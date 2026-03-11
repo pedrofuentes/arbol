@@ -154,6 +154,78 @@ function getNodeNames(container: HTMLElement): string[] {
     .map((el) => el.textContent!);
 }
 
+// Extract Y position from a node's transform attribute
+function getNodeY(container: HTMLElement, nodeId: string): number | null {
+  const node = container.querySelector(`.node[data-id="${nodeId}"]`);
+  if (!node) return null;
+  const transform = node.getAttribute('transform');
+  if (!transform) return null;
+  const match = transform.match(/translate\([^,]+,\s*([^)]+)\)/);
+  return match ? parseFloat(match[1]) : null;
+}
+
+// Get vertical gap between two nodes (parent bottom to child top)
+function getVerticalGap(container: HTMLElement, parentId: string, childId: string, nodeHeight: number): number | null {
+  const parentY = getNodeY(container, parentId);
+  const childY = getNodeY(container, childId);
+  if (parentY === null || childY === null) return null;
+  return childY - parentY - nodeHeight;
+}
+
+// Single-child manager with no PALs (Fatima→Ethan case)
+function singleChildNoPALs(): OrgNode {
+  return {
+    id: 'root',
+    name: 'CEO',
+    title: 'CEO',
+    children: [
+      {
+        id: 'dir',
+        name: 'Director',
+        title: 'Dir',
+        children: [
+          { id: 'm1', name: 'Manager', title: 'M1', children: [
+            { id: 'ic1', name: 'IC', title: 'Eng' },
+          ]},
+        ],
+      },
+    ],
+  };
+}
+
+// Sibling managers: one with PALs, one without (David vs CTO case)
+function siblingsMixedPALs(): OrgNode {
+  return {
+    id: 'root',
+    name: 'CEO',
+    title: 'CEO',
+    children: [
+      { id: 'pal1', name: 'PAL', title: 'Advisor' },
+      {
+        id: 'mgr-pal',
+        name: 'CTO',
+        title: 'CTO',
+        children: [
+          { id: 'pal-cto', name: 'CTO PAL', title: 'Advisor' },
+          { id: 'm1a', name: 'M1A', title: 'EM', children: [
+            { id: 'ic1', name: 'IC1', title: 'Eng' },
+          ]},
+        ],
+      },
+      {
+        id: 'mgr-nopal',
+        name: 'COO',
+        title: 'COO',
+        children: [
+          { id: 'm1b', name: 'M1B', title: 'EM', children: [
+            { id: 'ic2', name: 'IC2', title: 'Eng' },
+          ]},
+        ],
+      },
+    ],
+  };
+}
+
 // --- Tests ---
 
 describe('ChartRenderer', () => {
@@ -406,6 +478,92 @@ describe('ChartRenderer', () => {
       const opts = renderer.getOptions();
       expect(opts.nodeWidth).toBe(110);
       expect(opts.nodeHeight).toBe(22);
+    });
+  });
+
+  const NODE_HEIGHT = 22;
+
+  describe('vertical spacing', () => {
+
+    it('single-child non-PAL manager has gap equal to bottomVerticalSpacing', () => {
+      renderer.destroy();
+      renderer = createRenderer({
+        topVerticalSpacing: 5,
+        bottomVerticalSpacing: 12,
+      });
+      renderer.render(singleChildNoPALs());
+      // root→dir is single-child, gap should be bottomVerticalSpacing (12)
+      const gap = getVerticalGap(container, 'root', 'dir', NODE_HEIGHT);
+      expect(gap).toBe(12);
+    });
+
+    it('single-child gap is smaller than multi-child gap', () => {
+      renderer.destroy();
+      renderer = createRenderer({
+        topVerticalSpacing: 5,
+        bottomVerticalSpacing: 12,
+      });
+      renderer.render(siblingsMixedPALs());
+      // root has 2 manager children + 1 PAL = multi-child
+      // mgr-nopal has 1 child = single-child
+      const rootToChild = getVerticalGap(container, 'root', 'mgr-pal', NODE_HEIGHT);
+      const singleGap = getVerticalGap(container, 'mgr-nopal', 'm1b', NODE_HEIGHT);
+      expect(singleGap).toBeLessThan(rootToChild!);
+    });
+
+    it('siblings at same depth have same Y position', () => {
+      renderer.render(siblingsMixedPALs());
+      const yPal = getNodeY(container, 'mgr-pal');
+      const yNoPal = getNodeY(container, 'mgr-nopal');
+      expect(yPal).toBe(yNoPal);
+    });
+
+    it('PAL manager children are shifted down by PAL stack height', () => {
+      renderer.destroy();
+      renderer = createRenderer({
+        topVerticalSpacing: 5,
+        bottomVerticalSpacing: 12,
+      });
+      renderer.render(managerWithPALs());
+      // root has PALs, so root→mgr1 gap should be > topVerticalSpacing + bottomVerticalSpacing
+      const gap = getVerticalGap(container, 'root', 'mgr1', NODE_HEIGHT);
+      expect(gap).toBeGreaterThan(17); // 17 = top(5) + bottom(12)
+    });
+
+    it('deep tree with no PALs: all single-child gaps use bottomVerticalSpacing', () => {
+      renderer.destroy();
+      renderer = createRenderer({
+        topVerticalSpacing: 5,
+        bottomVerticalSpacing: 12,
+      });
+      renderer.render(deepNoPALs());
+      const gap1 = getVerticalGap(container, 'root', 'l1', NODE_HEIGHT);
+      const gap2 = getVerticalGap(container, 'l1', 'l2', NODE_HEIGHT);
+      // Both are single-child connections
+      expect(gap1).toBe(12);
+      expect(gap2).toBe(12);
+    });
+  });
+
+  describe('no node overlap', () => {
+    it('no two manager nodes share the same position', () => {
+      renderer.render(mixedSiblings());
+      const nodes = Array.from(container.querySelectorAll('.node:not(.ic-node):not(.pal-node)'));
+      const positions = nodes.map(n => n.getAttribute('transform'));
+      const unique = new Set(positions);
+      expect(unique.size).toBe(positions.length);
+    });
+
+    it('IC nodes are positioned below their M1 parent', () => {
+      renderer.render(m1WithICs());
+      const parentY = getNodeY(container, 'root')!;
+      const icNodes = container.querySelectorAll('.ic-node');
+      for (const ic of Array.from(icNodes)) {
+        const transform = ic.getAttribute('transform')!;
+        const match = transform.match(/translate\([^,]+,\s*([^)]+)\)/);
+        const icY = parseFloat(match![1]);
+        expect(icY).toBeGreaterThan(parentY + NODE_HEIGHT);
+      }
     });
   });
 });
