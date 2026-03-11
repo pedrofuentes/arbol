@@ -154,6 +154,9 @@ export class SettingsEditor {
       presetGrid.appendChild(card);
     }
 
+    // Layout Presets section
+    this.container.appendChild(this.buildLayoutPresets());
+
     for (const group of SETTING_GROUPS) {
       const header = document.createElement('h4');
       header.textContent = group.title;
@@ -237,6 +240,107 @@ export class SettingsEditor {
       document.body.removeChild(input);
     });
     ioBtnGroup.appendChild(importSettingsBtn);
+  }
+
+  private buildLayoutPresets(): HTMLElement {
+    const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<RendererOptions> }[] = [
+      {
+        name: 'Compact',
+        icon: '▪',
+        sizes: {
+          nodeWidth: 90, nodeHeight: 18, horizontalSpacing: 20, branchSpacing: 6,
+          topVerticalSpacing: 3, bottomVerticalSpacing: 8,
+          icNodeWidth: 80, icGap: 3, icContainerPadding: 4,
+          palTopGap: 5, palBottomGap: 5, palRowGap: 3, palCenterGap: 40,
+          nameFontSize: 7, titleFontSize: 6, textPaddingTop: 3, textGap: 1,
+        },
+      },
+      {
+        name: 'Default',
+        icon: '▫',
+        sizes: {
+          nodeWidth: 110, nodeHeight: 22, horizontalSpacing: 30, branchSpacing: 10,
+          topVerticalSpacing: 5, bottomVerticalSpacing: 12,
+          icNodeWidth: 100, icGap: 4, icContainerPadding: 6,
+          palTopGap: 7, palBottomGap: 7, palRowGap: 4, palCenterGap: 50,
+          nameFontSize: 8, titleFontSize: 7, textPaddingTop: 4, textGap: 1,
+        },
+      },
+      {
+        name: 'Spacious',
+        icon: '▢',
+        sizes: {
+          nodeWidth: 140, nodeHeight: 28, horizontalSpacing: 40, branchSpacing: 16,
+          topVerticalSpacing: 8, bottomVerticalSpacing: 16,
+          icNodeWidth: 120, icGap: 5, icContainerPadding: 8,
+          palTopGap: 10, palBottomGap: 10, palRowGap: 5, palCenterGap: 60,
+          nameFontSize: 9, titleFontSize: 8, textPaddingTop: 5, textGap: 2,
+        },
+      },
+      {
+        name: 'Presentation',
+        icon: '▣',
+        sizes: {
+          nodeWidth: 160, nodeHeight: 34, horizontalSpacing: 50, branchSpacing: 20,
+          topVerticalSpacing: 10, bottomVerticalSpacing: 20,
+          icNodeWidth: 140, icGap: 6, icContainerPadding: 10,
+          palTopGap: 12, palBottomGap: 12, palRowGap: 6, palCenterGap: 70,
+          nameFontSize: 11, titleFontSize: 9, textPaddingTop: 6, textGap: 2,
+        },
+      },
+    ];
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'margin-bottom:16px;';
+
+    const heading = document.createElement('h4');
+    heading.textContent = 'Layout Presets';
+    heading.style.cssText =
+      'margin:0 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
+    wrapper.appendChild(heading);
+
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;';
+
+    for (const preset of LAYOUT_PRESETS) {
+      const btn = document.createElement('button');
+      btn.style.cssText = `
+        display:flex;flex-direction:column;align-items:center;gap:2px;
+        padding:6px 4px;border:1px solid var(--border-default);
+        border-radius:var(--radius-md);background:var(--bg-elevated);
+        cursor:pointer;transition:all 120ms ease;font-family:var(--font-sans);
+      `;
+
+      const icon = document.createElement('span');
+      icon.textContent = preset.icon;
+      icon.style.cssText = 'font-size:14px;line-height:1;color:var(--text-secondary);';
+      btn.appendChild(icon);
+
+      const label = document.createElement('span');
+      label.textContent = preset.name;
+      label.style.cssText = 'font-size:9px;color:var(--text-tertiary);font-weight:600;';
+      btn.appendChild(label);
+
+      btn.addEventListener('mouseenter', () => {
+        btn.style.borderColor = 'var(--accent)';
+        btn.style.background = 'var(--bg-hover)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.borderColor = 'var(--border-default)';
+        btn.style.background = 'var(--bg-elevated)';
+      });
+
+      btn.addEventListener('click', () => {
+        this.renderer.updateOptions(preset.sizes);
+        this.rerenderCallback();
+        this.build();
+      });
+
+      grid.appendChild(btn);
+    }
+
+    wrapper.appendChild(grid);
+    return wrapper;
   }
 
   private createControl(
