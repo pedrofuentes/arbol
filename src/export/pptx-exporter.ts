@@ -11,7 +11,12 @@ export const PX_TO_INCHES = 1 / 96;
 const DEFAULT_SLIDE_WIDTH = 13.33;
 const DEFAULT_SLIDE_HEIGHT = 7.5;
 const DEFAULT_PADDING = 0.5;
-const DEFAULT_FILE_NAME = 'org-chart.pptx';
+function generateFileName(): string {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
+  return `${timestamp}-org-chart.pptx`;
+}
 
 const DEFAULT_CARD_STROKE = '22C55E';
 const DEFAULT_CARD_FILL = 'FFFFFF';
@@ -197,7 +202,7 @@ export async function exportToPptx(
   const slideWidth = options?.slideWidth ?? DEFAULT_SLIDE_WIDTH;
   const slideHeight = options?.slideHeight ?? DEFAULT_SLIDE_HEIGHT;
   const padding = options?.padding ?? DEFAULT_PADDING;
-  const fileName = options?.fileName ?? DEFAULT_FILE_NAME;
+  const fileName = options?.fileName ?? generateFileName();
 
   const pres = new pptxgen();
 

@@ -255,11 +255,11 @@ describe('pptx-exporter', () => {
       );
     });
 
-    it('uses default file name when not specified', async () => {
+    it('uses timestamped default file name when not specified', async () => {
       const layout = makeLayout();
       await exportToPptx(layout);
       expect(mockWriteFile).toHaveBeenCalledWith(
-        expect.objectContaining({ fileName: 'org-chart.pptx' }),
+        expect.objectContaining({ fileName: expect.stringMatching(/^\d{12}-org-chart\.pptx$/) }),
       );
     });
 
