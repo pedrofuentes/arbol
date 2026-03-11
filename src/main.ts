@@ -186,7 +186,7 @@ function main(): void {
     branchSpacing: 10,
     topVerticalSpacing: 5,
     bottomVerticalSpacing: 12,
-    icNodeWidth: 85,
+    icNodeWidth: 100,
     icGap: 4,
     icContainerPadding: 6,
     palTopGap: 7,
