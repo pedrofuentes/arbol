@@ -1,8 +1,7 @@
 {
   "name": "arbol",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "An interactive org chart editor for the browser",
   "directories": {
     "doc": "docs"
   },
@@ -12,9 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["org-chart", "organization", "hierarchy", "d3", "typescript", "pptx", "editor"],
+  "author": "Pedro",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "d3": "^7.9.0",
