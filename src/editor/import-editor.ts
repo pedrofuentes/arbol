@@ -786,6 +786,12 @@ export class ImportEditor {
       (mapping: ColumnMapping, presetName: string) => {
         this.mappingStore.savePreset({ name: presetName, mapping });
         this.refreshPresetDropdown();
+        this.errorArea.style.color = 'var(--accent)';
+        this.errorArea.textContent = `✓ Preset "${presetName}" saved`;
+        setTimeout(() => {
+          this.errorArea.textContent = '';
+          this.errorArea.style.color = '';
+        }, 2000);
       },
       () => {
         this.hideColumnMapper();

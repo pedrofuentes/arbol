@@ -1,0 +1,34 @@
+Alias,Full Name,Reports To Alias,Address Book Title
+REVERHART,Rowan Everhart,,CEO
+CALDRIDGE,Cypress Aldridge,reverhart,CTO
+MHARRINGTON,Maple Harrington,reverhart,CFO
+FKINCAID,Forrest Kincaid,reverhart,COO
+LKINGSLEY,Laurel Kingsley,reverhart,CMO
+ITHORNTON,Ivy Thornton,caldridge,VP Engineering
+OPEMBERTON,Oakley Pemberton,caldridge,VP Platform
+WESTRADA,Willow Estrada,caldridge,Dir Security
+HDRUMMOND,Hazel Drummond,ithornton,EM Frontend
+CBLACKWELL,Cedar Blackwell,ithornton,EM Backend
+JHALE,Juniper Hale,ithornton,EM QA
+BTALMADGE,Birch Talmadge,opemberton,EM Infra
+LGRAVES,Linden Graves,opemberton,EM Data
+TLANGLEY,Thorn Langley,westrada,EM AppSec
+AKADE,Aspen Kade,hdrummond,Sr Engineer
+BLENNOX,Briar Lennox,hdrummond,Engineer
+CMERRITT,Clover Merritt,hdrummond,Engineer
+DVOSS,Daphne Voss,hdrummond,Jr Engineer
+ECARVER,Elm Carver,cblackwell,Sr Engineer
+FBECKETT,Flora Beckett,cblackwell,Engineer
+GARCHER,Glen Archer,cblackwell,Engineer
+LVANCE,Laurel Vance,jhale,QA Lead
+MFIELDING,Moss Fielding,jhale,QA Engineer
+ANORTHCOTT,Aster Northcott,btalmadge,Sr SRE
+BLANDRY,Brook Landry,btalmadge,SRE
+CWINGATE,Coral Wingate,btalmadge,SRE
+DPRESCOTT,Dale Prescott,btalmadge,Jr SRE
+EFAIRBANKS,Echo Fairbanks,btalmadge,Jr SRE
+MSINCLAIR,Marigold Sinclair,lgraves,Data Engineer
+NASHBY,Nico Ashby,lgraves,Data Engineer
+OCASTILLO,Olive Castillo,tlangley,Security Engineer
+PDONOVAN,Pike Donovan,tlangley,Security Engineer
+RELLISON,Reed Ellison,tlangley,Pentester
