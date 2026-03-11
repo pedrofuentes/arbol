@@ -1,6 +1,6 @@
 import type { MappingPreset } from '../types';
 
-const STORAGE_KEY = 'chartit-csv-mappings';
+const STORAGE_KEY = 'arbol-csv-mappings';
 
 export class MappingStore {
   getPresets(): MappingPreset[] {

@@ -26,13 +26,13 @@ describe('ThemeManager', () => {
   });
 
   it('restores saved theme from localStorage', () => {
-    localStorageMock.setItem('chartit-theme', 'light');
+    localStorageMock.setItem('arbol-theme', 'light');
     const tm = new ThemeManager();
     expect(tm.getTheme()).toBe('light');
   });
 
   it('defaults to dark when localStorage has invalid value', () => {
-    localStorageMock.setItem('chartit-theme', 'invalid');
+    localStorageMock.setItem('arbol-theme', 'invalid');
     const tm = new ThemeManager();
     expect(tm.getTheme()).toBe('dark');
   });
@@ -45,7 +45,7 @@ describe('ThemeManager', () => {
   });
 
   it('toggle() switches from light to dark', () => {
-    localStorageMock.setItem('chartit-theme', 'light');
+    localStorageMock.setItem('arbol-theme', 'light');
     const tm = new ThemeManager();
     expect(tm.getTheme()).toBe('light');
     tm.toggle();
@@ -56,9 +56,9 @@ describe('ThemeManager', () => {
     const tm = new ThemeManager();
     vi.clearAllMocks();
     tm.setTheme('light');
-    expect(localStorageMock.setItem).toHaveBeenCalledWith('chartit-theme', 'light');
+    expect(localStorageMock.setItem).toHaveBeenCalledWith('arbol-theme', 'light');
     tm.setTheme('dark');
-    expect(localStorageMock.setItem).toHaveBeenCalledWith('chartit-theme', 'dark');
+    expect(localStorageMock.setItem).toHaveBeenCalledWith('arbol-theme', 'dark');
   });
 
   it('apply() adds .theme-light on documentElement for light theme', () => {
@@ -76,7 +76,7 @@ describe('ThemeManager', () => {
   });
 
   it('apply() is called during construction with saved light theme', () => {
-    localStorageMock.setItem('chartit-theme', 'light');
+    localStorageMock.setItem('arbol-theme', 'light');
     new ThemeManager();
     expect(document.documentElement.classList.contains('theme-light')).toBe(true);
   });

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MappingStore } from '../../src/store/mapping-store';
 import type { ColumnMapping, MappingPreset } from '../../src/types';
 
-const STORAGE_KEY = 'chartit-csv-mappings';
+const STORAGE_KEY = 'arbol-csv-mappings';
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};

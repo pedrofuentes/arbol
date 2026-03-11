@@ -73,7 +73,7 @@ describe('SettingsStore', () => {
     });
 
     it('returns defaults when localStorage contains invalid JSON', () => {
-      localStorageMock.setItem('chartit-settings', 'not-json');
+      localStorageMock.setItem('arbol-settings', 'not-json');
       const loaded = store.load(DEFAULTS);
       expect(loaded).toEqual(DEFAULTS);
     });
@@ -181,7 +181,7 @@ describe('SettingsStore', () => {
 
     it('uses default name when none provided', () => {
       const exp = store.createExport(DEFAULTS);
-      expect(exp.name).toBe('chartit-settings');
+      expect(exp.name).toBe('arbol-settings');
     });
   });
 

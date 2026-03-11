@@ -1,7 +1,7 @@
 export type Theme = 'dark' | 'light';
 
 export class ThemeManager {
-  private static STORAGE_KEY = 'chartit-theme';
+  private static STORAGE_KEY = 'arbol-theme';
   private currentTheme: Theme;
   private listeners: Set<(theme: Theme) => void> = new Set();
 

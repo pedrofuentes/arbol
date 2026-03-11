@@ -71,7 +71,7 @@ function validateSettings(obj: Record<string, unknown>): Partial<PersistableSett
 }
 
 export class SettingsStore {
-  private static STORAGE_KEY = 'chartit-settings';
+  private static STORAGE_KEY = 'arbol-settings';
   private static CURRENT_VERSION = 1;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -125,7 +125,7 @@ export class SettingsStore {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${exportObj.name}.chartit-settings.json`;
+    a.download = `${exportObj.name}.arbol-settings.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -141,7 +141,7 @@ export class SettingsStore {
   createExport(settings: PersistableSettings, name?: string): SettingsExport {
     return {
       version: SettingsStore.CURRENT_VERSION,
-      name: name ?? 'chartit-settings',
+      name: name ?? 'arbol-settings',
       timestamp: new Date().toISOString(),
       settings,
     };

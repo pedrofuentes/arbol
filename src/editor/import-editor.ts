@@ -142,7 +142,7 @@ export class ImportEditor {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `chartit-${preset.name.replace(/\s+/g, '-').toLowerCase()}.json`;
+          a.download = `arbol-${preset.name.replace(/\s+/g, '-').toLowerCase()}.json`;
           a.click();
           URL.revokeObjectURL(url);
         });
@@ -358,7 +358,7 @@ export class ImportEditor {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'chartit-mappings.json';
+      a.download = 'arbol-mappings.json';
       a.click();
       URL.revokeObjectURL(url);
     });
