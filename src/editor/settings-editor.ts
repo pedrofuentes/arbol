@@ -26,7 +26,9 @@ const SETTING_GROUPS: SettingGroup[] = [
     title: 'Tree Spacing',
     settings: [
       { key: 'horizontalSpacing', label: 'Horizontal Spacing', type: 'range', min: 5, max: 100, step: 1 },
-      { key: 'verticalSpacing', label: 'Vertical Spacing', type: 'range', min: 5, max: 100, step: 1 },
+      { key: 'branchSpacing', label: 'Branch Spacing', type: 'range', min: 0, max: 60, step: 1 },
+      { key: 'topVerticalSpacing', label: 'Top Vertical Spacing', type: 'range', min: 0, max: 50, step: 1 },
+      { key: 'bottomVerticalSpacing', label: 'Bottom Vertical Spacing', type: 'range', min: 0, max: 50, step: 1 },
     ],
   },
   {

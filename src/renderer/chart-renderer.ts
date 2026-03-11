@@ -9,7 +9,9 @@ export interface RendererOptions {
   nodeHeight: number;
   // Tree layout spacing
   horizontalSpacing: number;
-  verticalSpacing: number;
+  branchSpacing?: number;
+  topVerticalSpacing?: number;
+  bottomVerticalSpacing?: number;
   // IC (Individual Contributor) options
   icNodeWidth?: number;
   icGap?: number;
@@ -51,8 +53,11 @@ export class ChartRenderer {
       icNodeWidth: Math.round(options.nodeWidth * 0.77),
       icGap: 4,
       icContainerPadding: 6,
-      palTopGap: 10,
-      palBottomGap: 10,
+      branchSpacing: 10,
+      topVerticalSpacing: 5,
+      bottomVerticalSpacing: 12,
+      palTopGap: 7,
+      palBottomGap: 7,
       palRowGap: 4,
       palCenterGap: 50,
       nameFontSize: 8,
@@ -86,7 +91,8 @@ export class ChartRenderer {
   render(root: OrgNode): void {
     const visibleTree = filterVisibleTree(root, this.collapsed);
     const { layoutTree, icMap, palMap } = stripM1Children(visibleTree, this.collapsed);
-    const { nodeWidth, nodeHeight, horizontalSpacing, verticalSpacing, palCenterGap } = this.opts;
+    const { nodeWidth, nodeHeight, horizontalSpacing, topVerticalSpacing, bottomVerticalSpacing, palCenterGap } = this.opts;
+    const totalVerticalSpacing = topVerticalSpacing + bottomVerticalSpacing;
 
     const hierarchy = d3.hierarchy(layoutTree, (d) => d.children);
     const palTotalWidth = nodeWidth * 2 + palCenterGap;
@@ -95,7 +101,7 @@ export class ChartRenderer {
       .tree<OrgNode>()
       .nodeSize([
         nodeWidth + horizontalSpacing,
-        nodeHeight + verticalSpacing,
+        nodeHeight + totalVerticalSpacing,
       ])
       .separation((a, b) => {
         const aHasPals = palMap.has(a.data.id);
@@ -113,9 +119,9 @@ export class ChartRenderer {
     const getPalStackHeight = (nodeId: string): number => {
       const pals = palMap.get(nodeId);
       if (!pals || pals.length === 0) return 0;
-      const { palTopGap, palRowGap } = this.opts;
+      const { palTopGap, palBottomGap, palRowGap } = this.opts;
       const rows = Math.ceil(pals.length / 2);
-      return palTopGap + palRowGap + rows * nodeHeight + (rows - 1) * palRowGap;
+      return palTopGap + palRowGap + rows * nodeHeight + (rows - 1) * palRowGap + palBottomGap;
     };
 
     const shiftSubtree = (node: d3.HierarchyPointNode<OrgNode>, extraY: number): void => {
@@ -133,6 +139,82 @@ export class ChartRenderer {
         }
       }
     }
+
+    // Enforce branchSpacing: ensure subtree bounding boxes don't overlap
+    const { branchSpacing, icNodeWidth, icContainerPadding } = this.opts;
+
+    const getSubtreeXBounds = (node: d3.HierarchyPointNode<OrgNode>): [number, number] => {
+      let minX = node.x - nodeWidth / 2;
+      let maxX = node.x + nodeWidth / 2;
+
+      // Account for PAL stacks (two columns spread wider than the node)
+      if (palMap.has(node.data.id)) {
+        const palLeft = node.x - palCenterGap / 2 - nodeWidth;
+        const palRight = node.x + palCenterGap / 2 + nodeWidth;
+        minX = Math.min(minX, palLeft);
+        maxX = Math.max(maxX, palRight);
+      }
+
+      // Account for IC stacks
+      if (icMap.has(node.data.id)) {
+        const icTotalWidth = icNodeWidth + icContainerPadding * 2;
+        minX = Math.min(minX, node.x - icTotalWidth / 2);
+        maxX = Math.max(maxX, node.x + icTotalWidth / 2);
+      }
+
+      for (const child of node.children ?? []) {
+        const [childMin, childMax] = getSubtreeXBounds(child);
+        minX = Math.min(minX, childMin);
+        maxX = Math.max(maxX, childMax);
+      }
+      return [minX, maxX];
+    };
+
+    const shiftSubtreeX = (node: d3.HierarchyPointNode<OrgNode>, dx: number): void => {
+      node.x += dx;
+      for (const child of node.children ?? []) {
+        shiftSubtreeX(child, dx);
+      }
+    };
+
+    const enforceSpacing = (node: d3.HierarchyPointNode<OrgNode>): void => {
+      if (!node.children || node.children.length < 2) {
+        for (const child of node.children ?? []) {
+          enforceSpacing(child);
+        }
+        return;
+      }
+
+      // First enforce spacing on children's subtrees
+      for (const child of node.children) {
+        enforceSpacing(child);
+      }
+
+      // Then enforce exact spacing between adjacent siblings
+      for (let i = 1; i < node.children.length; i++) {
+        const left = node.children[i - 1];
+        const right = node.children[i];
+        const [, leftMax] = getSubtreeXBounds(left);
+        const [rightMin] = getSubtreeXBounds(right);
+        const gap = rightMin - leftMax;
+        const shift = branchSpacing - gap;
+        if (shift !== 0) {
+          shiftSubtreeX(right, shift);
+        }
+      }
+
+      // Re-center parent over its children
+      const firstChild = node.children[0];
+      const lastChild = node.children[node.children.length - 1];
+      const childrenCenter = (firstChild.x + lastChild.x) / 2;
+      const parentShift = childrenCenter - node.x;
+      node.x = childrenCenter;
+
+      // Propagate parent shift upward would be complex;
+      // instead we only center at each level during this pass
+    };
+
+    enforceSpacing(treeData);
 
     this.g.selectAll('*').remove();
 
@@ -258,7 +340,7 @@ export class ChartRenderer {
     treeData: d3.HierarchyPointNode<OrgNode>,
     getPalStackHeight: (id: string) => number,
   ): void {
-    const { nodeHeight } = this.opts;
+    const { nodeHeight, topVerticalSpacing } = this.opts;
 
     // Elbow links from below PAL area to children
     linksGroup
@@ -271,10 +353,10 @@ export class ChartRenderer {
         const sx = d.source.x;
         const palOffset = getPalStackHeight(d.source.data.id);
         const sy = d.source.y + nodeHeight + palOffset;
+        const horizontalY = sy + topVerticalSpacing;
         const tx = d.target.x;
         const ty = d.target.y;
-        const my = (sy + ty) / 2;
-        return `M${sx},${sy} L${sx},${my} L${tx},${my} L${tx},${ty}`;
+        return `M${sx},${sy} L${sx},${horizontalY} L${tx},${horizontalY} L${tx},${ty}`;
       })
       .attr('fill', 'none')
       .attr('stroke', this.opts.linkColor)
