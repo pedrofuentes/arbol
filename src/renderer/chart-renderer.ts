@@ -139,7 +139,12 @@ export class ChartRenderer {
         for (const child of node.children) {
           shiftSubtree(child, palHeight);
         }
-      } else if (extraNonPalShift > 0 && node.children) {
+      } else if (node.children && node.children.length === 1) {
+        // Single child: shift up to make gap equal to bottomVerticalSpacing
+        for (const child of node.children) {
+          shiftSubtree(child, -topVerticalSpacing);
+        }
+      } else if (extraNonPalShift > 0 && node.children && node.children.length > 1) {
         for (const child of node.children) {
           shiftSubtree(child, extraNonPalShift);
         }
@@ -359,11 +364,14 @@ export class ChartRenderer {
         const sx = d.source.x;
         const palOffset = getPalStackHeight(d.source.data.id);
         const sy = d.source.y + nodeHeight + palOffset;
-        // Non-PAL managers: match bottomVerticalSpacing for consistent look
-        const stubHeight = palOffset > 0 ? topVerticalSpacing : bottomVerticalSpacing;
-        const horizontalY = sy + stubHeight;
         const tx = d.target.x;
         const ty = d.target.y;
+        const isSingleChild = (d.source.children?.length ?? 0) === 1;
+        if (isSingleChild) {
+          return `M${sx},${sy} L${tx},${ty}`;
+        }
+        const stubHeight = palOffset > 0 ? topVerticalSpacing : bottomVerticalSpacing;
+        const horizontalY = sy + stubHeight;
         return `M${sx},${sy} L${sx},${horizontalY} L${tx},${horizontalY} L${tx},${ty}`;
       })
       .attr('fill', 'none')
