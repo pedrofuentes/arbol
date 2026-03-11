@@ -255,7 +255,12 @@ function main(): void {
   });
   headerRight.insertBefore(redoBtn, themeBtn);
 
-  const updateUndoRedoState = () => {
+  // Visual divider between undo/redo and theme toggle
+  const divider = document.createElement('span');
+  divider.className = 'header-divider';
+  headerRight.insertBefore(divider, themeBtn);
+
+  const updateUndoRedoState= () => {
     undoBtn.disabled = !store.canUndo();
     redoBtn.disabled = !store.canRedo();
     undoBtn.style.opacity = store.canUndo() ? '1' : '0.4';

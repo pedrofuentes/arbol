@@ -18,7 +18,8 @@ export class TabSwitcher {
     const nav = document.createElement('nav');
     nav.className = 'tab-nav';
     nav.style.cssText =
-      'display:flex;gap:0;border-bottom:1px solid var(--border-subtle);margin-bottom:12px;';
+      'display:flex;gap:2px;padding:3px;margin-bottom:14px;' +
+      'background:var(--bg-base);border-radius:var(--radius-lg);';
 
     for (const tab of tabs) {
       const btn = document.createElement('button');
@@ -26,10 +27,10 @@ export class TabSwitcher {
       btn.textContent = tab.label;
       btn.dataset.tabId = tab.id;
       btn.style.cssText =
-        'flex:1;padding:8px 0;border:none;background:none;cursor:pointer;' +
+        'flex:1;padding:6px 0;border:none;background:transparent;cursor:pointer;' +
         'font-size:12px;font-weight:600;font-family:var(--font-sans);' +
-        'color:var(--text-tertiary);border-bottom:2px solid transparent;' +
-        'transition:color var(--transition-fast),border-color var(--transition-fast);';
+        'color:var(--text-tertiary);border-radius:var(--radius-md);' +
+        'transition:all 150ms cubic-bezier(0.22,1,0.36,1);letter-spacing:0.02em;';
       btn.addEventListener('click', () => this.activate(tab.id));
       nav.appendChild(btn);
       this.buttons.set(tab.id, btn);
@@ -59,7 +60,8 @@ export class TabSwitcher {
     for (const [id, btn] of this.buttons) {
       const isActive = id === tabId;
       btn.style.color = isActive ? 'var(--text-primary)' : 'var(--text-tertiary)';
-      btn.style.borderBottomColor = isActive ? 'var(--accent)' : 'transparent';
+      btn.style.background = isActive ? 'var(--bg-elevated)' : 'transparent';
+      btn.style.boxShadow = isActive ? 'var(--shadow-sm)' : 'none';
     }
   }
 
