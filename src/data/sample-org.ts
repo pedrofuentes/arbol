@@ -2,69 +2,69 @@ import { OrgNode } from '../types';
 
 export const SAMPLE_ORG: OrgNode = {
   id: 'ceo',
-  name: 'Sarah Chen',
+  name: 'Rowan Everhart',
   title: 'CEO',
   children: [
-    { id: 'pal-ceo-1', name: 'Alex Rivera', title: 'Chief of Staff' },
-    { id: 'pal-ceo-2', name: 'Jordan Blake', title: 'EA to CEO' },
-    { id: 'pal-ceo-3', name: 'Casey Morgan', title: 'Strategy Advisor' },
+    { id: 'pal-ceo-1', name: 'Sage Calloway', title: 'Chief of Staff' },
+    { id: 'pal-ceo-2', name: 'Wren Ashford', title: 'EA to CEO' },
+    { id: 'pal-ceo-3', name: 'Quinn Morrigan', title: 'Strategy Advisor' },
     {
       id: 'cto',
-      name: 'Marcus Johnson',
+      name: 'Cypress Aldridge',
       title: 'CTO',
       children: [
-        { id: 'pal-cto-1', name: 'Sam Torres', title: 'Tech Advisor' },
-        { id: 'pal-cto-2', name: 'Kim Nguyen', title: 'EA to CTO' },
+        { id: 'pal-cto-1', name: 'Fern Hollister', title: 'Tech Advisor' },
+        { id: 'pal-cto-2', name: 'Lark Whitfield', title: 'EA to CTO' },
         {
           id: 'vp-eng',
-          name: 'Priya Patel',
+          name: 'Ivy Thornton',
           title: 'VP Engineering',
           children: [
-            { id: 'em-fe', name: 'Ana Torres', title: 'EM Frontend', children: [
-              { id: 'fe-1', name: 'Mike Chang', title: 'Sr Engineer' },
-              { id: 'fe-2', name: 'Sara Ali', title: 'Engineer' },
-              { id: 'fe-3', name: 'Tom Reed', title: 'Engineer' },
-              { id: 'fe-4', name: 'Nina Volkov', title: 'Jr Engineer' },
+            { id: 'em-fe', name: 'Hazel Drummond', title: 'EM Frontend', children: [
+              { id: 'fe-1', name: 'Aspen Kade', title: 'Sr Engineer' },
+              { id: 'fe-2', name: 'Briar Lennox', title: 'Engineer' },
+              { id: 'fe-3', name: 'Clover Merritt', title: 'Engineer' },
+              { id: 'fe-4', name: 'Daphne Voss', title: 'Jr Engineer' },
             ]},
-            { id: 'em-be', name: 'Leo Martins', title: 'EM Backend', children: [
-              { id: 'be-1', name: 'Rachel Green', title: 'Sr Engineer' },
-              { id: 'be-2', name: 'Omar Hassan', title: 'Engineer' },
-              { id: 'be-3', name: 'Emily Sato', title: 'Engineer' },
+            { id: 'em-be', name: 'Cedar Blackwell', title: 'EM Backend', children: [
+              { id: 'be-1', name: 'Elm Carver', title: 'Sr Engineer' },
+              { id: 'be-2', name: 'Flora Beckett', title: 'Engineer' },
+              { id: 'be-3', name: 'Glen Archer', title: 'Engineer' },
             ]},
-            { id: 'em-qa', name: 'Jake Novak', title: 'EM QA', children: [
-              { id: 'qa-1', name: 'Mei Lin', title: 'QA Lead' },
-              { id: 'qa-2', name: 'Dan Okafor', title: 'QA Engineer' },
+            { id: 'em-qa', name: 'Juniper Hale', title: 'EM QA', children: [
+              { id: 'qa-1', name: 'Laurel Vance', title: 'QA Lead' },
+              { id: 'qa-2', name: 'Moss Fielding', title: 'QA Engineer' },
             ]},
           ],
         },
         {
           id: 'vp-plat',
-          name: 'James Wilson',
+          name: 'Oakley Pemberton',
           title: 'VP Platform',
           children: [
-            { id: 'pal-plat-1', name: 'Zoe Adams', title: 'Platform Architect' },
-            { id: 'em-infra', name: 'Chris Park', title: 'EM Infra', children: [
-              { id: 'infra-1', name: 'Aisha Khan', title: 'Sr SRE' },
-              { id: 'infra-2', name: 'Ryan Cole', title: 'SRE' },
-              { id: 'infra-3', name: 'Tina Wu', title: 'SRE' },
-              { id: 'infra-4', name: 'Mark Silva', title: 'Jr SRE' },
-              { id: 'infra-5', name: 'Eva Petrov', title: 'Jr SRE' },
+            { id: 'pal-plat-1', name: 'Rue Atwood', title: 'Platform Architect' },
+            { id: 'em-infra', name: 'Birch Talmadge', title: 'EM Infra', children: [
+              { id: 'infra-1', name: 'Aster Northcott', title: 'Sr SRE' },
+              { id: 'infra-2', name: 'Brook Landry', title: 'SRE' },
+              { id: 'infra-3', name: 'Coral Wingate', title: 'SRE' },
+              { id: 'infra-4', name: 'Dale Prescott', title: 'Jr SRE' },
+              { id: 'infra-5', name: 'Echo Fairbanks', title: 'Jr SRE' },
             ]},
-            { id: 'em-data', name: 'Liam Scott', title: 'EM Data', children: [
-              { id: 'data-1', name: 'Nora Bell', title: 'Data Engineer' },
-              { id: 'data-2', name: 'Oscar Ruiz', title: 'Data Engineer' },
+            { id: 'em-data', name: 'Linden Graves', title: 'EM Data', children: [
+              { id: 'data-1', name: 'Marigold Sinclair', title: 'Data Engineer' },
+              { id: 'data-2', name: 'Nico Ashby', title: 'Data Engineer' },
             ]},
           ],
         },
         {
           id: 'dir-security',
-          name: 'Fatima Zahra',
+          name: 'Willow Estrada',
           title: 'Dir Security',
           children: [
-            { id: 'em-sec', name: 'Ethan Lee', title: 'EM AppSec', children: [
-              { id: 'sec-1', name: 'Ava Mitchell', title: 'Security Engineer' },
-              { id: 'sec-2', name: 'Noah Park', title: 'Security Engineer' },
-              { id: 'sec-3', name: 'Lily Tran', title: 'Pentester' },
+            { id: 'em-sec', name: 'Thorn Langley', title: 'EM AppSec', children: [
+              { id: 'sec-1', name: 'Olive Castillo', title: 'Security Engineer' },
+              { id: 'sec-2', name: 'Pike Donovan', title: 'Security Engineer' },
+              { id: 'sec-3', name: 'Reed Ellison', title: 'Pentester' },
             ]},
           ],
         },
@@ -72,68 +72,68 @@ export const SAMPLE_ORG: OrgNode = {
     },
     {
       id: 'cfo',
-      name: 'Lisa Park',
+      name: 'Maple Harrington',
       title: 'CFO',
       children: [
-        { id: 'pal-cfo-1', name: 'Derek Fox', title: 'FP&A Analyst' },
-        { id: 'ctrl', name: 'Tom Brown', title: 'Controller', children: [
-          { id: 'acct-1', name: 'Amy Chen', title: 'Sr Accountant' },
-          { id: 'acct-2', name: 'Ben Hayes', title: 'Accountant' },
+        { id: 'pal-cfo-1', name: 'Finch Wakefield', title: 'FP&A Analyst' },
+        { id: 'ctrl', name: 'Alder Cromwell', title: 'Controller', children: [
+          { id: 'acct-1', name: 'Poppy Whitmore', title: 'Sr Accountant' },
+          { id: 'acct-2', name: 'Robin Caldwell', title: 'Accountant' },
         ]},
-        { id: 'treas', name: 'Maria Lopez', title: 'Treasurer', children: [
-          { id: 'fin-1', name: 'Yuki Tanaka', title: 'Financial Analyst' },
+        { id: 'treas', name: 'Iris Fairchild', title: 'Treasurer', children: [
+          { id: 'fin-1', name: 'Sorrel Delacroix', title: 'Financial Analyst' },
         ]},
       ],
     },
     {
       id: 'coo',
-      name: 'David Kim',
+      name: 'Forrest Kincaid',
       title: 'COO',
       children: [
         {
           id: 'vp-ops',
-          name: 'Sofia Reyes',
+          name: 'Sylvan Royce',
           title: 'VP Operations',
           children: [
-            { id: 'em-logistics', name: 'Ben Carter', title: 'EM Logistics', children: [
-              { id: 'log-1', name: 'Chris Evans', title: 'Ops Coordinator' },
-              { id: 'log-2', name: 'Liam O\'Brien', title: 'Ops Coordinator' },
-              { id: 'log-3', name: 'Ava Stone', title: 'Ops Specialist' },
-              { id: 'log-4', name: 'Max Turner', title: 'Ops Specialist' },
-              { id: 'log-5', name: 'Isla Gray', title: 'Ops Associate' },
-              { id: 'log-6', name: 'Jack White', title: 'Ops Associate' },
-              { id: 'log-7', name: 'Ruby Fox', title: 'Ops Intern' },
-              { id: 'log-8', name: 'Finn Black', title: 'Ops Intern' },
+            { id: 'em-logistics', name: 'Heath Barlow', title: 'EM Logistics', children: [
+              { id: 'log-1', name: 'Basil Croft', title: 'Ops Coordinator' },
+              { id: 'log-2', name: 'Calla Devlin', title: 'Ops Coordinator' },
+              { id: 'log-3', name: 'Daisy Engstrom', title: 'Ops Specialist' },
+              { id: 'log-4', name: 'Fox Gallagher', title: 'Ops Specialist' },
+              { id: 'log-5', name: 'Gale Holloway', title: 'Ops Associate' },
+              { id: 'log-6', name: 'Harbor Jarvis', title: 'Ops Associate' },
+              { id: 'log-7', name: 'Indigo Kerr', title: 'Ops Intern' },
+              { id: 'log-8', name: 'Jasper Locke', title: 'Ops Intern' },
             ]},
-            { id: 'em-support', name: 'Noah Park', title: 'EM Support', children: [
-              { id: 'sup-1', name: 'Ella Rose', title: 'Support Lead' },
-              { id: 'sup-2', name: 'Luke Hale', title: 'Support Specialist' },
-              { id: 'sup-3', name: 'Mia Frost', title: 'Support Specialist' },
+            { id: 'em-support', name: 'Piper Ainsworth', title: 'EM Support', children: [
+              { id: 'sup-1', name: 'Skye Brennan', title: 'Support Lead' },
+              { id: 'sup-2', name: 'Thistle Crane', title: 'Support Specialist' },
+              { id: 'sup-3', name: 'Vale Dumont', title: 'Support Specialist' },
             ]},
           ],
         },
-        { id: 'hr-mgr', name: 'Yuki Tanaka', title: 'HR Manager', children: [
-          { id: 'hr-1', name: 'Grace Kim', title: 'HR Specialist' },
-          { id: 'hr-2', name: 'Leo Diaz', title: 'Recruiter' },
-          { id: 'hr-3', name: 'Chloe Ng', title: 'Recruiter' },
+        { id: 'hr-mgr', name: 'Yarrow Pennington', title: 'HR Manager', children: [
+          { id: 'hr-1', name: 'Zinnia Rowe', title: 'HR Specialist' },
+          { id: 'hr-2', name: 'Acacia Sterling', title: 'Recruiter' },
+          { id: 'hr-3', name: 'Briony Tate', title: 'Recruiter' },
         ]},
       ],
     },
     {
       id: 'cmo',
-      name: 'Elena Volkov',
+      name: 'Laurel Kingsley',
       title: 'CMO',
       children: [
-        { id: 'pal-cmo-1', name: 'Ivan Petrov', title: 'Brand Strategist' },
-        { id: 'pal-cmo-2', name: 'Diana Wells', title: 'Comms Lead' },
-        { id: 'em-growth', name: 'Peter Grant', title: 'Growth Lead', children: [
-          { id: 'gr-1', name: 'Sasha Moore', title: 'Growth Engineer' },
-          { id: 'gr-2', name: 'Kai Young', title: 'Growth Analyst' },
+        { id: 'pal-cmo-1', name: 'Orion Redmond', title: 'Brand Strategist' },
+        { id: 'pal-cmo-2', name: 'River Chandler', title: 'Comms Lead' },
+        { id: 'em-growth', name: 'Sienna Marchetti', title: 'Growth Lead', children: [
+          { id: 'gr-1', name: 'Terra Novak', title: 'Growth Engineer' },
+          { id: 'gr-2', name: 'Umber Yates', title: 'Growth Analyst' },
         ]},
-        { id: 'em-design', name: 'Hana Ito', title: 'Design Lead', children: [
-          { id: 'des-1', name: 'Olga Fern', title: 'Sr Designer' },
-          { id: 'des-2', name: 'Ravi Shah', title: 'Designer' },
-          { id: 'des-3', name: 'Emi Lau', title: 'Jr Designer' },
+        { id: 'em-design', name: 'Violet Ashworth', title: 'Design Lead', children: [
+          { id: 'des-1', name: 'Wisteria Cole', title: 'Sr Designer' },
+          { id: 'des-2', name: 'Zephyr Drake', title: 'Designer' },
+          { id: 'des-3', name: 'Aurora Finley', title: 'Jr Designer' },
         ]},
       ],
     },
