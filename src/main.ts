@@ -15,8 +15,8 @@ function main(): void {
 
   const renderer = new ChartRenderer({
     container: chartArea,
-    nodeWidth: 180,
-    nodeHeight: 60,
+    nodeWidth: 110,
+    nodeHeight: 26,
     horizontalSpacing: 20,
     verticalSpacing: 40,
   });

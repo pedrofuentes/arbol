@@ -94,11 +94,11 @@ export class ChartRenderer {
       .append('rect')
       .attr('width', nodeWidth)
       .attr('height', nodeHeight)
-      .attr('rx', 8)
-      .attr('ry', 8)
+      .attr('rx', 0)
+      .attr('ry', 0)
       .attr('fill', '#ffffff')
-      .attr('stroke', '#e2e8f0')
-      .attr('stroke-width', 1.5)
+      .attr('stroke', '#22c55e')
+      .attr('stroke-width', 1)
       .on('click', function (_event, d) {
         if (self.onNodeClick) {
           self.onNodeClick(d.data.id);
@@ -109,19 +109,21 @@ export class ChartRenderer {
       .append('text')
       .attr('class', 'node-name')
       .attr('x', nodeWidth / 2)
-      .attr('y', nodeHeight / 2 - 6)
+      .attr('y', 12)
       .attr('text-anchor', 'middle')
       .attr('font-weight', 'bold')
-      .attr('font-size', '13px')
+      .attr('font-family', 'Calibri, sans-serif')
+      .attr('font-size', '8px')
       .text((d) => d.data.name);
 
     nodes
       .append('text')
       .attr('class', 'node-title')
       .attr('x', nodeWidth / 2)
-      .attr('y', nodeHeight / 2 + 12)
+      .attr('y', 21)
       .attr('text-anchor', 'middle')
-      .attr('font-size', '11px')
+      .attr('font-family', 'Calibri, sans-serif')
+      .attr('font-size', '7px')
       .attr('fill', '#64748b')
       .text((d) => d.data.title);
 
