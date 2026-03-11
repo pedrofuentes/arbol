@@ -1,5 +1,7 @@
 import { OrgStore } from './store/org-store';
 import { ChartRenderer } from './renderer/chart-renderer';
+import { TabSwitcher } from './editor/tab-switcher';
+import { SettingsEditor } from './editor/settings-editor';
 import { OrgNode } from './types';
 
 const SAMPLE_DATA: OrgNode = {
@@ -65,6 +67,7 @@ const SAMPLE_DATA: OrgNode = {
 };
 
 function main(): void {
+  const sidebar = document.getElementById('sidebar')!;
   const chartArea = document.getElementById('chart-area')!;
 
   const store = new OrgStore(SAMPLE_DATA);
@@ -79,15 +82,23 @@ function main(): void {
     icGap: 4,
   });
 
-  store.onChange(() => {
-    renderer.render(store.getTree());
-  });
+  const rerender = () => renderer.render(store.getTree());
 
-  renderer.setCollapseToggleHandler(() => {
-    renderer.render(store.getTree());
-  });
+  // Sidebar tabs
+  const tabSwitcher = new TabSwitcher(sidebar, [
+    { id: 'form', label: 'Form' },
+    { id: 'json', label: 'JSON' },
+    { id: 'settings', label: 'Settings' },
+  ]);
 
-  renderer.render(store.getTree());
+  const settingsContainer = tabSwitcher.getContentContainer('settings')!;
+  new SettingsEditor(settingsContainer, renderer, rerender);
+
+  store.onChange(rerender);
+
+  renderer.setCollapseToggleHandler(rerender);
+
+  rerender();
 }
 
 document.addEventListener('DOMContentLoaded', main);

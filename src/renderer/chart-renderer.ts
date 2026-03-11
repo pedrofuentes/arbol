@@ -408,6 +408,14 @@ export class ChartRenderer {
     return this.svg.node()!;
   }
 
+  updateOptions(partial: Partial<RendererOptions>): void {
+    Object.assign(this.opts, partial);
+  }
+
+  getOptions(): ResolvedOptions {
+    return { ...this.opts };
+  }
+
   getChartGroup(): SVGGElement {
     return this.g.node()!;
   }
