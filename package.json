@@ -11,7 +11,15 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "keywords": ["org-chart", "organization", "hierarchy", "d3", "typescript", "pptx", "editor"],
+  "keywords": [
+    "org-chart",
+    "organization",
+    "hierarchy",
+    "d3",
+    "typescript",
+    "pptx",
+    "editor"
+  ],
   "author": "Pedro",
   "license": "MIT",
   "repository": {
@@ -25,7 +33,8 @@
   "type": "commonjs",
   "dependencies": {
     "d3": "^7.9.0",
-    "pptxgenjs": "^4.0.1"
+    "pptxgenjs": "^4.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/d3": "^7.4.3",

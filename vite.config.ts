@@ -6,6 +6,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           pptxgenjs: ['pptxgenjs'],
+          xlsx: ['xlsx'],
         },
       },
     },

@@ -397,7 +397,7 @@ export class ImportEditor {
 
     this.fileInput = document.createElement('input');
     this.fileInput.type = 'file';
-    this.fileInput.accept = '.json,.csv';
+    this.fileInput.accept = '.json,.csv,.xlsx,.xls';
     this.fileInput.style.display = 'none';
     this.fileInput.addEventListener('change', () => {
       const file = this.fileInput.files?.[0];
@@ -423,7 +423,7 @@ export class ImportEditor {
     dropZone.appendChild(dropLabel);
 
     const dropHint = document.createElement('div');
-    dropHint.textContent = 'Supports .json and .csv files';
+    dropHint.textContent = 'Supports .json, .csv, and .xlsx files';
     dropHint.style.cssText = 'color:var(--text-tertiary);font-size:10px;margin-top:4px;font-family:var(--font-sans);';
     dropZone.appendChild(dropHint);
 
@@ -598,6 +598,31 @@ export class ImportEditor {
       this.showError(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum is 10MB.`);
       return;
     }
+
+    const ext = file.name.lastIndexOf('.') >= 0
+      ? file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
+      : '';
+
+    if (ext === '.xlsx' || ext === '.xls') {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const xlsx = await import('xlsx');
+          const workbook = xlsx.read(reader.result, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const csvText = xlsx.utils.sheet_to_csv(firstSheet);
+          const result = this.parseCsv(csvText, file.name);
+          this.pendingImport = result;
+          this.showStatus(result);
+        } catch (e: unknown) {
+          this.showError(e instanceof Error ? e.message : String(e));
+        }
+      };
+      reader.onerror = () => this.showError('Failed to read file');
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       const text = reader.result as string;
