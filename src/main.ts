@@ -2,6 +2,8 @@ import { OrgStore } from './store/org-store';
 import { ChartRenderer } from './renderer/chart-renderer';
 import { TabSwitcher } from './editor/tab-switcher';
 import { SettingsEditor } from './editor/settings-editor';
+import { FormEditor } from './editor/form-editor';
+import { JsonEditor } from './editor/json-editor';
 import { exportToPptx } from './export/pptx-exporter';
 import { OrgNode } from './types';
 
@@ -188,10 +190,29 @@ function main(): void {
     { id: 'settings', label: 'Settings' },
   ]);
 
+  const formContainer = tabSwitcher.getContentContainer('form')!;
+  const formEditor = new FormEditor(formContainer, store);
+
+  const jsonContainer = tabSwitcher.getContentContainer('json')!;
+  const jsonEditor = new JsonEditor(jsonContainer, store);
+
   const settingsContainer = tabSwitcher.getContentContainer('settings')!;
   new SettingsEditor(settingsContainer, renderer, rerender);
 
-  store.onChange(rerender);
+  store.onChange(() => {
+    rerender();
+    formEditor.refresh();
+    jsonEditor.refresh();
+  });
+
+  renderer.setNodeClickHandler((nodeId: string) => {
+    formEditor.selectNode(nodeId);
+    renderer.setSelectedNode(nodeId);
+  });
+
+  formEditor.setSelectionChangeHandler((nodeId: string | null) => {
+    renderer.setSelectedNode(nodeId);
+  });
 
   renderer.setCollapseToggleHandler(rerender);
 
