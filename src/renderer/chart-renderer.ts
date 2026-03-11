@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import { OrgNode } from '../types';
-import { filterVisibleTree, stripM1Children } from '../utils/tree';
+import { computeLayout, LayoutResult } from './layout-engine';
 
 export interface RendererOptions {
   container: HTMLElement;
@@ -36,7 +36,7 @@ export interface RendererOptions {
   icContainerFill?: string;
 }
 
-interface ResolvedOptions extends Required<RendererOptions> {}
+export interface ResolvedOptions extends Required<RendererOptions> {}
 
 export type NodeClickHandler = (nodeId: string) => void;
 
@@ -47,6 +47,7 @@ export class ChartRenderer {
   private collapsed: Set<string> = new Set();
   private onNodeClick: NodeClickHandler | null = null;
   private onCollapseToggle: ((nodeId: string) => void) | null = null;
+  private lastLayout: LayoutResult | null = null;
 
   constructor(options: RendererOptions) {
     this.opts = {
@@ -89,208 +90,105 @@ export class ChartRenderer {
   }
 
   render(root: OrgNode): void {
-    const visibleTree = filterVisibleTree(root, this.collapsed);
-    const { layoutTree, icMap, palMap } = stripM1Children(visibleTree, this.collapsed);
-    const { nodeWidth, nodeHeight, horizontalSpacing, topVerticalSpacing, bottomVerticalSpacing, palCenterGap } = this.opts;
-    const totalVerticalSpacing = topVerticalSpacing + bottomVerticalSpacing;
-
-    const hierarchy = d3.hierarchy(layoutTree, (d) => d.children);
-    const palTotalWidth = nodeWidth * 2 + palCenterGap;
-
-    const treeLayout = d3
-      .tree<OrgNode>()
-      .nodeSize([
-        nodeWidth + horizontalSpacing,
-        nodeHeight + totalVerticalSpacing,
-      ])
-      .separation((a, b) => {
-        const aHasPals = palMap.has(a.data.id);
-        const bHasPals = palMap.has(b.data.id);
-        const base = a.parent === b.parent ? 1 : 2;
-        if (aHasPals || bHasPals) {
-          return Math.max(base, palTotalWidth / (nodeWidth + horizontalSpacing) + 0.3);
-        }
-        return base;
-      });
-
-    const treeData = treeLayout(hierarchy);
-
-    // Shift subtrees down to make room for PAL stacks
-    const getPalStackHeight = (nodeId: string): number => {
-      const pals = palMap.get(nodeId);
-      if (!pals || pals.length === 0) return 0;
-      const { palTopGap, palBottomGap, palRowGap } = this.opts;
-      const rows = Math.ceil(pals.length / 2);
-      return palTopGap + palRowGap + rows * nodeHeight + (rows - 1) * palRowGap + palBottomGap;
-    };
-
-    const shiftSubtree = (node: d3.HierarchyPointNode<OrgNode>, extraY: number): void => {
-      node.y += extraY;
-      for (const child of node.children ?? []) {
-        shiftSubtree(child, extraY);
-      }
-    };
-
-    // Shift children down to make room for PAL stacks or to balance spacing
-    const extraNonPalShift = bottomVerticalSpacing - topVerticalSpacing;
-    for (const node of treeData.descendants()) {
-      const palHeight = getPalStackHeight(node.data.id);
-      if (palHeight > 0 && node.children) {
-        for (const child of node.children) {
-          shiftSubtree(child, palHeight);
-        }
-      } else if (node.children && node.children.length === 1) {
-        // Single child: shift up to make gap equal to bottomVerticalSpacing
-        for (const child of node.children) {
-          shiftSubtree(child, -topVerticalSpacing);
-        }
-      } else if (extraNonPalShift > 0 && node.children && node.children.length > 1) {
-        for (const child of node.children) {
-          shiftSubtree(child, extraNonPalShift);
-        }
-      }
-    }
-
-    // Enforce branchSpacing: ensure subtree bounding boxes don't overlap
-    const { branchSpacing, icNodeWidth, icContainerPadding } = this.opts;
-
-    const getSubtreeXBounds = (node: d3.HierarchyPointNode<OrgNode>): [number, number] => {
-      let minX = node.x - nodeWidth / 2;
-      let maxX = node.x + nodeWidth / 2;
-
-      // Account for PAL stacks
-      if (palMap.has(node.data.id)) {
-        const pals = palMap.get(node.data.id)!;
-        const palLeft = node.x - palCenterGap / 2 - nodeWidth;
-        const palRight = node.x + palCenterGap / 2 + nodeWidth;
-        // Left PAL always exists (first PAL goes left)
-        minX = Math.min(minX, palLeft);
-        // Right PAL only exists if there are 2+ PALs
-        if (pals.length > 1) {
-          maxX = Math.max(maxX, palRight);
-        }
-      }
-
-      // Account for IC stacks
-      if (icMap.has(node.data.id)) {
-        const icTotalWidth = icNodeWidth + icContainerPadding * 2;
-        minX = Math.min(minX, node.x - icTotalWidth / 2);
-        maxX = Math.max(maxX, node.x + icTotalWidth / 2);
-      }
-
-      for (const child of node.children ?? []) {
-        const [childMin, childMax] = getSubtreeXBounds(child);
-        minX = Math.min(minX, childMin);
-        maxX = Math.max(maxX, childMax);
-      }
-      return [minX, maxX];
-    };
-
-    const shiftSubtreeX = (node: d3.HierarchyPointNode<OrgNode>, dx: number): void => {
-      node.x += dx;
-      for (const child of node.children ?? []) {
-        shiftSubtreeX(child, dx);
-      }
-    };
-
-    const enforceSpacing = (node: d3.HierarchyPointNode<OrgNode>): void => {
-      if (!node.children || node.children.length < 2) {
-        for (const child of node.children ?? []) {
-          enforceSpacing(child);
-        }
-        return;
-      }
-
-      // First enforce spacing on children's subtrees
-      for (const child of node.children) {
-        enforceSpacing(child);
-      }
-
-      // Then enforce exact spacing between adjacent siblings
-      for (let i = 1; i < node.children.length; i++) {
-        const left = node.children[i - 1];
-        const right = node.children[i];
-        const [, leftMax] = getSubtreeXBounds(left);
-        const [rightMin] = getSubtreeXBounds(right);
-        const gap = rightMin - leftMax;
-        const shift = branchSpacing - gap;
-        if (shift !== 0) {
-          shiftSubtreeX(right, shift);
-        }
-      }
-
-      // Re-center parent over its children
-      const firstChild = node.children[0];
-      const lastChild = node.children[node.children.length - 1];
-      const childrenCenter = (firstChild.x + lastChild.x) / 2;
-      const parentShift = childrenCenter - node.x;
-      node.x = childrenCenter;
-
-      // Propagate parent shift upward would be complex;
-      // instead we only center at each level during this pass
-    };
-
-    enforceSpacing(treeData);
+    const layout = computeLayout(root, this.opts, this.collapsed);
+    this.lastLayout = layout;
 
     this.g.selectAll('*').remove();
 
-    // Layer 1: Tree links
+    const { nodeHeight, linkColor, linkWidth, icContainerFill } = this.opts;
+
+    // Layer 1: Tree links (elbow paths + vertical connectors through PAL area)
     const linksGroup = this.g.append('g').attr('class', 'links');
-    this.renderTreeLinks(linksGroup, treeData, getPalStackHeight);
+    for (const link of layout.links.filter((l) => l.layer === 'tree')) {
+      linksGroup.append('path')
+        .attr('class', 'link')
+        .attr('d', link.path)
+        .attr('fill', 'none')
+        .attr('stroke', linkColor)
+        .attr('stroke-width', linkWidth);
+    }
 
     // Layer 2: IC stacks (behind manager nodes)
     const icGroup = this.g.append('g').attr('class', 'ic-stacks');
-    for (const treeNode of treeData.descendants()) {
-      const ics = icMap.get(treeNode.data.id);
-      if (ics && ics.length > 0) {
-        this.renderICStack(icGroup, treeNode.x, treeNode.y, ics);
-      }
+    for (const container of layout.icContainers) {
+      icGroup.append('rect')
+        .attr('class', 'ic-container')
+        .attr('x', container.x)
+        .attr('y', container.y)
+        .attr('width', container.width)
+        .attr('height', container.height)
+        .attr('fill', icContainerFill);
+    }
+
+    for (const node of layout.nodes.filter((n) => n.type === 'ic')) {
+      const g = icGroup.append('g')
+        .attr('class', 'node ic-node')
+        .attr('data-id', node.id)
+        .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
+
+      const datum = { data: { id: node.id, name: node.name, title: node.title } };
+      const sel = d3.select(g.node()!).datum(datum);
+      this.renderCardContent(sel as any, node.width, nodeHeight, () => node.id);
     }
 
     // Layer 3: PAL stacks (on top of tree links)
     const palGroup = this.g.append('g').attr('class', 'pal-stacks');
-    for (const treeNode of treeData.descendants()) {
-      const pals = palMap.get(treeNode.data.id);
-      if (pals && pals.length > 0) {
-        this.renderPALStack(palGroup, treeNode.x, treeNode.y, pals);
-      }
+    for (const link of layout.links.filter((l) => l.layer === 'pal')) {
+      palGroup.append('path')
+        .attr('class', 'link')
+        .attr('d', link.path)
+        .attr('fill', 'none')
+        .attr('stroke', linkColor)
+        .attr('stroke-width', linkWidth);
+    }
+
+    for (const node of layout.nodes.filter((n) => n.type === 'pal')) {
+      const g = palGroup.append('g')
+        .attr('class', 'node pal-node')
+        .attr('data-id', node.id)
+        .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
+
+      const datum = { data: { id: node.id, name: node.name, title: node.title } };
+      const sel = d3.select(g.node()!).datum(datum);
+      this.renderCardContent(sel as any, node.width, nodeHeight, () => node.id);
     }
 
     // Layer 4: Manager nodes (topmost)
     const nodesGroup = this.g.append('g').attr('class', 'nodes');
-    const nodes = nodesGroup
-      .selectAll('g')
-      .data(treeData.descendants())
-      .enter()
-      .append('g')
-      .attr('class', 'node')
-      .attr('data-id', (d) => d.data.id)
-      .attr('transform', (d) => `translate(${d.x - nodeWidth / 2},${d.y})`);
+    const managerNodes = layout.nodes.filter((n) => n.type === 'manager');
 
-    this.renderCardContent(nodes, nodeWidth, nodeHeight, (d) => d.data.id);
+    for (const node of managerNodes) {
+      const g = nodesGroup.append('g')
+        .attr('class', 'node')
+        .attr('data-id', node.id)
+        .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
 
-    // Collapse/expand indicators
-    nodes
-      .filter((d) =>
-        (d.data.children && d.data.children.length > 0) ||
-        icMap.has(d.data.id) ||
-        this.collapsed.has(d.data.id)
-      )
-      .append('text')
-      .attr('class', 'collapse-indicator')
-      .attr('x', nodeWidth / 2)
-      .attr('y', nodeHeight + 14)
-      .attr('text-anchor', 'middle')
-      .attr('cursor', 'pointer')
-      .text((d) => (this.collapsed.has(d.data.id) ? '▸' : '▾'))
-      .on('click', (_event, d) => {
-        this.toggleCollapse(d.data.id);
-        if (this.onCollapseToggle) {
-          this.onCollapseToggle(d.data.id);
-        }
-      });
+      const datum = { data: { id: node.id, name: node.name, title: node.title } };
+      const sel = d3.select(g.node()!).datum(datum);
+      this.renderCardContent(sel as any, node.width, nodeHeight, (d: any) => d.data.id);
+
+      if (node.collapsible) {
+        d3.select(g.node()!).append('text')
+          .attr('class', 'collapse-indicator')
+          .attr('x', node.width / 2)
+          .attr('y', nodeHeight + 14)
+          .attr('text-anchor', 'middle')
+          .attr('cursor', 'pointer')
+          .text(this.collapsed.has(node.id) ? '▸' : '▾')
+          .on('click', () => {
+            this.toggleCollapse(node.id);
+            if (this.onCollapseToggle) {
+              this.onCollapseToggle(node.id);
+            }
+          });
+      }
+    }
 
     this.centerContent();
+  }
+
+  getLastLayout(): LayoutResult | null {
+    return this.lastLayout;
   }
 
   // --- Rendering helpers ---
@@ -337,130 +235,6 @@ export class ChartRenderer {
       .attr('font-size', `${titleFontSize}px`)
       .attr('fill', '#64748b')
       .text((d: any) => d.data?.title ?? d.title);
-  }
-
-  private renderLink(
-    parent: d3.Selection<SVGGElement, unknown, null | SVGGElement, unknown>,
-    d: string,
-  ): void {
-    parent.append('path')
-      .attr('class', 'link')
-      .attr('d', d)
-      .attr('fill', 'none')
-      .attr('stroke', this.opts.linkColor)
-      .attr('stroke-width', this.opts.linkWidth);
-  }
-
-  private renderTreeLinks(
-    linksGroup: d3.Selection<SVGGElement, unknown, null, undefined>,
-    treeData: d3.HierarchyPointNode<OrgNode>,
-    getPalStackHeight: (id: string) => number,
-  ): void {
-    const { nodeHeight, topVerticalSpacing, bottomVerticalSpacing } = this.opts;
-
-    // Elbow links from below PAL area to children
-    linksGroup
-      .selectAll('path.tree-link')
-      .data(treeData.links())
-      .enter()
-      .append('path')
-      .attr('class', 'link')
-      .attr('d', (d) => {
-        const sx = d.source.x;
-        const palOffset = getPalStackHeight(d.source.data.id);
-        const sy = d.source.y + nodeHeight + palOffset;
-        const tx = d.target.x;
-        const ty = d.target.y;
-        const isSingleChild = (d.source.children?.length ?? 0) === 1;
-        if (isSingleChild) {
-          return `M${sx},${sy} L${tx},${ty}`;
-        }
-        const stubHeight = palOffset > 0 ? topVerticalSpacing : bottomVerticalSpacing;
-        const horizontalY = sy + stubHeight;
-        return `M${sx},${sy} L${sx},${horizontalY} L${tx},${horizontalY} L${tx},${ty}`;
-      })
-      .attr('fill', 'none')
-      .attr('stroke', this.opts.linkColor)
-      .attr('stroke-width', this.opts.linkWidth);
-
-    // Vertical connector through PAL area
-    for (const node of treeData.descendants()) {
-      const palOffset = getPalStackHeight(node.data.id);
-      if (palOffset > 0 && node.children && node.children.length > 0) {
-        this.renderLink(
-          linksGroup,
-          `M${node.x},${node.y + nodeHeight} L${node.x},${node.y + nodeHeight + palOffset}`,
-        );
-      }
-    }
-  }
-
-  private renderICStack(
-    parent: d3.Selection<SVGGElement, unknown, null, undefined>,
-    m1X: number,
-    m1Y: number,
-    ics: OrgNode[],
-  ): void {
-    const { nodeHeight, icNodeWidth, icGap, icContainerPadding, icContainerFill } = this.opts;
-    const startY = m1Y + nodeHeight;
-    const totalHeight = ics.length * nodeHeight + (ics.length - 1) * icGap + icContainerPadding * 2;
-    const totalWidth = icNodeWidth + icContainerPadding * 2;
-
-    parent.append('rect')
-      .attr('class', 'ic-container')
-      .attr('x', m1X - totalWidth / 2)
-      .attr('y', startY)
-      .attr('width', totalWidth)
-      .attr('height', totalHeight)
-      .attr('fill', icContainerFill);
-
-    ics.forEach((ic, i) => {
-      const x = m1X - icNodeWidth / 2;
-      const y = startY + icContainerPadding + i * (nodeHeight + icGap);
-
-      const g = parent.append('g')
-        .attr('class', 'node ic-node')
-        .attr('data-id', ic.id)
-        .attr('transform', `translate(${x},${y})`);
-
-      const icData = { data: ic };
-      const sel = d3.select(g.node()!).datum(icData);
-      this.renderCardContent(sel as any, icNodeWidth, nodeHeight, () => ic.id);
-    });
-  }
-
-  private renderPALStack(
-    parent: d3.Selection<SVGGElement, unknown, null, undefined>,
-    mgrX: number,
-    mgrY: number,
-    pals: OrgNode[],
-  ): void {
-    const { nodeWidth, nodeHeight, palTopGap, palRowGap, palCenterGap } = this.opts;
-    const startY = mgrY + nodeHeight + palTopGap;
-    const hasTwoCols = pals.length > 1;
-
-    pals.forEach((pal, i) => {
-      const row = Math.floor(i / 2);
-      const isLeft = i % 2 === 0;
-      const x = isLeft
-        ? mgrX - palCenterGap / 2 - nodeWidth
-        : mgrX + palCenterGap / 2;
-      const y = startY + palRowGap + row * (nodeHeight + palRowGap);
-
-      // Elbow link: down from manager, then horizontal to PAL side-center
-      const palConnectX = isLeft ? x + nodeWidth : x;
-      const palConnectY = y + nodeHeight / 2;
-      this.renderLink(parent, `M${mgrX},${mgrY + nodeHeight} L${mgrX},${palConnectY} L${palConnectX},${palConnectY}`);
-
-      const g = parent.append('g')
-        .attr('class', 'node pal-node')
-        .attr('data-id', pal.id)
-        .attr('transform', `translate(${x},${y})`);
-
-      const palData = { data: pal };
-      const sel = d3.select(g.node()!).datum(palData);
-      this.renderCardContent(sel as any, nodeWidth, nodeHeight, () => pal.id);
-    });
   }
 
   private centerContent(): void {
