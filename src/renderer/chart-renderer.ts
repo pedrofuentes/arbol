@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import { OrgNode } from '../types';
-import { filterVisibleTree } from '../utils/tree';
+import { filterVisibleTree, stripM1Children } from '../utils/tree';
 
 export interface RendererOptions {
   container: HTMLElement;
@@ -8,6 +8,9 @@ export interface RendererOptions {
   nodeHeight: number;
   horizontalSpacing: number;
   verticalSpacing: number;
+  icNodeWidth?: number;
+  icGap?: number;
+  icTopGap?: number;
 }
 
 export type NodeClickHandler = (nodeId: string) => void;
@@ -15,13 +18,18 @@ export type NodeClickHandler = (nodeId: string) => void;
 export class ChartRenderer {
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private g: d3.Selection<SVGGElement, unknown, null, undefined>;
-  private options: RendererOptions;
+  private options: Required<RendererOptions>;
   private collapsed: Set<string> = new Set();
   private onNodeClick: NodeClickHandler | null = null;
   private onCollapseToggle: ((nodeId: string) => void) | null = null;
 
   constructor(options: RendererOptions) {
-    this.options = options;
+    this.options = {
+      icNodeWidth: Math.round(options.nodeWidth * 0.77),
+      icGap: 2,
+      icTopGap: 4,
+      ...options,
+    };
     this.svg = d3
       .select(options.container)
       .append('svg')
@@ -40,10 +48,11 @@ export class ChartRenderer {
 
   render(root: OrgNode): void {
     const visibleTree = filterVisibleTree(root, this.collapsed);
+    const { layoutTree, icMap } = stripM1Children(visibleTree, this.collapsed);
     const { nodeWidth, nodeHeight, horizontalSpacing, verticalSpacing } =
       this.options;
 
-    const hierarchy = d3.hierarchy(visibleTree, (d) => d.children);
+    const hierarchy = d3.hierarchy(layoutTree, (d) => d.children);
     const treeLayout = d3
       .tree<OrgNode>()
       .nodeSize([
@@ -55,7 +64,7 @@ export class ChartRenderer {
 
     this.g.selectAll('*').remove();
 
-    // Render links
+    // Render links (only for manager nodes, not ICs)
     const linksGroup = this.g.append('g').attr('class', 'links');
     linksGroup
       .selectAll('path')
@@ -75,7 +84,15 @@ export class ChartRenderer {
       .attr('stroke', '#94a3b8')
       .attr('stroke-width', 1.5);
 
-    // Render nodes
+    // Render IC stacks below M1 nodes (rendered first so they're behind)
+    const icGroup = this.g.append('g').attr('class', 'ic-stacks');
+    for (const treeNode of treeData.descendants()) {
+      const ics = icMap.get(treeNode.data.id);
+      if (!ics || ics.length === 0) continue;
+      this.renderICStack(icGroup, treeNode.x, treeNode.y, ics);
+    }
+
+    // Render manager nodes (on top of IC containers)
     const nodesGroup = this.g.append('g').attr('class', 'nodes');
     const self = this;
     const nodes = nodesGroup
@@ -90,50 +107,15 @@ export class ChartRenderer {
         (d) => `translate(${d.x - nodeWidth / 2},${d.y})`,
       );
 
-    nodes
-      .append('rect')
-      .attr('width', nodeWidth)
-      .attr('height', nodeHeight)
-      .attr('rx', 0)
-      .attr('ry', 0)
-      .attr('fill', '#ffffff')
-      .attr('stroke', '#22c55e')
-      .attr('stroke-width', 1)
-      .on('click', function (_event, d) {
-        if (self.onNodeClick) {
-          self.onNodeClick(d.data.id);
-        }
-      });
+    this.renderNodeCards(nodes, nodeWidth, nodeHeight);
 
-    nodes
-      .append('text')
-      .attr('class', 'node-name')
-      .attr('x', nodeWidth / 2)
-      .attr('y', 12)
-      .attr('text-anchor', 'middle')
-      .attr('font-weight', 'bold')
-      .attr('font-family', 'Calibri, sans-serif')
-      .attr('font-size', '8px')
-      .text((d) => d.data.name);
-
-    nodes
-      .append('text')
-      .attr('class', 'node-title')
-      .attr('x', nodeWidth / 2)
-      .attr('y', 21)
-      .attr('text-anchor', 'middle')
-      .attr('font-family', 'Calibri, sans-serif')
-      .attr('font-size', '7px')
-      .attr('fill', '#64748b')
-      .text((d) => d.data.title);
-
-    // Collapse/expand indicator for nodes with children
+    // Collapse/expand indicator for nodes with children or ICs
     nodes
       .filter((d) => {
-        const original = d.data;
         return (
-          (original.children && original.children.length > 0) ||
-          this.collapsed.has(original.id)
+          (d.data.children && d.data.children.length > 0) ||
+          icMap.has(d.data.id) ||
+          this.collapsed.has(d.data.id)
         );
       })
       .append('text')
@@ -151,6 +133,122 @@ export class ChartRenderer {
       });
 
     this.centerContent();
+  }
+
+  private renderNodeCards(
+    nodes: d3.Selection<SVGGElement, d3.HierarchyPointNode<OrgNode>, SVGGElement, unknown>,
+    width: number,
+    height: number,
+  ): void {
+    const self = this;
+
+    nodes
+      .append('rect')
+      .attr('width', width)
+      .attr('height', height)
+      .attr('rx', 0)
+      .attr('ry', 0)
+      .attr('fill', '#ffffff')
+      .attr('stroke', '#22c55e')
+      .attr('stroke-width', 1)
+      .on('click', function (_event, d) {
+        if (self.onNodeClick) {
+          self.onNodeClick(d.data.id);
+        }
+      });
+
+    nodes
+      .append('text')
+      .attr('class', 'node-name')
+      .attr('x', width / 2)
+      .attr('y', 4)
+      .attr('dominant-baseline', 'hanging')
+      .attr('text-anchor', 'middle')
+      .attr('font-weight', 'bold')
+      .attr('font-family', 'Calibri, sans-serif')
+      .attr('font-size', '8px')
+      .text((d) => d.data.name);
+
+    nodes
+      .append('text')
+      .attr('class', 'node-title')
+      .attr('x', width / 2)
+      .attr('y', 13)
+      .attr('dominant-baseline', 'hanging')
+      .attr('text-anchor', 'middle')
+      .attr('font-family', 'Calibri, sans-serif')
+      .attr('font-size', '7px')
+      .attr('fill', '#64748b')
+      .text((d) => d.data.title);
+  }
+
+  private renderICStack(
+    parent: d3.Selection<SVGGElement, unknown, null, undefined>,
+    m1X: number,
+    m1Y: number,
+    ics: OrgNode[],
+  ): void {
+    const { nodeHeight, icNodeWidth, icGap, icTopGap } = this.options;
+    const self = this;
+    const startY = m1Y + nodeHeight;
+    const padding = 6;
+    const totalHeight = ics.length * nodeHeight + (ics.length - 1) * icGap + padding * 2;
+    const totalWidth = icNodeWidth + padding * 2;
+
+    // Grey background container
+    parent.append('rect')
+      .attr('class', 'ic-container')
+      .attr('x', m1X - totalWidth / 2)
+      .attr('y', startY)
+      .attr('width', totalWidth)
+      .attr('height', totalHeight)
+      .attr('fill', '#e5e7eb')
+      .attr('rx', 0)
+      .attr('ry', 0);
+
+    ics.forEach((ic, i) => {
+      const x = m1X - icNodeWidth / 2;
+      const y = startY + padding + i * (nodeHeight + icGap);
+
+      const g = parent.append('g')
+        .attr('class', 'node ic-node')
+        .attr('data-id', ic.id)
+        .attr('transform', `translate(${x},${y})`);
+
+      g.append('rect')
+        .attr('width', icNodeWidth)
+        .attr('height', nodeHeight)
+        .attr('fill', '#ffffff')
+        .attr('stroke', '#22c55e')
+        .attr('stroke-width', 1)
+        .on('click', function () {
+          if (self.onNodeClick) {
+            self.onNodeClick(ic.id);
+          }
+        });
+
+      g.append('text')
+        .attr('class', 'node-name')
+        .attr('x', icNodeWidth / 2)
+        .attr('y', 4)
+        .attr('dominant-baseline', 'hanging')
+        .attr('text-anchor', 'middle')
+        .attr('font-weight', 'bold')
+        .attr('font-family', 'Calibri, sans-serif')
+        .attr('font-size', '8px')
+        .text(ic.name);
+
+      g.append('text')
+        .attr('class', 'node-title')
+        .attr('x', icNodeWidth / 2)
+        .attr('y', 13)
+        .attr('dominant-baseline', 'hanging')
+        .attr('text-anchor', 'middle')
+        .attr('font-family', 'Calibri, sans-serif')
+        .attr('font-size', '7px')
+        .attr('fill', '#64748b')
+        .text(ic.title);
+    });
   }
 
   private centerContent(): void {

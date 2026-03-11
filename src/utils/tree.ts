@@ -42,3 +42,34 @@ export function flattenTree(node: OrgNode): OrgNode[] {
   }
   return result;
 }
+
+export function isLeaf(node: OrgNode): boolean {
+  return !node.children || node.children.length === 0;
+}
+
+export function isM1(node: OrgNode): boolean {
+  if (!node.children || node.children.length === 0) return false;
+  return node.children.every(isLeaf);
+}
+
+export function stripM1Children(
+  node: OrgNode,
+  collapsed: Set<string>,
+): { layoutTree: OrgNode; icMap: Map<string, OrgNode[]> } {
+  const icMap = new Map<string, OrgNode[]>();
+
+  function walk(n: OrgNode): OrgNode {
+    const clone: OrgNode = { id: n.id, name: n.name, title: n.title };
+    if (collapsed.has(n.id) || !n.children || n.children.length === 0) {
+      return clone;
+    }
+    if (isM1(n)) {
+      icMap.set(n.id, n.children.map((c) => ({ id: c.id, name: c.name, title: c.title })));
+      return clone;
+    }
+    clone.children = n.children.map(walk);
+    return clone;
+  }
+
+  return { layoutTree: walk(node), icMap };
+}

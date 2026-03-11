@@ -77,10 +77,11 @@ describe('ChartRenderer', () => {
     expect(titleTexts).toContain('CTO');
   });
 
-  it('renders the correct number of links', () => {
+  it('renders links only for manager nodes (not ICs)', () => {
     renderer.render(makeTree());
     const links = container.querySelectorAll('.link');
-    expect(links.length).toBe(3);
+    // root→Bob and root→Carol = 2 links. Bob→Diana is IC (no link).
+    expect(links.length).toBe(2);
   });
 
   it('renders no links for a single node', () => {
