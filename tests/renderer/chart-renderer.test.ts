@@ -77,11 +77,11 @@ describe('ChartRenderer', () => {
     expect(titleTexts).toContain('CTO');
   });
 
-  it('renders links only for manager nodes (not ICs)', () => {
+  it('renders links only for manager nodes (not ICs or PALs)', () => {
     renderer.render(makeTree());
     const links = container.querySelectorAll('.link');
-    // root→Bob and root→Carol = 2 links. Bob→Diana is IC (no link).
-    expect(links.length).toBe(2);
+    // root→Bob = 1 tree link, Carol PAL = 1 PAL link, vertical connector through PAL area = 1
+    expect(links.length).toBe(3);
   });
 
   it('renders no links for a single node', () => {

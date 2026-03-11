@@ -177,10 +177,13 @@ describe('stripM1Children', () => {
         { id: 'dir', name: 'Dir', title: 'Director' },
       ],
     };
-    const { layoutTree, icMap } = stripM1Children(tree, new Set());
-    expect(flattenTree(layoutTree).map(n => n.id)).toEqual(['root', 'm1', 'dir']);
+    const { layoutTree, icMap, palMap } = stripM1Children(tree, new Set());
+    expect(flattenTree(layoutTree).map(n => n.id)).toEqual(['root', 'm1']);
     expect(icMap.has('m1')).toBe(true);
     expect(icMap.get('m1')!.map(n => n.id)).toEqual(['ic1', 'ic2']);
+    // dir is a PAL (leaf under non-M1 root)
+    expect(palMap.has('root')).toBe(true);
+    expect(palMap.get('root')!.map(n => n.id)).toEqual(['dir']);
   });
 
   it('strips children from M1 nodes in complex tree', () => {
@@ -190,6 +193,22 @@ describe('stripM1Children', () => {
     expect(bob.children).toBeUndefined();
     expect(icMap.has('b')).toBe(true);
     expect(icMap.get('b')!.map(n => n.id)).toEqual(['d', 'e']);
+  });
+
+  it('separates PALs from manager children', () => {
+    const tree: OrgNode = {
+      id: 'root', name: 'CEO', title: 'CEO', children: [
+        { id: 'pal1', name: 'PAL1', title: 'PAL' },
+        { id: 'pal2', name: 'PAL2', title: 'PAL' },
+        { id: 'm1', name: 'Mgr', title: 'M1', children: [
+          { id: 'ic1', name: 'IC1', title: 'Eng' },
+        ]},
+      ],
+    };
+    const { layoutTree, icMap, palMap } = stripM1Children(tree, new Set());
+    expect(flattenTree(layoutTree).map(n => n.id)).toEqual(['root', 'm1']);
+    expect(palMap.get('root')!.map(n => n.id)).toEqual(['pal1', 'pal2']);
+    expect(icMap.get('m1')!.map(n => n.id)).toEqual(['ic1']);
   });
 
   it('respects collapsed nodes', () => {

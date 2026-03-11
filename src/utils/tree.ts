@@ -55,8 +55,9 @@ export function isM1(node: OrgNode): boolean {
 export function stripM1Children(
   node: OrgNode,
   collapsed: Set<string>,
-): { layoutTree: OrgNode; icMap: Map<string, OrgNode[]> } {
+): { layoutTree: OrgNode; icMap: Map<string, OrgNode[]>; palMap: Map<string, OrgNode[]> } {
   const icMap = new Map<string, OrgNode[]>();
+  const palMap = new Map<string, OrgNode[]>();
 
   function walk(n: OrgNode): OrgNode {
     const clone: OrgNode = { id: n.id, name: n.name, title: n.title };
@@ -67,9 +68,17 @@ export function stripM1Children(
       icMap.set(n.id, n.children.map((c) => ({ id: c.id, name: c.name, title: c.title })));
       return clone;
     }
-    clone.children = n.children.map(walk);
+    // Non-M1 manager: separate PALs (leaf children) from manager children
+    const pals = n.children.filter(isLeaf);
+    const managers = n.children.filter((c) => !isLeaf(c));
+    if (pals.length > 0) {
+      palMap.set(n.id, pals.map((c) => ({ id: c.id, name: c.name, title: c.title })));
+    }
+    if (managers.length > 0) {
+      clone.children = managers.map(walk);
+    }
     return clone;
   }
 
-  return { layoutTree: walk(node), icMap };
+  return { layoutTree: walk(node), icMap, palMap };
 }
