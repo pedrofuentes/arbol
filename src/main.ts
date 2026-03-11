@@ -303,10 +303,10 @@ function main(): void {
     searchTimeout = setTimeout(() => {
       const query = searchInput.value.trim();
       if (query.length === 0) {
-        (renderer as any).setHighlightedNodes(null);
+        renderer.setHighlightedNodes(null);
       } else {
         const matchIds = getMatchingNodeIds(store.getTree(), query);
-        (renderer as any).setHighlightedNodes(matchIds.size > 0 ? matchIds : null);
+        renderer.setHighlightedNodes(matchIds.size > 0 ? matchIds : null);
       }
     }, 200);
   });
@@ -505,7 +505,7 @@ function main(): void {
       if (document.activeElement === searchInput) {
         searchInput.value = '';
         searchInput.blur();
-        (renderer as any).setHighlightedNodes(null);
+        renderer.setHighlightedNodes(null);
         return;
       }
       // Deselect node

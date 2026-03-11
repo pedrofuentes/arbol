@@ -1,6 +1,6 @@
 import { ChartRenderer, RendererOptions } from '../renderer/chart-renderer';
 import { CHART_THEME_PRESETS, addCustomPreset } from '../store/theme-presets';
-import { SettingsStore } from '../store/settings-store';
+import { SettingsStore, type PersistableSettings } from '../store/settings-store';
 
 interface SettingDef {
   key: keyof RendererOptions;
@@ -186,7 +186,7 @@ export class SettingsEditor {
     exportSettingsBtn.addEventListener('click', () => {
       if (this.settingsStore) {
         const opts = this.renderer.getOptions();
-        this.settingsStore.saveImmediate(opts as any);
+        this.settingsStore.saveImmediate(opts as Partial<PersistableSettings>);
         this.settingsStore.exportToFile('my-chart-theme');
       }
     });

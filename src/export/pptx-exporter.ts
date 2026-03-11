@@ -1,4 +1,4 @@
-import pptxgen from 'pptxgenjs';
+import type pptxgen from 'pptxgenjs';
 import type {
   LayoutResult,
   LayoutNode,
@@ -109,7 +109,7 @@ function addNodeShape(
   const titleFontSize = Math.max(3, nameFontSize - 1);
 
   // Card rectangle with border
-  slide.addShape('rect' as any, {
+  slide.addShape('rect', {
     x: topLeft.x,
     y: topLeft.y,
     w,
@@ -150,7 +150,7 @@ function addICContainer(
   const w = container.width * scale * PX_TO_INCHES;
   const h = container.height * scale * PX_TO_INCHES;
 
-  slide.addShape('rect' as any, {
+  slide.addShape('rect', {
     x: topLeft.x,
     y: topLeft.y,
     w,
@@ -183,7 +183,7 @@ function addLinkLines(
     const flipH = end.x < start.x;
     const flipV = end.y < start.y;
 
-    slide.addShape('line' as any, {
+    slide.addShape('line', {
       x,
       y,
       w,
@@ -204,7 +204,8 @@ export async function exportToPptx(
   const padding = options?.padding ?? DEFAULT_PADDING;
   const fileName = options?.fileName ?? generateFileName();
 
-  const pres = new pptxgen();
+  const { default: PptxGenJS } = await import('pptxgenjs');
+  const pres = new PptxGenJS();
 
   pres.defineLayout({ name: 'CUSTOM', width: slideWidth, height: slideHeight });
   pres.layout = 'CUSTOM';
