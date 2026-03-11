@@ -11,7 +11,6 @@ import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { getMatchingNodeIds } from './utils/search';
 import { OrgNode } from './types';
 import { flattenTree } from './utils/tree';
-import { showConfirmDialog } from './ui/confirm-dialog';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
 
@@ -344,34 +343,6 @@ function main(): void {
 
   formEditor.setSelectionChangeHandler((nodeId: string | null) => {
     renderer.setSelectedNode(nodeId);
-  });
-
-  renderer.setCollapseToggleHandler(rerender);
-
-  // Wire drag-and-drop with confirmation for large moves
-  renderer.setNodeMoveHandler(async (nodeId: string, newParentId: string) => {
-    const descendantCount = store.getDescendantCount(nodeId);
-
-    if (descendantCount > 5) {
-      const allNodes = flattenTree(store.getTree());
-      const draggedNode = allNodes.find(n => n.id === nodeId);
-      const targetNode = allNodes.find(n => n.id === newParentId);
-
-      const confirmed = await showConfirmDialog({
-        title: 'Move Team',
-        message: `Move ${draggedNode?.name ?? 'this person'} and ${descendantCount} reports under ${targetNode?.name ?? 'target'}?`,
-        confirmLabel: 'Move',
-        danger: false,
-      });
-
-      if (!confirmed) return;
-    }
-
-    try {
-      store.moveNode(nodeId, newParentId);
-    } catch {
-      // Silently fail — re-render will snap back to original position
-    }
   });
 
   // Footer

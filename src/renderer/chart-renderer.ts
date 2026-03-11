@@ -45,15 +45,11 @@ export class ChartRenderer {
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private g: d3.Selection<SVGGElement, unknown, null, undefined>;
   private opts: ResolvedOptions;
-  private collapsed: Set<string> = new Set();
   private onNodeClick: NodeClickHandler | null = null;
-  private onCollapseToggle: ((nodeId: string) => void) | null = null;
   private lastLayout: LayoutResult | null = null;
   private zoomManager: ZoomManager;
   private hasRendered = false;
   private highlightedNodes: Set<string> | null = null;
-  private dragEnabled: boolean = true;
-  private onNodeMove: ((nodeId: string, newParentId: string) => void) | null = null;
 
   constructor(options: RendererOptions) {
     this.opts = {
@@ -92,25 +88,13 @@ export class ChartRenderer {
     this.onNodeClick = handler;
   }
 
-  setCollapseToggleHandler(handler: (nodeId: string) => void): void {
-    this.onCollapseToggle = handler;
-  }
-
   setHighlightedNodes(nodeIds: Set<string> | null): void {
     this.highlightedNodes = nodeIds;
     this.applyHighlighting();
   }
 
-  setNodeMoveHandler(handler: (nodeId: string, newParentId: string) => void): void {
-    this.onNodeMove = handler;
-  }
-
-  setDragEnabled(enabled: boolean): void {
-    this.dragEnabled = enabled;
-  }
-
   render(root: OrgNode): void {
-    const layout = computeLayout(root, this.opts, this.collapsed);
+    const layout = computeLayout(root, this.opts);
     this.lastLayout = layout;
 
     this.g.selectAll('*').remove();
@@ -186,86 +170,6 @@ export class ChartRenderer {
       const datum = { data: { id: node.id, name: node.name, title: node.title } };
       const sel = d3.select(g.node()!).datum(datum);
       this.renderCardContent(sel as any, node.width, nodeHeight, (d: any) => d.data.id);
-
-      if (node.collapsible) {
-        d3.select(g.node()!).append('text')
-          .attr('class', 'collapse-indicator')
-          .attr('x', node.width / 2)
-          .attr('y', nodeHeight + 14)
-          .attr('text-anchor', 'middle')
-          .attr('cursor', 'pointer')
-          .text(this.collapsed.has(node.id) ? '▸' : '▾')
-          .text(this.collapsed.has(node.id) ? '▸' : '▾')
-          .on('click', () => {
-            this.toggleCollapse(node.id);
-            if (this.onCollapseToggle) {
-              this.onCollapseToggle(node.id);
-            }
-          });
-      }
-
-      if (this.dragEnabled) {
-        const self = this;
-        const dragBehavior = d3.drag<SVGGElement, unknown>()
-          .on('start', function (event) {
-            event.sourceEvent.stopPropagation();
-            const parent = this.parentNode;
-            if (parent) parent.appendChild(this);
-            d3.select(this).raise().classed('dragging', true);
-            d3.select(this).style('cursor', 'grabbing');
-          })
-          .on('drag', function (event) {
-            const current = d3.select(this);
-            const transform = current.attr('transform');
-            const match = transform?.match(/translate\(([^,]+),([^)]+)\)/);
-            if (match) {
-              const x = parseFloat(match[1]) + event.dx;
-              const y = parseFloat(match[2]) + event.dy;
-              current.attr('transform', `translate(${x},${y})`);
-            }
-          })
-          .on('end', function (_event) {
-            d3.select(this).classed('dragging', false);
-            d3.select(this).style('cursor', null);
-
-            if (!self.onNodeMove || !self.lastLayout) return;
-
-            const draggedId = d3.select(this).attr('data-id');
-            if (!draggedId) return;
-
-            const transform = d3.select(this).attr('transform');
-            const match = transform?.match(/translate\(([^,]+),([^)]+)\)/);
-            if (!match) return;
-
-            const dropX = parseFloat(match[1]);
-            const dropY = parseFloat(match[2]);
-
-            let closestId: string | null = null;
-            let closestDist = Infinity;
-
-            for (const layoutNode of self.lastLayout.nodes) {
-              if (layoutNode.id === draggedId || layoutNode.type !== 'manager') continue;
-              const nx = layoutNode.x - layoutNode.width / 2;
-              const ny = layoutNode.y;
-              const dist = Math.sqrt(Math.pow(dropX - nx, 2) + Math.pow(dropY - ny, 2));
-              if (dist < closestDist) {
-                closestDist = dist;
-                closestId = layoutNode.id;
-              }
-            }
-
-            const threshold = self.opts.nodeWidth * 1.5;
-            if (closestId && closestDist < threshold) {
-              try {
-                self.onNodeMove(draggedId, closestId);
-              } catch (_e) {
-                // Move failed (e.g., circular reference) — re-render will snap back
-              }
-            }
-          });
-
-        d3.select(g.node()!).call(dragBehavior as any);
-      }
     }
 
     if (this.hasRendered) {
@@ -352,22 +256,6 @@ export class ChartRenderer {
       .attr('font-size', `${titleFontSize}px`)
       .attr('fill', '#64748b')
       .text((d: any) => d.data?.title ?? d.title);
-  }
-
-  toggleCollapse(id: string): void {
-    if (this.collapsed.has(id)) {
-      this.collapsed.delete(id);
-    } else {
-      this.collapsed.add(id);
-    }
-  }
-
-  isCollapsed(id: string): boolean {
-    return this.collapsed.has(id);
-  }
-
-  getCollapsed(): Set<string> {
-    return new Set(this.collapsed);
   }
 
   setSelectedNode(nodeId: string | null): void {

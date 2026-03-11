@@ -123,7 +123,7 @@ function nodesByType(result: LayoutResult, type: LayoutNode['type']): LayoutNode
 describe('computeLayout', () => {
   describe('single node', () => {
     it('returns 1 manager node, 0 links, 0 IC containers', () => {
-      const result = computeLayout(singleNode(), defaultOpts(), new Set());
+      const result = computeLayout(singleNode(), defaultOpts());
       const managers = nodesByType(result, 'manager');
       expect(managers.length).toBe(1);
       expect(managers[0].id).toBe('root');
@@ -135,7 +135,7 @@ describe('computeLayout', () => {
 
     it('node has correct dimensions from options', () => {
       const opts = defaultOpts();
-      const result = computeLayout(singleNode(), opts, new Set());
+      const result = computeLayout(singleNode(), opts);
       const node = nodesByType(result, 'manager')[0];
       expect(node.width).toBe(opts.nodeWidth);
       expect(node.height).toBe(opts.nodeHeight);
@@ -144,24 +144,24 @@ describe('computeLayout', () => {
 
   describe('M1 with 3 ICs', () => {
     it('returns 1 manager + 3 IC nodes', () => {
-      const result = computeLayout(m1WithICs(), defaultOpts(), new Set());
+      const result = computeLayout(m1WithICs(), defaultOpts());
       expect(nodesByType(result, 'manager').length).toBe(1);
       expect(nodesByType(result, 'ic').length).toBe(3);
     });
 
     it('returns 0 tree links (ICs are stacked, not linked)', () => {
-      const result = computeLayout(m1WithICs(), defaultOpts(), new Set());
+      const result = computeLayout(m1WithICs(), defaultOpts());
       expect(result.links.filter((l) => l.layer === 'tree').length).toBe(0);
     });
 
     it('returns 1 IC container', () => {
-      const result = computeLayout(m1WithICs(), defaultOpts(), new Set());
+      const result = computeLayout(m1WithICs(), defaultOpts());
       expect(result.icContainers.length).toBe(1);
     });
 
     it('IC nodes use icNodeWidth from options', () => {
       const opts = defaultOpts();
-      const result = computeLayout(m1WithICs(), opts, new Set());
+      const result = computeLayout(m1WithICs(), opts);
       for (const ic of nodesByType(result, 'ic')) {
         expect(ic.width).toBe(opts.icNodeWidth);
       }
@@ -169,7 +169,7 @@ describe('computeLayout', () => {
 
     it('IC nodes are positioned below the manager', () => {
       const opts = defaultOpts();
-      const result = computeLayout(m1WithICs(), opts, new Set());
+      const result = computeLayout(m1WithICs(), opts);
       const mgr = nodesByType(result, 'manager')[0];
       for (const ic of nodesByType(result, 'ic')) {
         expect(ic.y).toBeGreaterThan(mgr.y + mgr.height);
@@ -177,7 +177,7 @@ describe('computeLayout', () => {
     });
 
     it('manager node is marked collapsible', () => {
-      const result = computeLayout(m1WithICs(), defaultOpts(), new Set());
+      const result = computeLayout(m1WithICs(), defaultOpts());
       const mgr = nodesByType(result, 'manager')[0];
       expect(mgr.collapsible).toBe(true);
     });
@@ -185,14 +185,14 @@ describe('computeLayout', () => {
 
   describe('manager with 2 PALs + 1 M1', () => {
     it('returns manager + 2 PAL + M1 + 2 IC nodes', () => {
-      const result = computeLayout(managerWithPALsAndM1(), defaultOpts(), new Set());
+      const result = computeLayout(managerWithPALsAndM1(), defaultOpts());
       expect(nodesByType(result, 'manager').length).toBe(2); // root + mgr1
       expect(nodesByType(result, 'pal').length).toBe(2);
       expect(nodesByType(result, 'ic').length).toBe(2);
     });
 
     it('returns PAL links and tree links', () => {
-      const result = computeLayout(managerWithPALsAndM1(), defaultOpts(), new Set());
+      const result = computeLayout(managerWithPALsAndM1(), defaultOpts());
       const palLinks = result.links.filter((l) => l.layer === 'pal');
       const treeLinks = result.links.filter((l) => l.layer === 'tree');
       expect(palLinks.length).toBe(2); // one per PAL
@@ -200,13 +200,13 @@ describe('computeLayout', () => {
     });
 
     it('returns 1 IC container (for the M1 child)', () => {
-      const result = computeLayout(managerWithPALsAndM1(), defaultOpts(), new Set());
+      const result = computeLayout(managerWithPALsAndM1(), defaultOpts());
       expect(result.icContainers.length).toBe(1);
     });
 
     it('PAL nodes are positioned below the manager card', () => {
       const opts = defaultOpts();
-      const result = computeLayout(managerWithPALsAndM1(), opts, new Set());
+      const result = computeLayout(managerWithPALsAndM1(), opts);
       const root = nodesByType(result, 'manager').find((n) => n.id === 'root')!;
       for (const pal of nodesByType(result, 'pal')) {
         expect(pal.y).toBeGreaterThan(root.y + root.height);
@@ -214,7 +214,7 @@ describe('computeLayout', () => {
     });
 
     it('first PAL is to the left, second PAL is to the right', () => {
-      const result = computeLayout(managerWithPALsAndM1(), defaultOpts(), new Set());
+      const result = computeLayout(managerWithPALsAndM1(), defaultOpts());
       const pals = nodesByType(result, 'pal');
       expect(pals[0].x).toBeLessThan(pals[1].x);
     });
@@ -222,7 +222,7 @@ describe('computeLayout', () => {
 
   describe('mixed tree', () => {
     it('returns correct node types', () => {
-      const result = computeLayout(mixedTree(), defaultOpts(), new Set());
+      const result = computeLayout(mixedTree(), defaultOpts());
       const managers = nodesByType(result, 'manager');
       const pals = nodesByType(result, 'pal');
       const ics = nodesByType(result, 'ic');
@@ -235,7 +235,7 @@ describe('computeLayout', () => {
     });
 
     it('returns correct link count', () => {
-      const result = computeLayout(mixedTree(), defaultOpts(), new Set());
+      const result = computeLayout(mixedTree(), defaultOpts());
       // PAL links: 1 (pal1 under root) + 1 (pal-cto under cto) = 2
       const palLinks = result.links.filter((l) => l.layer === 'pal');
       expect(palLinks.length).toBe(2);
@@ -245,7 +245,7 @@ describe('computeLayout', () => {
     });
 
     it('all link paths are valid SVG path strings', () => {
-      const result = computeLayout(mixedTree(), defaultOpts(), new Set());
+      const result = computeLayout(mixedTree(), defaultOpts());
       for (const link of result.links) {
         expect(link.path).toMatch(/^M[\d.\-e]+,[\d.\-e]+ L/);
       }
@@ -254,23 +254,23 @@ describe('computeLayout', () => {
 
   describe('bounding box', () => {
     it('minX < 0 for a centered tree (root centered at x=0)', () => {
-      const result = computeLayout(managerWithPALsAndM1(), defaultOpts(), new Set());
+      const result = computeLayout(managerWithPALsAndM1(), defaultOpts());
       expect(result.boundingBox.minX).toBeLessThan(0);
     });
 
     it('minY = 0 for root at top', () => {
-      const result = computeLayout(singleNode(), defaultOpts(), new Set());
+      const result = computeLayout(singleNode(), defaultOpts());
       expect(result.boundingBox.minY).toBe(0);
     });
 
     it('width > 0 and height > 0', () => {
-      const result = computeLayout(managerWithPALsAndM1(), defaultOpts(), new Set());
+      const result = computeLayout(managerWithPALsAndM1(), defaultOpts());
       expect(result.boundingBox.width).toBeGreaterThan(0);
       expect(result.boundingBox.height).toBeGreaterThan(0);
     });
 
     it('encompasses all nodes', () => {
-      const result = computeLayout(mixedTree(), defaultOpts(), new Set());
+      const result = computeLayout(mixedTree(), defaultOpts());
       const bb = result.boundingBox;
       for (const node of result.nodes) {
         const left = node.x - node.width / 2;
@@ -283,28 +283,9 @@ describe('computeLayout', () => {
     });
   });
 
-  describe('collapsed nodes', () => {
-    it('returns fewer nodes when a node is collapsed', () => {
-      const opts = defaultOpts();
-      const expanded = computeLayout(managerWithPALsAndM1(), opts, new Set());
-      const collapsed = computeLayout(managerWithPALsAndM1(), opts, new Set(['root']));
-      expect(collapsed.nodes.length).toBeLessThan(expanded.nodes.length);
-    });
-
-    it('collapsed M1 has no IC nodes', () => {
-      const result = computeLayout(m1WithICs(), defaultOpts(), new Set(['root']));
-      expect(nodesByType(result, 'ic').length).toBe(0);
-      expect(result.icContainers.length).toBe(0);
-    });
-
-    it('collapsed node is still marked collapsible', () => {
-      const result = computeLayout(m1WithICs(), defaultOpts(), new Set(['root']));
-      const mgr = nodesByType(result, 'manager')[0];
-      expect(mgr.collapsible).toBe(true);
-    });
-
+  describe('collapsible marking', () => {
     it('leaf node without children is not collapsible', () => {
-      const result = computeLayout(singleNode(), defaultOpts(), new Set());
+      const result = computeLayout(singleNode(), defaultOpts());
       const mgr = nodesByType(result, 'manager')[0];
       expect(mgr.collapsible).toBe(false);
     });

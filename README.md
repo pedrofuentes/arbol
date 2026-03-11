@@ -2,13 +2,13 @@
 
 An interactive org chart editor for the browser.
 
+**[Live Demo →](https://arbol.pedrofuent.es)**
+
 ## Features
 
 - Interactive hierarchical org chart visualization
-- Drag-and-drop reorganization with confirmation for large moves
 - Three editing modes: Form, JSON, CSV import (3 formats auto-detected)
 - PowerPoint export (.pptx) with editable shapes and connectors
-- Collapsible subtrees for large hierarchies (1000+ people)
 - PAL (Personal Advisor) role support with special 2-column layout
 - Smart M1 detection (compact layout for manager groups)
 - 20+ customizable renderer settings (dimensions, spacing, typography, colors)
@@ -21,7 +21,7 @@ An interactive org chart editor for the browser.
 ## Getting Started
 
 ```bash
-git clone https://github.com/pedro/arbol.git
+git clone https://github.com/pedrofuentes/arbol.git
 cd arbol
 npm install
 npm run dev

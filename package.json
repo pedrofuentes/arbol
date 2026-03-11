@@ -14,6 +14,14 @@
   "keywords": ["org-chart", "organization", "hierarchy", "d3", "typescript", "pptx", "editor"],
   "author": "Pedro",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pedrofuentes/arbol.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pedrofuentes/arbol/issues"
+  },
+  "homepage": "https://arbol.pedrofuent.es",
   "type": "commonjs",
   "dependencies": {
     "d3": "^7.9.0",

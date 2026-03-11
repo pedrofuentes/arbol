@@ -473,43 +473,6 @@ describe('ChartRenderer', () => {
     });
   });
 
-  describe('collapse/expand', () => {
-    it('hides children when node is collapsed', () => {
-      renderer.toggleCollapse('b');
-      renderer.render(simpleTree());
-      const ids = getNodeIds(container);
-      expect(ids).toContain('root');
-      expect(ids).toContain('b');
-      expect(ids).toContain('c');
-      expect(ids).not.toContain('d');
-    });
-
-    it('shows children again when expanded', () => {
-      renderer.toggleCollapse('b');
-      renderer.render(simpleTree());
-      expect(getNodeIds(container)).not.toContain('d');
-
-      renderer.toggleCollapse('b');
-      renderer.render(simpleTree());
-      expect(getNodeIds(container)).toContain('d');
-    });
-
-    it('tracks collapsed state', () => {
-      expect(renderer.isCollapsed('b')).toBe(false);
-      renderer.toggleCollapse('b');
-      expect(renderer.isCollapsed('b')).toBe(true);
-      renderer.toggleCollapse('b');
-      expect(renderer.isCollapsed('b')).toBe(false);
-    });
-
-    it('hides IC stack when M1 is collapsed', () => {
-      renderer.toggleCollapse('root');
-      renderer.render(m1WithICs());
-      const icNodes = container.querySelectorAll('.ic-node');
-      expect(icNodes.length).toBe(0);
-    });
-  });
-
   describe('updateOptions', () => {
     it('updates options and allows re-render', () => {
       renderer.render(singleNode());

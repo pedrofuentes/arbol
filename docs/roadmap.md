@@ -8,7 +8,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
-## ✅ Completed
+## 🚀 v1.0.0 (Current Release)
 
 ### Phase 1 — Project Foundation
 - [x] Initialize project with Vite + TypeScript + D3.js + Vitest
@@ -22,7 +22,6 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Connecting lines with vertical elbow connectors
 - [x] IC (Individual Contributor) stacks — vertical layout below M1 managers, grey container, no connecting lines
 - [x] PAL (Personal Advisor) stacks — alternating left/right columns with side-entry connecting lines
-- [x] Collapse/expand subtrees with toggle indicators
 - [x] Consistent vertical spacing logic for PAL/non-PAL managers
 - [x] Single-child manager optimized gap (matches `bottomVerticalSpacing`)
 - [x] Boundary-based branch spacing with configurable exact gaps
@@ -65,7 +64,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] IC node widths per preset: 83, 99, 125, 141
 
 ### Phase 9 — Data Import
-- [x] JSON file import (drag-drop + paste)
+- [x] JSON file import (paste)
 - [x] CSV import with 3 auto-detected formats:
   - With IDs: `id, name, title, parent_id`
   - By manager name: `name, title, manager_name`
@@ -86,7 +85,6 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Undo/redo with 50-step history
 - [x] Keyboard shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+E, Ctrl+F, Ctrl+H, Escape)
 - [x] `ShortcutManager` for centralized key bindings
-- [x] Drag-and-drop reorganization with confirmation for large moves
 
 ### Phase 12 — Project Naming & Branding
 - [x] Renamed from "ChartIt" to "Arbol" 🌳
@@ -104,7 +102,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] **327 tests across 19 test files** — all passing
 - [x] TDD approach from day one
 - [x] Unit tests: OrgStore, tree utilities, search, ID generation
-- [x] Integration tests: renderer output, IC/PAL stacks, collapse/expand, spacing regression
+- [x] Integration tests: renderer output, IC/PAL stacks, spacing regression
 - [x] Store tests: settings-store, mapping-store, theme-manager, theme-presets
 - [x] Editor tests: import-editor, tab-switcher, shortcuts
 
@@ -112,11 +110,22 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ## 🔲 Planned / Ideas
 
+### v1.1.0 — Drag-and-Drop Reorganization
+- [ ] Drag-and-drop node reorganization with visual feedback
+- [ ] Confirmation dialog for large moves (>5 reports)
+- [ ] Full test coverage for drag interactions
+- [ ] Drag-and-drop file import refinement
+
+### v1.2.0 — Collapsible Subtrees
+- [ ] Collapse/expand subtrees with toggle indicators
+- [ ] Persist collapse state across re-renders
+- [ ] Full test coverage for collapse/expand behavior
+- [ ] Large hierarchy support (1000+ people)
+
 ### Short-term
 - [ ] Increase test coverage on `chart-renderer` (currently ~52%) and `column-mapper` (low branch coverage)
 - [ ] Animation/transitions on tree layout changes
 - [ ] PNG/SVG export option alongside PPTX
-- [ ] Drag-and-drop file import refinement
 - [ ] Mobile/responsive layout improvements
 
 ### Medium-term

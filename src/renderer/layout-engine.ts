@@ -37,10 +37,9 @@ export interface LayoutResult {
 export function computeLayout(
   root: OrgNode,
   opts: ResolvedOptions,
-  collapsed: Set<string>,
 ): LayoutResult {
-  const visibleTree = filterVisibleTree(root, collapsed);
-  const { layoutTree, icMap, palMap } = stripM1Children(visibleTree, collapsed);
+  const visibleTree = filterVisibleTree(root);
+  const { layoutTree, icMap, palMap } = stripM1Children(visibleTree);
 
   const {
     nodeWidth, nodeHeight, horizontalSpacing,
@@ -280,7 +279,6 @@ export function computeLayout(
   for (const treeNode of treeData.descendants()) {
     const hasTreeChildren = !!(treeNode.data.children && treeNode.data.children.length > 0);
     const hasICs = icMap.has(treeNode.data.id);
-    const isCollapsed = collapsed.has(treeNode.data.id);
 
     nodes.push({
       id: treeNode.data.id,
@@ -291,7 +289,7 @@ export function computeLayout(
       width: nodeWidth,
       height: nodeHeight,
       type: 'manager',
-      collapsible: hasTreeChildren || hasICs || isCollapsed,
+      collapsible: hasTreeChildren || hasICs,
     });
   }
 

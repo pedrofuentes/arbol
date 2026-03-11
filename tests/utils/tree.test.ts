@@ -97,23 +97,17 @@ describe('cloneTree', () => {
 });
 
 describe('filterVisibleTree', () => {
-  it('returns full tree when nothing is collapsed', () => {
+  it('returns a clone of the full tree', () => {
     const tree = makeTree();
-    const filtered = filterVisibleTree(tree, new Set());
+    const filtered = filterVisibleTree(tree);
     expect(flattenTree(filtered)).toHaveLength(5);
-  });
-
-  it('excludes children of collapsed nodes', () => {
-    const tree = makeTree();
-    const filtered = filterVisibleTree(tree, new Set(['b']));
-    const nodes = flattenTree(filtered);
-    expect(nodes.map(n => n.id)).toEqual(['root', 'b', 'c']);
   });
 
   it('does not mutate the original tree', () => {
     const tree = makeTree();
-    filterVisibleTree(tree, new Set(['b']));
-    expect(flattenTree(tree)).toHaveLength(5);
+    const filtered = filterVisibleTree(tree);
+    filtered.name = 'CHANGED';
+    expect(tree.name).toBe('Alice');
   });
 });
 
@@ -177,7 +171,7 @@ describe('stripM1Children', () => {
         { id: 'dir', name: 'Dir', title: 'Director' },
       ],
     };
-    const { layoutTree, icMap, palMap } = stripM1Children(tree, new Set());
+    const { layoutTree, icMap, palMap } = stripM1Children(tree);
     expect(flattenTree(layoutTree).map(n => n.id)).toEqual(['root', 'm1']);
     expect(icMap.has('m1')).toBe(true);
     expect(icMap.get('m1')!.map(n => n.id)).toEqual(['ic1', 'ic2']);
@@ -188,7 +182,7 @@ describe('stripM1Children', () => {
 
   it('strips children from M1 nodes in complex tree', () => {
     const tree = makeTree();
-    const { layoutTree, icMap } = stripM1Children(tree, new Set());
+    const { layoutTree, icMap } = stripM1Children(tree);
     const bob = findNodeById(layoutTree, 'b')!;
     expect(bob.children).toBeUndefined();
     expect(icMap.has('b')).toBe(true);
@@ -205,22 +199,9 @@ describe('stripM1Children', () => {
         ]},
       ],
     };
-    const { layoutTree, icMap, palMap } = stripM1Children(tree, new Set());
+    const { layoutTree, icMap, palMap } = stripM1Children(tree);
     expect(flattenTree(layoutTree).map(n => n.id)).toEqual(['root', 'm1']);
     expect(palMap.get('root')!.map(n => n.id)).toEqual(['pal1', 'pal2']);
     expect(icMap.get('m1')!.map(n => n.id)).toEqual(['ic1']);
-  });
-
-  it('respects collapsed nodes', () => {
-    const tree: OrgNode = {
-      id: 'root', name: 'CEO', title: 'CEO', children: [
-        { id: 'm1', name: 'Mgr', title: 'M1', children: [
-          { id: 'ic1', name: 'IC1', title: 'Eng' },
-        ]},
-      ],
-    };
-    const { layoutTree, icMap } = stripM1Children(tree, new Set(['m1']));
-    expect(icMap.has('m1')).toBe(false);
-    expect(findNodeById(layoutTree, 'm1')!.children).toBeUndefined();
   });
 });
