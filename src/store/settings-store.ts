@@ -64,6 +64,9 @@ function validateSettings(obj: Record<string, unknown>): Partial<PersistableSett
       if (typeof val !== 'string') {
         throw new Error(`Invalid value for "${key}": expected a string`);
       }
+      if (!/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d\s,.\/%]+\)$|^var\(--[\w-]+\)$/.test(val)) {
+        throw new Error(`Invalid color value for "${key}": must be a hex color, rgb(), or CSS variable`);
+      }
       result[key] = val;
     }
   }

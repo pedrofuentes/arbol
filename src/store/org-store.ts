@@ -136,11 +136,27 @@ export class OrgStore {
   fromJSON(json: string): void {
     this.snapshot();
     const parsed = JSON.parse(json);
-    if (!parsed.id || !parsed.name || !parsed.title) {
-      throw new Error('Invalid org tree: root must have id, name, and title');
-    }
+    this.validateTree(parsed);
     this.root = parsed;
     this.emit();
+  }
+
+  private validateTree(node: unknown, depth = 0, count = { value: 0 }): asserts node is OrgNode {
+    if (depth > 100) throw new Error('Tree exceeds maximum depth of 100 levels');
+    if (++count.value > 50000) throw new Error('Tree exceeds maximum of 50,000 nodes');
+    if (!node || typeof node !== 'object') throw new Error('Invalid node: expected an object');
+    const obj = node as Record<string, unknown>;
+    if (typeof obj.id !== 'string' || !obj.id.trim()) throw new Error('Each node must have a non-empty string id');
+    if (typeof obj.name !== 'string') throw new Error('Each node must have a string name');
+    if (typeof obj.title !== 'string') throw new Error('Each node must have a string title');
+    if (obj.name.length > 500) throw new Error(`Name too long (max 500 chars) on node "${obj.id}"`);
+    if (obj.title.length > 500) throw new Error(`Title too long (max 500 chars) on node "${obj.id}"`);
+    if (obj.children !== undefined) {
+      if (!Array.isArray(obj.children)) throw new Error(`Invalid children on node "${obj.id}": expected an array`);
+      for (const child of obj.children) {
+        this.validateTree(child, depth + 1, count);
+      }
+    }
   }
 
   onChange(listener: ChangeListener): () => void {

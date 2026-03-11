@@ -66,6 +66,7 @@ export class FormEditor {
     const nameGroup = this.createFormGroup('Name');
     this.nameInput = document.createElement('input');
     this.nameInput.type = 'text';
+    this.nameInput.maxLength = 200;
     this.nameInput.dataset.field = 'name';
     this.nameInput.setAttribute('aria-label', 'Name');
     nameGroup.appendChild(this.nameInput);
@@ -75,6 +76,7 @@ export class FormEditor {
     const titleGroup = this.createFormGroup('Title');
     this.titleInput = document.createElement('input');
     this.titleInput.type = 'text';
+    this.titleInput.maxLength = 200;
     this.titleInput.dataset.field = 'title';
     this.titleInput.setAttribute('aria-label', 'Title');
     titleGroup.appendChild(this.titleInput);
@@ -148,6 +150,7 @@ export class FormEditor {
     const nameGroup = this.createFormGroup('Name');
     const editNameInput = document.createElement('input');
     editNameInput.type = 'text';
+    editNameInput.maxLength = 200;
     editNameInput.dataset.field = 'edit-name';
     editNameInput.value = node.name;
     nameGroup.appendChild(editNameInput);
@@ -157,6 +160,7 @@ export class FormEditor {
     const titleGroup = this.createFormGroup('Title');
     const editTitleInput = document.createElement('input');
     editTitleInput.type = 'text';
+    editTitleInput.maxLength = 200;
     editTitleInput.dataset.field = 'edit-title';
     editTitleInput.value = node.title;
     titleGroup.appendChild(editTitleInput);

@@ -7,7 +7,9 @@ export class MappingStore {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return [];
-      return JSON.parse(raw) as MappingPreset[];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((item: unknown) => this.isValidPreset(item)) as MappingPreset[];
     } catch {
       return [];
     }

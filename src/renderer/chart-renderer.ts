@@ -373,7 +373,9 @@ export class ChartRenderer {
   setSelectedNode(nodeId: string | null): void {
     this.g.selectAll('.node').classed('selected', false);
     if (nodeId) {
-      this.g.select(`.node[data-id="${nodeId}"]`).classed('selected', true);
+      this.g.selectAll<SVGGElement, unknown>('.node')
+        .filter(function () { return this.getAttribute('data-id') === nodeId; })
+        .classed('selected', true);
     }
   }
 

@@ -2,65 +2,81 @@ const HELP_SECTIONS = [
   {
     title: 'Getting Started',
     items: [
-      'The chart displays your organization hierarchy. Pan by dragging the canvas, zoom with scroll wheel.',
-      'Click any card on the chart to select and edit that person.',
-      'Use the sidebar tabs to manage your data.',
+      ['The chart displays your organization hierarchy. Pan by dragging the canvas, zoom with scroll wheel.'],
+      ['Click any card on the chart to select and edit that person.'],
+      ['Use the sidebar tabs to manage your data.'],
     ],
   },
   {
     title: 'Sidebar Tabs',
     items: [
-      '<strong>Form</strong> — Add new people under a parent, or edit/delete the selected person.',
-      '<strong>Load Data</strong> — Import an org chart from a JSON or CSV file, or paste data directly.',
-      '<strong>Edit Tree</strong> — View and edit the raw JSON tree. Click Apply to update the chart.',
-      '<strong>Settings</strong> — Adjust card sizes, spacing, colors, and typography. Choose a preset theme or fine-tune individual values.',
+      [{ tag: 'strong', text: 'Form' }, ' — Add new people under a parent, or edit/delete the selected person.'],
+      [{ tag: 'strong', text: 'Load Data' }, ' — Import an org chart from a JSON or CSV file, or paste data directly.'],
+      [{ tag: 'strong', text: 'Edit Tree' }, ' — View and edit the raw JSON tree. Click Apply to update the chart.'],
+      [{ tag: 'strong', text: 'Settings' }, ' — Adjust card sizes, spacing, colors, and typography. Choose a preset theme or fine-tune individual values.'],
     ],
   },
   {
     title: 'Importing Data',
     items: [
-      '<strong>JSON</strong> — Nested tree with <code>id</code>, <code>name</code>, <code>title</code>, and optional <code>children</code> array.',
-      '<strong>CSV with IDs</strong> — Columns: <code>id, name, title, parent_id</code> (root has empty parent).',
-      '<strong>CSV by name</strong> — Columns: <code>name, title, manager_name</code> (matched by name).',
-      'Drop a file on the drop zone, or paste text and click Parse & Preview.',
+      [{ tag: 'strong', text: 'JSON' }, ' — Nested tree with ', { tag: 'code', text: 'id' }, ', ', { tag: 'code', text: 'name' }, ', ', { tag: 'code', text: 'title' }, ', and optional ', { tag: 'code', text: 'children' }, ' array.'],
+      [{ tag: 'strong', text: 'CSV with IDs' }, ' — Columns: ', { tag: 'code', text: 'id, name, title, parent_id' }, ' (root has empty parent).'],
+      [{ tag: 'strong', text: 'CSV by name' }, ' — Columns: ', { tag: 'code', text: 'name, title, manager_name' }, ' (matched by name).'],
+      ['Drop a file on the drop zone, or paste text and click Parse & Preview.'],
     ],
   },
   {
     title: 'Chart Interactions',
     items: [
-      '<strong>Click</strong> a card to select it for editing.',
-      '<strong>Drag</strong> a manager card to move them (and their reports) under a new parent.',
-      '<strong>Collapse/Expand</strong> — Click the ▾/▸ indicator below a manager to toggle their subtree.',
-      '<strong>Search</strong> — Type in the search bar to highlight matching people. Non-matches are dimmed.',
+      [{ tag: 'strong', text: 'Click' }, ' a card to select it for editing.'],
+      [{ tag: 'strong', text: 'Drag' }, ' a manager card to move them (and their reports) under a new parent.'],
+      [{ tag: 'strong', text: 'Collapse/Expand' }, ' — Click the ▾/▸ indicator below a manager to toggle their subtree.'],
+      [{ tag: 'strong', text: 'Search' }, ' — Type in the search bar to highlight matching people. Non-matches are dimmed.'],
     ],
   },
   {
     title: 'Settings & Persistence',
     items: [
-      'All visual settings auto-save to your browser and restore on next visit.',
-      'Use <strong>Export Settings</strong> to download your configuration as a file.',
-      'Use <strong>Import Settings</strong> to load a saved configuration.',
-      'Theme presets apply a full color scheme in one click.',
+      ['All visual settings auto-save to your browser and restore on next visit.'],
+      ['Use ', { tag: 'strong', text: 'Export Settings' }, ' to download your configuration as a file.'],
+      ['Use ', { tag: 'strong', text: 'Import Settings' }, ' to load a saved configuration.'],
+      ['Theme presets apply a full color scheme in one click.'],
     ],
   },
   {
     title: 'Keyboard Shortcuts',
     items: [
-      '<kbd>Ctrl+Z</kbd> — Undo',
-      '<kbd>Ctrl+Shift+Z</kbd> or <kbd>Ctrl+Y</kbd> — Redo',
-      '<kbd>Ctrl+F</kbd> — Focus search bar',
-      '<kbd>Ctrl+E</kbd> — Export to PowerPoint',
-      '<kbd>Escape</kbd> — Clear search or deselect',
+      [{ tag: 'kbd', text: 'Ctrl+Z' }, ' — Undo'],
+      [{ tag: 'kbd', text: 'Ctrl+Shift+Z' }, ' or ', { tag: 'kbd', text: 'Ctrl+Y' }, ' — Redo'],
+      [{ tag: 'kbd', text: 'Ctrl+F' }, ' — Focus search bar'],
+      [{ tag: 'kbd', text: 'Ctrl+E' }, ' — Export to PowerPoint'],
+      [{ tag: 'kbd', text: 'Escape' }, ' — Clear search or deselect'],
     ],
   },
   {
     title: 'Exporting',
     items: [
-      '<strong>Export PPTX</strong> — Downloads the chart as an editable PowerPoint file with native shapes and text.',
-      'The export auto-scales to fit a widescreen slide.',
+      [{ tag: 'strong', text: 'Export PPTX' }, ' — Downloads the chart as an editable PowerPoint file with native shapes and text.'],
+      ['The export auto-scales to fit a widescreen slide.'],
     ],
   },
 ];
+
+type HelpFragment = string | { tag: string; text: string };
+
+function buildHelpItem(fragments: HelpFragment[]): DocumentFragment {
+  const frag = document.createDocumentFragment();
+  for (const part of fragments) {
+    if (typeof part === 'string') {
+      frag.appendChild(document.createTextNode(part));
+    } else {
+      const el = document.createElement(part.tag);
+      el.textContent = part.text;
+      frag.appendChild(el);
+    }
+  }
+  return frag;
+}
 
 export function showHelpDialog(): void {
   const overlay = document.createElement('div');
@@ -143,7 +159,7 @@ export function showHelpDialog(): void {
 
     for (const item of section.items) {
       const li = document.createElement('li');
-      li.innerHTML = item;
+      li.appendChild(buildHelpItem(item));
       li.style.cssText = `
         font-size:13px;line-height:1.5;color:var(--text-secondary);
         font-family:var(--font-sans);padding-left:12px;position:relative;

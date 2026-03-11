@@ -578,8 +578,14 @@ export class ImportEditor {
     }
   }
 
+  private static MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
   private processFile(file: File): void {
     this.clearStatus();
+    if (file.size > ImportEditor.MAX_FILE_SIZE) {
+      this.showError(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum is 10MB.`);
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       const text = reader.result as string;

@@ -203,6 +203,10 @@ export class SettingsEditor {
       input.addEventListener('change', () => {
         const file = input.files?.[0];
         if (!file || !this.settingsStore) return;
+        if (file.size > 1 * 1024 * 1024) {
+          alert('Settings file too large (max 1MB).');
+          return;
+        }
         const reader = new FileReader();
         reader.onload = () => {
           try {
