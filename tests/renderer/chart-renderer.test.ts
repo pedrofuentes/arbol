@@ -386,6 +386,49 @@ describe('ChartRenderer', () => {
       const palNodes = container.querySelectorAll('.pal-node');
       expect(palNodes.length).toBe(3);
     });
+
+    it('single PAL is positioned to the left of the manager, not centered', () => {
+      const tree: OrgNode = {
+        id: 'root', name: 'CEO', title: 'CEO', children: [
+          { id: 'pal1', name: 'Solo PAL', title: 'Advisor' },
+          { id: 'mgr', name: 'CTO', title: 'CTO', children: [
+            { id: 'ic1', name: 'IC', title: 'Eng' },
+          ]},
+        ],
+      };
+      renderer.render(tree);
+      const mgrNode = container.querySelector('.node[data-id="root"]');
+      const palNode = container.querySelector('.pal-node[data-id="pal1"]');
+      expect(palNode).not.toBeNull();
+      // PAL should be offset to the left, not at the same X as manager
+      const mgrTransform = mgrNode!.getAttribute('transform')!;
+      const palTransform = palNode!.getAttribute('transform')!;
+      const mgrX = parseFloat(mgrTransform.match(/translate\(([^,]+)/)![1]);
+      const palX = parseFloat(palTransform.match(/translate\(([^,]+)/)![1]);
+      expect(palX).toBeLessThan(mgrX);
+    });
+
+    it('two PALs alternate left and right of the manager', () => {
+      renderer.render(managerWithPALs());
+      const palNodes = container.querySelectorAll('.pal-node');
+      const transforms = Array.from(palNodes).map(n => {
+        const t = n.getAttribute('transform')!;
+        return parseFloat(t.match(/translate\(([^,]+)/)![1]);
+      });
+      // First PAL (left) should have smaller X than second PAL (right)
+      expect(transforms[0]).toBeLessThan(transforms[1]);
+    });
+
+    it('PAL is positioned below the manager card', () => {
+      renderer.render(managerWithPALs());
+      const mgrY = getNodeY(container, 'root')!;
+      const palNodes = container.querySelectorAll('.pal-node');
+      for (const pal of Array.from(palNodes)) {
+        const transform = pal.getAttribute('transform')!;
+        const palY = parseFloat(transform.match(/translate\([^,]+,\s*([^)]+)\)/)![1]);
+        expect(palY).toBeGreaterThan(mgrY + NODE_HEIGHT);
+      }
+    });
   });
 
   describe('mixed scenarios', () => {

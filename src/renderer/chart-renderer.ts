@@ -229,6 +229,32 @@ export class ChartRenderer {
 
     this.g.selectAll('*').remove();
 
+    // DEBUG: draw subtree boundary lines with order numbers
+    const debugGroup = this.g.append('g').attr('class', 'debug-bounds');
+    let debugIdx = 0;
+    for (const node of treeData.descendants()) {
+      if (!node.children || node.children.length === 0) continue;
+      for (const child of node.children) {
+        debugIdx++;
+        const [minX, maxX] = getSubtreeXBounds(child);
+        debugGroup.append('line')
+          .attr('x1', minX).attr('y1', child.y - 10)
+          .attr('x2', minX).attr('y2', child.y + nodeHeight + 200)
+          .attr('stroke', 'red').attr('stroke-width', 0.5).attr('opacity', 0.5);
+        debugGroup.append('line')
+          .attr('x1', maxX).attr('y1', child.y - 10)
+          .attr('x2', maxX).attr('y2', child.y + nodeHeight + 200)
+          .attr('stroke', 'blue').attr('stroke-width', 0.5).attr('opacity', 0.5);
+        debugGroup.append('text')
+          .attr('x', (minX + maxX) / 2)
+          .attr('y', child.y - 3)
+          .attr('text-anchor', 'middle')
+          .attr('font-size', '7px')
+          .attr('fill', 'red')
+          .text(`#${debugIdx} ${child.data.name}`);
+      }
+    }
+
     // Layer 1: Tree links
     const linksGroup = this.g.append('g').attr('class', 'links');
     this.renderTreeLinks(linksGroup, treeData, getPalStackHeight);
@@ -437,9 +463,9 @@ export class ChartRenderer {
     pals.forEach((pal, i) => {
       const row = Math.floor(i / 2);
       const isLeft = i % 2 === 0;
-      const x = hasTwoCols
-        ? (isLeft ? mgrX - palCenterGap / 2 - nodeWidth : mgrX + palCenterGap / 2)
-        : mgrX - nodeWidth / 2;
+      const x = isLeft
+        ? mgrX - palCenterGap / 2 - nodeWidth
+        : mgrX + palCenterGap / 2;
       const y = startY + palRowGap + row * (nodeHeight + palRowGap);
 
       // Elbow link: down from manager, then horizontal to PAL side-center
