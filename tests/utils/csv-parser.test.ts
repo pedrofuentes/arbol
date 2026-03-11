@@ -491,4 +491,52 @@ describe('missing root auto-creation', () => {
     expect(result.tree.children).toHaveLength(1);
     expect(result.tree.children![0].name).toBe('Alice');
   });
+
+  it('auto-creates missing root with explicit ID-based mapping', () => {
+    const csv = [
+      'alias,full_name,role,boss_alias',
+      'jsmith,Jane Smith,Director,vp_boss',
+      'blee,Bob Lee,Manager,jsmith',
+      'cwong,Carol Wong,Engineer,blee',
+    ].join('\n');
+
+    const mapping: ColumnMapping = {
+      name: 'full_name',
+      title: 'role',
+      parentRef: 'boss_alias',
+      id: 'alias',
+      parentRefType: 'id',
+      caseInsensitive: true,
+    };
+
+    const result = parseCsvToTree(csv, mapping);
+    expect(result.tree.id).toBe('vp_boss');
+    expect(result.tree.name).toBe('vp_boss');
+    expect(result.tree.title).toBe('\u2014');
+    expect(result.tree.children).toHaveLength(1);
+    expect(result.tree.children![0].name).toBe('Jane Smith');
+    expect(result.nodeCount).toBe(4);
+  });
+
+  it('auto-creates missing root with explicit name-based mapping', () => {
+    const csv = [
+      'employee,job,supervisor',
+      'Alice,Director,Big Boss',
+      'Bob,Manager,Alice',
+    ].join('\n');
+
+    const mapping: ColumnMapping = {
+      name: 'employee',
+      title: 'job',
+      parentRef: 'supervisor',
+      parentRefType: 'name',
+      caseInsensitive: true,
+    };
+
+    const result = parseCsvToTree(csv, mapping);
+    expect(result.tree.name).toBe('Big Boss');
+    expect(result.tree.children).toHaveLength(1);
+    expect(result.tree.children![0].name).toBe('Alice');
+    expect(result.nodeCount).toBe(3);
+  });
 });
