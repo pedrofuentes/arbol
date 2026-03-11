@@ -158,12 +158,17 @@ export class ChartRenderer {
       let minX = node.x - nodeWidth / 2;
       let maxX = node.x + nodeWidth / 2;
 
-      // Account for PAL stacks (two columns spread wider than the node)
+      // Account for PAL stacks
       if (palMap.has(node.data.id)) {
+        const pals = palMap.get(node.data.id)!;
         const palLeft = node.x - palCenterGap / 2 - nodeWidth;
         const palRight = node.x + palCenterGap / 2 + nodeWidth;
+        // Left PAL always exists (first PAL goes left)
         minX = Math.min(minX, palLeft);
-        maxX = Math.max(maxX, palRight);
+        // Right PAL only exists if there are 2+ PALs
+        if (pals.length > 1) {
+          maxX = Math.max(maxX, palRight);
+        }
       }
 
       // Account for IC stacks
@@ -228,32 +233,6 @@ export class ChartRenderer {
     enforceSpacing(treeData);
 
     this.g.selectAll('*').remove();
-
-    // DEBUG: draw subtree boundary lines with order numbers
-    const debugGroup = this.g.append('g').attr('class', 'debug-bounds');
-    let debugIdx = 0;
-    for (const node of treeData.descendants()) {
-      if (!node.children || node.children.length === 0) continue;
-      for (const child of node.children) {
-        debugIdx++;
-        const [minX, maxX] = getSubtreeXBounds(child);
-        debugGroup.append('line')
-          .attr('x1', minX).attr('y1', child.y - 10)
-          .attr('x2', minX).attr('y2', child.y + nodeHeight + 200)
-          .attr('stroke', 'red').attr('stroke-width', 0.5).attr('opacity', 0.5);
-        debugGroup.append('line')
-          .attr('x1', maxX).attr('y1', child.y - 10)
-          .attr('x2', maxX).attr('y2', child.y + nodeHeight + 200)
-          .attr('stroke', 'blue').attr('stroke-width', 0.5).attr('opacity', 0.5);
-        debugGroup.append('text')
-          .attr('x', (minX + maxX) / 2)
-          .attr('y', child.y - 3)
-          .attr('text-anchor', 'middle')
-          .attr('font-size', '7px')
-          .attr('fill', 'red')
-          .text(`#${debugIdx} ${child.data.name}`);
-      }
-    }
 
     // Layer 1: Tree links
     const linksGroup = this.g.append('g').attr('class', 'links');
