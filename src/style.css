@@ -387,12 +387,6 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Selected node highlight */
-.node.selected rect {
-  stroke: var(--accent) !important;
-  stroke-width: 2px !important;
-  filter: drop-shadow(0 0 4px var(--accent-glow));
-}
 
 /* Dragging state */
 .node.dragging {

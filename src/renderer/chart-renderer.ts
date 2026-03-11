@@ -115,22 +115,7 @@ export class ChartRenderer {
 
     this.g.selectAll('*').remove();
 
-    // Add SVG defs for filters
-    const defs = this.g.append('defs');
-    defs.append('filter')
-      .attr('id', 'card-shadow')
-      .attr('x', '-10%')
-      .attr('y', '-10%')
-      .attr('width', '130%')
-      .attr('height', '140%')
-      .append('feDropShadow')
-      .attr('dx', '0')
-      .attr('dy', '1')
-      .attr('stdDeviation', '1.5')
-      .attr('flood-color', '#000000')
-      .attr('flood-opacity', '0.12');
-
-    const { nodeHeight, linkColor, linkWidth, icContainerFill } = this.opts;
+    const{ nodeHeight, linkColor, linkWidth, icContainerFill } = this.opts;
 
     // Layer 1: Tree links (elbow paths + vertical connectors through PAL area)
     const linksGroup = this.g.append('g').attr('class', 'links');
@@ -152,8 +137,6 @@ export class ChartRenderer {
         .attr('y', container.y)
         .attr('width', container.width)
         .attr('height', container.height)
-        .attr('rx', 3)
-        .attr('ry', 3)
         .attr('fill', icContainerFill);
     }
 
@@ -198,8 +181,7 @@ export class ChartRenderer {
       const g = nodesGroup.append('g')
         .attr('class', 'node')
         .attr('data-id', node.id)
-        .attr('transform', `translate(${node.x - node.width / 2},${node.y})`)
-        .attr('filter', 'url(#card-shadow)');
+        .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
 
       const datum = { data: { id: node.id, name: node.name, title: node.title } };
       const sel = d3.select(g.node()!).datum(datum);
@@ -212,9 +194,7 @@ export class ChartRenderer {
           .attr('y', nodeHeight + 14)
           .attr('text-anchor', 'middle')
           .attr('cursor', 'pointer')
-          .attr('font-family', 'DM Sans, system-ui, sans-serif')
-          .attr('font-size', '10px')
-          .attr('fill', '#8b8b92')
+          .text(this.collapsed.has(node.id) ? '▸' : '▾')
           .text(this.collapsed.has(node.id) ? '▸' : '▾')
           .on('click', () => {
             this.toggleCollapse(node.id);
@@ -344,8 +324,6 @@ export class ChartRenderer {
     selection.append('rect')
       .attr('width', width)
       .attr('height', height)
-      .attr('rx', 3)
-      .attr('ry', 3)
       .attr('fill', cardFill)
       .attr('stroke', cardStroke)
       .attr('stroke-width', cardStrokeWidth)
@@ -360,7 +338,7 @@ export class ChartRenderer {
       .attr('dominant-baseline', 'hanging')
       .attr('text-anchor', 'middle')
       .attr('font-weight', 'bold')
-      .attr('font-family', 'DM Sans, system-ui, sans-serif')
+      .attr('font-family', 'Calibri, sans-serif')
       .attr('font-size', `${nameFontSize}px`)
       .text((d: any) => d.data?.name ?? d.name);
 
@@ -370,7 +348,7 @@ export class ChartRenderer {
       .attr('y', titleY)
       .attr('dominant-baseline', 'hanging')
       .attr('text-anchor', 'middle')
-      .attr('font-family', 'DM Sans, system-ui, sans-serif')
+      .attr('font-family', 'Calibri, sans-serif')
       .attr('font-size', `${titleFontSize}px`)
       .attr('fill', '#64748b')
       .text((d: any) => d.data?.title ?? d.title);
@@ -393,27 +371,9 @@ export class ChartRenderer {
   }
 
   setSelectedNode(nodeId: string | null): void {
-    // Reset all nodes
-    this.g.selectAll('.node rect').each(function () {
-      const el = d3.select(this);
-      const origStroke = el.attr('data-original-stroke');
-      const origStrokeWidth = el.attr('data-original-stroke-width');
-      if (origStroke) el.attr('stroke', origStroke);
-      if (origStrokeWidth) el.attr('stroke-width', origStrokeWidth);
-      el.attr('data-original-stroke', null)
-        .attr('data-original-stroke-width', null);
-    });
-
     this.g.selectAll('.node').classed('selected', false);
-
     if (nodeId) {
-      const node = this.g.select(`.node[data-id="${nodeId}"]`);
-      node.classed('selected', true);
-      node.select('rect')
-        .attr('data-original-stroke', function () { return d3.select(this).attr('stroke'); })
-        .attr('data-original-stroke-width', function () { return d3.select(this).attr('stroke-width'); })
-        .attr('stroke', '#10b981')
-        .attr('stroke-width', 2);
+      this.g.select(`.node[data-id="${nodeId}"]`).classed('selected', true);
     }
   }
 
