@@ -152,7 +152,6 @@ export class ColumnMapper {
     // By ID radio
     const idLabel = this.createRadioOption('parentRefType', 'id', 'By ID', false);
     this.byIdRadio = idLabel.querySelector('input')!;
-    this.byIdRadio.disabled = true;
 
     radioGroup.appendChild(nameLabel);
     radioGroup.appendChild(idLabel);
@@ -160,8 +159,8 @@ export class ColumnMapper {
     this.container.appendChild(group);
 
     // Update Reports To label when toggle changes
-    this.byNameRadio.addEventListener('change', () => this.updateParentRefLabel());
-    this.byIdRadio.addEventListener('change', () => this.updateParentRefLabel());
+    this.byNameRadio.addEventListener('change', () => { this.updateParentRefLabel(); this.updatePresetBtnState(); });
+    this.byIdRadio.addEventListener('change', () => { this.updateParentRefLabel(); this.updatePresetBtnState(); });
   }
 
   private buildCaseInsensitiveOption(): void {
@@ -235,11 +234,6 @@ export class ColumnMapper {
   }
 
   private onIdFieldChanged(): void {
-    const hasId = this.idSelect.value !== '';
-    this.byIdRadio.disabled = !hasId;
-    if (!hasId && this.byIdRadio.checked) {
-      this.byNameRadio.checked = true;
-    }
     this.updateParentRefLabel();
     this.updatePresetBtnState();
   }
