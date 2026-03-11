@@ -231,6 +231,28 @@ function main(): void {
     }
   });
 
+  // Footer: Fit to Screen button
+  const fitBtn = document.createElement('button');
+  fitBtn.className = 'footer-btn';
+  fitBtn.dataset.action = 'fit';
+  fitBtn.textContent = 'Fit to Screen';
+  footer.appendChild(fitBtn);
+
+  fitBtn.addEventListener('click', () => {
+    renderer.getZoomManager()?.fitToContent();
+  });
+
+  // Footer: Reset Zoom button
+  const resetZoomBtn = document.createElement('button');
+  resetZoomBtn.className = 'footer-btn';
+  resetZoomBtn.dataset.action = 'reset-zoom';
+  resetZoomBtn.textContent = 'Reset Zoom';
+  footer.appendChild(resetZoomBtn);
+
+  resetZoomBtn.addEventListener('click', () => {
+    renderer.getZoomManager()?.resetZoom();
+  });
+
   rerender();
 }
 

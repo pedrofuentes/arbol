@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import { OrgNode } from '../types';
 import { computeLayout, LayoutResult } from './layout-engine';
+import { ZoomManager } from './zoom-manager';
 
 export interface RendererOptions {
   container: HTMLElement;
@@ -48,6 +49,8 @@ export class ChartRenderer {
   private onNodeClick: NodeClickHandler | null = null;
   private onCollapseToggle: ((nodeId: string) => void) | null = null;
   private lastLayout: LayoutResult | null = null;
+  private zoomManager: ZoomManager;
+  private hasRendered = false;
 
   constructor(options: RendererOptions) {
     this.opts = {
@@ -79,6 +82,7 @@ export class ChartRenderer {
       .attr('width', '100%')
       .attr('height', '100%');
     this.g = this.svg.append('g').attr('class', 'chart-group');
+    this.zoomManager = new ZoomManager(this.svg.node()!, this.g.node()!);
   }
 
   setNodeClickHandler(handler: NodeClickHandler): void {
@@ -184,11 +188,20 @@ export class ChartRenderer {
       }
     }
 
-    this.centerContent();
+    if (this.hasRendered) {
+      this.zoomManager.applyTransform(this.zoomManager.getCurrentTransform());
+    } else {
+      this.zoomManager.fitToContent();
+      this.hasRendered = true;
+    }
   }
 
   getLastLayout(): LayoutResult | null {
     return this.lastLayout;
+  }
+
+  getZoomManager(): ZoomManager {
+    return this.zoomManager;
   }
 
   // --- Rendering helpers ---
@@ -235,27 +248,6 @@ export class ChartRenderer {
       .attr('font-size', `${titleFontSize}px`)
       .attr('fill', '#64748b')
       .text((d: any) => d.data?.title ?? d.title);
-  }
-
-  private centerContent(): void {
-    const svgNode = this.svg.node()!;
-    const gNode = this.g.node()!;
-    if (typeof gNode.getBBox !== 'function') return;
-
-    const bbox = gNode.getBBox();
-    const svgWidth = svgNode.clientWidth || svgNode.getBoundingClientRect().width;
-    const svgHeight = svgNode.clientHeight || svgNode.getBoundingClientRect().height;
-    if (bbox.width === 0 || bbox.height === 0) return;
-
-    const padding = 40;
-    const scale = Math.min(
-      (svgWidth - padding * 2) / bbox.width,
-      (svgHeight - padding * 2) / bbox.height,
-      1.5,
-    );
-    const tx = svgWidth / 2 - (bbox.x + bbox.width / 2) * scale;
-    const ty = padding - bbox.y * scale;
-    this.g.attr('transform', `translate(${tx},${ty}) scale(${scale})`);
   }
 
   toggleCollapse(id: string): void {
