@@ -6,16 +6,16 @@ interface ParsedImport {
   tree: OrgNode;
   nodeCount: number;
   format: 'JSON' | 'CSV';
-  fileName: string;
+  source: string;
 }
 
 export class ImportEditor {
   private container: HTMLElement;
   private store: OrgStore;
-  private dropZone!: HTMLDivElement;
   private fileInput!: HTMLInputElement;
   private statusArea!: HTMLDivElement;
   private errorArea!: HTMLDivElement;
+  private pasteArea!: HTMLTextAreaElement;
   private pendingImport: ParsedImport | null = null;
 
   constructor(container: HTMLElement, store: OrgStore) {
@@ -31,13 +31,13 @@ export class ImportEditor {
   private build(): void {
     this.container.innerHTML = '';
 
-    const heading = document.createElement('h4');
-    heading.textContent = 'Import Data';
-    heading.style.cssText =
-      'margin:0 0 8px;font-size:11px;text-transform:uppercase;color:#94a3b8;letter-spacing:1px;';
-    this.container.appendChild(heading);
+    // --- File Upload Section ---
+    const fileHeading = document.createElement('h4');
+    fileHeading.textContent = 'From File';
+    fileHeading.style.cssText =
+      'margin:0 0 8px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
+    this.container.appendChild(fileHeading);
 
-    // Hidden file input
     this.fileInput = document.createElement('input');
     this.fileInput.type = 'file';
     this.fileInput.accept = '.json,.csv';
@@ -49,75 +49,100 @@ export class ImportEditor {
     });
     this.container.appendChild(this.fileInput);
 
-    // Drop zone
-    this.dropZone = document.createElement('div');
-    this.dropZone.style.cssText = `
+    const dropZone = document.createElement('div');
+    dropZone.style.cssText = `
       border: 2px dashed var(--border-default);
       border-radius: var(--radius-lg);
-      padding: 32px 16px;
+      padding: 20px 16px;
       text-align: center;
       cursor: pointer;
-      transition: border-color 200ms ease, background 200ms ease;
-      margin-bottom: 12px;
+      transition: all 200ms cubic-bezier(0.22,1,0.36,1);
+      margin-bottom: 14px;
     `;
 
-    const icon = document.createElement('div');
-    icon.textContent = '📂';
-    icon.style.cssText = 'font-size:32px;margin-bottom:8px;';
+    const dropLabel = document.createElement('div');
+    dropLabel.innerHTML = '<span style="font-size:20px">📂</span>&nbsp;&nbsp;Drop file or <strong style="color:var(--accent);cursor:pointer;">browse</strong>';
+    dropLabel.style.cssText = 'color:var(--text-secondary);font-size:12px;font-family:var(--font-sans);';
+    dropZone.appendChild(dropLabel);
 
-    const label = document.createElement('div');
-    label.textContent = 'Drop JSON or CSV file here';
-    label.style.cssText = 'color:var(--text-secondary);font-size:13px;margin-bottom:8px;';
+    const dropHint = document.createElement('div');
+    dropHint.textContent = 'Supports .json and .csv files';
+    dropHint.style.cssText = 'color:var(--text-tertiary);font-size:10px;margin-top:4px;font-family:var(--font-sans);';
+    dropZone.appendChild(dropHint);
 
-    const separator = document.createElement('div');
-    separator.textContent = 'or';
-    separator.style.cssText = 'color:var(--text-tertiary);font-size:11px;margin-bottom:8px;';
+    dropZone.addEventListener('click', () => this.fileInput.click());
 
-    const browseBtn = document.createElement('button');
-    browseBtn.className = 'btn btn-secondary';
-    browseBtn.textContent = 'Browse Files';
-    browseBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.fileInput.click();
-    });
-
-    this.dropZone.append(icon, label, separator, browseBtn);
-    this.dropZone.addEventListener('click', () => this.fileInput.click());
-
-    this.dropZone.addEventListener('dragover', (e) => {
+    dropZone.addEventListener('dragover', (e) => {
       e.preventDefault();
-      this.dropZone.style.borderColor = 'var(--accent)';
-      this.dropZone.style.background = 'var(--accent-muted)';
+      dropZone.style.borderColor = 'var(--accent)';
+      dropZone.style.background = 'var(--accent-muted)';
     });
-
-    this.dropZone.addEventListener('dragleave', () => {
-      this.dropZone.style.borderColor = 'var(--border-default)';
-      this.dropZone.style.background = '';
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.borderColor = 'var(--border-default)';
+      dropZone.style.background = '';
     });
-
-    this.dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener('drop', (e) => {
       e.preventDefault();
-      this.dropZone.style.borderColor = 'var(--border-default)';
-      this.dropZone.style.background = '';
+      dropZone.style.borderColor = 'var(--border-default)';
+      dropZone.style.background = '';
       const file = e.dataTransfer?.files[0];
       if (file) this.processFile(file);
     });
 
-    this.container.appendChild(this.dropZone);
+    this.container.appendChild(dropZone);
 
-    // Status/preview area (hidden initially)
+    // --- Paste Section ---
+    const pasteHeading = document.createElement('h4');
+    pasteHeading.textContent = 'Or Paste Data';
+    pasteHeading.style.cssText =
+      'margin:0 0 8px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
+    this.container.appendChild(pasteHeading);
+
+    this.pasteArea = document.createElement('textarea');
+    this.pasteArea.placeholder = 'Paste JSON or CSV here...';
+    this.pasteArea.style.cssText =
+      'width:100%;min-height:120px;font-family:var(--font-mono);font-size:11px;' +
+      'resize:vertical;padding:8px 10px;line-height:1.5;' +
+      'background:var(--bg-base);border:1px solid var(--border-default);' +
+      'border-radius:var(--radius-md);color:var(--text-primary);' +
+      'transition:border-color 150ms ease;';
+    this.container.appendChild(this.pasteArea);
+
+    const pasteBtn = document.createElement('button');
+    pasteBtn.className = 'btn btn-primary';
+    pasteBtn.textContent = 'Parse & Preview';
+    pasteBtn.style.marginTop = '8px';
+    pasteBtn.addEventListener('click', () => this.processPaste());
+    this.container.appendChild(pasteBtn);
+
+    // --- Status & Error areas ---
     this.statusArea = document.createElement('div');
     this.statusArea.dataset.field = 'status';
     this.statusArea.style.display = 'none';
     this.container.appendChild(this.statusArea);
 
-    // Error area
     this.errorArea = document.createElement('div');
     this.errorArea.dataset.field = 'error';
     this.errorArea.className = 'error-msg';
-    this.errorArea.style.cssText = 'color:var(--danger);font-size:12px;margin-top:8px;';
+    this.errorArea.style.cssText = 'margin-top:8px;';
     this.errorArea.textContent = '';
     this.container.appendChild(this.errorArea);
+  }
+
+  private processPaste(): void {
+    this.clearStatus();
+    const text = this.pasteArea.value.trim();
+    if (!text) {
+      this.showError('Nothing to parse — paste JSON or CSV data above.');
+      return;
+    }
+    try {
+      const result = this.parseContent(text, 'pasted data');
+      this.pendingImport = result;
+      this.showStatus(result);
+    } catch (e: unknown) {
+      this.showError(e instanceof Error ? e.message : String(e));
+    }
   }
 
   private processFile(file: File): void {
@@ -137,37 +162,36 @@ export class ImportEditor {
     reader.readAsText(file);
   }
 
-  private parseContent(text: string, fileName: string): ParsedImport {
-    const ext = fileName.lastIndexOf('.') >= 0
-      ? fileName.slice(fileName.lastIndexOf('.')).toLowerCase()
+  private parseContent(text: string, source: string): ParsedImport {
+    const ext = source.lastIndexOf('.') >= 0
+      ? source.slice(source.lastIndexOf('.')).toLowerCase()
       : '';
 
-    if (ext === '.csv') {
-      return this.parseCsv(text, fileName);
+    if (ext === '.csv') return this.parseCsv(text, source);
+    if (ext === '.json') return this.parseJson(text, source);
+
+    // No extension (pasted data) — try JSON first, fall back to CSV
+    const trimmed = text.trimStart();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      try { return this.parseJson(text, source); } catch { /* fall through */ }
     }
-    if (ext === '.json') {
-      return this.parseJson(text, fileName);
-    }
-    // No recognised extension — try JSON first, fall back to CSV
-    try {
-      return this.parseJson(text, fileName);
-    } catch {
-      return this.parseCsv(text, fileName);
-    }
+    try { return this.parseCsv(text, source); } catch { /* fall through */ }
+    try { return this.parseJson(text, source); } catch { /* fall through */ }
+    throw new Error('Could not parse as JSON or CSV. Check your data format.');
   }
 
-  private parseCsv(text: string, fileName: string): ParsedImport {
+  private parseCsv(text: string, source: string): ParsedImport {
     const { tree, nodeCount } = parseCsvToTree(text);
-    return { tree, nodeCount, format: 'CSV', fileName };
+    return { tree, nodeCount, format: 'CSV', source };
   }
 
-  private parseJson(text: string, fileName: string): ParsedImport {
+  private parseJson(text: string, source: string): ParsedImport {
     const parsed = JSON.parse(text) as OrgNode;
     if (!parsed.id || !parsed.name || !parsed.title) {
       throw new Error('Invalid org tree: root must have id, name, and title');
     }
     const nodeCount = this.countNodes(parsed);
-    return { tree: parsed, nodeCount, format: 'JSON', fileName };
+    return { tree: parsed, nodeCount, format: 'JSON', source };
   }
 
   private countNodes(node: OrgNode): number {
@@ -183,12 +207,13 @@ export class ImportEditor {
   private showStatus(result: ParsedImport): void {
     this.statusArea.innerHTML = '';
     this.statusArea.style.display = 'block';
-    this.statusArea.style.cssText +=
-      ';padding:12px;border-radius:var(--radius-md);background:var(--bg-elevated);margin-bottom:8px;';
+    this.statusArea.style.cssText =
+      'display:block;padding:12px;border-radius:var(--radius-md);background:var(--bg-elevated);' +
+      'margin-top:12px;border:1px solid var(--border-default);';
 
     const info = document.createElement('div');
-    info.style.cssText = 'font-size:13px;color:var(--text-primary);margin-bottom:8px;';
-    info.textContent = `Loaded: ${result.fileName} (${result.format}, ${result.nodeCount} people)`;
+    info.style.cssText = 'font-size:13px;color:var(--text-primary);margin-bottom:8px;font-family:var(--font-sans);';
+    info.innerHTML = `✓ Parsed <strong>${result.nodeCount}</strong> people from ${result.format}`;
     this.statusArea.appendChild(info);
 
     const btnGroup = document.createElement('div');
@@ -197,7 +222,7 @@ export class ImportEditor {
     const applyBtn = document.createElement('button');
     applyBtn.className = 'btn btn-primary';
     applyBtn.dataset.action = 'apply';
-    applyBtn.textContent = 'Apply';
+    applyBtn.textContent = 'Apply to Chart';
     applyBtn.addEventListener('click', () => this.applyImport());
 
     const cancelBtn = document.createElement('button');
@@ -214,6 +239,7 @@ export class ImportEditor {
     if (!this.pendingImport) return;
     try {
       this.store.fromJSON(JSON.stringify(this.pendingImport.tree));
+      this.pasteArea.value = '';
       this.clearStatus();
     } catch (e: unknown) {
       this.showError(e instanceof Error ? e.message : String(e));
