@@ -57,3 +57,18 @@ body {
   background: #ffffff;
   border-top: 1px solid #e2e8f0;
 }
+
+.footer-btn {
+  padding: 4px 12px;
+  font-size: 13px;
+  font-family: 'Calibri', sans-serif;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #f8fafc;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.footer-btn:hover {
+  background: #e2e8f0;
+}

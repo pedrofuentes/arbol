@@ -2,6 +2,7 @@ import { OrgStore } from './store/org-store';
 import { ChartRenderer } from './renderer/chart-renderer';
 import { TabSwitcher } from './editor/tab-switcher';
 import { SettingsEditor } from './editor/settings-editor';
+import { exportToPptx } from './export/pptx-exporter';
 import { OrgNode } from './types';
 
 const SAMPLE_DATA: OrgNode = {
@@ -193,6 +194,21 @@ function main(): void {
   store.onChange(rerender);
 
   renderer.setCollapseToggleHandler(rerender);
+
+  // Footer: Export PPTX button
+  const footer = document.getElementById('footer')!;
+  const exportBtn = document.createElement('button');
+  exportBtn.className = 'footer-btn';
+  exportBtn.dataset.action = 'export-pptx';
+  exportBtn.textContent = 'Export PPTX';
+  footer.appendChild(exportBtn);
+
+  exportBtn.addEventListener('click', async () => {
+    const layout = renderer.getLastLayout();
+    if (layout) {
+      await exportToPptx(layout);
+    }
+  });
 
   rerender();
 }
