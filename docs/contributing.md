@@ -1,0 +1,82 @@
+# Contributing to Arbol
+
+Thank you for your interest in contributing to Arbol! This guide covers everything you need to get started.
+
+## Quick Start
+
+```bash
+git clone https://github.com/pedro/arbol.git
+cd arbol
+npm install
+npm run dev     # http://localhost:5173/
+npm run test    # 327 tests, all must pass
+```
+
+## Development Workflow
+
+1. **Create a branch** off `main`:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Write tests first** (TDD). Tests go in `tests/` mirroring the `src/` structure.
+
+3. **Implement the feature.** Follow the [coding standards](agents.md#coding-standards).
+
+4. **Run the full test suite:**
+   ```bash
+   npm run test
+   ```
+
+5. **Build for production** to catch TypeScript errors:
+   ```bash
+   npm run build
+   ```
+
+6. **Commit** with conventional message format:
+   ```
+   feat: add node color customization
+   fix: correct PAL boundary spacing for odd counts
+   refactor: extract link drawing into reusable method
+   test: add regression tests for single-child managers
+   docs: update roadmap with new feature
+   ```
+
+7. **Open a PR** against `main`.
+
+## Project Structure
+
+See [agents.md](agents.md#project-structure) for the full file tree and module descriptions.
+
+## Key Architecture Decisions
+
+### Why no UI framework?
+D3.js needs direct DOM control over the SVG. A framework like React/Vue would fight D3 for ownership. Vanilla TypeScript avoids this conflict while keeping the codebase simple.
+
+### Why pptxgenjs for export?
+PowerPoint export needs editable shapes (not embedded images). pptxgenjs generates native `.pptx` with rectangles, text boxes, and connectors that users can modify in PowerPoint. It's code-split to keep the initial bundle small.
+
+### Why localStorage?
+Arbol is a browser-only tool with no backend. Settings and CSV mapping presets persist via localStorage so users don't lose their configuration between sessions.
+
+## Rendering Concepts
+
+Understanding these concepts is essential for working on the renderer:
+
+- **IC stacks** — Individual Contributors under M1 managers render vertically in a grey container with no connecting lines
+- **PAL stacks** — Personal Advisors render in alternating left/right columns with elbow connectors from the manager's sides
+- **Boundary spacing** — Sibling subtree gaps are calculated from bounding boxes, not node centers
+- **All spacing is configurable** — Nothing is hardcoded; everything flows through `RendererOptions`
+
+## Testing Guidelines
+
+- Always run `npm run test` before committing
+- Spacing changes must include regression tests (see `chart-renderer.test.ts`)
+- Store modules should test persistence, serialization, and edge cases
+- UI modules with business logic need unit tests; purely presentational DOM builders are optional
+
+## Need Help?
+
+- Check the [roadmap](roadmap.md) for what's been done and what's planned
+- Read [agents.md](agents.md) for technical details and common pitfalls
+- Look at existing tests for patterns and examples
