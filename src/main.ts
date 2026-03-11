@@ -211,11 +211,13 @@ function main(): void {
     ...savedSettings,
   });
 
+  let onSettingsSaved: (() => void) | null = null;
+
   const rerender = () => {
     renderer.render(store.getTree());
-    // Persist settings on every rerender (debounced in store)
     const opts = renderer.getOptions();
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
+    onSettingsSaved?.();
   };
 
   // Theme toggle
@@ -371,6 +373,24 @@ function main(): void {
   statusText.id = 'footer-status';
   statusText.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
   footerLeft.appendChild(statusText);
+
+  // Save indicator — flashes briefly when settings are persisted
+  const saveIndicator = document.createElement('span');
+  saveIndicator.style.cssText =
+    'font-size:10px;color:var(--accent);font-family:var(--font-sans);font-weight:600;' +
+    'opacity:0;transition:opacity 200ms ease;';
+  saveIndicator.textContent = '✓ Saved';
+  footerLeft.appendChild(saveIndicator);
+
+  let saveFlashTimer: ReturnType<typeof setTimeout> | null = null;
+  const flashSaved = () => {
+    saveIndicator.style.opacity = '1';
+    if (saveFlashTimer) clearTimeout(saveFlashTimer);
+    saveFlashTimer = setTimeout(() => {
+      saveIndicator.style.opacity = '0';
+    }, 1500);
+  };
+  onSettingsSaved = flashSaved;
 
   const updateStatus = () => {
     const tree = store.getTree();
