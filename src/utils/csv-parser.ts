@@ -185,14 +185,31 @@ function buildTreeById(nodes: { id: string; name: string; title: string; parentR
     idMap.set(normalize(node.id), node);
   }
 
-  // Find roots
+  // Find roots and collect orphan references
   const roots: string[] = [];
+  const missingParents = new Set<string>();
   for (const node of nodes) {
     if (!node.parentRef) {
       roots.push(normalize(node.id));
     } else if (!idMap.has(normalize(node.parentRef))) {
-      throw new Error(`Orphan reference: node "${node.name}" references parent_id "${node.parentRef}" which does not exist.`);
+      missingParents.add(normalize(node.parentRef));
     }
+  }
+
+  // Auto-create missing root if all orphans reference the same parent
+  if (roots.length === 0 && missingParents.size === 1) {
+    const missingId = [...missingParents][0];
+    const originalRef = nodes.find(n => normalize(n.parentRef) === missingId)!.parentRef;
+    const placeholder = { id: originalRef, name: originalRef, title: '\u2014', parentRef: '' };
+    nodes.push(placeholder);
+    idMap.set(missingId, placeholder);
+    roots.push(missingId);
+    missingParents.clear();
+  }
+
+  if (missingParents.size > 0) {
+    const orphanNodes = nodes.filter(n => n.parentRef && !idMap.has(normalize(n.parentRef)));
+    throw new Error(`Orphan reference: node "${orphanNodes[0].name}" references parent_id "${orphanNodes[0].parentRef}" which does not exist.`);
   }
 
   if (roots.length === 0) {
@@ -239,12 +256,29 @@ function buildTreeByName(nodes: { id: string; name: string; title: string; paren
   }
 
   const roots: string[] = [];
+  const missingParents = new Set<string>();
   for (const node of nodes) {
     if (!node.parentRef) {
       roots.push(normalize(node.name));
     } else if (!nameMap.has(normalize(node.parentRef))) {
-      throw new Error(`Orphan reference: node "${node.name}" references parent "${node.parentRef}" which does not exist.`);
+      missingParents.add(normalize(node.parentRef));
     }
+  }
+
+  // Auto-create missing root if all orphans reference the same parent
+  if (roots.length === 0 && missingParents.size === 1) {
+    const missingName = [...missingParents][0];
+    const originalRef = nodes.find(n => normalize(n.parentRef) === missingName)!.parentRef;
+    const placeholder = { id: crypto.randomUUID(), name: originalRef, title: '\u2014', parentRef: '' };
+    nodes.push(placeholder);
+    nameMap.set(missingName, placeholder);
+    roots.push(missingName);
+    missingParents.clear();
+  }
+
+  if (missingParents.size > 0) {
+    const orphanNodes = nodes.filter(n => n.parentRef && !nameMap.has(normalize(n.parentRef)));
+    throw new Error(`Orphan reference: node "${orphanNodes[0].name}" references parent "${orphanNodes[0].parentRef}" which does not exist.`);
   }
 
   if (roots.length === 0) {

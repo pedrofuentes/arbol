@@ -433,3 +433,62 @@ describe('case-insensitive matching', () => {
     expect(() => parseCsvToTree(csv, mapping)).toThrow(/orphan/i);
   });
 });
+
+describe('missing root auto-creation', () => {
+  it('auto-creates placeholder root when all orphans reference same missing ID', () => {
+    const csv = [
+      'id,name,title,parent_id',
+      'alice,Alice,Director,vp_boss',
+      'bob,Bob,Manager,alice',
+      'carol,Carol,Engineer,bob',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.id).toBe('vp_boss');
+    expect(result.tree.name).toBe('vp_boss');
+    expect(result.tree.title).toBe('\u2014');
+    expect(result.tree.children).toHaveLength(1);
+    expect(result.tree.children![0].name).toBe('Alice');
+    expect(result.nodeCount).toBe(4);
+  });
+
+  it('auto-creates placeholder root when all orphans reference same missing name', () => {
+    const csv = [
+      'name,title,manager_name',
+      'Alice,Director,Big Boss',
+      'Bob,Manager,Alice',
+      'Carol,Engineer,Bob',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.name).toBe('Big Boss');
+    expect(result.tree.title).toBe('\u2014');
+    expect(result.tree.children).toHaveLength(1);
+    expect(result.tree.children![0].name).toBe('Alice');
+    expect(result.nodeCount).toBe(4);
+  });
+
+  it('still throws when orphans reference multiple different missing parents', () => {
+    const csv = [
+      'id,name,title,parent_id',
+      'alice,Alice,Director,boss1',
+      'bob,Bob,Manager,boss2',
+      'carol,Carol,Engineer,bob',
+    ].join('\n');
+
+    expect(() => parseCsvToTree(csv)).toThrow(/orphan/i);
+  });
+
+  it('handles missing root with case-insensitive matching', () => {
+    const csv = [
+      'id,name,title,parent_id',
+      'alice,Alice,Director,VP_BOSS',
+      'bob,Bob,Manager,alice',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.name).toBe('VP_BOSS');
+    expect(result.tree.children).toHaveLength(1);
+    expect(result.tree.children![0].name).toBe('Alice');
+  });
+});
