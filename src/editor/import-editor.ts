@@ -1,6 +1,8 @@
 import { OrgStore } from '../store/org-store';
-import { parseCsvToTree } from '../utils/csv-parser';
-import type { OrgNode } from '../types';
+import { MappingStore } from '../store/mapping-store';
+import { parseCsvToTree, extractHeaders } from '../utils/csv-parser';
+import { ColumnMapper } from '../ui/column-mapper';
+import type { OrgNode, ColumnMapping } from '../types';
 
 interface ParsedImport {
   tree: OrgNode;
@@ -12,24 +14,100 @@ interface ParsedImport {
 export class ImportEditor {
   private container: HTMLElement;
   private store: OrgStore;
+  private mappingStore: MappingStore;
   private fileInput!: HTMLInputElement;
   private statusArea!: HTMLDivElement;
   private errorArea!: HTMLDivElement;
   private pasteArea!: HTMLTextAreaElement;
+  private presetSelect!: HTMLSelectElement;
+  private mappingArea!: HTMLDivElement;
+  private currentMapper: ColumnMapper | null = null;
+  private pendingCsvText: string | null = null;
   private pendingImport: ParsedImport | null = null;
 
   constructor(container: HTMLElement, store: OrgStore) {
     this.container = container;
     this.store = store;
+    this.mappingStore = new MappingStore();
     this.build();
   }
 
   destroy(): void {
+    if (this.currentMapper) {
+      this.currentMapper.destroy();
+      this.currentMapper = null;
+    }
     this.container.innerHTML = '';
   }
 
   private build(): void {
     this.container.innerHTML = '';
+
+    // --- Mapping Preset Section ---
+    const presetHeading = document.createElement('h4');
+    presetHeading.textContent = 'Mapping Preset';
+    presetHeading.style.cssText =
+      'margin:0 0 8px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
+    this.container.appendChild(presetHeading);
+
+    const presetRow = document.createElement('div');
+    presetRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:14px;';
+
+    this.presetSelect = document.createElement('select');
+    this.presetSelect.style.cssText =
+      'flex:1;padding:4px 8px;font-size:11px;font-family:var(--font-sans);' +
+      'background:var(--bg-base);border:1px solid var(--border-default);' +
+      'border-radius:var(--radius-md);color:var(--text-primary);';
+    this.refreshPresetDropdown();
+    presetRow.appendChild(this.presetSelect);
+
+    const manageBtn = document.createElement('button');
+    manageBtn.className = 'btn btn-secondary';
+    manageBtn.textContent = 'Manage';
+    manageBtn.style.cssText = 'font-size:10px;padding:3px 8px;';
+
+    const manageArea = document.createElement('div');
+    manageArea.style.cssText = 'display:none;margin-bottom:14px;padding:8px 10px;' +
+      'background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);';
+
+    const rebuildManageList = () => {
+      manageArea.innerHTML = '';
+      const presets = this.mappingStore.getPresets();
+      if (presets.length === 0) {
+        const empty = document.createElement('div');
+        empty.textContent = 'No saved presets.';
+        empty.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
+        manageArea.appendChild(empty);
+        return;
+      }
+      for (const preset of presets) {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;';
+        const label = document.createElement('span');
+        label.textContent = preset.name;
+        label.style.cssText = 'font-size:11px;color:var(--text-primary);font-family:var(--font-sans);';
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn btn-secondary';
+        delBtn.textContent = '×';
+        delBtn.style.cssText = 'font-size:12px;padding:1px 6px;line-height:1;min-width:0;';
+        delBtn.addEventListener('click', () => {
+          this.mappingStore.deletePreset(preset.name);
+          this.refreshPresetDropdown();
+          rebuildManageList();
+        });
+        row.append(label, delBtn);
+        manageArea.appendChild(row);
+      }
+    };
+
+    manageBtn.addEventListener('click', () => {
+      const isVisible = manageArea.style.display !== 'none';
+      manageArea.style.display = isVisible ? 'none' : 'block';
+      if (!isVisible) rebuildManageList();
+    });
+    presetRow.appendChild(manageBtn);
+    this.container.appendChild(presetRow);
+    this.container.appendChild(manageArea);
 
     // --- File Upload Section ---
     const fileHeading = document.createElement('h4');
@@ -130,6 +208,11 @@ export class ImportEditor {
     this.errorArea.style.cssText = 'margin-top:8px;';
     this.errorArea.textContent = '';
     this.container.appendChild(this.errorArea);
+
+    // --- Column Mapping Area ---
+    this.mappingArea = document.createElement('div');
+    this.mappingArea.style.display = 'none';
+    this.container.appendChild(this.mappingArea);
   }
 
   private buildFormatHelp(): HTMLElement {
@@ -260,8 +343,24 @@ export class ImportEditor {
   }
 
   private parseCsv(text: string, source: string): ParsedImport {
-    const { tree, nodeCount } = parseCsvToTree(text);
-    return { tree, nodeCount, format: 'CSV', source };
+    const presetName = this.presetSelect.value;
+    if (presetName) {
+      const preset = this.mappingStore.getPreset(presetName);
+      if (preset) {
+        const { tree, nodeCount } = parseCsvToTree(text, preset.mapping);
+        return { tree, nodeCount, format: 'CSV', source };
+      }
+    }
+
+    try {
+      const { tree, nodeCount } = parseCsvToTree(text);
+      return { tree, nodeCount, format: 'CSV', source };
+    } catch (e) {
+      this.pendingCsvText = text;
+      const headers = extractHeaders(text);
+      this.showColumnMapper(headers);
+      throw new Error('Auto-detection failed. Please map columns below.');
+    }
   }
 
   private parseJson(text: string, source: string): ParsedImport {
@@ -334,5 +433,60 @@ export class ImportEditor {
     this.statusArea.style.display = 'none';
     this.statusArea.innerHTML = '';
     this.errorArea.textContent = '';
+  }
+
+  private showColumnMapper(headers: string[]): void {
+    this.mappingArea.style.display = 'block';
+    if (this.currentMapper) {
+      this.currentMapper.destroy();
+      this.currentMapper = null;
+    }
+
+    this.currentMapper = new ColumnMapper(
+      this.mappingArea,
+      headers,
+      (mapping: ColumnMapping) => {
+        if (!this.pendingCsvText) return;
+        try {
+          const { tree, nodeCount } = parseCsvToTree(this.pendingCsvText, mapping);
+          this.pendingImport = { tree, nodeCount, format: 'CSV', source: 'mapped CSV' };
+          this.showStatus(this.pendingImport);
+          this.hideColumnMapper();
+        } catch (e: unknown) {
+          this.showError(e instanceof Error ? e.message : String(e));
+        }
+      },
+      (mapping: ColumnMapping, presetName: string) => {
+        this.mappingStore.savePreset({ name: presetName, mapping });
+        this.refreshPresetDropdown();
+      },
+      () => {
+        this.hideColumnMapper();
+      },
+    );
+  }
+
+  private hideColumnMapper(): void {
+    this.mappingArea.style.display = 'none';
+    if (this.currentMapper) {
+      this.currentMapper.destroy();
+      this.currentMapper = null;
+    }
+    this.pendingCsvText = null;
+  }
+
+  private refreshPresetDropdown(): void {
+    this.presetSelect.innerHTML = '';
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = '';
+    defaultOpt.textContent = 'Auto-detect';
+    this.presetSelect.appendChild(defaultOpt);
+
+    for (const preset of this.mappingStore.getPresets()) {
+      const opt = document.createElement('option');
+      opt.value = preset.name;
+      opt.textContent = preset.name;
+      this.presetSelect.appendChild(opt);
+    }
   }
 }

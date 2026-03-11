@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseCsvToTree } from '../../src/utils/csv-parser';
+import { parseCsvToTree, extractHeaders } from '../../src/utils/csv-parser';
+import type { ColumnMapping } from '../../src/types';
 
 describe('parseCsvToTree', () => {
   // Format A tests
@@ -241,5 +242,118 @@ describe('parseCsvToTree', () => {
     ].join('\n');
 
     expect(() => parseCsvToTree(csv)).toThrow(/multiple roots/i);
+  });
+});
+
+describe('extractHeaders', () => {
+  it('returns headers from a CSV string', () => {
+    const csv = 'name,title,manager_name\nAlice,CEO,';
+    expect(extractHeaders(csv)).toEqual(['name', 'title', 'manager_name']);
+  });
+
+  it('handles BOM', () => {
+    const csv = '\uFEFFname,title,manager_name\nAlice,CEO,';
+    expect(extractHeaders(csv)).toEqual(['name', 'title', 'manager_name']);
+  });
+
+  it('returns empty array for empty string', () => {
+    expect(extractHeaders('')).toEqual([]);
+  });
+
+  it('handles quoted headers with commas', () => {
+    const csv = '"First, Name","Job Title","Reports To"\nAlice,CEO,';
+    expect(extractHeaders(csv)).toEqual([
+      'First, Name',
+      'Job Title',
+      'Reports To',
+    ]);
+  });
+});
+
+describe('parseCsvToTree with explicit ColumnMapping', () => {
+  const customCsv = [
+    'employee_name,job_title,supervisor',
+    'Jane Doe,CEO,',
+    'John Smith,VP Engineering,Jane Doe',
+    'Alice Lee,Manager,John Smith',
+  ].join('\n');
+
+  const nameMapping: ColumnMapping = {
+    name: 'employee_name',
+    title: 'job_title',
+    parentRef: 'supervisor',
+    parentRefType: 'name',
+  };
+
+  it('parses CSV with custom column names using provided mapping', () => {
+    const result = parseCsvToTree(customCsv, nameMapping);
+    expect(result.tree.name).toBe('Jane Doe');
+    expect(result.tree.title).toBe('CEO');
+    expect(result.tree.children).toHaveLength(1);
+    expect(result.tree.children![0].name).toBe('John Smith');
+    expect(result.tree.children![0].children![0].name).toBe('Alice Lee');
+    expect(result.nodeCount).toBe(3);
+  });
+
+  it('parses CSV with id-based mapping', () => {
+    const csv = [
+      'emp_id,emp_name,emp_title,boss_id',
+      '100,Jane Doe,CEO,',
+      '200,John Smith,VP Eng,100',
+      '300,Alice Lee,Manager,200',
+    ].join('\n');
+
+    const idMapping: ColumnMapping = {
+      name: 'emp_name',
+      title: 'emp_title',
+      parentRef: 'boss_id',
+      id: 'emp_id',
+      parentRefType: 'id',
+    };
+
+    const result = parseCsvToTree(csv, idMapping);
+    expect(result.tree.name).toBe('Jane Doe');
+    expect(result.tree.id).toBe('100');
+    expect(result.tree.children![0].name).toBe('John Smith');
+    expect(result.nodeCount).toBe(3);
+  });
+
+  it('throws when a mapped column does not exist in headers', () => {
+    const csv = [
+      'col_a,col_b,col_c',
+      'Jane,CEO,',
+      'John,VP,Jane',
+      'Alice,Mgr,John',
+    ].join('\n');
+
+    expect(() => parseCsvToTree(csv, nameMapping)).toThrow(
+      /column mapping error/i,
+    );
+  });
+
+  it('performs case-insensitive header matching with mapping', () => {
+    const csv = [
+      'EMPLOYEE_NAME,JOB_TITLE,SUPERVISOR',
+      'Jane Doe,CEO,',
+      'John Smith,VP Engineering,Jane Doe',
+      'Alice Lee,Manager,John Smith',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv, nameMapping);
+    expect(result.tree.name).toBe('Jane Doe');
+    expect(result.nodeCount).toBe(3);
+  });
+
+  it('still works without mapping (backward compat)', () => {
+    const csv = [
+      'name,title,manager_name',
+      'Alice,CEO,',
+      'Bob,CTO,Alice',
+      'Carol,Engineer,Bob',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.name).toBe('Alice');
+    expect(result.nodeCount).toBe(3);
   });
 });

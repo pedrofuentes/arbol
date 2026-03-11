@@ -1,4 +1,4 @@
-import type { OrgNode } from '../types';
+import type { OrgNode, ColumnMapping } from '../types';
 
 export interface CsvParseResult {
   tree: OrgNode;
@@ -84,7 +84,16 @@ function stripBom(text: string): string {
   return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
 
-export function parseCsvToTree(csvText: string): CsvParseResult {
+export function extractHeaders(csvText: string): string[] {
+  const cleaned = stripBom(csvText);
+  const firstLine = cleaned.split(/\r?\n/).find((line) => line.trim() !== '');
+  if (!firstLine) {
+    return [];
+  }
+  return parseRow(firstLine);
+}
+
+export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvParseResult {
   const cleaned = stripBom(csvText);
   const lines = cleaned.split(/\r?\n/).filter((line) => line.trim() !== '');
 
@@ -93,7 +102,40 @@ export function parseCsvToTree(csvText: string): CsvParseResult {
   }
 
   const headers = parseRow(lines[0]);
-  const colMap = detectFormat(headers);
+
+  let colMap: ColumnMap;
+  if (mapping) {
+    const normalized = headers.map((h) => h.toLowerCase().trim());
+
+    const nameIdx = normalized.indexOf(mapping.name.toLowerCase().trim());
+    const titleIdx = normalized.indexOf(mapping.title.toLowerCase().trim());
+    const parentIdx = normalized.indexOf(mapping.parentRef.toLowerCase().trim());
+
+    const missing: string[] = [];
+    if (nameIdx === -1) missing.push(`name ("${mapping.name}")`);
+    if (titleIdx === -1) missing.push(`title ("${mapping.title}")`);
+    if (parentIdx === -1) missing.push(`parentRef ("${mapping.parentRef}")`);
+
+    let idIdx: number | undefined;
+    if (mapping.id) {
+      idIdx = normalized.indexOf(mapping.id.toLowerCase().trim());
+      if (idIdx === -1) missing.push(`id ("${mapping.id}")`);
+    }
+
+    if (missing.length > 0) {
+      throw new Error(
+        `Column mapping error: the following columns were not found in the CSV headers: ${missing.join(', ')}. Available headers: ${headers.join(', ')}`,
+      );
+    }
+
+    const format: Format = mapping.parentRefType === 'id' ? 'A' : 'B';
+    colMap = { format, name: nameIdx, title: titleIdx, parent: parentIdx };
+    if (idIdx !== undefined) {
+      colMap.id = idIdx;
+    }
+  } else {
+    colMap = detectFormat(headers);
+  }
 
   const dataLines = lines.slice(1);
   if (dataLines.length < 1) {
