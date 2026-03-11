@@ -12,6 +12,7 @@ import { getMatchingNodeIds } from './utils/search';
 import { OrgNode } from './types';
 import { flattenTree } from './utils/tree';
 import { showConfirmDialog } from './ui/confirm-dialog';
+import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
 
 const SAMPLE_DATA: OrgNode = {
@@ -235,6 +236,15 @@ function main(): void {
     themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
   });
   headerRight.appendChild(themeBtn);
+
+  // Help button
+  const helpBtn = document.createElement('button');
+  helpBtn.className = 'icon-btn';
+  helpBtn.setAttribute('data-tooltip', 'Help & shortcuts');
+  helpBtn.textContent = '?';
+  helpBtn.style.fontWeight = '700';
+  helpBtn.addEventListener('click', () => showHelpDialog());
+  headerRight.appendChild(helpBtn);
 
   // Undo/Redo buttons (inserted before theme button)
   const undoBtn = document.createElement('button');
