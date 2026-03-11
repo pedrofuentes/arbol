@@ -147,6 +147,13 @@ export function computeLayout(
       for (const child of node.children ?? []) {
         enforceSpacing(child);
       }
+      // Single child: align subtree vertically under parent
+      if (node.children && node.children.length === 1) {
+        const dx = node.x - node.children[0].x;
+        if (dx !== 0) {
+          shiftSubtreeX(node.children[0], dx);
+        }
+      }
       return;
     }
 

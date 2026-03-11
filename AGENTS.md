@@ -105,8 +105,8 @@ CSV imports support: `id,name,title,parent_id` or `name,title,manager_name` (aut
 - **Framework:** Vitest with jsdom environment
 - **327 tests across 19 files** — all must pass before committing
 - **Run tests:** `npm run test`
-- **Watch mode:** `npm test:watch`
-- **TDD approach:** write tests first, then implementation
+- **Watch mode:** `npm run test:watch`
+- **TDD is mandatory** — see [Agent Workflow](#agent-workflow-mandatory) above
 - Tests live in `tests/` mirroring `src/` structure
 
 ### Test Categories
@@ -133,12 +133,55 @@ npm run test:watch   # Watch mode
 npm run build        # Production build (tsc + vite build)
 ```
 
-## Git Workflow
+## Agent Workflow (Mandatory)
 
-- **GitHub Flow** — `main` is always deployable
-- Feature branches off `main`, merged back when complete
-- All tests must pass before merging
-- Commit messages use conventional format: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
+Every code change **must** follow this sequence — no exceptions:
+
+### 1. Create a Feature Branch
+
+```bash
+git checkout main && git pull
+git checkout -b <type>/<short-description>   # e.g. feat/csv-export, fix/pal-overlap
+```
+
+- **Never commit directly to `main`.** All work happens on a feature branch.
+- Branch naming: `feat/`, `fix/`, `refactor/`, `test/`, `docs/`, `chore/` prefix + kebab-case description.
+
+### 2. Test-Driven Development (TDD)
+
+For every change, follow the Red → Green → Refactor cycle:
+
+1. **Red** — Write a failing test that describes the expected behavior.
+2. **Green** — Write the minimum implementation to make the test pass.
+3. **Refactor** — Clean up the code while keeping all tests green.
+
+- Write tests **before** implementation code — no exceptions.
+- Run `npm run test` after every meaningful change to confirm nothing is broken.
+- New features require new tests. Bug fixes require a regression test that reproduces the bug first.
+- Tests live in `tests/` mirroring `src/` structure.
+
+### 3. Commit and Verify
+
+- All tests must pass (`npm run test`) before any commit.
+- Build must succeed (`npm run build`) before considering the branch ready.
+- Commit messages use conventional format: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`.
+
+### 4. Merge Only With User Approval
+
+- When work is complete on the feature branch, **ask the user for explicit approval** before merging into `main`.
+- Present a summary of changes (files modified, tests added/changed, what the feature does).
+- **Do NOT merge, rebase, or push to `main` without the user saying yes.**
+- If the user declines, stay on the feature branch and address their feedback.
+
+### Git Rules Summary
+
+| Rule | Enforcement |
+|---|---|
+| Work on feature branch | **Always** — never commit to `main` directly |
+| TDD (tests first) | **Always** — Red → Green → Refactor |
+| Tests pass before commit | **Always** — `npm run test` must exit 0 |
+| Merge to `main` | **Only** with explicit user approval |
+| Conventional commits | **Always** — `feat:`, `fix:`, etc. |
 
 ## Common Pitfalls
 
