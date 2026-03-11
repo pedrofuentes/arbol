@@ -131,11 +131,17 @@ export class ChartRenderer {
       }
     };
 
+    // Shift children down to make room for PAL stacks or to balance spacing
+    const extraNonPalShift = bottomVerticalSpacing - topVerticalSpacing;
     for (const node of treeData.descendants()) {
       const palHeight = getPalStackHeight(node.data.id);
       if (palHeight > 0 && node.children) {
         for (const child of node.children) {
           shiftSubtree(child, palHeight);
+        }
+      } else if (extraNonPalShift > 0 && node.children) {
+        for (const child of node.children) {
+          shiftSubtree(child, extraNonPalShift);
         }
       }
     }
@@ -340,7 +346,7 @@ export class ChartRenderer {
     treeData: d3.HierarchyPointNode<OrgNode>,
     getPalStackHeight: (id: string) => number,
   ): void {
-    const { nodeHeight, topVerticalSpacing } = this.opts;
+    const { nodeHeight, topVerticalSpacing, bottomVerticalSpacing } = this.opts;
 
     // Elbow links from below PAL area to children
     linksGroup
@@ -353,7 +359,9 @@ export class ChartRenderer {
         const sx = d.source.x;
         const palOffset = getPalStackHeight(d.source.data.id);
         const sy = d.source.y + nodeHeight + palOffset;
-        const horizontalY = sy + topVerticalSpacing;
+        // Non-PAL managers: match bottomVerticalSpacing for consistent look
+        const stubHeight = palOffset > 0 ? topVerticalSpacing : bottomVerticalSpacing;
+        const horizontalY = sy + stubHeight;
         const tx = d.target.x;
         const ty = d.target.y;
         return `M${sx},${sy} L${sx},${horizontalY} L${tx},${horizontalY} L${tx},${ty}`;
