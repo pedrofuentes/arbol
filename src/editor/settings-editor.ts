@@ -250,7 +250,7 @@ export class SettingsEditor {
         sizes: {
           nodeWidth: 90, nodeHeight: 18, horizontalSpacing: 20, branchSpacing: 6,
           topVerticalSpacing: 3, bottomVerticalSpacing: 8,
-          icNodeWidth: 80, icGap: 3, icContainerPadding: 4,
+          icNodeWidth: 83, icGap: 3, icContainerPadding: 4,
           palTopGap: 5, palBottomGap: 5, palRowGap: 3, palCenterGap: 40,
           nameFontSize: 7, titleFontSize: 6, textPaddingTop: 3, textGap: 1,
         },
@@ -261,7 +261,7 @@ export class SettingsEditor {
         sizes: {
           nodeWidth: 110, nodeHeight: 22, horizontalSpacing: 30, branchSpacing: 10,
           topVerticalSpacing: 5, bottomVerticalSpacing: 12,
-          icNodeWidth: 100, icGap: 4, icContainerPadding: 6,
+          icNodeWidth: 99, icGap: 4, icContainerPadding: 6,
           palTopGap: 7, palBottomGap: 7, palRowGap: 4, palCenterGap: 50,
           nameFontSize: 8, titleFontSize: 7, textPaddingTop: 4, textGap: 1,
         },
@@ -272,7 +272,7 @@ export class SettingsEditor {
         sizes: {
           nodeWidth: 140, nodeHeight: 28, horizontalSpacing: 40, branchSpacing: 16,
           topVerticalSpacing: 8, bottomVerticalSpacing: 16,
-          icNodeWidth: 120, icGap: 5, icContainerPadding: 8,
+          icNodeWidth: 125, icGap: 5, icContainerPadding: 8,
           palTopGap: 10, palBottomGap: 10, palRowGap: 5, palCenterGap: 60,
           nameFontSize: 9, titleFontSize: 8, textPaddingTop: 5, textGap: 2,
         },
@@ -283,7 +283,7 @@ export class SettingsEditor {
         sizes: {
           nodeWidth: 160, nodeHeight: 34, horizontalSpacing: 50, branchSpacing: 20,
           topVerticalSpacing: 10, bottomVerticalSpacing: 20,
-          icNodeWidth: 140, icGap: 6, icContainerPadding: 10,
+          icNodeWidth: 141, icGap: 6, icContainerPadding: 10,
           palTopGap: 12, palBottomGap: 12, palRowGap: 6, palCenterGap: 70,
           nameFontSize: 11, titleFontSize: 9, textPaddingTop: 6, textGap: 2,
         },
