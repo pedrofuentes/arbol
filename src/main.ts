@@ -323,7 +323,7 @@ function main(): void {
   new ImportEditor(importContainer, store);
 
   const settingsContainer = tabSwitcher.getContentContainer('settings')!;
-  new SettingsEditor(settingsContainer, renderer, rerender);
+  new SettingsEditor(settingsContainer, renderer, rerender, settingsStore);
 
   store.onChange(() => {
     rerender();
