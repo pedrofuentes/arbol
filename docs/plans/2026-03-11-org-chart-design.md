@@ -13,6 +13,12 @@ Build a browser-based org chart application that renders an organizational hiera
 - **TypeScript** — strict mode
 - **D3.js** — `d3-hierarchy` (tree layout), `d3-selection` (DOM), `d3-zoom` (pan/zoom)
 - **Vitest** — testing (TDD)
+
+## Coding Standards
+
+- **No hardcoded numbers.** All spacing, sizing, colors, and style values must be configurable via options/parameters passed at construction time, never buried in implementation code.
+- **Modular and reusable.** Shared rendering logic (cards, links) must be factored into single reusable methods. No copy-paste of rendering code across node types.
+- **Single source of truth.** Each value (spacing, color, font size) must be defined in exactly one place — the options interface — and referenced everywhere else.
 - **Vanilla TS** — no framework, avoids DOM ownership conflicts with D3
 
 ## Architecture
