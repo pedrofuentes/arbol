@@ -11,6 +11,7 @@ export interface ColumnMapping {
   parentRef: string;
   id?: string;
   parentRefType: 'id' | 'name';
+  caseInsensitive?: boolean;
 }
 
 export interface MappingPreset {

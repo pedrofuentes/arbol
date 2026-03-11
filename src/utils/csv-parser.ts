@@ -142,6 +142,8 @@ export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvPar
     throw new Error('CSV must contain at least 1 data row (need at least a root node).');
   }
 
+  const caseInsensitive = mapping?.caseInsensitive ?? true;
+
   interface FlatNode {
     id: string;
     name: string;
@@ -170,24 +172,25 @@ export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvPar
 
   // Detect circular references and orphans by building adjacency
   if (colMap.format === 'A') {
-    return buildTreeById(nodes);
+    return buildTreeById(nodes, caseInsensitive);
   } else {
-    return buildTreeByName(nodes);
+    return buildTreeByName(nodes, caseInsensitive);
   }
 }
 
-function buildTreeById(nodes: { id: string; name: string; title: string; parentRef: string }[]): CsvParseResult {
+function buildTreeById(nodes: { id: string; name: string; title: string; parentRef: string }[], caseInsensitive: boolean): CsvParseResult {
+  const normalize = caseInsensitive ? (s: string) => s.toLowerCase() : (s: string) => s;
   const idMap = new Map<string, { id: string; name: string; title: string; parentRef: string }>();
   for (const node of nodes) {
-    idMap.set(node.id, node);
+    idMap.set(normalize(node.id), node);
   }
 
   // Find roots
   const roots: string[] = [];
   for (const node of nodes) {
     if (!node.parentRef) {
-      roots.push(node.id);
-    } else if (!idMap.has(node.parentRef)) {
+      roots.push(normalize(node.id));
+    } else if (!idMap.has(normalize(node.parentRef))) {
       throw new Error(`Orphan reference: node "${node.name}" references parent_id "${node.parentRef}" which does not exist.`);
     }
   }
@@ -200,22 +203,23 @@ function buildTreeById(nodes: { id: string; name: string; title: string; parentR
   }
 
   // Detect cycles
-  detectCycles(nodes, 'id');
+  detectCycles(nodes, 'id', caseInsensitive);
 
   const childrenMap = new Map<string, string[]>();
   for (const node of nodes) {
     if (node.parentRef) {
-      const siblings = childrenMap.get(node.parentRef) ?? [];
-      siblings.push(node.id);
-      childrenMap.set(node.parentRef, siblings);
+      const parentKey = normalize(node.parentRef);
+      const siblings = childrenMap.get(parentKey) ?? [];
+      siblings.push(normalize(node.id));
+      childrenMap.set(parentKey, siblings);
     }
   }
 
   let count = 0;
-  function buildNode(id: string): OrgNode {
-    const n = idMap.get(id)!;
+  function buildNode(normalizedId: string): OrgNode {
+    const n = idMap.get(normalizedId)!;
     count++;
-    const childIds = childrenMap.get(id);
+    const childIds = childrenMap.get(normalizedId);
     const result: OrgNode = { id: n.id, name: n.name, title: n.title };
     if (childIds && childIds.length > 0) {
       result.children = childIds.map(buildNode);
@@ -227,17 +231,18 @@ function buildTreeById(nodes: { id: string; name: string; title: string; parentR
   return { tree, nodeCount: count };
 }
 
-function buildTreeByName(nodes: { id: string; name: string; title: string; parentRef: string }[]): CsvParseResult {
+function buildTreeByName(nodes: { id: string; name: string; title: string; parentRef: string }[], caseInsensitive: boolean): CsvParseResult {
+  const normalize = caseInsensitive ? (s: string) => s.toLowerCase() : (s: string) => s;
   const nameMap = new Map<string, { id: string; name: string; title: string; parentRef: string }>();
   for (const node of nodes) {
-    nameMap.set(node.name, node);
+    nameMap.set(normalize(node.name), node);
   }
 
   const roots: string[] = [];
   for (const node of nodes) {
     if (!node.parentRef) {
-      roots.push(node.name);
-    } else if (!nameMap.has(node.parentRef)) {
+      roots.push(normalize(node.name));
+    } else if (!nameMap.has(normalize(node.parentRef))) {
       throw new Error(`Orphan reference: node "${node.name}" references parent "${node.parentRef}" which does not exist.`);
     }
   }
@@ -249,22 +254,23 @@ function buildTreeByName(nodes: { id: string; name: string; title: string; paren
     throw new Error(`Multiple roots detected: ${roots.map((r) => `"${r}"`).join(', ')}. Only one root is allowed.`);
   }
 
-  detectCycles(nodes, 'name');
+  detectCycles(nodes, 'name', caseInsensitive);
 
   const childrenMap = new Map<string, string[]>();
   for (const node of nodes) {
     if (node.parentRef) {
-      const siblings = childrenMap.get(node.parentRef) ?? [];
-      siblings.push(node.name);
-      childrenMap.set(node.parentRef, siblings);
+      const parentKey = normalize(node.parentRef);
+      const siblings = childrenMap.get(parentKey) ?? [];
+      siblings.push(normalize(node.name));
+      childrenMap.set(parentKey, siblings);
     }
   }
 
   let count = 0;
-  function buildNode(name: string): OrgNode {
-    const n = nameMap.get(name)!;
+  function buildNode(normalizedName: string): OrgNode {
+    const n = nameMap.get(normalizedName)!;
     count++;
-    const childNames = childrenMap.get(name);
+    const childNames = childrenMap.get(normalizedName);
     const result: OrgNode = { id: n.id, name: n.name, title: n.title };
     if (childNames && childNames.length > 0) {
       result.children = childNames.map(buildNode);
@@ -279,17 +285,19 @@ function buildTreeByName(nodes: { id: string; name: string; title: string; paren
 function detectCycles(
   nodes: { id: string; name: string; title: string; parentRef: string }[],
   keyField: 'id' | 'name',
+  caseInsensitive: boolean,
 ): void {
+  const normalize = caseInsensitive ? (s: string) => s.toLowerCase() : (s: string) => s;
   const parentMap = new Map<string, string>();
   for (const node of nodes) {
-    const key = keyField === 'id' ? node.id : node.name;
+    const key = normalize(keyField === 'id' ? node.id : node.name);
     if (node.parentRef) {
-      parentMap.set(key, node.parentRef);
+      parentMap.set(key, normalize(node.parentRef));
     }
   }
 
   for (const node of nodes) {
-    const key = keyField === 'id' ? node.id : node.name;
+    const key = normalize(keyField === 'id' ? node.id : node.name);
     const visited = new Set<string>();
     let current: string | undefined = key;
     while (current && parentMap.has(current)) {

@@ -13,6 +13,8 @@ export class ColumnMapper {
   private idSelect!: HTMLSelectElement;
   private byIdRadio!: HTMLInputElement;
   private byNameRadio!: HTMLInputElement;
+  private caseInsensitiveCheckbox!: HTMLInputElement;
+  private parentRefLabel!: HTMLLabelElement;
   private presetNameInput!: HTMLInputElement;
   private savePresetBtn!: HTMLButtonElement;
   private errorArea!: HTMLDivElement;
@@ -57,11 +59,16 @@ export class ColumnMapper {
     // Column dropdowns
     this.nameSelect = this.createDropdown('Person Name Column', true);
     this.titleSelect = this.createDropdown('Job Title Column', true);
-    this.parentRefSelect = this.createDropdown('Reports To Column', true);
+    const parentRefGroup = this.createDropdown('Reports To (Name)', true);
+    this.parentRefSelect = parentRefGroup;
+    this.parentRefLabel = this.parentRefSelect.parentElement!.querySelector('label')!;
     this.idSelect = this.createDropdown('Person ID Column (optional)', false);
 
     // Parent Reference Type toggle
     this.buildParentRefTypeToggle();
+
+    // Case-insensitive checkbox
+    this.buildCaseInsensitiveOption();
 
     // Save as Preset section
     this.buildPresetSection();
@@ -151,6 +158,29 @@ export class ColumnMapper {
     radioGroup.appendChild(idLabel);
     group.appendChild(radioGroup);
     this.container.appendChild(group);
+
+    // Update Reports To label when toggle changes
+    this.byNameRadio.addEventListener('change', () => this.updateParentRefLabel());
+    this.byIdRadio.addEventListener('change', () => this.updateParentRefLabel());
+  }
+
+  private buildCaseInsensitiveOption(): void {
+    const group = document.createElement('div');
+    group.className = 'form-group';
+    group.style.cssText = 'margin-bottom:10px;';
+
+    const label = document.createElement('label');
+    label.style.cssText =
+      'display:flex;align-items:center;gap:6px;font-size:var(--text-sm);color:var(--text-secondary);cursor:pointer;text-transform:none;letter-spacing:normal;font-weight:var(--font-medium);';
+
+    this.caseInsensitiveCheckbox = document.createElement('input');
+    this.caseInsensitiveCheckbox.type = 'checkbox';
+    this.caseInsensitiveCheckbox.checked = true;
+
+    label.appendChild(this.caseInsensitiveCheckbox);
+    label.appendChild(document.createTextNode('Case-insensitive matching'));
+    group.appendChild(label);
+    this.container.appendChild(group);
   }
 
   private createRadioOption(
@@ -210,7 +240,14 @@ export class ColumnMapper {
     if (!hasId && this.byIdRadio.checked) {
       this.byNameRadio.checked = true;
     }
+    this.updateParentRefLabel();
     this.updatePresetBtnState();
+  }
+
+  private updateParentRefLabel(): void {
+    this.parentRefLabel.textContent = this.byIdRadio.checked
+      ? 'Reports To (ID)'
+      : 'Reports To (Name)';
   }
 
   private updatePresetBtnState(): void {
@@ -233,7 +270,7 @@ export class ColumnMapper {
     if (id) selected.push(id);
     if (new Set(selected).size !== selected.length) return null;
 
-    return { name, title, parentRef, id, parentRefType };
+    return { name, title, parentRef, id, parentRefType, caseInsensitive: this.caseInsensitiveCheckbox.checked };
   }
 
   private handleApply(): void {
@@ -264,7 +301,7 @@ export class ColumnMapper {
       return;
     }
 
-    this.onApply({ name, title, parentRef, id, parentRefType });
+    this.onApply({ name, title, parentRef, id, parentRefType, caseInsensitive: this.caseInsensitiveCheckbox.checked });
   }
 
   private handleSavePreset(): void {

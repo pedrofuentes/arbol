@@ -357,3 +357,79 @@ describe('parseCsvToTree with explicit ColumnMapping', () => {
     expect(result.nodeCount).toBe(3);
   });
 });
+
+describe('case-insensitive matching', () => {
+  it('matches IDs case-insensitively by default', () => {
+    const csv = [
+      'id,name,title,parent_id',
+      'jsmith,Jane Smith,CEO,',
+      'blee,Bob Lee,CTO,JSMITH',
+      'cwong,Carol Wong,Engineer,BLEE',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.name).toBe('Jane Smith');
+    expect(result.tree.children).toHaveLength(1);
+    expect(result.tree.children![0].name).toBe('Bob Lee');
+    expect(result.tree.children![0].children![0].name).toBe('Carol Wong');
+    expect(result.nodeCount).toBe(3);
+  });
+
+  it('matches names case-insensitively by default', () => {
+    const csv = [
+      'name,title,manager_name',
+      'Alice,CEO,',
+      'Bob,CTO,ALICE',
+      'Carol,Engineer,bob',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.name).toBe('Alice');
+    expect(result.tree.children![0].name).toBe('Bob');
+    expect(result.tree.children![0].children![0].name).toBe('Carol');
+    expect(result.nodeCount).toBe(3);
+  });
+
+  it('matches IDs case-insensitively with explicit mapping', () => {
+    const csv = [
+      'alias,full_name,role,boss_alias',
+      'jsmith,Jane Smith,CEO,',
+      'blee,Bob Lee,CTO,JSMITH',
+      'cwong,Carol Wong,Engineer,BLee',
+    ].join('\n');
+
+    const mapping: ColumnMapping = {
+      name: 'full_name',
+      title: 'role',
+      parentRef: 'boss_alias',
+      id: 'alias',
+      parentRefType: 'id',
+      caseInsensitive: true,
+    };
+
+    const result = parseCsvToTree(csv, mapping);
+    expect(result.tree.name).toBe('Jane Smith');
+    expect(result.tree.children![0].children![0].name).toBe('Carol Wong');
+    expect(result.nodeCount).toBe(3);
+  });
+
+  it('fails on case mismatch when caseInsensitive is false', () => {
+    const csv = [
+      'alias,full_name,role,boss_alias',
+      'jsmith,Jane Smith,CEO,',
+      'blee,Bob Lee,CTO,JSMITH',
+      'cwong,Carol Wong,Engineer,BLEE',
+    ].join('\n');
+
+    const mapping: ColumnMapping = {
+      name: 'full_name',
+      title: 'role',
+      parentRef: 'boss_alias',
+      id: 'alias',
+      parentRefType: 'id',
+      caseInsensitive: false,
+    };
+
+    expect(() => parseCsvToTree(csv, mapping)).toThrow(/orphan/i);
+  });
+});
