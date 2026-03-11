@@ -135,4 +135,100 @@ describe('MappingStore', () => {
       expect(store.getPresets()).toEqual([]);
     });
   });
+
+  describe('exportPresets', () => {
+    const validPreset = {
+      name: 'Test',
+      mapping: { name: 'employee_name', title: 'job_title', parentRef: 'supervisor', parentRefType: 'name' as const },
+    };
+
+    it('returns "[]" when no presets exist', () => {
+      expect(store.exportPresets()).toBe('[]');
+    });
+
+    it('exports all presets as pretty-printed JSON when called without args', () => {
+      store.savePreset(makePreset('Alpha'));
+      store.savePreset(makePreset('Beta'));
+
+      const json = store.exportPresets();
+      const parsed = JSON.parse(json);
+      expect(parsed).toHaveLength(2);
+      expect(parsed[0].name).toBe('Alpha');
+      expect(parsed[1].name).toBe('Beta');
+      // Pretty-printed: must contain newlines
+      expect(json).toContain('\n');
+    });
+
+    it('exports only named presets when called with names array', () => {
+      store.savePreset(makePreset('Alpha'));
+      store.savePreset(makePreset('Beta'));
+      store.savePreset(makePreset('Gamma'));
+
+      const json = store.exportPresets(['Beta', 'Gamma']);
+      const parsed = JSON.parse(json);
+      expect(parsed).toHaveLength(2);
+      expect(parsed[0].name).toBe('Beta');
+      expect(parsed[1].name).toBe('Gamma');
+    });
+
+    it('returns "[]" when none of the specified names match', () => {
+      store.savePreset(makePreset('Alpha'));
+
+      expect(store.exportPresets(['NonExistent', 'Unknown'])).toBe('[]');
+    });
+  });
+
+  describe('importPresets', () => {
+    const validPreset = {
+      name: 'Test',
+      mapping: { name: 'employee_name', title: 'job_title', parentRef: 'supervisor', parentRefType: 'name' as const },
+    };
+
+    it('imports valid presets and returns count', () => {
+      const json = JSON.stringify([validPreset]);
+      const count = store.importPresets(json);
+
+      expect(count).toBe(1);
+      expect(store.getPresets()).toHaveLength(1);
+      expect(store.getPreset('Test')).toBeDefined();
+      expect(store.getPreset('Test')!.mapping.name).toBe('employee_name');
+    });
+
+    it('upserts: importing a preset with same name as existing updates it', () => {
+      store.savePreset(makePreset('Test'));
+      expect(store.getPreset('Test')!.mapping.name).toBe('employee_name');
+
+      const updated = {
+        ...validPreset,
+        mapping: { ...validPreset.mapping, name: 'full_name' },
+      };
+      store.importPresets(JSON.stringify([updated]));
+
+      expect(store.getPresets()).toHaveLength(1);
+      expect(store.getPreset('Test')!.mapping.name).toBe('full_name');
+    });
+
+    it('skips invalid entries but imports valid ones, returns count of valid only', () => {
+      const json = JSON.stringify([
+        validPreset,
+        { name: 'Bad', mapping: {} },
+        { name: '', mapping: validPreset.mapping },
+        { ...validPreset, name: 'Also Good' },
+      ]);
+      const count = store.importPresets(json);
+
+      expect(count).toBe(2);
+      expect(store.getPresets()).toHaveLength(2);
+      expect(store.getPreset('Test')).toBeDefined();
+      expect(store.getPreset('Also Good')).toBeDefined();
+    });
+
+    it('throws on non-array JSON', () => {
+      expect(() => store.importPresets('{}')).toThrow('expected an array');
+    });
+
+    it('throws on invalid JSON string', () => {
+      expect(() => store.importPresets('not json')).toThrow();
+    });
+  });
 });

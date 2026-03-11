@@ -2,6 +2,7 @@ import { OrgStore } from '../store/org-store';
 import { MappingStore } from '../store/mapping-store';
 import { parseCsvToTree, extractHeaders } from '../utils/csv-parser';
 import { ColumnMapper } from '../ui/column-mapper';
+import { PresetCreator } from '../ui/preset-creator';
 import type { OrgNode, ColumnMapping } from '../types';
 
 interface ParsedImport {
@@ -21,7 +22,10 @@ export class ImportEditor {
   private pasteArea!: HTMLTextAreaElement;
   private presetSelect!: HTMLSelectElement;
   private mappingArea!: HTMLDivElement;
+  private manageSlot!: HTMLDivElement;
   private currentMapper: ColumnMapper | null = null;
+  private currentCreator: PresetCreator | null = null;
+  private slotMapper: ColumnMapper | null = null;
   private pendingCsvText: string | null = null;
   private pendingImport: ParsedImport | null = null;
 
@@ -33,6 +37,7 @@ export class ImportEditor {
   }
 
   destroy(): void {
+    this.clearManageSlot();
     if (this.currentMapper) {
       this.currentMapper.destroy();
       this.currentMapper = null;
@@ -70,14 +75,51 @@ export class ImportEditor {
     manageArea.style.cssText = 'display:none;margin-bottom:14px;padding:8px 10px;' +
       'background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);';
 
+    // --- Action buttons row ---
+    const actionRow = document.createElement('div');
+    actionRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;';
+
+    const actionBtnStyle = 'font-size:10px;padding:3px 8px;';
+
+    const createBtn = document.createElement('button');
+    createBtn.className = 'btn btn-secondary';
+    createBtn.textContent = 'Create';
+    createBtn.style.cssText = actionBtnStyle;
+
+    const fromSampleBtn = document.createElement('button');
+    fromSampleBtn.className = 'btn btn-secondary';
+    fromSampleBtn.textContent = 'From Sample';
+    fromSampleBtn.style.cssText = actionBtnStyle;
+
+    const importBtn = document.createElement('button');
+    importBtn.className = 'btn btn-secondary';
+    importBtn.textContent = 'Import';
+    importBtn.style.cssText = actionBtnStyle;
+
+    const exportAllBtn = document.createElement('button');
+    exportAllBtn.className = 'btn btn-secondary';
+    exportAllBtn.textContent = 'Export All';
+    exportAllBtn.style.cssText = actionBtnStyle;
+
+    actionRow.append(createBtn, fromSampleBtn, importBtn, exportAllBtn);
+    manageArea.appendChild(actionRow);
+
+    // --- Manage slot (dynamic inline area) ---
+    this.manageSlot = document.createElement('div');
+    this.manageSlot.style.cssText = 'display:none;padding:8px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);margin-bottom:8px;';
+    manageArea.appendChild(this.manageSlot);
+
+    // --- Preset list ---
+    const presetListContainer = document.createElement('div');
+
     const rebuildManageList = () => {
-      manageArea.innerHTML = '';
+      presetListContainer.innerHTML = '';
       const presets = this.mappingStore.getPresets();
       if (presets.length === 0) {
         const empty = document.createElement('div');
         empty.textContent = 'No saved presets.';
         empty.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
-        manageArea.appendChild(empty);
+        presetListContainer.appendChild(empty);
         return;
       }
       for (const preset of presets) {
@@ -86,6 +128,25 @@ export class ImportEditor {
         const label = document.createElement('span');
         label.textContent = preset.name;
         label.style.cssText = 'font-size:11px;color:var(--text-primary);font-family:var(--font-sans);';
+
+        const btnGroup = document.createElement('div');
+        btnGroup.style.cssText = 'display:flex;gap:4px;';
+
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'btn btn-secondary';
+        exportBtn.textContent = 'Export';
+        exportBtn.style.cssText = 'font-size:10px;padding:1px 6px;line-height:1;min-width:0;';
+        exportBtn.addEventListener('click', () => {
+          const json = this.mappingStore.exportPresets([preset.name]);
+          const blob = new Blob([json], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `chartit-${preset.name.replace(/\s+/g, '-').toLowerCase()}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+
         const delBtn = document.createElement('button');
         delBtn.className = 'btn btn-secondary';
         delBtn.textContent = '×';
@@ -95,15 +156,221 @@ export class ImportEditor {
           this.refreshPresetDropdown();
           rebuildManageList();
         });
-        row.append(label, delBtn);
-        manageArea.appendChild(row);
+
+        btnGroup.append(exportBtn, delBtn);
+        row.append(label, btnGroup);
+        presetListContainer.appendChild(row);
       }
     };
+
+    manageArea.appendChild(presetListContainer);
+
+    // --- Action button handlers ---
+
+    createBtn.addEventListener('click', () => {
+      this.clearManageSlot();
+      this.manageSlot.style.display = 'block';
+      this.currentCreator = new PresetCreator(
+        this.manageSlot,
+        (preset) => {
+          this.mappingStore.savePreset(preset);
+          this.refreshPresetDropdown();
+          rebuildManageList();
+          this.clearManageSlot();
+        },
+        () => {
+          this.clearManageSlot();
+        },
+      );
+    });
+
+    fromSampleBtn.addEventListener('click', () => {
+      this.clearManageSlot();
+      const sampleInput = document.createElement('input');
+      sampleInput.type = 'file';
+      sampleInput.accept = '.csv';
+      sampleInput.style.display = 'none';
+      this.manageSlot.appendChild(sampleInput);
+      sampleInput.addEventListener('change', () => {
+        const file = sampleInput.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const text = reader.result as string;
+          const headers = extractHeaders(text);
+          if (headers.length === 0) {
+            this.manageSlot.style.display = 'block';
+            this.manageSlot.innerHTML = '';
+            const errMsg = document.createElement('div');
+            errMsg.textContent = 'Could not extract headers from CSV file.';
+            errMsg.style.cssText = 'font-size:11px;color:var(--danger);font-family:var(--font-sans);';
+            this.manageSlot.appendChild(errMsg);
+            return;
+          }
+          this.manageSlot.style.display = 'block';
+          this.manageSlot.innerHTML = '';
+          // Use a fresh ColumnMapper in the manage slot (not the auto-detect one)
+          const slotMapper = new ColumnMapper(
+            this.manageSlot,
+            headers,
+            (mapping: ColumnMapping) => {
+              // "Apply" in this context means save as preset
+              const presetName = prompt('Enter a name for this preset:');
+              if (!presetName?.trim()) return;
+              this.mappingStore.savePreset({ name: presetName.trim(), mapping });
+              this.refreshPresetDropdown();
+              rebuildManageList();
+              this.clearManageSlot();
+            },
+            (mapping: ColumnMapping, presetName: string) => {
+              this.mappingStore.savePreset({ name: presetName, mapping });
+              this.refreshPresetDropdown();
+              rebuildManageList();
+              const successMsg = document.createElement('div');
+              successMsg.textContent = 'Preset saved!';
+              successMsg.style.cssText = 'font-size:11px;color:var(--success, #22c55e);font-family:var(--font-sans);margin-top:4px;';
+              this.manageSlot.appendChild(successMsg);
+              setTimeout(() => this.clearManageSlot(), 1200);
+            },
+            () => {
+              this.clearManageSlot();
+            },
+          );
+          // Track so clearManageSlot can destroy it
+          this.currentCreator = null;
+          this.slotMapper = slotMapper;
+        };
+        reader.onerror = () => {
+          this.manageSlot.style.display = 'block';
+          this.manageSlot.innerHTML = '';
+          const errMsg = document.createElement('div');
+          errMsg.textContent = 'Failed to read file.';
+          errMsg.style.cssText = 'font-size:11px;color:var(--danger);font-family:var(--font-sans);';
+          this.manageSlot.appendChild(errMsg);
+        };
+        reader.readAsText(file);
+      });
+      sampleInput.click();
+    });
+
+    importBtn.addEventListener('click', () => {
+      this.clearManageSlot();
+      this.manageSlot.style.display = 'block';
+
+      const heading = document.createElement('h4');
+      heading.textContent = 'Import Presets';
+      heading.style.cssText =
+        'margin:0 0 4px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
+      this.manageSlot.appendChild(heading);
+
+      const textarea = document.createElement('textarea');
+      textarea.placeholder = 'Paste preset JSON here...';
+      textarea.style.cssText =
+        'width:100%;min-height:80px;font-family:var(--font-mono);font-size:11px;' +
+        'resize:vertical;padding:8px 10px;line-height:1.5;' +
+        'background:var(--bg-base);border:1px solid var(--border-default);' +
+        'border-radius:var(--radius-md);color:var(--text-primary);margin-bottom:6px;';
+      this.manageSlot.appendChild(textarea);
+
+      const loadFileLink = document.createElement('a');
+      loadFileLink.textContent = 'Or load file';
+      loadFileLink.href = '#';
+      loadFileLink.style.cssText = 'font-size:10px;color:var(--accent);display:block;margin-bottom:8px;font-family:var(--font-sans);';
+      this.manageSlot.appendChild(loadFileLink);
+
+      const jsonFileInput = document.createElement('input');
+      jsonFileInput.type = 'file';
+      jsonFileInput.accept = '.json';
+      jsonFileInput.style.display = 'none';
+      this.manageSlot.appendChild(jsonFileInput);
+
+      loadFileLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        jsonFileInput.click();
+      });
+
+      jsonFileInput.addEventListener('change', () => {
+        const file = jsonFileInput.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          textarea.value = reader.result as string;
+        };
+        reader.readAsText(file);
+      });
+
+      const importMsg = document.createElement('div');
+      importMsg.style.cssText = 'font-size:11px;font-family:var(--font-sans);margin-bottom:6px;min-height:0;';
+      this.manageSlot.appendChild(importMsg);
+
+      const btnRow = document.createElement('div');
+      btnRow.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;';
+
+      const cancelImportBtn = document.createElement('button');
+      cancelImportBtn.className = 'btn btn-secondary';
+      cancelImportBtn.textContent = 'Cancel';
+      cancelImportBtn.style.cssText = actionBtnStyle;
+      cancelImportBtn.addEventListener('click', () => this.clearManageSlot());
+
+      const loadBtn = document.createElement('button');
+      loadBtn.className = 'btn btn-primary';
+      loadBtn.textContent = 'Load';
+      loadBtn.style.cssText = actionBtnStyle;
+      loadBtn.addEventListener('click', () => {
+        importMsg.textContent = '';
+        importMsg.style.color = '';
+        const json = textarea.value.trim();
+        if (!json) {
+          importMsg.textContent = 'Please paste JSON or load a file first.';
+          importMsg.style.color = 'var(--danger)';
+          return;
+        }
+        try {
+          const count = this.mappingStore.importPresets(json);
+          importMsg.textContent = `Imported ${count} preset${count === 1 ? '' : 's'} successfully.`;
+          importMsg.style.color = 'var(--success, #22c55e)';
+          this.refreshPresetDropdown();
+          rebuildManageList();
+        } catch (e: unknown) {
+          importMsg.textContent = e instanceof Error ? e.message : 'Invalid JSON';
+          importMsg.style.color = 'var(--danger)';
+        }
+      });
+
+      btnRow.append(cancelImportBtn, loadBtn);
+      this.manageSlot.appendChild(btnRow);
+    });
+
+    exportAllBtn.addEventListener('click', () => {
+      const json = this.mappingStore.exportPresets();
+      const presets = this.mappingStore.getPresets();
+      if (presets.length === 0) {
+        this.clearManageSlot();
+        this.manageSlot.style.display = 'block';
+        const msg = document.createElement('div');
+        msg.textContent = 'No presets to export';
+        msg.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
+        this.manageSlot.appendChild(msg);
+        setTimeout(() => this.clearManageSlot(), 2000);
+        return;
+      }
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'chartit-mappings.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
 
     manageBtn.addEventListener('click', () => {
       const isVisible = manageArea.style.display !== 'none';
       manageArea.style.display = isVisible ? 'none' : 'block';
-      if (!isVisible) rebuildManageList();
+      if (isVisible) {
+        this.clearManageSlot();
+      } else {
+        rebuildManageList();
+      }
     });
     presetRow.appendChild(manageBtn);
     this.container.appendChild(presetRow);
@@ -473,6 +740,19 @@ export class ImportEditor {
       this.currentMapper = null;
     }
     this.pendingCsvText = null;
+  }
+
+  private clearManageSlot(): void {
+    if (this.currentCreator) {
+      this.currentCreator.destroy();
+      this.currentCreator = null;
+    }
+    if (this.slotMapper) {
+      this.slotMapper.destroy();
+      this.slotMapper = null;
+    }
+    this.manageSlot.innerHTML = '';
+    this.manageSlot.style.display = 'none';
   }
 
   private refreshPresetDropdown(): void {

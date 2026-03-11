@@ -38,4 +38,38 @@ export class MappingStore {
   getPreset(name: string): MappingPreset | undefined {
     return this.getPresets().find((p) => p.name === name);
   }
+
+  exportPresets(names?: string[]): string {
+    const all = this.getPresets();
+    const selected = names ? all.filter((p) => names.includes(p.name)) : all;
+    return JSON.stringify(selected, null, 2);
+  }
+
+  importPresets(json: string): number {
+    const parsed: unknown = JSON.parse(json);
+    if (!Array.isArray(parsed)) {
+      throw new Error('Invalid JSON: expected an array of mapping presets');
+    }
+
+    let count = 0;
+    for (const item of parsed) {
+      if (!this.isValidPreset(item)) continue;
+      this.savePreset(item as MappingPreset);
+      count++;
+    }
+    return count;
+  }
+
+  private isValidPreset(value: unknown): boolean {
+    if (typeof value !== 'object' || value === null) return false;
+    const obj = value as Record<string, unknown>;
+    if (typeof obj.name !== 'string' || !obj.name.trim()) return false;
+    if (typeof obj.mapping !== 'object' || obj.mapping === null) return false;
+    const m = obj.mapping as Record<string, unknown>;
+    if (typeof m.name !== 'string' || !m.name.trim()) return false;
+    if (typeof m.title !== 'string' || !m.title.trim()) return false;
+    if (typeof m.parentRef !== 'string' || !m.parentRef.trim()) return false;
+    if (m.parentRefType !== 'id' && m.parentRefType !== 'name') return false;
+    return true;
+  }
 }

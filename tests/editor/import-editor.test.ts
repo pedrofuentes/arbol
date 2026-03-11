@@ -216,3 +216,77 @@ describe('ImportEditor — Mapping flow on auto-detect failure', () => {
     expect(mappingSelects.length).toBeGreaterThanOrEqual(3);
   });
 });
+
+describe('ImportEditor — Manage area UI', () => {
+  let container: HTMLDivElement;
+  let store: OrgStore;
+  let editor: ImportEditor;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = new OrgStore(ROOT);
+    editor = new ImportEditor(container, store);
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    document.body.removeChild(container);
+  });
+
+  const findButton = (text: string) =>
+    Array.from(container.querySelectorAll('button')).find(
+      (b) => b.textContent === text,
+    ) as HTMLButtonElement | undefined;
+
+  it('clicking "Manage" reveals the manage area with action buttons', () => {
+    const manageBtn = findButton('Manage')!;
+    expect(manageBtn).toBeDefined();
+    manageBtn.click();
+
+    expect(findButton('Create')).toBeDefined();
+    expect(findButton('From Sample')).toBeDefined();
+    expect(findButton('Import')).toBeDefined();
+    expect(findButton('Export All')).toBeDefined();
+  });
+
+  it('clicking "Create" shows the preset creator form', () => {
+    findButton('Manage')!.click();
+    findButton('Create')!.click();
+
+    const inputs = container.querySelectorAll('input[type="text"]');
+    expect(inputs.length).toBeGreaterThanOrEqual(1);
+
+    expect(findButton('Save')).toBeDefined();
+    expect(findButton('Cancel')).toBeDefined();
+  });
+
+  it('clicking "Import" shows the import form with a textarea and "Load" button', () => {
+    findButton('Manage')!.click();
+    findButton('Import')!.click();
+
+    const importTextarea = container.querySelectorAll('textarea');
+    // At least 2 textareas: the main paste area + the import preset textarea
+    expect(importTextarea.length).toBeGreaterThanOrEqual(2);
+
+    expect(findButton('Load')).toBeDefined();
+  });
+
+  it('clicking "Cancel" inside the import form hides the manage slot', () => {
+    findButton('Manage')!.click();
+    findButton('Import')!.click();
+
+    // The manage slot should be visible (contains textarea + Load)
+    expect(findButton('Load')).toBeDefined();
+
+    // Find the Cancel button inside the import form (not the main cancel)
+    const cancelButtons = Array.from(container.querySelectorAll('button')).filter(
+      (b) => b.textContent === 'Cancel',
+    );
+    // Click the last Cancel (the import form one)
+    cancelButtons[cancelButtons.length - 1].click();
+
+    // Load button should be gone since the manage slot is cleared
+    expect(findButton('Load')).toBeUndefined();
+  });
+});
