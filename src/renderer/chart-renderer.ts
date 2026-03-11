@@ -51,6 +51,9 @@ export class ChartRenderer {
   private lastLayout: LayoutResult | null = null;
   private zoomManager: ZoomManager;
   private hasRendered = false;
+  private highlightedNodes: Set<string> | null = null;
+  private dragEnabled: boolean = true;
+  private onNodeMove: ((nodeId: string, newParentId: string) => void) | null = null;
 
   constructor(options: RendererOptions) {
     this.opts = {
@@ -93,11 +96,39 @@ export class ChartRenderer {
     this.onCollapseToggle = handler;
   }
 
+  setHighlightedNodes(nodeIds: Set<string> | null): void {
+    this.highlightedNodes = nodeIds;
+    this.applyHighlighting();
+  }
+
+  setNodeMoveHandler(handler: (nodeId: string, newParentId: string) => void): void {
+    this.onNodeMove = handler;
+  }
+
+  setDragEnabled(enabled: boolean): void {
+    this.dragEnabled = enabled;
+  }
+
   render(root: OrgNode): void {
     const layout = computeLayout(root, this.opts, this.collapsed);
     this.lastLayout = layout;
 
     this.g.selectAll('*').remove();
+
+    // Add SVG defs for filters
+    const defs = this.g.append('defs');
+    defs.append('filter')
+      .attr('id', 'card-shadow')
+      .attr('x', '-10%')
+      .attr('y', '-10%')
+      .attr('width', '130%')
+      .attr('height', '140%')
+      .append('feDropShadow')
+      .attr('dx', '0')
+      .attr('dy', '1')
+      .attr('stdDeviation', '1.5')
+      .attr('flood-color', '#000000')
+      .attr('flood-opacity', '0.12');
 
     const { nodeHeight, linkColor, linkWidth, icContainerFill } = this.opts;
 
@@ -121,6 +152,8 @@ export class ChartRenderer {
         .attr('y', container.y)
         .attr('width', container.width)
         .attr('height', container.height)
+        .attr('rx', 3)
+        .attr('ry', 3)
         .attr('fill', icContainerFill);
     }
 
@@ -165,7 +198,8 @@ export class ChartRenderer {
       const g = nodesGroup.append('g')
         .attr('class', 'node')
         .attr('data-id', node.id)
-        .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
+        .attr('transform', `translate(${node.x - node.width / 2},${node.y})`)
+        .attr('filter', 'url(#card-shadow)');
 
       const datum = { data: { id: node.id, name: node.name, title: node.title } };
       const sel = d3.select(g.node()!).datum(datum);
@@ -178,6 +212,9 @@ export class ChartRenderer {
           .attr('y', nodeHeight + 14)
           .attr('text-anchor', 'middle')
           .attr('cursor', 'pointer')
+          .attr('font-family', 'DM Sans, system-ui, sans-serif')
+          .attr('font-size', '10px')
+          .attr('fill', '#8b8b92')
           .text(this.collapsed.has(node.id) ? '▸' : '▾')
           .on('click', () => {
             this.toggleCollapse(node.id);
@@ -185,6 +222,69 @@ export class ChartRenderer {
               this.onCollapseToggle(node.id);
             }
           });
+      }
+
+      if (this.dragEnabled) {
+        const self = this;
+        const dragBehavior = d3.drag<SVGGElement, unknown>()
+          .on('start', function (event) {
+            event.sourceEvent.stopPropagation();
+            const parent = this.parentNode;
+            if (parent) parent.appendChild(this);
+            d3.select(this).raise().classed('dragging', true);
+            d3.select(this).style('cursor', 'grabbing');
+          })
+          .on('drag', function (event) {
+            const current = d3.select(this);
+            const transform = current.attr('transform');
+            const match = transform?.match(/translate\(([^,]+),([^)]+)\)/);
+            if (match) {
+              const x = parseFloat(match[1]) + event.dx;
+              const y = parseFloat(match[2]) + event.dy;
+              current.attr('transform', `translate(${x},${y})`);
+            }
+          })
+          .on('end', function (_event) {
+            d3.select(this).classed('dragging', false);
+            d3.select(this).style('cursor', null);
+
+            if (!self.onNodeMove || !self.lastLayout) return;
+
+            const draggedId = d3.select(this).attr('data-id');
+            if (!draggedId) return;
+
+            const transform = d3.select(this).attr('transform');
+            const match = transform?.match(/translate\(([^,]+),([^)]+)\)/);
+            if (!match) return;
+
+            const dropX = parseFloat(match[1]);
+            const dropY = parseFloat(match[2]);
+
+            let closestId: string | null = null;
+            let closestDist = Infinity;
+
+            for (const layoutNode of self.lastLayout.nodes) {
+              if (layoutNode.id === draggedId || layoutNode.type !== 'manager') continue;
+              const nx = layoutNode.x - layoutNode.width / 2;
+              const ny = layoutNode.y;
+              const dist = Math.sqrt(Math.pow(dropX - nx, 2) + Math.pow(dropY - ny, 2));
+              if (dist < closestDist) {
+                closestDist = dist;
+                closestId = layoutNode.id;
+              }
+            }
+
+            const threshold = self.opts.nodeWidth * 1.5;
+            if (closestId && closestDist < threshold) {
+              try {
+                self.onNodeMove(draggedId, closestId);
+              } catch (_e) {
+                // Move failed (e.g., circular reference) — re-render will snap back
+              }
+            }
+          });
+
+        d3.select(g.node()!).call(dragBehavior as any);
       }
     }
 
@@ -194,6 +294,8 @@ export class ChartRenderer {
       this.zoomManager.fitToContent();
       this.hasRendered = true;
     }
+
+    this.applyHighlighting();
   }
 
   getLastLayout(): LayoutResult | null {
@@ -205,6 +307,28 @@ export class ChartRenderer {
   }
 
   // --- Rendering helpers ---
+
+  private applyHighlighting(): void {
+    if (!this.highlightedNodes) {
+      this.g.selectAll('.node, .ic-node, .pal-node').style('opacity', null);
+      this.g.selectAll('.links').style('opacity', null);
+      return;
+    }
+
+    const highlighted = this.highlightedNodes;
+
+    this.g.selectAll('.node, .ic-node, .pal-node').each(function () {
+      const el = d3.select(this);
+      const nodeId = el.attr('data-id');
+      if (nodeId && highlighted.has(nodeId)) {
+        el.style('opacity', '1');
+      } else {
+        el.style('opacity', '0.2');
+      }
+    });
+
+    this.g.selectAll('.links').style('opacity', '0.3');
+  }
 
   private renderCardContent(
     selection: d3.Selection<SVGGElement, any, any, any>,
@@ -220,6 +344,8 @@ export class ChartRenderer {
     selection.append('rect')
       .attr('width', width)
       .attr('height', height)
+      .attr('rx', 3)
+      .attr('ry', 3)
       .attr('fill', cardFill)
       .attr('stroke', cardStroke)
       .attr('stroke-width', cardStrokeWidth)
@@ -234,7 +360,7 @@ export class ChartRenderer {
       .attr('dominant-baseline', 'hanging')
       .attr('text-anchor', 'middle')
       .attr('font-weight', 'bold')
-      .attr('font-family', 'Calibri, sans-serif')
+      .attr('font-family', 'DM Sans, system-ui, sans-serif')
       .attr('font-size', `${nameFontSize}px`)
       .text((d: any) => d.data?.name ?? d.name);
 
@@ -244,7 +370,7 @@ export class ChartRenderer {
       .attr('y', titleY)
       .attr('dominant-baseline', 'hanging')
       .attr('text-anchor', 'middle')
-      .attr('font-family', 'Calibri, sans-serif')
+      .attr('font-family', 'DM Sans, system-ui, sans-serif')
       .attr('font-size', `${titleFontSize}px`)
       .attr('fill', '#64748b')
       .text((d: any) => d.data?.title ?? d.title);
@@ -267,9 +393,27 @@ export class ChartRenderer {
   }
 
   setSelectedNode(nodeId: string | null): void {
+    // Reset all nodes
+    this.g.selectAll('.node rect').each(function () {
+      const el = d3.select(this);
+      const origStroke = el.attr('data-original-stroke');
+      const origStrokeWidth = el.attr('data-original-stroke-width');
+      if (origStroke) el.attr('stroke', origStroke);
+      if (origStrokeWidth) el.attr('stroke-width', origStrokeWidth);
+      el.attr('data-original-stroke', null)
+        .attr('data-original-stroke-width', null);
+    });
+
     this.g.selectAll('.node').classed('selected', false);
+
     if (nodeId) {
-      this.g.select(`.node[data-id="${nodeId}"]`).classed('selected', true);
+      const node = this.g.select(`.node[data-id="${nodeId}"]`);
+      node.classed('selected', true);
+      node.select('rect')
+        .attr('data-original-stroke', function () { return d3.select(this).attr('stroke'); })
+        .attr('data-original-stroke-width', function () { return d3.select(this).attr('stroke-width'); })
+        .attr('stroke', '#10b981')
+        .attr('stroke-width', 2);
     }
   }
 

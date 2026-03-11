@@ -4,8 +4,15 @@ import { TabSwitcher } from './editor/tab-switcher';
 import { SettingsEditor } from './editor/settings-editor';
 import { FormEditor } from './editor/form-editor';
 import { JsonEditor } from './editor/json-editor';
+import { ImportEditor } from './editor/import-editor';
 import { exportToPptx } from './export/pptx-exporter';
+import { ThemeManager } from './store/theme-manager';
+import { SettingsStore, PersistableSettings } from './store/settings-store';
+import { getMatchingNodeIds } from './utils/search';
 import { OrgNode } from './types';
+import { flattenTree } from './utils/tree';
+import { showConfirmDialog } from './ui/confirm-dialog';
+import { ShortcutManager } from './utils/shortcuts';
 
 const SAMPLE_DATA: OrgNode = {
   id: 'ceo',
@@ -170,23 +177,122 @@ function main(): void {
 
   const store = new OrgStore(SAMPLE_DATA);
 
-  const renderer = new ChartRenderer({
-    container: chartArea,
+  // Settings persistence
+  const settingsStore = new SettingsStore();
+  const defaultSettings: PersistableSettings = {
     nodeWidth: 110,
     nodeHeight: 22,
     horizontalSpacing: 30,
+    branchSpacing: 10,
     topVerticalSpacing: 5,
     bottomVerticalSpacing: 12,
-    icNodeWidth: 100,
+    icNodeWidth: 85,
     icGap: 4,
+    icContainerPadding: 6,
+    palTopGap: 7,
+    palBottomGap: 7,
+    palRowGap: 4,
+    palCenterGap: 50,
+    nameFontSize: 8,
+    titleFontSize: 7,
+    textPaddingTop: 4,
+    textGap: 1,
+    linkColor: '#94a3b8',
+    linkWidth: 1.5,
+    cardFill: '#ffffff',
+    cardStroke: '#22c55e',
+    cardStrokeWidth: 1,
+    icContainerFill: '#e5e7eb',
+  };
+  const savedSettings = settingsStore.load(defaultSettings);
+
+  const renderer = new ChartRenderer({
+    container: chartArea,
+    ...savedSettings,
   });
 
-  const rerender = () => renderer.render(store.getTree());
+  const rerender = () => {
+    renderer.render(store.getTree());
+    // Persist settings on every rerender (debounced in store)
+    const opts = renderer.getOptions();
+    settingsStore.save(opts as unknown as Partial<PersistableSettings>);
+  };
+
+  // Theme toggle
+  const themeManager = new ThemeManager();
+  const headerRight = document.getElementById('header-right')!;
+
+  const themeBtn = document.createElement('button');
+  themeBtn.className = 'icon-btn';
+  themeBtn.setAttribute('data-tooltip', 'Toggle theme');
+  themeBtn.textContent = themeManager.getTheme() === 'dark' ? '☀️' : '🌙';
+  themeBtn.addEventListener('click', () => {
+    themeManager.toggle();
+  });
+  themeManager.onChange((theme) => {
+    themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  });
+  headerRight.appendChild(themeBtn);
+
+  // Undo/Redo buttons (inserted before theme button)
+  const undoBtn = document.createElement('button');
+  undoBtn.className = 'icon-btn';
+  undoBtn.setAttribute('data-tooltip', 'Undo (Ctrl+Z)');
+  undoBtn.textContent = '↩';
+  undoBtn.disabled = true;
+  undoBtn.addEventListener('click', () => {
+    store.undo();
+  });
+  headerRight.insertBefore(undoBtn, themeBtn);
+
+  const redoBtn = document.createElement('button');
+  redoBtn.className = 'icon-btn';
+  redoBtn.setAttribute('data-tooltip', 'Redo (Ctrl+Shift+Z)');
+  redoBtn.textContent = '↪';
+  redoBtn.disabled = true;
+  redoBtn.addEventListener('click', () => {
+    store.redo();
+  });
+  headerRight.insertBefore(redoBtn, themeBtn);
+
+  const updateUndoRedoState = () => {
+    undoBtn.disabled = !store.canUndo();
+    redoBtn.disabled = !store.canRedo();
+    undoBtn.style.opacity = store.canUndo() ? '1' : '0.4';
+    redoBtn.style.opacity = store.canRedo() ? '1' : '0.4';
+  };
+  store.onChange(updateUndoRedoState);
+  updateUndoRedoState();
+
+  // Search UI
+  const headerCenter = document.getElementById('header-center')!;
+
+  const searchInput = document.createElement('input');
+  searchInput.className = 'search-input';
+  searchInput.type = 'text';
+  searchInput.placeholder = 'Search people... (Ctrl+F)';
+  headerCenter.appendChild(searchInput);
+
+  let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  searchInput.addEventListener('input', () => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const query = searchInput.value.trim();
+      if (query.length === 0) {
+        (renderer as any).setHighlightedNodes(null);
+      } else {
+        const matchIds = getMatchingNodeIds(store.getTree(), query);
+        (renderer as any).setHighlightedNodes(matchIds.size > 0 ? matchIds : null);
+      }
+    }, 200);
+  });
 
   // Sidebar tabs
   const tabSwitcher = new TabSwitcher(sidebar, [
     { id: 'form', label: 'Form' },
     { id: 'json', label: 'JSON' },
+    { id: 'import', label: 'Import' },
     { id: 'settings', label: 'Settings' },
   ]);
 
@@ -195,6 +301,9 @@ function main(): void {
 
   const jsonContainer = tabSwitcher.getContentContainer('json')!;
   const jsonEditor = new JsonEditor(jsonContainer, store);
+
+  const importContainer = tabSwitcher.getContentContainer('import')!;
+  new ImportEditor(importContainer, store);
 
   const settingsContainer = tabSwitcher.getContentContainer('settings')!;
   new SettingsEditor(settingsContainer, renderer, rerender);
@@ -216,13 +325,67 @@ function main(): void {
 
   renderer.setCollapseToggleHandler(rerender);
 
-  // Footer: Export PPTX button
+  // Wire drag-and-drop with confirmation for large moves
+  renderer.setNodeMoveHandler(async (nodeId: string, newParentId: string) => {
+    const descendantCount = store.getDescendantCount(nodeId);
+
+    if (descendantCount > 5) {
+      const allNodes = flattenTree(store.getTree());
+      const draggedNode = allNodes.find(n => n.id === nodeId);
+      const targetNode = allNodes.find(n => n.id === newParentId);
+
+      const confirmed = await showConfirmDialog({
+        title: 'Move Team',
+        message: `Move ${draggedNode?.name ?? 'this person'} and ${descendantCount} reports under ${targetNode?.name ?? 'target'}?`,
+        confirmLabel: 'Move',
+        danger: false,
+      });
+
+      if (!confirmed) return;
+    }
+
+    try {
+      store.moveNode(nodeId, newParentId);
+    } catch {
+      // Silently fail — re-render will snap back to original position
+    }
+  });
+
+  // Footer
   const footer = document.getElementById('footer')!;
+  const countNodes = (tree: OrgNode) => flattenTree(tree).length;
+
+  // Footer: Status area (left side)
+  const footerLeft = document.createElement('div');
+  footerLeft.className = 'footer-left';
+  footerLeft.style.cssText = 'display:flex;align-items:center;gap:8px;margin-right:auto;';
+  footer.appendChild(footerLeft);
+
+  const statusText = document.createElement('span');
+  statusText.className = 'footer-status';
+  statusText.id = 'footer-status';
+  statusText.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
+  footerLeft.appendChild(statusText);
+
+  const updateStatus = () => {
+    const tree = store.getTree();
+    const count = countNodes(tree);
+    statusText.textContent = `${count} people`;
+  };
+  store.onChange(updateStatus);
+  updateStatus();
+
+  // Footer: Buttons (right side)
+  const footerRight = document.createElement('div');
+  footerRight.style.cssText = 'display:flex;align-items:center;gap:6px;';
+  footer.appendChild(footerRight);
+
   const exportBtn = document.createElement('button');
   exportBtn.className = 'footer-btn';
   exportBtn.dataset.action = 'export-pptx';
-  exportBtn.textContent = 'Export PPTX';
-  footer.appendChild(exportBtn);
+  exportBtn.textContent = '📊 Export PPTX';
+  exportBtn.setAttribute('data-tooltip', 'Export to PowerPoint (Ctrl+E)');
+  footerRight.appendChild(exportBtn);
 
   exportBtn.addEventListener('click', async () => {
     const layout = renderer.getLastLayout();
@@ -231,26 +394,81 @@ function main(): void {
     }
   });
 
-  // Footer: Fit to Screen button
   const fitBtn = document.createElement('button');
   fitBtn.className = 'footer-btn';
   fitBtn.dataset.action = 'fit';
-  fitBtn.textContent = 'Fit to Screen';
-  footer.appendChild(fitBtn);
+  fitBtn.textContent = '⊞ Fit';
+  fitBtn.setAttribute('data-tooltip', 'Fit chart to screen');
+  footerRight.appendChild(fitBtn);
 
   fitBtn.addEventListener('click', () => {
     renderer.getZoomManager()?.fitToContent();
   });
 
-  // Footer: Reset Zoom button
   const resetZoomBtn = document.createElement('button');
   resetZoomBtn.className = 'footer-btn';
   resetZoomBtn.dataset.action = 'reset-zoom';
-  resetZoomBtn.textContent = 'Reset Zoom';
-  footer.appendChild(resetZoomBtn);
+  resetZoomBtn.textContent = '⟲ Reset';
+  resetZoomBtn.setAttribute('data-tooltip', 'Reset zoom to 100%');
+  footerRight.appendChild(resetZoomBtn);
 
   resetZoomBtn.addEventListener('click', () => {
     renderer.getZoomManager()?.resetZoom();
+  });
+
+  // Keyboard shortcuts
+  const shortcuts = new ShortcutManager();
+
+  shortcuts.register({
+    key: 'z', ctrl: true,
+    handler: () => store.undo(),
+    description: 'Undo',
+  });
+
+  shortcuts.register({
+    key: 'z', ctrl: true, shift: true,
+    handler: () => store.redo(),
+    description: 'Redo',
+  });
+
+  shortcuts.register({
+    key: 'y', ctrl: true,
+    handler: () => store.redo(),
+    description: 'Redo (alt)',
+  });
+
+  shortcuts.register({
+    key: 'e', ctrl: true,
+    handler: async () => {
+      const layout = renderer.getLastLayout();
+      if (layout) await exportToPptx(layout);
+    },
+    description: 'Export PPTX',
+  });
+
+  shortcuts.register({
+    key: 'f', ctrl: true,
+    handler: () => {
+      searchInput.focus();
+    },
+    description: 'Search',
+  });
+
+  shortcuts.register({
+    key: 'Escape',
+    handler: () => {
+      // Clear search if active
+      if (document.activeElement === searchInput) {
+        searchInput.value = '';
+        searchInput.blur();
+        (renderer as any).setHighlightedNodes(null);
+        return;
+      }
+      // Deselect node
+      formEditor.selectNode(null);
+      renderer.setSelectedNode(null);
+    },
+    description: 'Deselect / Clear search',
   });
 
   rerender();

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { OrgStore } from '../../src/store/org-store';
 import { OrgNode } from '../../src/types';
-import { flattenTree } from '../../src/utils/tree';
+import { findNodeById, flattenTree } from '../../src/utils/tree';
 
 function makeRoot(): OrgNode {
   return {
@@ -188,6 +188,246 @@ describe('OrgStore', () => {
       unsub();
       store.addChild('root', { name: 'X', title: 'X' });
       expect(listener).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('undo/redo', () => {
+    it('canUndo returns false initially', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      expect(store.canUndo()).toBe(false);
+    });
+
+    it('canRedo returns false initially', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      expect(store.canRedo()).toBe(false);
+    });
+
+    it('undo restores previous state after addChild', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      store.addChild('r', { name: 'Child', title: 'VP' });
+      expect(store.getTree().children).toHaveLength(1);
+
+      store.undo();
+      expect(store.getTree().children).toBeUndefined();
+    });
+
+    it('undo restores previous state after removeNode', () => {
+      const root = {
+        id: 'r',
+        name: 'Root',
+        title: 'CEO',
+        children: [{ id: 'c1', name: 'Child', title: 'VP' }],
+      };
+      const store = new OrgStore(root);
+      store.removeNode('c1');
+      expect(store.getTree().children).toBeUndefined();
+
+      store.undo();
+      expect(store.getTree().children).toHaveLength(1);
+      expect(store.getTree().children![0].name).toBe('Child');
+    });
+
+    it('undo restores previous state after updateNode', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      store.updateNode('r', { name: 'Updated' });
+      expect(store.getTree().name).toBe('Updated');
+
+      store.undo();
+      expect(store.getTree().name).toBe('Root');
+    });
+
+    it('redo re-applies undone change', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      store.addChild('r', { name: 'Child', title: 'VP' });
+      store.undo();
+      expect(store.getTree().children).toBeUndefined();
+
+      store.redo();
+      expect(store.getTree().children).toHaveLength(1);
+    });
+
+    it('new mutation clears redo stack', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      store.addChild('r', { name: 'Child1', title: 'VP' });
+      store.undo();
+      expect(store.canRedo()).toBe(true);
+
+      store.addChild('r', { name: 'Child2', title: 'Dir' });
+      expect(store.canRedo()).toBe(false);
+    });
+
+    it('undo returns false when stack is empty', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      expect(store.undo()).toBe(false);
+    });
+
+    it('redo returns false when stack is empty', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      expect(store.redo()).toBe(false);
+    });
+
+    it('multiple undo steps work correctly', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      store.updateNode('r', { name: 'Step1' });
+      store.updateNode('r', { name: 'Step2' });
+      store.updateNode('r', { name: 'Step3' });
+
+      expect(store.getTree().name).toBe('Step3');
+      store.undo();
+      expect(store.getTree().name).toBe('Step2');
+      store.undo();
+      expect(store.getTree().name).toBe('Step1');
+      store.undo();
+      expect(store.getTree().name).toBe('Root');
+      expect(store.canUndo()).toBe(false);
+    });
+
+    it('emits change event on undo', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      store.addChild('r', { name: 'Child', title: 'VP' });
+
+      let called = false;
+      store.onChange(() => {
+        called = true;
+      });
+      store.undo();
+      expect(called).toBe(true);
+    });
+
+    it('emits change event on redo', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      store.addChild('r', { name: 'Child', title: 'VP' });
+      store.undo();
+
+      let called = false;
+      store.onChange(() => {
+        called = true;
+      });
+      store.redo();
+      expect(called).toBe(true);
+    });
+
+    it('getUndoStackSize returns correct count', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      expect(store.getUndoStackSize()).toBe(0);
+      store.addChild('r', { name: 'A', title: 'VP' });
+      expect(store.getUndoStackSize()).toBe(1);
+      store.addChild('r', { name: 'B', title: 'Dir' });
+      expect(store.getUndoStackSize()).toBe(2);
+    });
+
+    it('respects max history limit', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      for (let i = 0; i < 60; i++) {
+        store.updateNode('r', { name: `Step${i}` });
+      }
+      expect(store.getUndoStackSize()).toBeLessThanOrEqual(50);
+    });
+
+    it('fromJSON creates undo snapshot', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      store.fromJSON(JSON.stringify({ id: 'r', name: 'New', title: 'CEO' }));
+      expect(store.getTree().name).toBe('New');
+
+      store.undo();
+      expect(store.getTree().name).toBe('Root');
+    });
+  });
+
+  describe('moveNode', () => {
+    const makeTree = (): OrgNode => ({
+      id: 'r', name: 'Root', title: 'CEO', children: [
+        { id: 'a', name: 'A', title: 'VP', children: [
+          { id: 'a1', name: 'A1', title: 'Dir' },
+          { id: 'a2', name: 'A2', title: 'Dir' },
+        ]},
+        { id: 'b', name: 'B', title: 'VP', children: [
+          { id: 'b1', name: 'B1', title: 'Dir' },
+        ]},
+      ],
+    });
+
+    it('moves a node to a new parent', () => {
+      const store = new OrgStore(makeTree());
+      store.moveNode('a1', 'b');
+      const b = findNodeById(store.getTree(), 'b')!;
+      expect(b.children!.map((c) => c.id)).toContain('a1');
+    });
+
+    it('removes node from original parent', () => {
+      const store = new OrgStore(makeTree());
+      store.moveNode('a1', 'b');
+      const a = findNodeById(store.getTree(), 'a')!;
+      expect(a.children!.map((c) => c.id)).not.toContain('a1');
+    });
+
+    it('throws when moving root', () => {
+      const store = new OrgStore(makeTree());
+      expect(() => store.moveNode('r', 'a')).toThrow('Cannot move root node');
+    });
+
+    it('throws when moving to own descendant', () => {
+      const store = new OrgStore(makeTree());
+      expect(() => store.moveNode('a', 'a1')).toThrow('Cannot move a node under its own descendant');
+    });
+
+    it('throws when newParentId does not exist', () => {
+      const store = new OrgStore(makeTree());
+      expect(() => store.moveNode('a1', 'zzz')).toThrow('Target parent "zzz" not found');
+    });
+
+    it('is no-op when already under target parent', () => {
+      const store = new OrgStore(makeTree());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.moveNode('a1', 'a');
+      expect(listener).not.toHaveBeenCalled();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('creates undo snapshot', () => {
+      const store = new OrgStore(makeTree());
+      store.moveNode('a1', 'b');
+      expect(store.canUndo()).toBe(true);
+      store.undo();
+      const a = findNodeById(store.getTree(), 'a')!;
+      expect(a.children!.map((c) => c.id)).toContain('a1');
+      const b = findNodeById(store.getTree(), 'b')!;
+      expect(b.children!.map((c) => c.id)).not.toContain('a1');
+    });
+
+    it('emits change event', () => {
+      const store = new OrgStore(makeTree());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.moveNode('a1', 'b');
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getDescendantCount', () => {
+    it('returns 0 for leaf node', () => {
+      const store = new OrgStore({
+        id: 'r', name: 'Root', title: 'CEO', children: [
+          { id: 'a', name: 'A', title: 'VP' },
+        ],
+      });
+      expect(store.getDescendantCount('a')).toBe(0);
+    });
+
+    it('returns correct count for subtree', () => {
+      const store = new OrgStore({
+        id: 'r', name: 'Root', title: 'CEO', children: [
+          { id: 'a', name: 'A', title: 'VP', children: [
+            { id: 'a1', name: 'A1', title: 'Dir' },
+            { id: 'a2', name: 'A2', title: 'Dir', children: [
+              { id: 'a2x', name: 'A2X', title: 'Eng' },
+            ]},
+          ]},
+        ],
+      });
+      expect(store.getDescendantCount('a')).toBe(3);
+      expect(store.getDescendantCount('r')).toBe(4);
     });
   });
 });

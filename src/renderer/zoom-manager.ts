@@ -21,7 +21,7 @@ export class ZoomManager {
       .extent(() => {
         const w = this.svg.clientWidth || this.svg.getBoundingClientRect().width || 1;
         const h = this.svg.clientHeight || this.svg.getBoundingClientRect().height || 1;
-        return [[0, 0], [w, h]];
+        return [[0, 0], [w, h]] as [[number, number], [number, number]];
       })
       .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
         d3.select(this.g).attr('transform', event.transform.toString());

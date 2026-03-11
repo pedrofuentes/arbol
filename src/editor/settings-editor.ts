@@ -1,4 +1,6 @@
 import { ChartRenderer, RendererOptions } from '../renderer/chart-renderer';
+import { CHART_THEME_PRESETS } from '../store/theme-presets';
+import { SettingsStore } from '../store/settings-store';
 
 interface SettingDef {
   key: keyof RendererOptions;
@@ -79,15 +81,18 @@ export class SettingsEditor {
   private container: HTMLElement;
   private renderer: ChartRenderer;
   private rerenderCallback: () => void;
+  private settingsStore: SettingsStore | null;
 
   constructor(
     container: HTMLElement,
     renderer: ChartRenderer,
     rerenderCallback: () => void,
+    settingsStore?: SettingsStore,
   ) {
     this.container = container;
     this.renderer = renderer;
     this.rerenderCallback = rerenderCallback;
+    this.settingsStore = settingsStore ?? null;
     this.build();
   }
 
@@ -96,11 +101,64 @@ export class SettingsEditor {
 
     const opts = this.renderer.getOptions();
 
+    // Theme Presets section
+    const presetHeader = document.createElement('h4');
+    presetHeader.textContent = 'Theme Presets';
+    presetHeader.style.cssText = 'margin:0 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
+    this.container.appendChild(presetHeader);
+
+    const presetGrid = document.createElement('div');
+    presetGrid.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:16px;';
+    this.container.appendChild(presetGrid);
+
+    for (const preset of CHART_THEME_PRESETS) {
+      const card = document.createElement('button');
+      card.className = 'preset-card';
+      card.style.cssText = `
+        display:flex;align-items:center;gap:6px;padding:6px 8px;
+        border:1px solid var(--border-default);border-radius:var(--radius-md);
+        background:var(--bg-elevated);cursor:pointer;text-align:left;
+        transition:all 120ms ease;font-family:var(--font-sans);
+      `;
+
+      // Color swatch
+      const swatch = document.createElement('div');
+      swatch.style.cssText = `
+        width:20px;height:20px;border-radius:3px;flex-shrink:0;
+        background:${preset.colors.cardFill};
+        border:2px solid ${preset.colors.cardStroke};
+      `;
+      card.appendChild(swatch);
+
+      // Name
+      const name = document.createElement('span');
+      name.textContent = preset.name;
+      name.style.cssText = 'font-size:11px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      card.appendChild(name);
+
+      card.addEventListener('mouseenter', () => {
+        card.style.borderColor = 'var(--accent)';
+        card.style.background = 'var(--bg-hover)';
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.borderColor = 'var(--border-default)';
+        card.style.background = 'var(--bg-elevated)';
+      });
+
+      card.addEventListener('click', () => {
+        this.renderer.updateOptions(preset.colors as Partial<RendererOptions>);
+        this.rerenderCallback();
+        this.build(); // Rebuild to update slider/color values
+      });
+
+      presetGrid.appendChild(card);
+    }
+
     for (const group of SETTING_GROUPS) {
       const header = document.createElement('h4');
       header.textContent = group.title;
       header.style.cssText =
-        'margin:16px 0 8px;font-size:11px;text-transform:uppercase;color:#94a3b8;letter-spacing:1px;';
+        'margin:16px 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
       this.container.appendChild(header);
 
       for (const setting of group.settings) {
@@ -108,6 +166,58 @@ export class SettingsEditor {
         this.container.appendChild(this.createControl(setting, value));
       }
     }
+
+    // Settings Import/Export section
+    const ioHeader = document.createElement('h4');
+    ioHeader.textContent = 'Settings';
+    ioHeader.style.cssText = 'margin:16px 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
+    this.container.appendChild(ioHeader);
+
+    const ioBtnGroup = document.createElement('div');
+    ioBtnGroup.className = 'btn-group';
+    this.container.appendChild(ioBtnGroup);
+
+    const exportSettingsBtn = document.createElement('button');
+    exportSettingsBtn.className = 'btn btn-secondary';
+    exportSettingsBtn.textContent = '💾 Export';
+    exportSettingsBtn.addEventListener('click', () => {
+      if (this.settingsStore) {
+        const opts = this.renderer.getOptions();
+        this.settingsStore.saveImmediate(opts as any);
+        this.settingsStore.exportToFile('my-chart-theme');
+      }
+    });
+    ioBtnGroup.appendChild(exportSettingsBtn);
+
+    const importSettingsBtn = document.createElement('button');
+    importSettingsBtn.className = 'btn btn-secondary';
+    importSettingsBtn.textContent = '📂 Import';
+    importSettingsBtn.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.style.display = 'none';
+      input.addEventListener('change', () => {
+        const file = input.files?.[0];
+        if (!file || !this.settingsStore) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const settings = this.settingsStore!.importFromFile(reader.result as string);
+            this.renderer.updateOptions(settings as unknown as Partial<RendererOptions>);
+            this.rerenderCallback();
+            this.build();
+          } catch (e) {
+            alert(`Import failed: ${e instanceof Error ? e.message : String(e)}`);
+          }
+        };
+        reader.readAsText(file);
+      });
+      document.body.appendChild(input);
+      input.click();
+      document.body.removeChild(input);
+    });
+    ioBtnGroup.appendChild(importSettingsBtn);
   }
 
   private createControl(

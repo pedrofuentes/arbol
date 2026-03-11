@@ -51,7 +51,7 @@ export class FormEditor {
     const addHeading = document.createElement('h4');
     addHeading.textContent = 'Add Person';
     addHeading.style.cssText =
-      'margin:0 0 8px;font-size:11px;text-transform:uppercase;color:#94a3b8;letter-spacing:1px;';
+      'margin:0 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
     this.container.appendChild(addHeading);
 
     // Parent dropdown
@@ -138,7 +138,7 @@ export class FormEditor {
     const heading = document.createElement('h4');
     heading.textContent = 'Edit Person';
     heading.style.cssText =
-      'margin:16px 0 8px;font-size:11px;text-transform:uppercase;color:#94a3b8;letter-spacing:1px;';
+      'margin:16px 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
     this.editSection.appendChild(heading);
 
     // Edit Name
