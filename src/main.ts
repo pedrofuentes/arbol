@@ -14,17 +14,29 @@ import { flattenTree } from './utils/tree';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
 
+const ORG_STORAGE_KEY = 'arbol-org-data';
+
 const INITIAL_DATA: OrgNode = {
   id: 'root',
   name: 'Arbol',
   title: 'CEO',
 };
 
+function loadSavedOrg(): OrgNode {
+  try {
+    const raw = localStorage.getItem(ORG_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {
+    // Corrupted data — fall back to default
+  }
+  return INITIAL_DATA;
+}
+
 function main(): void {
   const sidebar = document.getElementById('sidebar')!;
   const chartArea = document.getElementById('chart-area')!;
 
-  const store = new OrgStore(INITIAL_DATA);
+  const store = new OrgStore(loadSavedOrg());
 
   // Settings persistence
   const settingsStore = new SettingsStore();
@@ -66,6 +78,7 @@ function main(): void {
     renderer.render(store.getTree());
     const opts = renderer.getOptions();
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
+    localStorage.setItem(ORG_STORAGE_KEY, JSON.stringify(store.getTree()));
     onSettingsSaved?.();
   };
 
