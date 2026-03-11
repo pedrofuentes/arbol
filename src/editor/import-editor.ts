@@ -615,7 +615,15 @@ export class ImportEditor {
           this.pendingImport = result;
           this.showStatus(result);
         } catch (e: unknown) {
-          this.showError(e instanceof Error ? e.message : String(e));
+          const msg = e instanceof Error ? e.message : String(e);
+          if (msg.includes('Encrypted') || msg.includes('EncryptionInfo')) {
+            this.showError(
+              'This file is encrypted or rights-protected. ' +
+              'Open it in Excel, save as a new unprotected .xlsx or .csv, then import that file.',
+            );
+          } else {
+            this.showError(msg);
+          }
         }
       };
       reader.onerror = () => this.showError('Failed to read file');
