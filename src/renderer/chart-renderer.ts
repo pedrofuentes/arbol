@@ -16,6 +16,7 @@ export interface RendererOptions {
   icContainerPadding?: number;
   // PAL options
   palTopGap?: number;
+  palBottomGap?: number;
   palRowGap?: number;
   palCenterGap?: number;
   // Typography
@@ -51,6 +52,7 @@ export class ChartRenderer {
       icGap: 4,
       icContainerPadding: 6,
       palTopGap: 10,
+      palBottomGap: 10,
       palRowGap: 4,
       palCenterGap: 50,
       nameFontSize: 8,

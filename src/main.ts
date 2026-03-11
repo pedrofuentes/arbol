@@ -74,7 +74,7 @@ function main(): void {
     nodeWidth: 110,
     nodeHeight: 22,
     horizontalSpacing: 30,
-    verticalSpacing: 60,
+    verticalSpacing: 30,
     icNodeWidth: 100,
     icGap: 4,
   });
