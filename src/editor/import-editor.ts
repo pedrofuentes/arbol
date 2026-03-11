@@ -524,7 +524,11 @@ export class ImportEditor {
         'color:var(--text-secondary);cursor:pointer;user-select:none;' +
         'background:var(--bg-elevated);list-style:none;';
       // Custom arrow
-      summary.innerHTML = `<span style="display:inline-block;margin-right:6px;font-size:9px;transition:transform 150ms ease;">▶</span>${fmt.label}`;
+      summary.textContent = '';
+      const arrow = document.createElement('span');
+      arrow.style.cssText = 'display:inline-block;margin-right:6px;font-size:9px;transition:transform 150ms ease;';
+      arrow.textContent = '▶';
+      summary.append(arrow, fmt.label);
       details.appendChild(summary);
 
       details.addEventListener('toggle', () => {
@@ -658,7 +662,12 @@ export class ImportEditor {
 
     const info = document.createElement('div');
     info.style.cssText = 'font-size:13px;color:var(--text-primary);margin-bottom:8px;font-family:var(--font-sans);';
-    info.innerHTML = `✓ Parsed <strong>${result.nodeCount}</strong> people from ${result.format}`;
+    info.textContent = '';
+    info.append('✓ Parsed ');
+    const strong = document.createElement('strong');
+    strong.textContent = String(result.nodeCount);
+    info.append(strong);
+    info.append(` people from ${result.format}`);
     this.statusArea.appendChild(info);
 
     const btnGroup = document.createElement('div');
