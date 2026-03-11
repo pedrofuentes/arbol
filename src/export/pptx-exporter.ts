@@ -100,7 +100,8 @@ function addNodeShape(
   );
   const w = node.width * scale * PX_TO_INCHES;
   const h = node.height * scale * PX_TO_INCHES;
-  const fontSize = Math.max(4, Math.round(7 * scale));
+  const nameFontSize = Math.max(4, Math.round(7 * scale));
+  const titleFontSize = Math.max(3, nameFontSize - 1);
 
   // Card rectangle with border
   slide.addShape('rect' as any, {
@@ -115,8 +116,8 @@ function addNodeShape(
   // Text content: name (bold) + title
   slide.addText(
     [
-      { text: node.name, options: { bold: true, breakLine: true } },
-      { text: node.title },
+      { text: node.name, options: { bold: true, breakLine: true, fontSize: nameFontSize } },
+      { text: node.title, options: { fontSize: titleFontSize, color: '64748B' } },
     ],
     {
       x: topLeft.x,
@@ -126,7 +127,6 @@ function addNodeShape(
       align: 'center',
       valign: 'middle',
       fontFace: DEFAULT_FONT_FAMILY,
-      fontSize,
       color: '1E293B',
       margin: 0,
     },
