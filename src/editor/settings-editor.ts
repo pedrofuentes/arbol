@@ -1,5 +1,5 @@
 import { ChartRenderer, RendererOptions } from '../renderer/chart-renderer';
-import { CHART_THEME_PRESETS } from '../store/theme-presets';
+import { CHART_THEME_PRESETS, addCustomPreset } from '../store/theme-presets';
 import { SettingsStore } from '../store/settings-store';
 
 interface SettingDef {
@@ -203,8 +203,27 @@ export class SettingsEditor {
         const reader = new FileReader();
         reader.onload = () => {
           try {
+            const raw = JSON.parse(reader.result as string);
             const settings = this.settingsStore!.importFromFile(reader.result as string);
             this.renderer.updateOptions(settings as unknown as Partial<RendererOptions>);
+
+            // Add as custom preset
+            const presetName = raw.name || file.name.replace(/\.json$/i, '');
+            const presetId = 'custom-' + presetName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            addCustomPreset({
+              id: presetId,
+              name: '⭐ ' + presetName,
+              description: 'Imported custom theme',
+              colors: {
+                cardFill: settings.cardFill,
+                cardStroke: settings.cardStroke,
+                cardStrokeWidth: settings.cardStrokeWidth,
+                linkColor: settings.linkColor,
+                linkWidth: settings.linkWidth,
+                icContainerFill: settings.icContainerFill,
+              },
+            });
+
             this.rerenderCallback();
             this.build();
           } catch (e) {

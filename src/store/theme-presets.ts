@@ -126,3 +126,13 @@ export function getPresetById(id: string): ChartThemePreset | undefined {
 export function getPresetNames(): { id: string; name: string }[] {
   return CHART_THEME_PRESETS.map(({ id, name }) => ({ id, name }));
 }
+
+export function addCustomPreset(preset: ChartThemePreset): void {
+  // Replace if same id already exists
+  const idx = CHART_THEME_PRESETS.findIndex((p) => p.id === preset.id);
+  if (idx >= 0) {
+    CHART_THEME_PRESETS[idx] = preset;
+  } else {
+    CHART_THEME_PRESETS.push(preset);
+  }
+}
