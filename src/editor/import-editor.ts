@@ -91,6 +91,9 @@ export class ImportEditor {
 
     this.container.appendChild(dropZone);
 
+    // --- Format Help Section ---
+    this.container.appendChild(this.buildFormatHelp());
+
     // --- Paste Section ---
     const pasteHeading = document.createElement('h4');
     pasteHeading.textContent = 'Or Paste Data';
@@ -127,6 +130,82 @@ export class ImportEditor {
     this.errorArea.style.cssText = 'margin-top:8px;';
     this.errorArea.textContent = '';
     this.container.appendChild(this.errorArea);
+  }
+
+  private buildFormatHelp(): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'margin-bottom:14px;';
+
+    const formats = [
+      {
+        label: 'CSV Format',
+        examples: [
+          {
+            name: 'With IDs (recommended)',
+            code: 'id,name,title,parent_id\nceo,Jane Doe,CEO,\nvp,John Smith,VP Eng,ceo',
+          },
+          {
+            name: 'By manager name',
+            code: 'name,title,manager_name\nJane Doe,CEO,\nJohn Smith,VP Eng,Jane Doe',
+          },
+        ],
+      },
+      {
+        label: 'JSON Format',
+        examples: [
+          {
+            name: 'Nested tree',
+            code: '{\n  "id": "ceo",\n  "name": "Jane Doe",\n  "title": "CEO",\n  "children": [\n    { "id": "vp", "name": "John", "title": "VP" }\n  ]\n}',
+          },
+        ],
+      },
+    ];
+
+    for (const fmt of formats) {
+      const details = document.createElement('details');
+      details.style.cssText =
+        'margin-bottom:6px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);' +
+        'overflow:hidden;transition:all 150ms ease;';
+
+      const summary = document.createElement('summary');
+      summary.textContent = fmt.label;
+      summary.style.cssText =
+        'padding:6px 10px;font-size:11px;font-weight:600;font-family:var(--font-sans);' +
+        'color:var(--text-secondary);cursor:pointer;user-select:none;' +
+        'background:var(--bg-elevated);list-style:none;';
+      // Custom arrow
+      summary.innerHTML = `<span style="display:inline-block;margin-right:6px;font-size:9px;transition:transform 150ms ease;">▶</span>${fmt.label}`;
+      details.appendChild(summary);
+
+      details.addEventListener('toggle', () => {
+        const arrow = summary.querySelector('span');
+        if (arrow) arrow.style.transform = details.open ? 'rotate(90deg)' : '';
+      });
+
+      const content = document.createElement('div');
+      content.style.cssText = 'padding:8px 10px;background:var(--bg-base);';
+
+      for (const ex of fmt.examples) {
+        const label = document.createElement('div');
+        label.textContent = ex.name;
+        label.style.cssText =
+          'font-size:10px;color:var(--text-tertiary);margin-bottom:3px;font-family:var(--font-sans);font-weight:600;';
+        content.appendChild(label);
+
+        const pre = document.createElement('pre');
+        pre.textContent = ex.code;
+        pre.style.cssText =
+          'font-family:var(--font-mono);font-size:10px;line-height:1.5;color:var(--text-secondary);' +
+          'white-space:pre-wrap;word-break:break-all;margin:0 0 8px;padding:6px 8px;' +
+          'background:var(--bg-elevated);border-radius:var(--radius-sm);border:1px solid var(--border-subtle);';
+        content.appendChild(pre);
+      }
+
+      details.appendChild(content);
+      wrapper.appendChild(details);
+    }
+
+    return wrapper;
   }
 
   private processPaste(): void {
