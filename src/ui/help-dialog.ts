@@ -73,6 +73,9 @@ export function showHelpDialog(): void {
   `;
 
   const dialog = document.createElement('div');
+  dialog.setAttribute('role', 'dialog');
+  dialog.setAttribute('aria-modal', 'true');
+  dialog.setAttribute('aria-label', 'Keyboard shortcuts and help');
   dialog.style.cssText = `
     background:var(--bg-surface);
     border:1px solid var(--border-default);
@@ -105,6 +108,7 @@ export function showHelpDialog(): void {
 
   const closeBtn = document.createElement('button');
   closeBtn.className = 'icon-btn';
+  closeBtn.setAttribute('aria-label', 'Close help dialog');
   closeBtn.textContent = '✕';
   closeBtn.style.cssText += 'font-size:14px;width:28px;height:28px;';
   header.appendChild(closeBtn);

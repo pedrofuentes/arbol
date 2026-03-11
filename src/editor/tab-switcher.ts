@@ -17,6 +17,8 @@ export class TabSwitcher {
 
     const nav = document.createElement('nav');
     nav.className = 'tab-nav';
+    nav.setAttribute('role', 'tablist');
+    nav.setAttribute('aria-label', 'Editor tabs');
     nav.style.cssText =
       'display:flex;gap:2px;padding:3px;margin-bottom:14px;' +
       'background:var(--bg-base);border-radius:var(--radius-lg);';
@@ -26,6 +28,8 @@ export class TabSwitcher {
       btn.className = 'tab-btn';
       btn.textContent = tab.label;
       btn.dataset.tabId = tab.id;
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', 'false');
       btn.style.cssText =
         'flex:1;padding:6px 0;border:none;background:transparent;cursor:pointer;' +
         'font-size:12px;font-weight:600;font-family:var(--font-sans);' +
@@ -59,6 +63,7 @@ export class TabSwitcher {
 
     for (const [id, btn] of this.buttons) {
       const isActive = id === tabId;
+      btn.setAttribute('aria-selected', String(isActive));
       btn.style.color = isActive ? 'var(--text-primary)' : 'var(--text-tertiary)';
       btn.style.background = isActive ? 'var(--bg-elevated)' : 'transparent';
       btn.style.boxShadow = isActive ? 'var(--shadow-sm)' : 'none';

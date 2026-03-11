@@ -228,6 +228,7 @@ function main(): void {
   const themeBtn = document.createElement('button');
   themeBtn.className = 'icon-btn';
   themeBtn.setAttribute('data-tooltip', 'Toggle theme');
+  themeBtn.setAttribute('aria-label', 'Toggle dark/light theme');
   themeBtn.textContent = themeManager.getTheme() === 'dark' ? '☀️' : '🌙';
   themeBtn.addEventListener('click', () => {
     themeManager.toggle();
@@ -241,6 +242,7 @@ function main(): void {
   const helpBtn = document.createElement('button');
   helpBtn.className = 'icon-btn';
   helpBtn.setAttribute('data-tooltip', 'Help & shortcuts');
+  helpBtn.setAttribute('aria-label', 'Show help');
   helpBtn.textContent = '?';
   helpBtn.style.fontWeight = '700';
   helpBtn.addEventListener('click', () => showHelpDialog());
@@ -250,6 +252,7 @@ function main(): void {
   const undoBtn = document.createElement('button');
   undoBtn.className = 'icon-btn';
   undoBtn.setAttribute('data-tooltip', 'Undo (Ctrl+Z)');
+  undoBtn.setAttribute('aria-label', 'Undo');
   undoBtn.textContent = '↩';
   undoBtn.disabled = true;
   undoBtn.addEventListener('click', () => {
@@ -260,6 +263,7 @@ function main(): void {
   const redoBtn = document.createElement('button');
   redoBtn.className = 'icon-btn';
   redoBtn.setAttribute('data-tooltip', 'Redo (Ctrl+Shift+Z)');
+  redoBtn.setAttribute('aria-label', 'Redo');
   redoBtn.textContent = '↪';
   redoBtn.disabled = true;
   redoBtn.addEventListener('click', () => {
@@ -287,6 +291,8 @@ function main(): void {
   const searchInput = document.createElement('input');
   searchInput.className = 'search-input';
   searchInput.type = 'text';
+  searchInput.setAttribute('role', 'searchbox');
+  searchInput.setAttribute('aria-label', 'Search people by name or title');
   searchInput.placeholder = 'Search people... (Ctrl+F)';
   headerCenter.appendChild(searchInput);
 
@@ -419,6 +425,7 @@ function main(): void {
   exportBtn.className = 'footer-btn';
   exportBtn.dataset.action = 'export-pptx';
   exportBtn.textContent = '📊 Export PPTX';
+  exportBtn.setAttribute('aria-label', 'Export to PowerPoint');
   exportBtn.setAttribute('data-tooltip', 'Export to PowerPoint (Ctrl+E)');
   footerRight.appendChild(exportBtn);
 
@@ -433,6 +440,7 @@ function main(): void {
   fitBtn.className = 'footer-btn';
   fitBtn.dataset.action = 'fit';
   fitBtn.textContent = '⊞ Fit';
+  fitBtn.setAttribute('aria-label', 'Fit chart to screen');
   fitBtn.setAttribute('data-tooltip', 'Fit chart to screen');
   footerRight.appendChild(fitBtn);
 
@@ -444,6 +452,7 @@ function main(): void {
   resetZoomBtn.className = 'footer-btn';
   resetZoomBtn.dataset.action = 'reset-zoom';
   resetZoomBtn.textContent = '⟲ Reset';
+  resetZoomBtn.setAttribute('aria-label', 'Reset zoom');
   resetZoomBtn.setAttribute('data-tooltip', 'Reset zoom to 100%');
   footerRight.appendChild(resetZoomBtn);
 

@@ -17,7 +17,11 @@ export function showConfirmDialog(options: ConfirmDialogOptions): Promise<boolea
       animation:fadeIn 150ms ease;
     `;
 
+    const dialogTitleId = 'confirm-dialog-title';
     const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'alertdialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.setAttribute('aria-labelledby', dialogTitleId);
     dialog.style.cssText = `
       background:var(--bg-elevated);
       border:1px solid var(--border-default);
@@ -30,6 +34,7 @@ export function showConfirmDialog(options: ConfirmDialogOptions): Promise<boolea
     `;
 
     const title = document.createElement('h3');
+    title.id = dialogTitleId;
     title.textContent = options.title;
     title.style.cssText = `
       margin:0 0 8px;font-size:16px;font-weight:600;

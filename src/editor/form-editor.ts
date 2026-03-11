@@ -58,6 +58,7 @@ export class FormEditor {
     const parentGroup = this.createFormGroup('Parent');
     this.parentSelect = document.createElement('select');
     this.parentSelect.dataset.field = 'parent';
+    this.parentSelect.setAttribute('aria-label', 'Parent person');
     parentGroup.appendChild(this.parentSelect);
     this.container.appendChild(parentGroup);
 
@@ -66,6 +67,7 @@ export class FormEditor {
     this.nameInput = document.createElement('input');
     this.nameInput.type = 'text';
     this.nameInput.dataset.field = 'name';
+    this.nameInput.setAttribute('aria-label', 'Name');
     nameGroup.appendChild(this.nameInput);
     this.container.appendChild(nameGroup);
 
@@ -74,6 +76,7 @@ export class FormEditor {
     this.titleInput = document.createElement('input');
     this.titleInput.type = 'text';
     this.titleInput.dataset.field = 'title';
+    this.titleInput.setAttribute('aria-label', 'Title');
     titleGroup.appendChild(this.titleInput);
     this.container.appendChild(titleGroup);
 
@@ -179,6 +182,7 @@ export class FormEditor {
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'btn btn-danger';
       deleteBtn.dataset.action = 'delete';
+      deleteBtn.setAttribute('aria-label', 'Delete selected person');
       deleteBtn.textContent = 'Delete';
       deleteBtn.addEventListener('click', () => {
         this.store.removeNode(this.selectedNodeId!);
