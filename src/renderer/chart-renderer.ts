@@ -147,6 +147,33 @@ export class ChartRenderer {
           this.onCollapseToggle(d.data.id);
         }
       });
+
+    this.centerContent();
+  }
+
+  private centerContent(): void {
+    const svgNode = this.svg.node()!;
+    const gNode = this.g.node()!;
+
+    // getBBox() is not available in jsdom/test environments
+    if (typeof gNode.getBBox !== 'function') return;
+
+    const bbox = gNode.getBBox();
+    const svgWidth = svgNode.clientWidth || svgNode.getBoundingClientRect().width;
+    const svgHeight = svgNode.clientHeight || svgNode.getBoundingClientRect().height;
+
+    if (bbox.width === 0 || bbox.height === 0) return;
+
+    const padding = 40;
+    const scale = Math.min(
+      (svgWidth - padding * 2) / bbox.width,
+      (svgHeight - padding * 2) / bbox.height,
+      1.5,
+    );
+    const tx = svgWidth / 2 - (bbox.x + bbox.width / 2) * scale;
+    const ty = padding - bbox.y * scale;
+
+    this.g.attr('transform', `translate(${tx},${ty}) scale(${scale})`);
   }
 
   toggleCollapse(id: string): void {
