@@ -360,11 +360,12 @@ export class SettingsEditor {
     actionsRow.className = 'accordion-actions';
 
     const toggleAllBtn = document.createElement('button');
-    toggleAllBtn.textContent = 'Expand all';
+    const allExpanded = ALL_SECTION_IDS.every((id) => this.isExpanded(id));
+    toggleAllBtn.textContent = allExpanded ? 'Collapse all' : 'Expand all';
     toggleAllBtn.addEventListener('click', () => {
-      const allExpanded = ALL_SECTION_IDS.every((id) => this.isExpanded(id));
+      const allExp = ALL_SECTION_IDS.every((id) => this.isExpanded(id));
       for (const id of ALL_SECTION_IDS) {
-        this.accordionState.set(id, !allExpanded);
+        this.accordionState.set(id, !allExp);
       }
       this.saveAccordionState();
       this.build();
