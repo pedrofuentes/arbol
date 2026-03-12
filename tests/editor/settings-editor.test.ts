@@ -356,35 +356,22 @@ describe('SettingsEditor', () => {
       expect(rerenderCb).toHaveBeenCalled();
     });
 
-    it('renders Theme and Layout dropdowns', () => {
+    it('renders layout preset buttons', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const themeSelect = container.querySelector<HTMLSelectElement>('select[aria-label="Theme"]');
-      const layoutSelect = container.querySelector<HTMLSelectElement>('select[aria-label="Layout"]');
-      expect(themeSelect).not.toBeNull();
-      expect(layoutSelect).not.toBeNull();
-      // Theme dropdown has 8 themes + placeholder
-      expect(themeSelect!.options.length).toBe(CHART_THEME_PRESETS.length + 1);
-      // Layout dropdown has 4 layouts + placeholder
-      expect(layoutSelect!.options.length).toBe(LAYOUT_PRESETS.length + 1);
+      // Layout buttons: Compact, Default, Spacious, Presentation
+      const buttons = container.querySelectorAll('button');
+      const layoutBtnTexts = Array.from(buttons)
+        .map((b) => b.textContent)
+        .filter((t) => t && ['Compact', 'Default', 'Spacious', 'Presentation'].some((n) => t.includes(n)));
+      expect(layoutBtnTexts.length).toBe(4);
     });
 
-    it('theme dropdown applies only colors', () => {
+    it('layout button applies only sizes', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const themeSelect = container.querySelector<HTMLSelectElement>('select[aria-label="Theme"]')!;
-      themeSelect.value = 'corporate-blue';
-      themeSelect.dispatchEvent(new Event('change'));
-      const calls = (renderer.updateOptions as ReturnType<typeof vi.fn>).mock.calls;
-      const lastCall = calls[calls.length - 1][0] as Partial<RendererOptions>;
-      expect(lastCall.cardFill).toBe('#f8fafc');
-      expect(lastCall.cardStroke).toBe('#2563eb');
-      expect(lastCall).not.toHaveProperty('nodeWidth');
-    });
-
-    it('layout dropdown applies only sizes', () => {
-      new SettingsEditor(container, renderer, rerenderCb);
-      const layoutSelect = container.querySelector<HTMLSelectElement>('select[aria-label="Layout"]')!;
-      layoutSelect.value = 'Compact';
-      layoutSelect.dispatchEvent(new Event('change'));
+      const buttons = Array.from(container.querySelectorAll('button'));
+      const compactBtn = buttons.find((b) => b.textContent?.includes('Compact'));
+      expect(compactBtn).toBeDefined();
+      compactBtn!.click();
       const calls = (renderer.updateOptions as ReturnType<typeof vi.fn>).mock.calls;
       const lastCall = calls[calls.length - 1][0] as Partial<RendererOptions>;
       expect(lastCall.nodeWidth).toBe(90);

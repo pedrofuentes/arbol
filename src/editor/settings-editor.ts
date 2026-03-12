@@ -709,89 +709,53 @@ export class SettingsEditor {
 
     wrapper.appendChild(presetGrid);
 
-    // Fine-grained control dropdowns
-    const controlRow = document.createElement('div');
-    controlRow.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
+    // Layout preset buttons (4-column grid)
+    const layoutHeading = document.createElement('div');
+    layoutHeading.textContent = 'Layout';
+    layoutHeading.style.cssText = 'font-size:10px;color:var(--text-tertiary);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;';
+    wrapper.appendChild(layoutHeading);
 
-    // Theme dropdown
-    const themeGroup = document.createElement('div');
-    themeGroup.style.cssText = 'flex:1;';
-
-    const themeLabel = document.createElement('label');
-    themeLabel.textContent = 'Theme';
-    themeLabel.style.cssText = 'display:block;font-size:10px;color:var(--text-tertiary);margin-bottom:3px;font-weight:600;';
-    themeGroup.appendChild(themeLabel);
-
-    const themeSelect = document.createElement('select');
-    themeSelect.setAttribute('aria-label', 'Theme');
-    themeSelect.style.cssText =
-      'width:100%;padding:4px 6px;font-size:11px;font-family:var(--font-sans);' +
-      'border:1px solid var(--border-default);border-radius:var(--radius-sm);' +
-      'background:var(--bg-surface);color:var(--text-primary);cursor:pointer;';
-
-    const themeDefaultOpt = document.createElement('option');
-    themeDefaultOpt.value = '';
-    themeDefaultOpt.textContent = 'Select theme…';
-    themeSelect.appendChild(themeDefaultOpt);
-
-    for (const theme of CHART_THEME_PRESETS) {
-      const opt = document.createElement('option');
-      opt.value = theme.id;
-      opt.textContent = theme.name;
-      themeSelect.appendChild(opt);
-    }
-
-    themeSelect.addEventListener('change', () => {
-      const theme = CHART_THEME_PRESETS.find((t) => t.id === themeSelect.value);
-      if (theme) {
-        this.renderer.updateOptions(theme.colors as Partial<RendererOptions>);
-        this.rerenderCallback();
-        this.build();
-      }
-    });
-    themeGroup.appendChild(themeSelect);
-    controlRow.appendChild(themeGroup);
-
-    // Layout dropdown
-    const layoutGroup = document.createElement('div');
-    layoutGroup.style.cssText = 'flex:1;';
-
-    const layoutLabel = document.createElement('label');
-    layoutLabel.textContent = 'Layout';
-    layoutLabel.style.cssText = 'display:block;font-size:10px;color:var(--text-tertiary);margin-bottom:3px;font-weight:600;';
-    layoutGroup.appendChild(layoutLabel);
-
-    const layoutSelect = document.createElement('select');
-    layoutSelect.setAttribute('aria-label', 'Layout');
-    layoutSelect.style.cssText =
-      'width:100%;padding:4px 6px;font-size:11px;font-family:var(--font-sans);' +
-      'border:1px solid var(--border-default);border-radius:var(--radius-sm);' +
-      'background:var(--bg-surface);color:var(--text-primary);cursor:pointer;';
-
-    const layoutDefaultOpt = document.createElement('option');
-    layoutDefaultOpt.value = '';
-    layoutDefaultOpt.textContent = 'Select layout…';
-    layoutSelect.appendChild(layoutDefaultOpt);
+    const layoutGrid = document.createElement('div');
+    layoutGrid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;';
 
     for (const lp of LAYOUT_PRESETS) {
-      const opt = document.createElement('option');
-      opt.value = lp.name;
-      opt.textContent = `${lp.icon} ${lp.name}`;
-      layoutSelect.appendChild(opt);
-    }
+      const btn = document.createElement('button');
+      btn.style.cssText = `
+        display:flex;flex-direction:column;align-items:center;gap:2px;
+        padding:6px 4px;border:1px solid var(--border-default);
+        border-radius:var(--radius-md);background:var(--bg-elevated);
+        cursor:pointer;transition:all 120ms ease;font-family:var(--font-sans);
+      `;
 
-    layoutSelect.addEventListener('change', () => {
-      const lp = LAYOUT_PRESETS.find((p) => p.name === layoutSelect.value);
-      if (lp) {
+      const icon = document.createElement('span');
+      icon.textContent = lp.icon;
+      icon.style.cssText = 'font-size:14px;line-height:1;color:var(--text-secondary);';
+      btn.appendChild(icon);
+
+      const label = document.createElement('span');
+      label.textContent = lp.name;
+      label.style.cssText = 'font-size:9px;color:var(--text-tertiary);font-weight:600;';
+      btn.appendChild(label);
+
+      btn.addEventListener('mouseenter', () => {
+        btn.style.borderColor = 'var(--accent)';
+        btn.style.background = 'var(--bg-hover)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.borderColor = 'var(--border-default)';
+        btn.style.background = 'var(--bg-elevated)';
+      });
+
+      btn.addEventListener('click', () => {
         this.renderer.updateOptions(lp.sizes);
         this.rerenderCallback();
         this.build();
-      }
-    });
-    layoutGroup.appendChild(layoutSelect);
-    controlRow.appendChild(layoutGroup);
+      });
 
-    wrapper.appendChild(controlRow);
+      layoutGrid.appendChild(btn);
+    }
+
+    wrapper.appendChild(layoutGrid);
 
     // Save as Preset button + inline name input
     const saveRow = document.createElement('div');
