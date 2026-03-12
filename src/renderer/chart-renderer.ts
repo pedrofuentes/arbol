@@ -224,7 +224,7 @@ export class ChartRenderer {
     if (this.hasRendered) {
       this.zoomManager.applyTransform(this.zoomManager.getCurrentTransform());
     } else {
-      this.zoomManager.fitToContent();
+      this.zoomManager.centerAtRealSize();
       this.hasRendered = true;
     }
 

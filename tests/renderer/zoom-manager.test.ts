@@ -83,65 +83,87 @@ describe('ZoomManager', () => {
     expect(t.y).toBe(0);
   });
 
-  it('getBaseScale() returns 1 initially', () => {
+  it('getBaseScale() returns 1 always', () => {
     const zm = new ZoomManager(svgEl, gEl);
     expect(zm.getBaseScale()).toBe(1);
   });
 
-  it('getRelativeZoomPercent() returns 100 when at identity with default base scale', () => {
+  it('getRelativeZoomPercent() returns 100 when at identity (absolute zoom)', () => {
     const zm = new ZoomManager(svgEl, gEl);
     zm.resetZoom();
     expect(zm.getRelativeZoomPercent()).toBe(100);
   });
 
-  it('getRelativeZoomPercent() calculates correctly relative to base scale', () => {
+  it('getRelativeZoomPercent() returns absolute zoom percentage', () => {
     const zm = new ZoomManager(svgEl, gEl);
-    // Simulate a fitToContent that set base scale to 1.5
-    // by applying a transform at 1.5, then checking relative %
     zm.applyTransform(d3.zoomIdentity.scale(1.5));
-    // Base scale is still 1, so relative % = 150
     expect(zm.getRelativeZoomPercent()).toBe(150);
+
+    zm.applyTransform(d3.zoomIdentity.scale(0.5));
+    expect(zm.getRelativeZoomPercent()).toBe(50);
   });
 
-  it('getRelativeZoomPercent() returns 100 after fitToContent when getBBox is available', () => {
+  it('getRelativeZoomPercent() returns scale percentage after fitToContent', () => {
     const zm = new ZoomManager(svgEl, gEl);
-    // Mock getBBox to return a valid bounding box
     const originalGetBBox = gEl.getBBox;
     gEl.getBBox = () => ({ x: 0, y: 0, width: 400, height: 300 }) as DOMRect;
-    // Mock clientWidth/clientHeight
     Object.defineProperty(svgEl, 'clientWidth', { value: 800, configurable: true });
     Object.defineProperty(svgEl, 'clientHeight', { value: 600, configurable: true });
 
     zm.fitToContent();
 
-    // After fitToContent, the relative zoom should always be 100%
-    expect(zm.getRelativeZoomPercent()).toBe(100);
-    expect(zm.getBaseScale()).toBeGreaterThan(0);
+    // Absolute zoom should reflect the actual scale, not 100%
+    const pct = zm.getRelativeZoomPercent();
+    expect(pct).toBeGreaterThan(0);
+    expect(zm.getBaseScale()).toBe(1);
 
     gEl.getBBox = originalGetBBox;
   });
 
-  it('getRelativeZoomPercent() reflects manual zoom relative to base', () => {
+  it('getRelativeZoomPercent() reflects manual zoom as absolute percentage', () => {
     const zm = new ZoomManager(svgEl, gEl);
-    // Mock getBBox for fitToContent
+
+    zm.applyTransform(d3.zoomIdentity.translate(100, 50).scale(2));
+    expect(zm.getRelativeZoomPercent()).toBe(200);
+
+    zm.applyTransform(d3.zoomIdentity.translate(100, 50).scale(0.5));
+    expect(zm.getRelativeZoomPercent()).toBe(50);
+  });
+
+  it('centerAtRealSize() does not throw when getBBox is unavailable', () => {
+    const zm = new ZoomManager(svgEl, gEl);
+    expect(() => zm.centerAtRealSize()).not.toThrow();
+    expect(() => zm.centerAtRealSize(20)).not.toThrow();
+  });
+
+  it('centerAtRealSize() sets scale to 1 and centers horizontally', () => {
+    const zm = new ZoomManager(svgEl, gEl);
+    gEl.getBBox = () => ({ x: -200, y: 0, width: 400, height: 300 }) as DOMRect;
+    Object.defineProperty(svgEl, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(svgEl, 'clientHeight', { value: 600, configurable: true });
+
+    zm.centerAtRealSize();
+
+    const t = zm.getCurrentTransform();
+    expect(t.k).toBe(1);
+    // Chart center is at x=-200 + 400/2 = 0, viewport center is 400
+    // tx = 800/2 - ((-200) + 400/2) = 400 - 0 = 400
+    expect(t.x).toBe(400);
+    // ty = padding(40) - bbox.y(0) = 40
+    expect(t.y).toBe(40);
+    expect(zm.getRelativeZoomPercent()).toBe(100);
+  });
+
+  it('centerAtRealSize() respects custom padding', () => {
+    const zm = new ZoomManager(svgEl, gEl);
     gEl.getBBox = () => ({ x: 0, y: 0, width: 400, height: 300 }) as DOMRect;
     Object.defineProperty(svgEl, 'clientWidth', { value: 800, configurable: true });
     Object.defineProperty(svgEl, 'clientHeight', { value: 600, configurable: true });
 
-    zm.fitToContent();
-    const baseScale = zm.getBaseScale();
+    zm.centerAtRealSize(20);
 
-    // Now zoom in 2x from the base
-    const currentTransform = zm.getCurrentTransform();
-    zm.applyTransform(
-      d3.zoomIdentity.translate(currentTransform.x, currentTransform.y).scale(baseScale * 2),
-    );
-    expect(zm.getRelativeZoomPercent()).toBe(200);
-
-    // Zoom out to half of base
-    zm.applyTransform(
-      d3.zoomIdentity.translate(currentTransform.x, currentTransform.y).scale(baseScale * 0.5),
-    );
-    expect(zm.getRelativeZoomPercent()).toBe(50);
+    const t = zm.getCurrentTransform();
+    expect(t.k).toBe(1);
+    expect(t.y).toBe(20);
   });
 });
