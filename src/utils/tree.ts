@@ -80,3 +80,22 @@ export function stripM1Children(
 
   return { layoutTree: walk(node), icMap, palMap };
 }
+
+export function countLeaves(root: OrgNode): number {
+  return flattenTree(root).filter(isLeaf).length;
+}
+
+/** Returns a map of depth → number of managers at that depth (excludes root at depth 0). */
+export function countManagersByLevel(root: OrgNode): Map<number, number> {
+  const map = new Map<number, number>();
+  function walk(node: OrgNode, depth: number): void {
+    if (depth > 0 && !isLeaf(node)) {
+      map.set(depth, (map.get(depth) ?? 0) + 1);
+    }
+    for (const child of node.children ?? []) {
+      walk(child, depth + 1);
+    }
+  }
+  walk(root, 0);
+  return map;
+}

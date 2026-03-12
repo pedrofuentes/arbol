@@ -293,6 +293,7 @@ body {
    ====================================================================== */
 
 #footer {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -322,6 +323,19 @@ body {
   color: var(--text-primary);
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent-muted);
+}
+
+.footer-center a {
+  font-size: var(--text-xs);
+  font-family: var(--font-sans);
+  color: var(--text-tertiary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.footer-center a:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 /* ======================================================================

@@ -10,7 +10,7 @@ import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { getMatchingNodeIds } from './utils/search';
 import { OrgNode } from './types';
-import { flattenTree, findNodeById, isLeaf } from './utils/tree';
+import { flattenTree, findNodeById, isLeaf, countLeaves, countManagersByLevel } from './utils/tree';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
 import { showContextMenu, dismissContextMenu } from './ui/context-menu';
@@ -483,12 +483,32 @@ function main(): void {
   const updateStatus = () => {
     const tree = store.getTree();
     const allNodes = flattenTree(tree);
-    const count = allNodes.length;
+    const total = allNodes.length;
     const managerCount = allNodes.filter((n) => !isLeaf(n)).length;
-    statusText.textContent = `${count} people · ${managerCount} managers`;
+    const icCount = countLeaves(tree);
+    const levels = countManagersByLevel(tree);
+
+    const parts = [`${total} people`, `${managerCount} managers`, `${icCount} ICs`];
+    const sortedLevels = Array.from(levels.entries()).sort((a, b) => a[0] - b[0]);
+    for (const [depth, count] of sortedLevels) {
+      parts.push(`${count} M${depth}`);
+    }
+    statusText.textContent = parts.join(' · ');
   };
   store.onChange(updateStatus);
   updateStatus();
+
+  // Footer: Center area (GitHub link)
+  const footerCenter = document.createElement('div');
+  footerCenter.className = 'footer-center';
+  footerCenter.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);';
+  const githubLink = document.createElement('a');
+  githubLink.href = 'https://github.com/pedrofuentes/arbol';
+  githubLink.target = '_blank';
+  githubLink.rel = 'noopener noreferrer';
+  githubLink.textContent = 'you to decide';
+  footerCenter.appendChild(githubLink);
+  footer.appendChild(footerCenter);
 
   // Footer: Buttons (right side)
   const footerRight = document.createElement('div');
