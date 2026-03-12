@@ -170,10 +170,30 @@ describe('ImportEditor — Preset selector UI', () => {
     expect(select.value).toBe('');
   });
 
-  it('renders a "Manage" button', () => {
+  it('does not render a "Manage" button', () => {
     const buttons = Array.from(container.querySelectorAll('button'));
     const manageBtn = buttons.find((b) => b.textContent === 'Manage');
-    expect(manageBtn).toBeDefined();
+    expect(manageBtn).toBeUndefined();
+  });
+
+  it('shows preset list inline without any toggle', () => {
+    const text = container.textContent || '';
+    expect(text).toContain('No saved presets.');
+  });
+
+  it('renders action buttons: + New, 📂 Import, 💾 Export All', () => {
+    const buttons = Array.from(container.querySelectorAll('button')).map(
+      (b) => b.textContent,
+    );
+    expect(buttons).toContain('+ New');
+    expect(buttons).toContain('📂 Import');
+    expect(buttons).toContain('💾 Export All');
+  });
+
+  it('does not render a "From Sample" button', () => {
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const fromSampleBtn = buttons.find((b) => b.textContent === 'From Sample');
+    expect(fromSampleBtn).toBeUndefined();
   });
 });
 
@@ -217,7 +237,7 @@ describe('ImportEditor — Mapping flow on auto-detect failure', () => {
   });
 });
 
-describe('ImportEditor — Manage area UI', () => {
+describe('ImportEditor — Inline preset actions', () => {
   let container: HTMLDivElement;
   let store: OrgStore;
   let editor: ImportEditor;
@@ -239,20 +259,8 @@ describe('ImportEditor — Manage area UI', () => {
       (b) => b.textContent === text,
     ) as HTMLButtonElement | undefined;
 
-  it('clicking "Manage" reveals the manage area with action buttons', () => {
-    const manageBtn = findButton('Manage')!;
-    expect(manageBtn).toBeDefined();
-    manageBtn.click();
-
-    expect(findButton('Create')).toBeDefined();
-    expect(findButton('From Sample')).toBeDefined();
-    expect(findButton('Import')).toBeDefined();
-    expect(findButton('Export All')).toBeDefined();
-  });
-
-  it('clicking "Create" shows the preset creator form', () => {
-    findButton('Manage')!.click();
-    findButton('Create')!.click();
+  it('clicking "+ New" shows the preset creator form', () => {
+    findButton('+ New')!.click();
 
     const inputs = container.querySelectorAll('input[type="text"]');
     expect(inputs.length).toBeGreaterThanOrEqual(1);
@@ -261,9 +269,8 @@ describe('ImportEditor — Manage area UI', () => {
     expect(findButton('Cancel')).toBeDefined();
   });
 
-  it('clicking "Import" shows the import form with a textarea and "Load" button', () => {
-    findButton('Manage')!.click();
-    findButton('Import')!.click();
+  it('clicking "📂 Import" shows the import form with a textarea and "Load" button', () => {
+    findButton('📂 Import')!.click();
 
     const importTextarea = container.querySelectorAll('textarea');
     // At least 2 textareas: the main paste area + the import preset textarea
@@ -273,8 +280,7 @@ describe('ImportEditor — Manage area UI', () => {
   });
 
   it('clicking "Cancel" inside the import form hides the manage slot', () => {
-    findButton('Manage')!.click();
-    findButton('Import')!.click();
+    findButton('📂 Import')!.click();
 
     // The manage slot should be visible (contains textarea + Load)
     expect(findButton('Load')).toBeDefined();

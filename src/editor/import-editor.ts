@@ -74,7 +74,7 @@ export class ImportEditor {
     this.container.appendChild(presetHeading);
 
     const presetRow = document.createElement('div');
-    presetRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:14px;';
+    presetRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;';
 
     this.presetSelect = document.createElement('select');
     this.presetSelect.style.cssText =
@@ -84,51 +84,11 @@ export class ImportEditor {
     this.refreshPresetDropdown();
     presetRow.appendChild(this.presetSelect);
 
-    const manageBtn = document.createElement('button');
-    manageBtn.className = 'btn btn-secondary';
-    manageBtn.textContent = 'Manage';
-    manageBtn.style.cssText = 'font-size:10px;padding:3px 8px;';
+    this.container.appendChild(presetRow);
 
-    const manageArea = document.createElement('div');
-    manageArea.style.cssText = 'display:none;margin-bottom:14px;padding:8px 10px;' +
-      'background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-md);';
-
-    // --- Action buttons row ---
-    const actionRow = document.createElement('div');
-    actionRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;';
-
-    const actionBtnStyle = 'font-size:10px;padding:3px 8px;';
-
-    const createBtn = document.createElement('button');
-    createBtn.className = 'btn btn-secondary';
-    createBtn.textContent = 'Create';
-    createBtn.style.cssText = actionBtnStyle;
-
-    const fromSampleBtn = document.createElement('button');
-    fromSampleBtn.className = 'btn btn-secondary';
-    fromSampleBtn.textContent = 'From Sample';
-    fromSampleBtn.style.cssText = actionBtnStyle;
-
-    const importBtn = document.createElement('button');
-    importBtn.className = 'btn btn-secondary';
-    importBtn.textContent = 'Import';
-    importBtn.style.cssText = actionBtnStyle;
-
-    const exportAllBtn = document.createElement('button');
-    exportAllBtn.className = 'btn btn-secondary';
-    exportAllBtn.textContent = 'Export All';
-    exportAllBtn.style.cssText = actionBtnStyle;
-
-    actionRow.append(createBtn, fromSampleBtn, importBtn, exportAllBtn);
-    manageArea.appendChild(actionRow);
-
-    // --- Manage slot (dynamic inline area) ---
-    this.manageSlot = document.createElement('div');
-    this.manageSlot.style.cssText = 'display:none;padding:8px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);margin-bottom:8px;';
-    manageArea.appendChild(this.manageSlot);
-
-    // --- Preset list ---
+    // --- Preset list (always visible) ---
     const presetListContainer = document.createElement('div');
+    presetListContainer.style.cssText = 'margin-bottom:8px;';
 
     const rebuildManageList = () => {
       presetListContainer.innerHTML = '';
@@ -181,7 +141,37 @@ export class ImportEditor {
       }
     };
 
-    manageArea.appendChild(presetListContainer);
+    rebuildManageList();
+    this.container.appendChild(presetListContainer);
+
+    // --- Action buttons row ---
+    const actionBtnStyle = 'font-size:10px;padding:3px 8px;';
+
+    const actionRow = document.createElement('div');
+    actionRow.style.cssText = 'display:flex;gap:6px;margin-bottom:8px;';
+
+    const createBtn = document.createElement('button');
+    createBtn.className = 'btn btn-secondary';
+    createBtn.textContent = '+ New';
+    createBtn.style.cssText = actionBtnStyle;
+
+    const importBtn = document.createElement('button');
+    importBtn.className = 'btn btn-secondary';
+    importBtn.textContent = '📂 Import';
+    importBtn.style.cssText = actionBtnStyle;
+
+    const exportAllBtn = document.createElement('button');
+    exportAllBtn.className = 'btn btn-secondary';
+    exportAllBtn.textContent = '💾 Export All';
+    exportAllBtn.style.cssText = actionBtnStyle;
+
+    actionRow.append(createBtn, importBtn, exportAllBtn);
+    this.container.appendChild(actionRow);
+
+    // --- Dynamic slot for inline forms ---
+    this.manageSlot = document.createElement('div');
+    this.manageSlot.style.cssText = 'display:none;padding:8px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);margin-bottom:8px;';
+    this.container.appendChild(this.manageSlot);
 
     // --- Action button handlers ---
 
@@ -200,75 +190,6 @@ export class ImportEditor {
           this.clearManageSlot();
         },
       );
-    });
-
-    fromSampleBtn.addEventListener('click', () => {
-      this.clearManageSlot();
-      const sampleInput = document.createElement('input');
-      sampleInput.type = 'file';
-      sampleInput.accept = '.csv';
-      sampleInput.style.display = 'none';
-      this.manageSlot.appendChild(sampleInput);
-      sampleInput.addEventListener('change', () => {
-        const file = sampleInput.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          const text = reader.result as string;
-          const headers = extractHeaders(text);
-          if (headers.length === 0) {
-            this.manageSlot.style.display = 'block';
-            this.manageSlot.innerHTML = '';
-            const errMsg = document.createElement('div');
-            errMsg.textContent = 'Could not extract headers from CSV file.';
-            errMsg.style.cssText = 'font-size:11px;color:var(--danger);font-family:var(--font-sans);';
-            this.manageSlot.appendChild(errMsg);
-            return;
-          }
-          this.manageSlot.style.display = 'block';
-          this.manageSlot.innerHTML = '';
-          // Use a fresh ColumnMapper in the manage slot (not the auto-detect one)
-          const slotMapper = new ColumnMapper(
-            this.manageSlot,
-            headers,
-            (mapping: ColumnMapping) => {
-              // "Apply" in this context means save as preset
-              const presetName = prompt('Enter a name for this preset:');
-              if (!presetName?.trim()) return;
-              this.mappingStore.savePreset({ name: presetName.trim(), mapping });
-              this.refreshPresetDropdown();
-              rebuildManageList();
-              this.clearManageSlot();
-            },
-            (mapping: ColumnMapping, presetName: string) => {
-              this.mappingStore.savePreset({ name: presetName, mapping });
-              this.refreshPresetDropdown();
-              rebuildManageList();
-              const successMsg = document.createElement('div');
-              successMsg.textContent = 'Preset saved!';
-              successMsg.style.cssText = 'font-size:11px;color:var(--success, #22c55e);font-family:var(--font-sans);margin-top:4px;';
-              this.manageSlot.appendChild(successMsg);
-              setTimeout(() => this.clearManageSlot(), 1200);
-            },
-            () => {
-              this.clearManageSlot();
-            },
-          );
-          // Track so clearManageSlot can destroy it
-          this.currentCreator = null;
-          this.slotMapper = slotMapper;
-        };
-        reader.onerror = () => {
-          this.manageSlot.style.display = 'block';
-          this.manageSlot.innerHTML = '';
-          const errMsg = document.createElement('div');
-          errMsg.textContent = 'Failed to read file.';
-          errMsg.style.cssText = 'font-size:11px;color:var(--danger);font-family:var(--font-sans);';
-          this.manageSlot.appendChild(errMsg);
-        };
-        reader.readAsText(file);
-      });
-      sampleInput.click();
     });
 
     importBtn.addEventListener('click', () => {
@@ -380,19 +301,6 @@ export class ImportEditor {
       a.click();
       URL.revokeObjectURL(url);
     });
-
-    manageBtn.addEventListener('click', () => {
-      const isVisible = manageArea.style.display !== 'none';
-      manageArea.style.display = isVisible ? 'none' : 'block';
-      if (isVisible) {
-        this.clearManageSlot();
-      } else {
-        rebuildManageList();
-      }
-    });
-    presetRow.appendChild(manageBtn);
-    this.container.appendChild(presetRow);
-    this.container.appendChild(manageArea);
 
     // --- File Upload Section ---
     const fileHeading = document.createElement('h4');
