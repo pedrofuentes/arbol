@@ -18,6 +18,7 @@ import { showInlineEditor, dismissInlineEditor } from './ui/inline-editor';
 import { showAddPopover, dismissAddPopover } from './ui/add-popover';
 import { showManagerPicker } from './ui/manager-picker';
 import { showConfirmDialog } from './ui/confirm-dialog';
+import { showFocusBanner, dismissFocusBanner } from './ui/focus-banner';
 
 const ORG_STORAGE_KEY = 'arbol-org-data';
 
@@ -79,11 +80,48 @@ function main(): void {
 
   let onSettingsSaved: (() => void) | null = null;
 
+  // Focus mode: show only a subtree rooted at this node
+  let focusedNodeId: string | null = null;
+
+  const exitFocusMode = () => {
+    focusedNodeId = null;
+    dismissFocusBanner();
+    rerender();
+    renderer.getZoomManager()?.fitToContent();
+  };
+
   const rerender = () => {
-    renderer.render(store.getTree());
+    const fullTree = store.getTree();
+
+    // If focused, validate the node still exists; if not, exit focus mode
+    if (focusedNodeId) {
+      const focusedNode = findNodeById(fullTree, focusedNodeId);
+      if (!focusedNode) {
+        focusedNodeId = null;
+        dismissFocusBanner();
+      }
+    }
+
+    const treeToRender = focusedNodeId
+      ? findNodeById(fullTree, focusedNodeId) ?? fullTree
+      : fullTree;
+
+    renderer.render(treeToRender);
     const opts = renderer.getOptions();
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
-    localStorage.setItem(ORG_STORAGE_KEY, JSON.stringify(store.getTree()));
+    localStorage.setItem(ORG_STORAGE_KEY, JSON.stringify(fullTree));
+
+    if (focusedNodeId) {
+      const focusedNode = findNodeById(fullTree, focusedNodeId)!;
+      showFocusBanner({
+        name: focusedNode.name,
+        container: chartArea,
+        onExit: exitFocusMode,
+      });
+    } else {
+      dismissFocusBanner();
+    }
+
     onSettingsSaved?.();
   };
 
@@ -286,6 +324,16 @@ function main(): void {
           },
         },
         {
+          label: 'Focus on sub-org',
+          icon: '🔎',
+          disabled: nodeIsLeaf || (focusedNodeId === nodeId),
+          action: () => {
+            focusedNodeId = nodeId;
+            rerender();
+            renderer.getZoomManager()?.fitToContent();
+          },
+        },
+        {
           label: 'Move',
           icon: '↗️',
           disabled: isRoot,
@@ -481,7 +529,10 @@ function main(): void {
   onSettingsSaved = flashSaved;
 
   const updateStatus = () => {
-    const tree = store.getTree();
+    const fullTree = store.getTree();
+    const tree = focusedNodeId
+      ? findNodeById(fullTree, focusedNodeId) ?? fullTree
+      : fullTree;
     const allNodes = flattenTree(tree);
     const total = allNodes.length;
     const managerCount = allNodes.filter((n) => !isLeaf(n)).length;
@@ -612,6 +663,11 @@ function main(): void {
         searchInput.value = '';
         searchInput.blur();
         renderer.setHighlightedNodes(null);
+        return;
+      }
+      // Exit focus mode if active
+      if (focusedNodeId) {
+        exitFocusMode();
         return;
       }
       // Clear multi-selection
