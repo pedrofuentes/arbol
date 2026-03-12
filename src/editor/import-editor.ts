@@ -55,17 +55,6 @@ export class ImportEditor {
   private build(): void {
     this.container.innerHTML = '';
 
-    // --- Load Sample Section ---
-    const sampleBtn = document.createElement('button');
-    sampleBtn.className = 'btn btn-secondary';
-    sampleBtn.textContent = '🌳 Load Sample Org Chart';
-    sampleBtn.style.cssText =
-      'width:100%;padding:8px;margin-bottom:14px;font-size:12px;';
-    sampleBtn.addEventListener('click', () => {
-      this.store.fromJSON(JSON.stringify(SAMPLE_ORG));
-    });
-    this.container.appendChild(sampleBtn);
-
     // --- Mapping Preset Section ---
     const presetHeading = document.createElement('h4');
     presetHeading.textContent = 'Mapping Preset';
@@ -401,6 +390,21 @@ export class ImportEditor {
     this.errorArea.style.cssText = 'margin-top:8px;';
     this.errorArea.textContent = '';
     this.container.appendChild(this.errorArea);
+
+    // --- Load Sample Section ---
+    const sampleSeparator = document.createElement('hr');
+    sampleSeparator.style.cssText = 'border:none;border-top:1px solid var(--border-subtle);margin:14px 0;';
+    this.container.appendChild(sampleSeparator);
+
+    const sampleBtn = document.createElement('button');
+    sampleBtn.className = 'btn btn-secondary';
+    sampleBtn.textContent = '🌳 Load Sample Org Chart';
+    sampleBtn.style.cssText =
+      'width:100%;padding:8px;margin-bottom:14px;font-size:12px;';
+    sampleBtn.addEventListener('click', () => {
+      this.store.fromJSON(JSON.stringify(SAMPLE_ORG));
+    });
+    this.container.appendChild(sampleBtn);
 
     // --- Column Mapping Area ---
     this.mappingArea = document.createElement('div');
