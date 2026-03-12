@@ -34,6 +34,7 @@ export interface RendererOptions {
   // Typography
   nameFontSize?: number;
   titleFontSize?: number;
+  legendFontSize?: number;
   textPaddingTop?: number;
   textGap?: number;
   // Link style
@@ -78,6 +79,7 @@ export class ChartRenderer {
       palCenterGap: 70,
       nameFontSize: 11,
       titleFontSize: 9,
+      legendFontSize: 12,
       textPaddingTop: 6,
       textGap: 2,
       linkColor: '#94a3b8',
@@ -341,17 +343,17 @@ export class ChartRenderer {
 
     const { boundingBox } = layout;
 
-    // Scale all legend dimensions from titleFontSize so the legend
+    // Scale all legend dimensions from legendFontSize so the legend
     // matches the active layout preset (Compact → Presentation).
-    const titleFs = this.opts.titleFontSize ?? 9;
-    const legendPadding = titleFs;
-    const swatchSize = titleFs;
-    const textGap = Math.round(titleFs * 0.5);
-    const rowHeight = Math.round(titleFs * 1.6);
-    const fontSize = titleFs;
-    const swatchRx = Math.round(Math.max(1, titleFs * 0.15));
-    const bgRx = Math.round(Math.max(2, titleFs * 0.35));
-    const legendGap = Math.round(titleFs * 2.2);
+    const legendFs = this.opts.legendFontSize ?? 12;
+    const legendPadding = legendFs;
+    const swatchSize = legendFs;
+    const textGap = Math.round(legendFs * 0.5);
+    const rowHeight = Math.round(legendFs * 1.6);
+    const fontSize = legendFs;
+    const swatchRx = Math.round(Math.max(1, legendFs * 0.15));
+    const bgRx = Math.round(Math.max(2, legendFs * 0.35));
+    const legendGap = Math.round(legendFs * 2.2);
 
     const legendX = boundingBox.minX;
     const legendY = boundingBox.minY + boundingBox.height + legendGap;

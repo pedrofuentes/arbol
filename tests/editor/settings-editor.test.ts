@@ -42,6 +42,7 @@ const DEFAULT_OPTS: ResolvedOptions = {
   palCenterGap: 70,
   nameFontSize: 11,
   titleFontSize: 9,
+  legendFontSize: 12,
   textPaddingTop: 6,
   textGap: 2,
   linkWidth: 1,

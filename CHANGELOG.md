@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] — 2026-03-12
+
+### Changed
+- **Scaled categories legend** — legend now sizes proportionally with each layout preset instead of using fixed 8px values
+  - New `legendFontSize` option on `RendererOptions` controls all legend dimensions (font, swatch, padding, row height)
+  - Per-preset values: Compact (8px), Default (12px), Spacious (14px), Presentation (16px)
+
 ## [1.5.0] — 2026-03-12
 
 ### Changed
