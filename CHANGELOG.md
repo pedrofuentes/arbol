@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-03-12
+
+### Added
+- **Dotted-line reporting** — optional dashed connections indicating a person works for one manager but reports to another
+  - `dottedLine` boolean on `OrgNode`, `setDottedLine()` store method with undo/redo
+  - Dashed SVG links (`stroke-dasharray`) and dashed PPTX connectors (`dashType`)
+  - "Dotted line" checkbox in manager picker during Move, toggle in context menu
+  - Configurable `dottedLineDash` setting (default `6,4`)
+
+### Changed
+- **Real-size initial zoom** — org chart now loads at actual pixel size (1:1 scale) instead of fitting to viewport
+  - New `centerAtRealSize()` method on `ZoomManager` — positions chart at scale=1, centered horizontally, top-aligned
+  - "⟲ Reset" button returns to real size; "⊞ Fit" button still fits to viewport
+  - Zoom indicator shows absolute percentage (100% = real pixel size)
+  - Focus mode enter/exit still auto-fits to viewport
+
 ## [1.3.1] — 2026-03-12
 
 ### Security
