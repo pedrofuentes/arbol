@@ -22,6 +22,7 @@ import { showAddPopover, dismissAddPopover } from './ui/add-popover';
 import { showManagerPicker } from './ui/manager-picker';
 import { showConfirmDialog } from './ui/confirm-dialog';
 import { showFocusBanner, dismissFocusBanner } from './ui/focus-banner';
+import { showCategoryLegend, dismissCategoryLegend } from './ui/category-legend';
 
 const ORG_STORAGE_KEY = 'arbol-org-data';
 
@@ -132,6 +133,14 @@ function main(): void {
     }
 
     onSettingsSaved?.();
+
+    // Update category legend on the chart
+    const categories = categoryStore.getAll();
+    if (categories.length > 0) {
+      showCategoryLegend({ categories, container: chartArea });
+    } else {
+      dismissCategoryLegend();
+    }
   };
 
   // Theme toggle
@@ -226,34 +235,65 @@ function main(): void {
 
   // Sidebar tabs
   const tabSwitcher = new TabSwitcher(sidebar, [
-    { id: 'form', label: 'Add' },
-    { id: 'import', label: 'Load' },
-    { id: 'json', label: 'Edit' },
+    { id: 'people', label: 'People' },
+    { id: 'import', label: 'Import' },
     { id: 'settings', label: 'Settings' },
-    { id: 'utilities', label: 'Utilities' },
   ]);
 
-  const formContainer = tabSwitcher.getContentContainer('form')!;
-  const formEditor = new FormEditor(formContainer, store);
-
-  const jsonContainer = tabSwitcher.getContentContainer('json')!;
-  const jsonEditor = new JsonEditor(jsonContainer, store);
+  const peopleContainer = tabSwitcher.getContentContainer('people')!;
+  const formEditor = new FormEditor(peopleContainer, store);
 
   const importContainer = tabSwitcher.getContentContainer('import')!;
   new ImportEditor(importContainer, store);
 
+  // Text normalization section
+  const normSeparator = document.createElement('hr');
+  normSeparator.style.cssText = 'border:none;border-top:1px solid var(--border-subtle);margin:16px 0;';
+  importContainer.appendChild(normSeparator);
+  new UtilitiesEditor(importContainer, store);
+
+  // JSON Editor as collapsible details
+  const jsonSeparator = document.createElement('hr');
+  jsonSeparator.style.cssText = 'border:none;border-top:1px solid var(--border-subtle);margin:16px 0;';
+  importContainer.appendChild(jsonSeparator);
+
+  const jsonDetails = document.createElement('details');
+  jsonDetails.style.cssText = 'margin-bottom:14px;';
+
+  const jsonSummary = document.createElement('summary');
+  jsonSummary.style.cssText =
+    'padding:6px 0;font-size:11px;font-weight:700;font-family:var(--font-sans);' +
+    'color:var(--text-tertiary);cursor:pointer;user-select:none;text-transform:uppercase;letter-spacing:0.08em;' +
+    'list-style:none;display:flex;align-items:center;gap:6px;';
+
+  const jsonArrow = document.createElement('span');
+  jsonArrow.style.cssText = 'font-size:8px;transition:transform 150ms ease;display:inline-block;';
+  jsonArrow.textContent = '▶';
+  jsonSummary.appendChild(jsonArrow);
+  jsonSummary.appendChild(document.createTextNode('Edit JSON'));
+  jsonDetails.appendChild(jsonSummary);
+
+  jsonDetails.addEventListener('toggle', () => {
+    jsonArrow.style.transform = jsonDetails.open ? 'rotate(90deg)' : '';
+  });
+
+  const jsonContent = document.createElement('div');
+  jsonDetails.appendChild(jsonContent);
+  importContainer.appendChild(jsonDetails);
+
+  const jsonEditor = new JsonEditor(jsonContent, store);
+
   const settingsContainer = tabSwitcher.getContentContainer('settings')!;
   new SettingsEditor(settingsContainer, renderer, rerender, settingsStore, categoryStore);
 
-  const utilitiesContainer = tabSwitcher.getContentContainer('utilities')!;
-  new UtilitiesEditor(utilitiesContainer, store);
-
   // Multi-select state
   const multiSelectedIds = new Set<string>();
+  let onMultiSelectionChanged: (() => void) | null = null;
 
   const clearMultiSelection = () => {
     multiSelectedIds.clear();
     renderer.setMultiSelectedNodes(null);
+    onMultiSelectionChanged?.();
   };
 
   store.onChange(() => {
@@ -279,6 +319,7 @@ function main(): void {
         multiSelectedIds.add(nodeId);
       }
       renderer.setMultiSelectedNodes(multiSelectedIds.size > 0 ? multiSelectedIds : null);
+      onMultiSelectionChanged?.();
     } else {
       // Regular click: clear multi-selection, highlight card only (no sidebar form)
       clearMultiSelection();
@@ -616,29 +657,46 @@ function main(): void {
   store.onChange(updateStatus);
   updateStatus();
 
-  // Footer: Center area (GitHub link)
+  // Footer: Center area (selection count + zoom level)
   const footerCenter = document.createElement('div');
   footerCenter.className = 'footer-center';
-  footerCenter.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--font-sans);';
-  const githubLink = document.createElement('a');
-  githubLink.href = 'https://github.com/pedrofuentes/arbol';
-  githubLink.target = '_blank';
-  githubLink.rel = 'noopener noreferrer';
-  githubLink.textContent = '✦ Built with Arbol';
-  footerCenter.appendChild(githubLink);
+  footerCenter.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-size:11px;font-family:var(--font-sans);';
 
-  const separator = document.createElement('span');
-  separator.style.color = 'var(--text-tertiary)';
-  separator.textContent = '·';
-  footerCenter.appendChild(separator);
+  const selectionIndicator = document.createElement('span');
+  selectionIndicator.style.cssText = 'color:var(--accent);font-weight:600;display:none;';
+  footerCenter.appendChild(selectionIndicator);
 
-  const issuesLink = document.createElement('a');
-  issuesLink.href = 'https://github.com/pedrofuentes/arbol/issues';
-  issuesLink.target = '_blank';
-  issuesLink.rel = 'noopener noreferrer';
-  issuesLink.textContent = 'Report bugs & request features';
-  footerCenter.appendChild(issuesLink);
+  const zoomIndicator = document.createElement('span');
+  zoomIndicator.style.cssText = 'color:var(--text-tertiary);';
+  footerCenter.appendChild(zoomIndicator);
+
   footer.appendChild(footerCenter);
+
+  // Update selection indicator when multi-select changes
+  const updateSelectionIndicator = () => {
+    if (multiSelectedIds.size > 0) {
+      selectionIndicator.textContent = `${multiSelectedIds.size} selected`;
+      selectionIndicator.style.display = '';
+    } else {
+      selectionIndicator.style.display = 'none';
+    }
+  };
+
+  // Update zoom indicator
+  const zoomManager = renderer.getZoomManager();
+  const updateZoomIndicator = () => {
+    const transform = zoomManager?.getCurrentTransform?.();
+    if (transform) {
+      const pct = Math.round(transform.k * 100);
+      zoomIndicator.textContent = `${pct}%`;
+    }
+  };
+  zoomManager?.onZoom(() => {
+    updateZoomIndicator();
+  });
+  updateZoomIndicator();
+
+  onMultiSelectionChanged = updateSelectionIndicator;
 
   // Footer: Buttons (right side)
   const footerRight = document.createElement('div');

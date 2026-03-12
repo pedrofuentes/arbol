@@ -10,10 +10,9 @@ const HELP_SECTIONS = [
   {
     title: 'Sidebar Tabs',
     items: [
-      [{ tag: 'strong', text: 'Add' }, ' — Add new people under a selected parent.'],
-      [{ tag: 'strong', text: 'Load' }, ' — Import an org chart from a JSON or CSV file, or paste data directly.'],
-      [{ tag: 'strong', text: 'Edit' }, ' — View and edit the raw JSON tree. Click Apply to update the chart.'],
-      [{ tag: 'strong', text: 'Settings' }, ' — Adjust card sizes, spacing, colors, and typography. Choose a preset theme or fine-tune individual values.'],
+      [{ tag: 'strong', text: 'People' }, ' — Add new people under a selected parent, or edit the selected person.'],
+      [{ tag: 'strong', text: 'Import' }, ' — Import an org chart from JSON, CSV, or XLSX files. Paste data, normalize text, or edit the raw JSON tree.'],
+      [{ tag: 'strong', text: 'Settings' }, ' — Adjust card sizes, spacing, colors, and typography. Choose a preset theme or fine-tune individual values. Use the filter to find specific settings.'],
     ],
   },
   {
@@ -61,6 +60,13 @@ const HELP_SECTIONS = [
     items: [
       [{ tag: 'strong', text: 'Export PPTX' }, ' — Downloads the chart as an editable PowerPoint file with native shapes and text.'],
       ['The export auto-scales to fit a widescreen slide.'],
+    ],
+  },
+  {
+    title: 'Links',
+    items: [
+      ['✦ Built with Arbol — https://github.com/pedrofuentes/arbol'],
+      ['Report bugs & request features — https://github.com/pedrofuentes/arbol/issues'],
     ],
   },
 ];
