@@ -31,7 +31,6 @@ export function showInlineEditor(options: InlineEditorOptions): void {
   container.style.left = `${rect.left}px`;
   container.style.top = `${rect.top}px`;
   container.style.width = `${rect.width}px`;
-  container.style.height = `${rect.height}px`;
   container.style.zIndex = '1001';
   container.style.border = '1px solid var(--border-strong)';
   container.style.boxShadow = 'var(--shadow-md)';
@@ -70,8 +69,30 @@ export function showInlineEditor(options: InlineEditorOptions): void {
   titleInput.style.width = '100%';
   titleInput.style.padding = 'var(--space-1) 0';
 
+  const buttonRow = document.createElement('div');
+  buttonRow.style.display = 'flex';
+  buttonRow.style.gap = 'var(--space-2)';
+  buttonRow.style.justifyContent = 'flex-end';
+  buttonRow.style.marginTop = 'var(--space-2)';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-primary';
+  saveBtn.textContent = 'Save';
+  saveBtn.style.padding = 'var(--space-1) var(--space-2)';
+  saveBtn.style.fontSize = '11px';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn btn-secondary';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.style.padding = 'var(--space-1) var(--space-2)';
+  cancelBtn.style.fontSize = '11px';
+
+  buttonRow.appendChild(saveBtn);
+  buttonRow.appendChild(cancelBtn);
+
   container.appendChild(nameInput);
   container.appendChild(titleInput);
+  container.appendChild(buttonRow);
 
   let dismissed = false;
 
@@ -112,6 +133,8 @@ export function showInlineEditor(options: InlineEditorOptions): void {
 
   nameInput.addEventListener('keydown', onKeyDown);
   titleInput.addEventListener('keydown', onKeyDown);
+  saveBtn.addEventListener('click', save);
+  cancelBtn.addEventListener('click', cancel);
   // Defer so the click that opened the editor doesn't immediately dismiss it
   requestAnimationFrame(() => {
     document.addEventListener('mousedown', onClickOutside);
@@ -120,6 +143,8 @@ export function showInlineEditor(options: InlineEditorOptions): void {
   const cleanup = () => {
     nameInput.removeEventListener('keydown', onKeyDown);
     titleInput.removeEventListener('keydown', onKeyDown);
+    saveBtn.removeEventListener('click', save);
+    cancelBtn.removeEventListener('click', cancel);
     document.removeEventListener('mousedown', onClickOutside);
   };
 

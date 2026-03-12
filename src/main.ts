@@ -253,7 +253,7 @@ function main(): void {
           },
         },
         {
-          label: 'Add',
+          label: `Add person under ${node.name}`,
           icon: '➕',
           action: () => {
             const rect = renderer.getNodeScreenRect(nodeId);

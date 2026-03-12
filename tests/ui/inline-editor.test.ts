@@ -61,7 +61,6 @@ describe('InlineEditor', () => {
     expect(container.style.left).toBe('50px');
     expect(container.style.top).toBe('80px');
     expect(container.style.width).toBe('200px');
-    expect(container.style.height).toBe('70px');
   });
 
   it('Enter key triggers onSave with current values', () => {
@@ -225,5 +224,47 @@ describe('InlineEditor', () => {
 
   it('dismissInlineEditor is safe to call when no editor is open', () => {
     expect(() => dismissInlineEditor()).not.toThrow();
+  });
+
+  it('renders Save and Cancel buttons', () => {
+    showInlineEditor(defaultOptions());
+
+    const buttons = document.querySelectorAll('button');
+    expect(buttons.length).toBe(2);
+
+    const saveBtn = buttons[0] as HTMLButtonElement;
+    const cancelBtn = buttons[1] as HTMLButtonElement;
+    expect(saveBtn.textContent).toBe('Save');
+    expect(saveBtn.className).toBe('btn btn-primary');
+    expect(saveBtn.style.fontSize).toBe('11px');
+
+    expect(cancelBtn.textContent).toBe('Cancel');
+    expect(cancelBtn.className).toBe('btn btn-secondary');
+    expect(cancelBtn.style.fontSize).toBe('11px');
+  });
+
+  it('Save button triggers onSave with current values', () => {
+    const onSave = vi.fn();
+    showInlineEditor(defaultOptions({ onSave }));
+
+    const nameInput = document.querySelector('input[aria-label="Name"]') as HTMLInputElement;
+    const titleInput = document.querySelector('input[aria-label="Title"]') as HTMLInputElement;
+    nameInput.value = 'Bob';
+    titleInput.value = 'Director';
+
+    const saveBtn = document.querySelector('button.btn-primary') as HTMLButtonElement;
+    saveBtn.click();
+
+    expect(onSave).toHaveBeenCalledWith('Bob', 'Director');
+  });
+
+  it('Cancel button triggers onCancel', () => {
+    const onCancel = vi.fn();
+    showInlineEditor(defaultOptions({ onCancel }));
+
+    const cancelBtn = document.querySelector('button.btn-secondary') as HTMLButtonElement;
+    cancelBtn.click();
+
+    expect(onCancel).toHaveBeenCalled();
   });
 });
