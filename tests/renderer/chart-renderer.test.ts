@@ -950,5 +950,59 @@ describe('ChartRenderer', () => {
       expect(fills).toContain('#ef4444');
       expect(fills).toContain('#22c55e');
     });
+
+    it('scales legend font size to match titleFontSize', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories, titleFontSize: 12 });
+      renderer.render(singleNode());
+      const legend = container.querySelector('.legend')!;
+      const text = legend.querySelector('text')!;
+      expect(text.getAttribute('font-size')).toBe('12px');
+    });
+
+    it('scales legend swatch size to match titleFontSize', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories, titleFontSize: 12 });
+      renderer.render(singleNode());
+      const legend = container.querySelector('.legend')!;
+      const entryGroup = legend.querySelector('g')!;
+      const swatch = entryGroup.querySelector('rect')!;
+      expect(swatch.getAttribute('width')).toBe('12');
+      expect(swatch.getAttribute('height')).toBe('12');
+    });
+
+    it('uses default sizing when titleFontSize is not set', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories });
+      renderer.render(singleNode());
+      const legend = container.querySelector('.legend')!;
+      const text = legend.querySelector('text')!;
+      // Default titleFontSize is 9
+      expect(text.getAttribute('font-size')).toBe('9px');
+    });
+
+    it('produces different legend sizes for Compact vs Presentation', () => {
+      // Compact: titleFontSize = 7
+      renderer.destroy();
+      renderer = createRenderer({ categories, titleFontSize: 7 });
+      renderer.render(singleNode());
+      const compactText = container.querySelector('.legend text')!;
+      const compactEntry = container.querySelector('.legend g')!;
+      const compactSwatch = compactEntry.querySelector('rect')!;
+
+      // Presentation: titleFontSize = 12
+      renderer.destroy();
+      renderer = createRenderer({ categories, titleFontSize: 12 });
+      renderer.render(singleNode());
+      const presentationText = container.querySelector('.legend text')!;
+      const presentationEntry = container.querySelector('.legend g')!;
+      const presentationSwatch = presentationEntry.querySelector('rect')!;
+
+      expect(compactText.getAttribute('font-size')).toBe('7px');
+      expect(presentationText.getAttribute('font-size')).toBe('12px');
+      expect(Number(compactSwatch.getAttribute('width'))).toBeLessThan(
+        Number(presentationSwatch.getAttribute('width')),
+      );
+    });
   });
 });

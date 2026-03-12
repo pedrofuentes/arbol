@@ -340,15 +340,21 @@ export class ChartRenderer {
     if (!categories || categories.length === 0) return;
 
     const { boundingBox } = layout;
-    const legendPadding = 8;
-    const swatchSize = 8;
-    const textGap = 4;
-    const rowHeight = 14;
-    const fontSize = 8;
 
-    // Position at bottom-left of the bounding box
+    // Scale all legend dimensions from titleFontSize so the legend
+    // matches the active layout preset (Compact → Presentation).
+    const titleFs = this.opts.titleFontSize ?? 9;
+    const legendPadding = titleFs;
+    const swatchSize = titleFs;
+    const textGap = Math.round(titleFs * 0.5);
+    const rowHeight = Math.round(titleFs * 1.6);
+    const fontSize = titleFs;
+    const swatchRx = Math.round(Math.max(1, titleFs * 0.15));
+    const bgRx = Math.round(Math.max(2, titleFs * 0.35));
+    const legendGap = Math.round(titleFs * 2.2);
+
     const legendX = boundingBox.minX;
-    const legendY = boundingBox.minY + boundingBox.height + 20;
+    const legendY = boundingBox.minY + boundingBox.height + legendGap;
 
     const legendGroup = this.g.append('g').attr('class', 'legend');
 
@@ -372,7 +378,7 @@ export class ChartRenderer {
         .attr('fill', cat.color)
         .attr('stroke', '#cbd5e1')
         .attr('stroke-width', 0.5)
-        .attr('rx', 1);
+        .attr('rx', swatchRx);
 
       const text = rowG
         .append('text')
@@ -404,7 +410,7 @@ export class ChartRenderer {
       .attr('fill', 'var(--bg-surface, #ffffff)')
       .attr('stroke', 'var(--border-default, #e2e8f0)')
       .attr('stroke-width', 0.5)
-      .attr('rx', 3);
+      .attr('rx', bgRx);
   }
 
   setSelectedNode(nodeId: string | null): void {
