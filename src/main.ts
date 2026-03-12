@@ -506,7 +506,7 @@ function main(): void {
   githubLink.href = 'https://github.com/pedrofuentes/arbol';
   githubLink.target = '_blank';
   githubLink.rel = 'noopener noreferrer';
-  githubLink.textContent = 'you to decide';
+  githubLink.textContent = '✦ Built with Arbol — Star on GitHub';
   footerCenter.appendChild(githubLink);
   footer.appendChild(footerCenter);
 
