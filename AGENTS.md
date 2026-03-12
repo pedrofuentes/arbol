@@ -59,7 +59,7 @@ src/
 ├── utils/
 │   ├── tree.ts                # Tree traversal: findNodeById, findParent, flattenTree, cloneTree, isLeaf, isM1, stripM1Children, countLeaves, managerLevel, countManagersByLevel
 │   ├── search.ts              # Case-insensitive substring search on name/title, returns matching IDs
-│   ├── csv-parser.ts          # CSV parsing (quoted fields, escapes) + tree building from flat CSV
+│   ├── csv-parser.ts          # CSV parsing (RFC 4180 multi-line quotes, escapes) + tree building from flat CSV, duplicate/cycle/limit validation
 │   ├── shortcuts.ts           # Keyboard shortcut manager (register combos, prevent defaults)
 │   └── id.ts                  # UUID generation via crypto.randomUUID()
 ├── types.ts                   # Interfaces: OrgNode, ColumnMapping, MappingPreset
@@ -124,7 +124,7 @@ interface ColorCategory {
 }
 ```
 
-CSV imports support: `id,name,title,parent_id` or `name,title,manager_name` (auto-detected).
+CSV imports support: `id,name,title,parent_id` or `name,title,manager_name` (auto-detected). Custom column names supported via column mapper UI. HR system exports with trailing metadata (e.g., "Applied filters:" blocks) are handled automatically. Max 10,000 nodes per import.
 
 ### Spacing Model
 
@@ -227,7 +227,7 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **553 tests across 27 files** — all must pass before committing
+- **569 tests across 27 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
@@ -239,7 +239,7 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `tests/utils/tree.test.ts` | findNodeById, findParent, flattenTree, cloneTree, isLeaf, isM1, stripM1Children, countLeaves, managerLevel |
 | `tests/utils/search.test.ts` | Name/title substring matching, case insensitivity |
 | `tests/utils/id.test.ts` | UUID generation format |
-| `tests/utils/csv-parser.test.ts` | CSV parsing (quotes, escapes), tree building from flat data |
+| `tests/utils/csv-parser.test.ts` | CSV parsing (quotes, escapes, multi-line), tree building, duplicate detection, node limit, cycle path, trailing metadata |
 | `tests/utils/shortcuts.test.ts` | Shortcut registration, key combos, prevent defaults |
 | `tests/store/category-store.test.ts` | ColorCategory CRUD, defaults, localStorage persistence, validation, events |
 | `tests/store/org-store.test.ts` | Node CRUD, events, undo/redo, serialization, validation, bulk ops |

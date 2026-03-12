@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-03-12
+
 ### Added
 - Per-node color categories with customizable labels and colors
 - Default categories: Open Position (amber), Offer Pending (blue), Future Start (purple)
@@ -18,7 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SVG legend overlay showing all defined categories below the chart
 - PPTX export includes per-node category colors and slide legend
 - Submenu support in context menu component
-- 87 new tests across 7 test files (553 total)
+- XLSX multi-sheet import warning (notes which sheet was used)
+- 103 new tests (569 total across 27 files)
+
+### Fixed
+- CSV import now handles trailing HR system metadata (e.g., Workday "Applied filters:" blocks) via RFC 4180 multi-line quoted field support
+- Rows with empty name fields are silently skipped during CSV import
+- Duplicate IDs (Format A) and duplicate names (Format B/C) now throw a clear error instead of silently overwriting data
+- Circular reference errors now show the full cycle path (e.g., "Alice → Carol → Bob → Alice")
+
+### Changed
+- `MAX_NODES` limit of 10,000 enforced on CSV import to prevent browser crashes
 
 ## [1.0.0] — 2026-03-11
 
