@@ -239,6 +239,7 @@ body {
   display: grid;
   grid-template-columns: 300px 1fr;
   overflow: hidden;
+  transition: grid-template-columns 200ms ease-out;
 }
 
 /* ======================================================================
@@ -251,6 +252,7 @@ body {
   overflow-y: auto;
   padding: var(--space-4);
   position: relative;
+  transition: padding 200ms ease-out;
 }
 
 /* Frosted-glass scrollbar */
@@ -261,6 +263,93 @@ body {
   border-radius: var(--radius-full);
 }
 #sidebar::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* ── Collapsible Sidebar ── */
+
+#main.sidebar-collapsed {
+  grid-template-columns: 40px 1fr;
+}
+
+.sidebar-collapsed #sidebar {
+  padding: var(--space-2) 0;
+  overflow: hidden;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  z-index: 5;
+  transition: all var(--transition-fast);
+}
+
+.sidebar-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.sidebar-collapsed .sidebar-toggle {
+  position: static;
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  margin-bottom: var(--space-2);
+}
+
+.sidebar-icon-strip {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: var(--space-1);
+}
+
+.sidebar-collapsed .sidebar-icon-strip {
+  display: flex;
+}
+
+.sidebar-collapsed .tab-nav,
+.sidebar-collapsed .tab-content {
+  display: none !important;
+}
+
+.sidebar-icon-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all var(--transition-fast);
+}
+
+.sidebar-icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-icon-btn.active {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
 
 /* ======================================================================
    Chart Area — The canvas

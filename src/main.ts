@@ -240,6 +240,63 @@ function main(): void {
     { id: 'settings', label: 'Settings' },
   ]);
 
+  // Sidebar collapse toggle
+  const mainEl = document.getElementById('main')!;
+  const SIDEBAR_COLLAPSED_KEY = 'arbol-sidebar-collapsed';
+
+  let sidebarCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
+
+  const sidebarToggle = document.createElement('button');
+  sidebarToggle.className = 'sidebar-toggle';
+  sidebarToggle.setAttribute('aria-label', 'Toggle sidebar');
+  sidebarToggle.setAttribute('data-tooltip', 'Toggle sidebar (Ctrl+B)');
+  sidebarToggle.textContent = '«';
+  sidebar.insertBefore(sidebarToggle, sidebar.firstChild);
+
+  const iconStrip = document.createElement('div');
+  iconStrip.className = 'sidebar-icon-strip';
+
+  const TAB_ICONS = [
+    { id: 'people', icon: '👤', label: 'People' },
+    { id: 'import', icon: '📥', label: 'Import' },
+    { id: 'settings', icon: '⚙️', label: 'Settings' },
+  ];
+
+  for (const tab of TAB_ICONS) {
+    const btn = document.createElement('button');
+    btn.className = 'sidebar-icon-btn';
+    btn.setAttribute('aria-label', tab.label);
+    btn.setAttribute('data-tooltip', tab.label);
+    btn.setAttribute('data-tab-id', tab.id);
+    btn.textContent = tab.icon;
+    btn.addEventListener('click', () => {
+      if (sidebarCollapsed) {
+        toggleSidebar();
+      }
+      tabSwitcher.activate(tab.id);
+    });
+    iconStrip.appendChild(btn);
+  }
+
+  sidebar.insertBefore(iconStrip, sidebar.children[1]);
+
+  const toggleSidebar = () => {
+    sidebarCollapsed = !sidebarCollapsed;
+    mainEl.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+    sidebarToggle.textContent = sidebarCollapsed ? '»' : '«';
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(sidebarCollapsed));
+    setTimeout(() => {
+      renderer.getZoomManager()?.fitToContent();
+    }, 250);
+  };
+
+  sidebarToggle.addEventListener('click', toggleSidebar);
+
+  if (sidebarCollapsed) {
+    mainEl.classList.add('sidebar-collapsed');
+    sidebarToggle.textContent = '»';
+  }
+
   const peopleContainer = tabSwitcher.getContentContainer('people')!;
   const formEditor = new FormEditor(peopleContainer, store);
 
@@ -802,6 +859,12 @@ function main(): void {
       renderer.setSelectedNode(null);
     },
     description: 'Deselect / Clear search',
+  });
+
+  shortcuts.register({
+    key: 'b', ctrl: true,
+    handler: () => toggleSidebar(),
+    description: 'Toggle sidebar',
   });
 
   rerender();
