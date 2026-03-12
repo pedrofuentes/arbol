@@ -241,18 +241,18 @@ function main(): void {
     { id: 'settings', label: 'Settings' },
   ]);
 
-  // Sidebar collapse toggle
+  // Sidebar collapse — floating chevron at edge
   const mainEl = document.getElementById('main')!;
   const SIDEBAR_COLLAPSED_KEY = 'arbol-sidebar-collapsed';
 
   let sidebarCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
 
-  const sidebarToggle = document.createElement('button');
-  sidebarToggle.className = 'sidebar-toggle';
-  sidebarToggle.setAttribute('aria-label', 'Toggle sidebar');
-  sidebarToggle.setAttribute('data-tooltip', 'Toggle sidebar (Ctrl+B)');
-  sidebarToggle.textContent = '«';
-  sidebar.insertBefore(sidebarToggle, sidebar.firstChild);
+  const collapseChevron = document.createElement('button');
+  collapseChevron.className = 'sidebar-collapse-chevron';
+  collapseChevron.setAttribute('aria-label', 'Toggle sidebar');
+  collapseChevron.setAttribute('data-tooltip', 'Toggle sidebar (Ctrl+B)');
+  collapseChevron.textContent = '◀';
+  sidebar.appendChild(collapseChevron);
 
   const iconStrip = document.createElement('div');
   iconStrip.className = 'sidebar-icon-strip';
@@ -284,18 +284,18 @@ function main(): void {
   const toggleSidebar = () => {
     sidebarCollapsed = !sidebarCollapsed;
     mainEl.classList.toggle('sidebar-collapsed', sidebarCollapsed);
-    sidebarToggle.textContent = sidebarCollapsed ? '»' : '«';
+    collapseChevron.textContent = sidebarCollapsed ? '▶' : '◀';
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(sidebarCollapsed));
     setTimeout(() => {
       renderer.getZoomManager()?.fitToContent();
     }, 250);
   };
 
-  sidebarToggle.addEventListener('click', toggleSidebar);
+  collapseChevron.addEventListener('click', toggleSidebar);
 
   if (sidebarCollapsed) {
     mainEl.classList.add('sidebar-collapsed');
-    sidebarToggle.textContent = '»';
+    collapseChevron.textContent = '▶';
   }
 
   const peopleContainer = tabSwitcher.getContentContainer('people')!;
