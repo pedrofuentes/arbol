@@ -243,9 +243,9 @@ describe('ChartRenderer', () => {
   function createRenderer(overrides = {}) {
     return new ChartRenderer({
       container,
-      nodeWidth: 110,
-      nodeHeight: 22,
-      horizontalSpacing: 30,
+      nodeWidth: 160,
+      nodeHeight: 34,
+      horizontalSpacing: 50,
       ...overrides,
     });
   }
@@ -502,12 +502,12 @@ describe('ChartRenderer', () => {
 
     it('getOptions returns current resolved options', () => {
       const opts = renderer.getOptions();
-      expect(opts.nodeWidth).toBe(110);
-      expect(opts.nodeHeight).toBe(22);
+      expect(opts.nodeWidth).toBe(160);
+      expect(opts.nodeHeight).toBe(34);
     });
   });
 
-  const NODE_HEIGHT = 22;
+  const NODE_HEIGHT = 34;
 
   describe('vertical spacing', () => {
     it('single-child non-Advisor manager has gap equal to bottomVerticalSpacing', () => {

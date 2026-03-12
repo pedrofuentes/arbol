@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] — 2026-03-12
+
+### Changed
+- **Rebalanced layout presets** — larger default sizes for better readability
+  - Default preset now uses previous Presentation values (160×34 cards, 11/9px fonts)
+  - New Spacious (190×42) and Presentation (220×50) presets for extra-large displays
+  - Compact preset retains the previous Default values (110×22) for dense layouts
+  - Slider max for Node Width increased to 250, IC Node Width to 220
+  - IC node width ratio updated from 0.77 to 0.88 of parent node width
+
 ## [1.4.0] — 2026-03-12
 
 ### Added

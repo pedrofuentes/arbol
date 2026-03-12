@@ -27,23 +27,23 @@ Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
 
 const DEFAULT_OPTS: ResolvedOptions = {
   container: document.createElement('div'),
-  nodeWidth: 110,
-  nodeHeight: 22,
-  horizontalSpacing: 30,
-  branchSpacing: 10,
-  topVerticalSpacing: 5,
-  bottomVerticalSpacing: 12,
-  icNodeWidth: 99,
-  icGap: 4,
-  icContainerPadding: 6,
-  palTopGap: 7,
-  palBottomGap: 7,
-  palRowGap: 4,
-  palCenterGap: 50,
-  nameFontSize: 8,
-  titleFontSize: 7,
-  textPaddingTop: 4,
-  textGap: 1,
+  nodeWidth: 160,
+  nodeHeight: 34,
+  horizontalSpacing: 50,
+  branchSpacing: 20,
+  topVerticalSpacing: 10,
+  bottomVerticalSpacing: 20,
+  icNodeWidth: 141,
+  icGap: 6,
+  icContainerPadding: 10,
+  palTopGap: 12,
+  palBottomGap: 12,
+  palRowGap: 6,
+  palCenterGap: 70,
+  nameFontSize: 11,
+  titleFontSize: 9,
+  textPaddingTop: 6,
+  textGap: 2,
   linkWidth: 1,
   linkColor: '#888888',
   dottedLineDash: '6,4',
@@ -382,7 +382,7 @@ describe('SettingsEditor', () => {
       compactBtn!.click();
       const calls = (renderer.updateOptions as ReturnType<typeof vi.fn>).mock.calls;
       const lastCall = calls[calls.length - 1][0] as Partial<RendererOptions>;
-      expect(lastCall.nodeWidth).toBe(90);
+      expect(lastCall.nodeWidth).toBe(110);
       expect(lastCall).not.toHaveProperty('cardFill');
     });
 

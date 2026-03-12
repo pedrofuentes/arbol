@@ -35,9 +35,9 @@ describe('Renderer-Store Integration', () => {
     store = new OrgStore(makeRoot());
     renderer = new ChartRenderer({
       container,
-      nodeWidth: 110,
-      nodeHeight: 22,
-      horizontalSpacing: 30,
+      nodeWidth: 160,
+      nodeHeight: 34,
+      horizontalSpacing: 50,
     });
     // Wire store → renderer
     store.onChange(() => renderer.render(store.getTree()));

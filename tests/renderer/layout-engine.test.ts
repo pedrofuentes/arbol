@@ -6,26 +6,26 @@ import { OrgNode } from '../../src/types';
 // --- Default options matching the test renderer ---
 
 function defaultOpts(): ResolvedOptions {
-  const nodeWidth = 110;
+  const nodeWidth = 160;
   return {
     container: document.createElement('div'),
     nodeWidth,
-    nodeHeight: 22,
-    horizontalSpacing: 30,
-    branchSpacing: 10,
-    topVerticalSpacing: 5,
-    bottomVerticalSpacing: 12,
-    icNodeWidth: Math.round(nodeWidth * 0.77),
-    icGap: 4,
-    icContainerPadding: 6,
-    palTopGap: 7,
-    palBottomGap: 7,
-    palRowGap: 4,
-    palCenterGap: 50,
-    nameFontSize: 8,
-    titleFontSize: 7,
-    textPaddingTop: 4,
-    textGap: 1,
+    nodeHeight: 34,
+    horizontalSpacing: 50,
+    branchSpacing: 20,
+    topVerticalSpacing: 10,
+    bottomVerticalSpacing: 20,
+    icNodeWidth: Math.round(nodeWidth * 0.88),
+    icGap: 6,
+    icContainerPadding: 10,
+    palTopGap: 12,
+    palBottomGap: 12,
+    palRowGap: 6,
+    palCenterGap: 70,
+    nameFontSize: 11,
+    titleFontSize: 9,
+    textPaddingTop: 6,
+    textGap: 2,
     linkColor: '#94a3b8',
     linkWidth: 1.5,
     dottedLineDash: '6,4',
@@ -483,9 +483,9 @@ describe('computeLayout', () => {
       document.body.appendChild(container);
       const renderer = new ChartRenderer({
         container,
-        nodeWidth: 110,
-        nodeHeight: 22,
-        horizontalSpacing: 30,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
       });
       expect(renderer.getLastLayout()).toBeNull();
       renderer.render(m1WithICs());
