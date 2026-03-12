@@ -231,6 +231,39 @@ export class SettingsEditor {
 
     const opts = this.renderer.getOptions();
 
+    // Settings filter
+    const filterWrapper = document.createElement('div');
+    filterWrapper.style.cssText = 'margin-bottom:8px;position:relative;';
+
+    const filterInput = document.createElement('input');
+    filterInput.type = 'text';
+    filterInput.placeholder = '🔍  Filter settings…';
+    filterInput.setAttribute('aria-label', 'Filter settings');
+    filterInput.style.cssText =
+      'width:100%;padding:6px 28px 6px 12px;font-size:12px;font-family:var(--font-sans);' +
+      'border:1px solid var(--border-default);border-radius:var(--radius-full);' +
+      'background:var(--bg-base);color:var(--text-primary);' +
+      'transition:border-color var(--transition-fast);';
+
+    const clearBtn = document.createElement('button');
+    clearBtn.textContent = '×';
+    clearBtn.setAttribute('aria-label', 'Clear filter');
+    clearBtn.style.cssText =
+      'position:absolute;right:8px;top:50%;transform:translateY(-50%);' +
+      'border:none;background:transparent;color:var(--text-tertiary);' +
+      'cursor:pointer;font-size:14px;padding:0 2px;' +
+      'transition:color var(--transition-fast);';
+    clearBtn.style.display = 'none';
+    clearBtn.addEventListener('click', () => {
+      filterInput.value = '';
+      filterInput.dispatchEvent(new Event('input'));
+      filterInput.focus();
+    });
+
+    filterWrapper.appendChild(filterInput);
+    filterWrapper.appendChild(clearBtn);
+    this.container.appendChild(filterWrapper);
+
     // Expand All / Collapse All toggle
     const actionsRow = document.createElement('div');
     actionsRow.className = 'accordion-actions';
@@ -411,6 +444,67 @@ export class SettingsEditor {
     this.container.appendChild(
       this.createAccordionSection('settings-io', 'Settings', ioBtnGroup),
     );
+
+    // Filter handler — wired after all sections are built
+    let filterTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    filterInput.addEventListener('input', () => {
+      if (filterTimeout) clearTimeout(filterTimeout);
+      filterTimeout = setTimeout(() => {
+        const query = filterInput.value.trim().toLowerCase();
+        clearBtn.style.display = query ? 'block' : 'none';
+
+        const sections = this.container.querySelectorAll('.accordion-section');
+
+        if (!query) {
+          sections.forEach((section) => {
+            (section as HTMLElement).style.opacity = '1';
+            (section as HTMLElement).style.pointerEvents = '';
+            const header = section.querySelector('.accordion-header') as HTMLElement;
+            const content = section.querySelector('.accordion-content') as HTMLElement;
+            if (header && content) {
+              const sectionId = content.id.replace('accordion-', '');
+              const expanded = this.isExpanded(sectionId);
+              header.setAttribute('aria-expanded', String(expanded));
+              content.setAttribute('data-expanded', String(expanded));
+            }
+          });
+          return;
+        }
+
+        sections.forEach((section) => {
+          const titleEl = section.querySelector('.accordion-title');
+          const titleText = titleEl?.textContent?.toLowerCase() ?? '';
+
+          let labelMatch = false;
+          const labels = section.querySelectorAll('label');
+          labels.forEach((label) => {
+            if (label.textContent?.toLowerCase().includes(query)) {
+              labelMatch = true;
+            }
+          });
+
+          const presetNames = section.querySelectorAll('.preset-card span, button span');
+          presetNames.forEach((el) => {
+            if (el.textContent?.toLowerCase().includes(query)) {
+              labelMatch = true;
+            }
+          });
+
+          const matches = titleText.includes(query) || labelMatch;
+
+          (section as HTMLElement).style.opacity = matches ? '1' : '0.3';
+          (section as HTMLElement).style.pointerEvents = matches ? '' : 'none';
+
+          const header = section.querySelector('.accordion-header') as HTMLElement;
+          const content = section.querySelector('.accordion-content') as HTMLElement;
+          if (header && content && matches) {
+            header.setAttribute('aria-expanded', 'true');
+            content.setAttribute('data-expanded', 'true');
+          }
+        });
+      }, 150);
+    });
   }
 
   private buildCategoriesContent(): HTMLElement {

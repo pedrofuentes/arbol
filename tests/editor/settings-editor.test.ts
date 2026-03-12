@@ -297,4 +297,134 @@ describe('SettingsEditor', () => {
       expect(catIdx).toBeLessThan(layoutIdx);
     });
   });
+
+  describe('settings filter', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function triggerFilter(input: HTMLInputElement, value: string): void {
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+      vi.advanceTimersByTime(200);
+    }
+
+    it('renders filter input with placeholder', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]');
+      expect(input).not.toBeNull();
+      expect(input!.placeholder).toContain('Filter');
+    });
+
+    it('dims non-matching sections when filtering', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      triggerFilter(input, 'typography');
+
+      const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
+      const nonMatching = Array.from(sections).filter(
+        (s) => !s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
+      );
+      for (const section of nonMatching) {
+        expect(section.style.opacity).toBe('0.3');
+      }
+    });
+
+    it('shows matching sections with full opacity', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      triggerFilter(input, 'typography');
+
+      const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
+      const matching = Array.from(sections).find(
+        (s) => s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
+      );
+      expect(matching).toBeDefined();
+      expect(matching!.style.opacity).toBe('1');
+    });
+
+    it('restores all sections when filter is cleared', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+
+      triggerFilter(input, 'typography');
+      triggerFilter(input, '');
+
+      const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
+      for (const section of sections) {
+        expect(section.style.opacity).toBe('1');
+      }
+    });
+
+    it('shows clear button when filter has text', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      const clearButton = container.querySelector<HTMLButtonElement>('button[aria-label="Clear filter"]')!;
+
+      expect(clearButton.style.display).toBe('none');
+
+      triggerFilter(input, 'card');
+      expect(clearButton.style.display).toBe('block');
+    });
+
+    it('clears filter when clear button is clicked', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      const clearButton = container.querySelector<HTMLButtonElement>('button[aria-label="Clear filter"]')!;
+
+      triggerFilter(input, 'card');
+      clearButton.click();
+      vi.advanceTimersByTime(200);
+
+      expect(input.value).toBe('');
+      expect(clearButton.style.display).toBe('none');
+
+      const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
+      for (const section of sections) {
+        expect(section.style.opacity).toBe('1');
+      }
+    });
+
+    it('auto-expands matching sections during filter', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      triggerFilter(input, 'typography');
+
+      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find(
+        (s) => s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
+      )!;
+      const content = typoSection.querySelector('.accordion-content')!;
+      expect(content.getAttribute('data-expanded')).toBe('true');
+    });
+
+    it('matches on setting labels within sections', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      triggerFilter(input, 'node width');
+
+      const cardDimSection = Array.from(container.querySelectorAll<HTMLElement>('.accordion-section')).find(
+        (s) => s.querySelector('.accordion-title')?.textContent === 'Card Dimensions',
+      );
+      expect(cardDimSection).toBeDefined();
+      expect(cardDimSection!.style.opacity).toBe('1');
+    });
+
+    it('disables pointer events on non-matching sections', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      triggerFilter(input, 'typography');
+
+      const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
+      const nonMatching = Array.from(sections).filter(
+        (s) => !s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
+      );
+      for (const section of nonMatching) {
+        expect(section.style.pointerEvents).toBe('none');
+      }
+    });
+  });
 });
