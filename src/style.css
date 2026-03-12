@@ -239,7 +239,6 @@ body {
   display: grid;
   grid-template-columns: 300px 1fr;
   overflow: hidden;
-  position: relative;
   transition: grid-template-columns 200ms ease-out;
 }
 
@@ -277,7 +276,7 @@ body {
 }
 
 .sidebar-collapse-chevron {
-  position: absolute;
+  position: fixed;
   top: 50%;
   left: 300px;
   transform: translateY(-50%) translateX(-50%);
@@ -298,7 +297,8 @@ body {
   pointer-events: none;
 }
 
-#main:hover > .sidebar-collapse-chevron,
+#sidebar:hover ~ .sidebar-collapse-chevron,
+.sidebar-collapse-chevron:hover,
 .sidebar-collapse-chevron:focus-visible {
   opacity: 1;
   pointer-events: auto;
