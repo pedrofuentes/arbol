@@ -85,17 +85,28 @@ export function countLeaves(root: OrgNode): number {
   return flattenTree(root).filter(isLeaf).length;
 }
 
-/** Returns a map of depth → number of managers at that depth (excludes root at depth 0). */
+/** Computes the manager level of a node (bottom-up): M1 = only ICs, M2 = has M1s, etc. Returns 0 for leaves. */
+export function managerLevel(node: OrgNode): number {
+  if (isLeaf(node)) return 0;
+  let maxChildLevel = 0;
+  for (const child of node.children!) {
+    maxChildLevel = Math.max(maxChildLevel, managerLevel(child));
+  }
+  return maxChildLevel + 1;
+}
+
+/** Returns a map of manager level → count (e.g., M1→3, M2→2). Excludes leaves (level 0). */
 export function countManagersByLevel(root: OrgNode): Map<number, number> {
   const map = new Map<number, number>();
-  function walk(node: OrgNode, depth: number): void {
-    if (depth > 0 && !isLeaf(node)) {
-      map.set(depth, (map.get(depth) ?? 0) + 1);
+  function walk(node: OrgNode): void {
+    const level = managerLevel(node);
+    if (level > 0) {
+      map.set(level, (map.get(level) ?? 0) + 1);
     }
     for (const child of node.children ?? []) {
-      walk(child, depth + 1);
+      walk(child);
     }
   }
-  walk(root, 0);
+  walk(root);
   return map;
 }

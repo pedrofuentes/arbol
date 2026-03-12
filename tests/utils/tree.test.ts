@@ -10,6 +10,7 @@ import {
   isM1,
   stripM1Children,
   countLeaves,
+  managerLevel,
   countManagersByLevel,
 } from '../../src/utils/tree';
 
@@ -258,14 +259,46 @@ describe('countLeaves', () => {
   });
 });
 
+describe('managerLevel', () => {
+  it('returns 0 for a leaf node', () => {
+    expect(managerLevel({ id: '1', name: 'A', title: 'IC' })).toBe(0);
+  });
+
+  it('returns 1 (M1) for a manager with only IC children', () => {
+    const m1: OrgNode = {
+      id: 'm', name: 'M', title: 'M', children: [
+        { id: 'a', name: 'A', title: 'IC' },
+        { id: 'b', name: 'B', title: 'IC' },
+      ],
+    };
+    expect(managerLevel(m1)).toBe(1);
+  });
+
+  it('returns 2 (M2) for a manager with M1 children', () => {
+    const tree = makeTree(); // root→[Bob(M1)→[Diana,Eve], Carol(leaf)]
+    expect(managerLevel(tree)).toBe(2); // root is M2 (has Bob who is M1)
+  });
+
+  it('returns 3 (M3) for a manager with M2 children', () => {
+    const tree: OrgNode = {
+      id: 'ceo', name: 'CEO', title: 'CEO', children: [
+        { id: 'vp', name: 'VP', title: 'VP', children: [
+          { id: 'dir', name: 'Dir', title: 'Dir', children: [
+            { id: 'ic', name: 'IC', title: 'Eng' },
+          ]},
+        ]},
+      ],
+    };
+    expect(managerLevel(tree)).toBe(3); // CEO→VP(M2)→Dir(M1)→IC
+  });
+});
+
 describe('countManagersByLevel', () => {
-  it('returns managers by depth (excluding root)', () => {
-    const tree = makeTree(); // root(d0)→[Bob(d1)→[Diana(d2),Eve(d2)], Carol(d1)]
+  it('counts M1 and M2 in a mixed tree', () => {
+    const tree = makeTree(); // root(M2)→[Bob(M1)→[Diana,Eve], Carol(leaf)]
     const levels = countManagersByLevel(tree);
-    // Bob at depth 1 is the only manager below root
-    expect(levels.get(1)).toBe(1);
-    expect(levels.has(2)).toBe(false); // Diana, Eve are leaves
-    expect(levels.has(0)).toBe(false); // root excluded
+    expect(levels.get(1)).toBe(1); // Bob is M1
+    expect(levels.get(2)).toBe(1); // root is M2
   });
 
   it('returns empty map for a single node', () => {
@@ -292,12 +325,15 @@ describe('countManagersByLevel', () => {
       ],
     };
     const levels = countManagersByLevel(tree);
-    expect(levels.get(1)).toBe(2); // vp1, vp2
-    expect(levels.get(2)).toBe(2); // dir1, dir2
-    expect(levels.has(3)).toBe(false); // ICs only
+    // dir1, dir2 are M1 (only ICs); vp2 is M1 (only ICs)
+    expect(levels.get(1)).toBe(3); // dir1, dir2, vp2
+    // vp1 is M2 (has M1 children)
+    expect(levels.get(2)).toBe(1); // vp1
+    // ceo is M3 (has M2 child vp1)
+    expect(levels.get(3)).toBe(1); // ceo
   });
 
-  it('returns empty map when root has only leaf children', () => {
+  it('returns only M1 when root has only leaf children', () => {
     const tree: OrgNode = {
       id: 'root', name: 'R', title: 'R', children: [
         { id: 'a', name: 'A', title: 'IC' },
@@ -305,6 +341,7 @@ describe('countManagersByLevel', () => {
       ],
     };
     const levels = countManagersByLevel(tree);
-    expect(levels.size).toBe(0);
+    expect(levels.get(1)).toBe(1); // root is M1
+    expect(levels.size).toBe(1);
   });
 });
