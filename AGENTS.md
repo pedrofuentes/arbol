@@ -43,10 +43,11 @@ src/
 ├── ui/
 │   ├── column-mapper.ts       # UI for mapping CSV columns to OrgNode fields
 │   ├── confirm-dialog.ts      # Modal confirmation dialog
-│   ├── context-menu.ts        # Right-click context menu (Edit, Add Child, Move, Remove)
+│   ├── context-menu.ts        # Right-click context menu (Edit, Add Child, Focus, Move, Remove)
 │   ├── inline-editor.ts       # Inline card editing (name/title on double-click)
 │   ├── add-popover.ts         # Popover form for adding a child from context menu
 │   ├── manager-picker.ts      # Manager selection UI for Move operations
+│   ├── focus-banner.ts        # Focus mode banner with exit button
 │   ├── help-dialog.ts         # Help/about overlay
 │   └── preset-creator.ts     # UI for creating/naming presets
 ├── utils/
@@ -95,8 +96,11 @@ All spacing is configurable via `RendererOptions`:
 ### Interactions
 - **Click** — highlights the card (visual selection only; does not open sidebar editor).
 - **Double-click** — opens inline editor on the card for name/title.
-- **Right-click** — shows context menu with Edit, Add Child, Move to…, Remove.
+- **Right-click** — shows context menu with Edit, Add Child, Focus on sub-org, Move to…, Remove.
 - **Shift+click** — toggles multi-select; bulk operations (Move, Remove) appear when ≥1 node is selected.
+
+### Focus Mode
+Right-click a non-leaf node → **"Focus on sub-org"** renders only that subtree. A banner shows `"Viewing [Name]'s org"` with a **"Show full org"** button. `Escape` also exits focus mode. Focus is a rendering-only filter — the store is unchanged. PPTX export in focus mode exports only the visible sub-org. If the focused node is removed (e.g., via undo), the view gracefully falls back to full org.
 
 ### Store Bulk Methods
 - `bulkMoveNodes(ids, newParentId)` — moves multiple nodes under a new parent in one undo step.
@@ -118,7 +122,7 @@ CSV imports support: `id,name,title,parent_id` or `name,title,manager_name` (aut
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **327 tests across 19 files** — all must pass before committing
+- **466 tests across 24 files** — all must pass before committing
 - **Run tests:** `npm run test`
 - **Watch mode:** `npm run test:watch`
 - **TDD is mandatory** — see [Agent Workflow](#agent-workflow-mandatory) above
@@ -138,6 +142,7 @@ CSV imports support: `id,name,title,parent_id` or `name,title,manager_name` (aut
 | `export/pptx-exporter.test.ts` | PowerPoint export shapes |
 | `editor/*.test.ts` | Import, tab switching, shortcuts |
 | `ui/context-menu.test.ts` | Context menu show/hide, actions, positioning |
+| `ui/focus-banner.test.ts` | Focus mode banner rendering, exit action, singleton |
 | `ui/inline-editor.test.ts` | Inline card editing, save/cancel, validation |
 | `ui/add-popover.test.ts` | Add-child popover form, parent pre-selection |
 | `ui/manager-picker.test.ts` | Manager picker search, selection, move targets |
