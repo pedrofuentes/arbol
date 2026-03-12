@@ -290,3 +290,151 @@ describe('ImportEditor — Manage area UI', () => {
     expect(findButton('Load')).toBeUndefined();
   });
 });
+
+const UPPERCASE_CSV = [
+  'id,name,title,parent_id',
+  'ceo,JANE DOE,CHIEF EXECUTIVE OFFICER,',
+  'vp,JOHN SMITH,VP ENGINEERING,ceo',
+].join('\n');
+
+const UPPERCASE_JSON = JSON.stringify({
+  id: 'ceo',
+  name: 'JANE DOE',
+  title: 'CHIEF EXECUTIVE OFFICER',
+  children: [
+    { id: 'vp', name: 'JOHN SMITH', title: 'VP ENGINEERING' },
+  ],
+});
+
+describe('ImportEditor — Text Normalization', () => {
+  let container: HTMLDivElement;
+  let store: OrgStore;
+  let editor: ImportEditor;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = new OrgStore(ROOT);
+    editor = new ImportEditor(container, store);
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    document.body.removeChild(container);
+  });
+
+  const getParseBtn = () =>
+    container.querySelector('button.btn-primary') as HTMLButtonElement;
+  const getTextarea = () =>
+    container.querySelector('textarea') as HTMLTextAreaElement;
+  const getApplyBtn = () =>
+    container.querySelector('[data-action="apply"]') as HTMLButtonElement;
+  const getNormSection = () =>
+    container.querySelector('[data-section="normalization"]') as HTMLElement;
+  const getNameNormSelect = () =>
+    container.querySelector('select[data-norm-field="name"]') as HTMLSelectElement;
+  const getTitleNormSelect = () =>
+    container.querySelector('select[data-norm-field="title"]') as HTMLSelectElement;
+
+  it('shows normalization dropdowns in import preview', () => {
+    getTextarea().value = UPPERCASE_CSV;
+    getParseBtn().click();
+
+    expect(getNormSection()).not.toBeNull();
+    expect(getNormSection().textContent).toContain('Text Normalization');
+    expect(getNameNormSelect()).not.toBeNull();
+    expect(getTitleNormSelect()).not.toBeNull();
+  });
+
+  it('normalization dropdowns default to "none" (As imported)', () => {
+    getTextarea().value = UPPERCASE_CSV;
+    getParseBtn().click();
+
+    expect(getNameNormSelect().value).toBe('none');
+    expect(getTitleNormSelect().value).toBe('none');
+  });
+
+  it('normalization dropdowns have all four options', () => {
+    getTextarea().value = UPPERCASE_CSV;
+    getParseBtn().click();
+
+    const nameOptions = Array.from(getNameNormSelect().options).map(o => o.value);
+    expect(nameOptions).toEqual(['none', 'titleCase', 'uppercase', 'lowercase']);
+
+    const titleOptions = Array.from(getTitleNormSelect().options).map(o => o.value);
+    expect(titleOptions).toEqual(['none', 'titleCase', 'uppercase', 'lowercase']);
+  });
+
+  it('with none/none, Apply leaves data unchanged', () => {
+    getTextarea().value = UPPERCASE_CSV;
+    getParseBtn().click();
+    getApplyBtn().click();
+
+    const tree = store.getTree();
+    expect(tree.name).toBe('JANE DOE');
+    expect(tree.title).toBe('CHIEF EXECUTIVE OFFICER');
+  });
+
+  it('applies titleCase normalization to names only', () => {
+    getTextarea().value = UPPERCASE_CSV;
+    getParseBtn().click();
+    getNameNormSelect().value = 'titleCase';
+    getApplyBtn().click();
+
+    const tree = store.getTree();
+    expect(tree.name).toBe('Jane Doe');
+    expect(tree.title).toBe('CHIEF EXECUTIVE OFFICER');
+    expect(tree.children![0].name).toBe('John Smith');
+    expect(tree.children![0].title).toBe('VP ENGINEERING');
+  });
+
+  it('applies uppercase normalization to titles only', () => {
+    getTextarea().value = UPPERCASE_JSON;
+    getParseBtn().click();
+    getTitleNormSelect().value = 'uppercase';
+    getApplyBtn().click();
+
+    const tree = store.getTree();
+    expect(tree.name).toBe('JANE DOE');
+    expect(tree.title).toBe('CHIEF EXECUTIVE OFFICER');
+  });
+
+  it('applies different normalization to name and title independently', () => {
+    getTextarea().value = UPPERCASE_CSV;
+    getParseBtn().click();
+    getNameNormSelect().value = 'titleCase';
+    getTitleNormSelect().value = 'lowercase';
+    getApplyBtn().click();
+
+    const tree = store.getTree();
+    expect(tree.name).toBe('Jane Doe');
+    expect(tree.title).toBe('chief executive officer');
+    expect(tree.children![0].name).toBe('John Smith');
+    expect(tree.children![0].title).toBe('vp engineering');
+  });
+
+  it('normalization works with JSON imports', () => {
+    getTextarea().value = UPPERCASE_JSON;
+    getParseBtn().click();
+    getNameNormSelect().value = 'titleCase';
+    getTitleNormSelect().value = 'titleCase';
+    getApplyBtn().click();
+
+    const tree = store.getTree();
+    expect(tree.name).toBe('Jane Doe');
+    expect(tree.title).toBe('Chief Executive Officer');
+    expect(tree.children![0].name).toBe('John Smith');
+    expect(tree.children![0].title).toBe('Vp Engineering');
+  });
+
+  it('normalization dropdowns are cleared after cancel', () => {
+    getTextarea().value = UPPERCASE_CSV;
+    getParseBtn().click();
+    expect(getNormSection()).not.toBeNull();
+
+    const cancelBtn = container.querySelector('[data-action="cancel"]') as HTMLButtonElement;
+    cancelBtn.click();
+
+    expect(getNormSection()).toBeNull();
+  });
+});

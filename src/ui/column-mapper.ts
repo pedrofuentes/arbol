@@ -1,4 +1,11 @@
-import type { ColumnMapping } from '../types';
+import type { ColumnMapping, TextNormalization } from '../types';
+
+const NORMALIZATION_OPTIONS: { value: TextNormalization; label: string }[] = [
+  { value: 'none', label: 'As imported' },
+  { value: 'titleCase', label: 'Title Case' },
+  { value: 'uppercase', label: 'UPPERCASE' },
+  { value: 'lowercase', label: 'lowercase' },
+];
 
 export class ColumnMapper {
   private container: HTMLElement;
@@ -15,6 +22,8 @@ export class ColumnMapper {
   private byNameRadio!: HTMLInputElement;
   private caseInsensitiveCheckbox!: HTMLInputElement;
   private parentRefLabel!: HTMLLabelElement;
+  private nameNormSelect!: HTMLSelectElement;
+  private titleNormSelect!: HTMLSelectElement;
   private presetNameInput!: HTMLInputElement;
   private savePresetBtn!: HTMLButtonElement;
   private errorArea!: HTMLDivElement;
@@ -69,6 +78,9 @@ export class ColumnMapper {
 
     // Case-insensitive checkbox
     this.buildCaseInsensitiveOption();
+
+    // Text normalization options
+    this.buildNormalizationOptions();
 
     // Save as Preset section
     this.buildPresetSection();
@@ -182,6 +194,31 @@ export class ColumnMapper {
     this.container.appendChild(group);
   }
 
+  private buildNormalizationOptions(): void {
+    const heading = document.createElement('h4');
+    heading.textContent = 'Text Normalization';
+    heading.style.cssText =
+      'margin:8px 0 4px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
+    this.container.appendChild(heading);
+
+    this.nameNormSelect = this.createNormDropdown('Name Text Format');
+    this.titleNormSelect = this.createNormDropdown('Title Text Format');
+  }
+
+  private createNormDropdown(labelText: string): HTMLSelectElement {
+    const group = this.createFormGroup(labelText);
+    const select = document.createElement('select');
+    for (const opt of NORMALIZATION_OPTIONS) {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.label;
+      select.appendChild(option);
+    }
+    group.appendChild(select);
+    this.container.appendChild(group);
+    return select;
+  }
+
   private createRadioOption(
     name: string,
     value: string,
@@ -264,7 +301,12 @@ export class ColumnMapper {
     if (id) selected.push(id);
     if (new Set(selected).size !== selected.length) return null;
 
-    return { name, title, parentRef, id, parentRefType, caseInsensitive: this.caseInsensitiveCheckbox.checked };
+    return {
+      name, title, parentRef, id, parentRefType,
+      caseInsensitive: this.caseInsensitiveCheckbox.checked,
+      nameNormalization: this.nameNormSelect.value as TextNormalization,
+      titleNormalization: this.titleNormSelect.value as TextNormalization,
+    };
   }
 
   private handleApply(): void {
@@ -295,7 +337,12 @@ export class ColumnMapper {
       return;
     }
 
-    this.onApply({ name, title, parentRef, id, parentRefType, caseInsensitive: this.caseInsensitiveCheckbox.checked });
+    this.onApply({
+      name, title, parentRef, id, parentRefType,
+      caseInsensitive: this.caseInsensitiveCheckbox.checked,
+      nameNormalization: this.nameNormSelect.value as TextNormalization,
+      titleNormalization: this.titleNormSelect.value as TextNormalization,
+    });
   }
 
   private handleSavePreset(): void {
