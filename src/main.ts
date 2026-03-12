@@ -301,13 +301,17 @@ function main(): void {
   const formEditor = new FormEditor(peopleContainer, store);
 
   const importContainer = tabSwitcher.getContentContainer('import')!;
-  new ImportEditor(importContainer, store);
+  const importEditorWrapper = document.createElement('div');
+  importContainer.appendChild(importEditorWrapper);
+  new ImportEditor(importEditorWrapper, store);
 
   // Text normalization section
   const normSeparator = document.createElement('hr');
   normSeparator.style.cssText = 'border:none;border-top:1px solid var(--border-subtle);margin:16px 0;';
   importContainer.appendChild(normSeparator);
-  new UtilitiesEditor(importContainer, store);
+  const normWrapper = document.createElement('div');
+  importContainer.appendChild(normWrapper);
+  new UtilitiesEditor(normWrapper, store);
 
   // JSON Editor as collapsible details
   const jsonSeparator = document.createElement('hr');
