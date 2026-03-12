@@ -12,6 +12,8 @@ export interface ColorCategory {
   color: string;
 }
 
+export type TextNormalization = 'none' | 'titleCase' | 'uppercase' | 'lowercase';
+
 export interface ColumnMapping {
   name: string;
   title: string;
@@ -19,6 +21,8 @@ export interface ColumnMapping {
   id?: string;
   parentRefType: 'id' | 'name';
   caseInsensitive?: boolean;
+  nameNormalization?: TextNormalization;
+  titleNormalization?: TextNormalization;
 }
 
 export interface MappingPreset {

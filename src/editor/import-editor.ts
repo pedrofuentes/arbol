@@ -1,10 +1,11 @@
 import { OrgStore } from '../store/org-store';
 import { MappingStore } from '../store/mapping-store';
 import { parseCsvToTree, extractHeaders } from '../utils/csv-parser';
+import { normalizeTreeText } from '../utils/text-normalize';
 import { ColumnMapper } from '../ui/column-mapper';
 import { PresetCreator } from '../ui/preset-creator';
 import { SAMPLE_ORG } from '../data/sample-org';
-import type { OrgNode, ColumnMapping } from '../types';
+import type { OrgNode, ColumnMapping, TextNormalization } from '../types';
 
 interface ParsedImport {
   tree: OrgNode;
@@ -12,6 +13,8 @@ interface ParsedImport {
   format: 'JSON' | 'CSV';
   source: string;
   warning?: string;
+  nameNormalization?: TextNormalization;
+  titleNormalization?: TextNormalization;
 }
 
 export class ImportEditor {
@@ -30,6 +33,8 @@ export class ImportEditor {
   private slotMapper: ColumnMapper | null = null;
   private pendingCsvText: string | null = null;
   private pendingImport: ParsedImport | null = null;
+  private nameNormSelect: HTMLSelectElement | null = null;
+  private titleNormSelect: HTMLSelectElement | null = null;
 
   constructor(container: HTMLElement, store: OrgStore) {
     this.container = container;
@@ -675,7 +680,11 @@ export class ImportEditor {
       const preset = this.mappingStore.getPreset(presetName);
       if (preset) {
         const { tree, nodeCount } = parseCsvToTree(text, preset.mapping);
-        return { tree, nodeCount, format: 'CSV', source };
+        return {
+          tree, nodeCount, format: 'CSV', source,
+          nameNormalization: preset.mapping.nameNormalization,
+          titleNormalization: preset.mapping.titleNormalization,
+        };
       }
     }
 
@@ -733,6 +742,17 @@ export class ImportEditor {
       this.statusArea.appendChild(warning);
     }
 
+    // Text normalization options
+    this.statusArea.appendChild(this.buildNormalizationRow());
+
+    // Pre-populate normalization from preset if available
+    if (result.nameNormalization && this.nameNormSelect) {
+      this.nameNormSelect.value = result.nameNormalization;
+    }
+    if (result.titleNormalization && this.titleNormSelect) {
+      this.titleNormSelect.value = result.titleNormalization;
+    }
+
     const btnGroup = document.createElement('div');
     btnGroup.className = 'btn-group';
 
@@ -755,12 +775,74 @@ export class ImportEditor {
   private applyImport(): void {
     if (!this.pendingImport) return;
     try {
-      this.store.fromJSON(JSON.stringify(this.pendingImport.tree));
+      const nameMode = (this.nameNormSelect?.value ?? 'none') as TextNormalization;
+      const titleMode = (this.titleNormSelect?.value ?? 'none') as TextNormalization;
+      let tree = this.pendingImport.tree;
+      if (nameMode !== 'none' || titleMode !== 'none') {
+        tree = normalizeTreeText(tree, nameMode, titleMode);
+      }
+      this.store.fromJSON(JSON.stringify(tree));
       this.pasteArea.value = '';
       this.clearStatus();
     } catch (e: unknown) {
       this.showError(e instanceof Error ? e.message : String(e));
     }
+  }
+
+  private static readonly NORM_OPTIONS: { value: TextNormalization; label: string }[] = [
+    { value: 'none', label: 'As imported' },
+    { value: 'titleCase', label: 'Title Case' },
+    { value: 'uppercase', label: 'UPPERCASE' },
+    { value: 'lowercase', label: 'lowercase' },
+  ];
+
+  private buildNormalizationRow(): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.dataset.section = 'normalization';
+    wrapper.style.cssText = 'margin-bottom:8px;';
+
+    const heading = document.createElement('div');
+    heading.textContent = 'Text Normalization';
+    heading.style.cssText =
+      'font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);margin-bottom:6px;';
+    wrapper.appendChild(heading);
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;';
+
+    this.nameNormSelect = this.createNormSelect('Name');
+    this.titleNormSelect = this.createNormSelect('Title');
+    row.appendChild(this.nameNormSelect.parentElement!);
+    row.appendChild(this.titleNormSelect.parentElement!);
+
+    wrapper.appendChild(row);
+    return wrapper;
+  }
+
+  private createNormSelect(labelText: string): HTMLSelectElement {
+    const group = document.createElement('div');
+    group.style.cssText = 'flex:1;';
+
+    const label = document.createElement('label');
+    label.textContent = `${labelText} Format`;
+    label.style.cssText =
+      'display:block;font-size:11px;color:var(--text-secondary);margin-bottom:2px;font-family:var(--font-sans);font-weight:var(--font-medium);';
+    group.appendChild(label);
+
+    const select = document.createElement('select');
+    select.dataset.normField = labelText.toLowerCase();
+    select.style.cssText =
+      'width:100%;padding:3px 6px;font-size:11px;font-family:var(--font-sans);' +
+      'background:var(--bg-base);border:1px solid var(--border-default);' +
+      'border-radius:var(--radius-md);color:var(--text-primary);';
+    for (const opt of ImportEditor.NORM_OPTIONS) {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.label;
+      select.appendChild(option);
+    }
+    group.appendChild(select);
+    return select;
   }
 
   private showError(message: string): void {
@@ -769,6 +851,8 @@ export class ImportEditor {
 
   private clearStatus(): void {
     this.pendingImport = null;
+    this.nameNormSelect = null;
+    this.titleNormSelect = null;
     this.statusArea.style.display = 'none';
     this.statusArea.innerHTML = '';
     this.errorArea.textContent = '';
@@ -788,7 +872,11 @@ export class ImportEditor {
         if (!this.pendingCsvText) return;
         try {
           const { tree, nodeCount } = parseCsvToTree(this.pendingCsvText, mapping);
-          this.pendingImport = { tree, nodeCount, format: 'CSV', source: 'mapped CSV' };
+          this.pendingImport = {
+            tree, nodeCount, format: 'CSV', source: 'mapped CSV',
+            nameNormalization: mapping.nameNormalization,
+            titleNormalization: mapping.titleNormalization,
+          };
           this.showStatus(this.pendingImport);
           this.hideColumnMapper();
         } catch (e: unknown) {

@@ -7,7 +7,8 @@ An interactive org chart editor for the browser.
 ## Features
 
 - Interactive hierarchical org chart visualization
-- Three editing tabs: Add (form), Load (JSON/CSV import, 3 formats auto-detected), Edit (JSON tree)
+- Five sidebar tabs: Add (form), Load (import), Edit (JSON), Settings, Utilities
+- **Text normalization** — normalize name/title casing (Title Case, UPPERCASE, lowercase) on import or for the existing org chart
 - Per-node color categories (Open Position, Offer Pending, Future Start + custom)
 - Color category legend on the chart (SVG overlay, included in PPTX export)
 - Right-click context menu on cards (Edit, Add Child, Set Category, Focus on sub-org, Move, Remove)
@@ -51,7 +52,7 @@ TypeScript, Vite, D3.js, pptxgenjs — no UI framework.
 
 ```
 src/
-├── editor/      # Data editing tabs (Add, Load, Edit)
+├── editor/      # Data editing tabs (Add, Load, Edit, Settings, Utilities)
 ├── renderer/    # D3-based chart rendering and layout
 ├── store/       # State management and undo/redo
 ├── export/      # PowerPoint export
