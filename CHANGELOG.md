@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.3.0] — UX Overhaul
+## [1.3.0] — 2026-03-12
 
 ### Added
 - **Collapsible accordion sections** in Settings — fine-tuning groups collapsed by default, presets and categories expanded
@@ -30,6 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Standalone Edit (JSON) tab — now a collapsible section in Import tab
 - Standalone Utilities tab — text normalization moved into Import tab
 - Mini card preview in Settings
+
+### Fixed
+- Zoom indicator showed 150% as the default view — now displays percentage relative to fit-to-content base scale so the default always reads 100%
+
+### Changed (internal)
+- Renamed PAL to Advisor in user-facing text
+- Reset zoom button now calls fitToContent() instead of resetZoom()
 
 ## [1.2.0] — 2026-03-12
 
