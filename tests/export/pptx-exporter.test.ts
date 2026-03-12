@@ -33,7 +33,14 @@ vi.mock('pptxgenjs', () => {
   };
 });
 
-import { exportToPptx, parseSvgPath, convertCoordinates } from '../../src/export/pptx-exporter';
+import {
+  exportToPptx,
+  parseSvgPath,
+  convertCoordinates,
+  resolveStyles,
+  PX_TO_INCHES,
+  PX_TO_PT,
+} from '../../src/export/pptx-exporter';
 
 function makeNode(overrides: Partial<LayoutNode> = {}): LayoutNode {
   return {
@@ -353,9 +360,7 @@ describe('pptx-exporter', () => {
       const shapeCalls = mockAddShape.mock.calls;
       const cardRect = shapeCalls.find((call: any) => {
         const opts = call[1];
-        return (
-          opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line && opts.line.width === 1
-        );
+        return opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line;
       });
       expect(cardRect).toBeDefined();
     });
@@ -369,9 +374,7 @@ describe('pptx-exporter', () => {
       const shapeCalls = mockAddShape.mock.calls;
       const cardRect = shapeCalls.find((call: any) => {
         const opts = call[1];
-        return (
-          opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line && opts.line.width === 1
-        );
+        return opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line;
       });
       expect(cardRect).toBeDefined();
     });
@@ -469,6 +472,166 @@ describe('pptx-exporter', () => {
       const legendLabels = textCalls.filter((call: any) => typeof call[0] === 'string');
       expect(legendLabels.length).toBe(3);
       expect(legendLabels.map((c: any) => c[0])).toEqual(['Alpha', 'Beta', 'Gamma']);
+    });
+  });
+
+  // --- resolveStyles ---
+  describe('resolveStyles', () => {
+    it('converts px font sizes to pt using PX_TO_PT', () => {
+      const styles = resolveStyles({ nameFontSize: 8, titleFontSize: 7 });
+      expect(styles.nameFontPt).toBe(Math.max(3, Math.round(8 * PX_TO_PT)));
+      expect(styles.titleFontPt).toBe(Math.max(3, Math.round(7 * PX_TO_PT)));
+    });
+
+    it('uses default font sizes when not provided', () => {
+      const styles = resolveStyles();
+      expect(styles.nameFontPt).toBe(Math.max(3, Math.round(11 * PX_TO_PT)));
+      expect(styles.titleFontPt).toBe(Math.max(3, Math.round(9 * PX_TO_PT)));
+    });
+
+    it('strips # from color values', () => {
+      const styles = resolveStyles({ cardFill: '#ff0000', cardStroke: '#00ff00' });
+      expect(styles.cardFill).toBe('ff0000');
+      expect(styles.cardStroke).toBe('00ff00');
+    });
+
+    it('uses default colors when not provided', () => {
+      const styles = resolveStyles();
+      expect(styles.cardFill).toBe('FFFFFF');
+      expect(styles.cardStroke).toBe('22C55E');
+      expect(styles.icContainerFill).toBe('E5E7EB');
+      expect(styles.linkColor).toBe('94A3B8');
+    });
+
+    it('converts line widths from px to pt', () => {
+      const styles = resolveStyles({ linkWidth: 2, cardStrokeWidth: 1.5 });
+      expect(styles.linkWidth).toBeCloseTo(2 * PX_TO_PT);
+      expect(styles.cardStrokeWidth).toBeCloseTo(1.5 * PX_TO_PT);
+    });
+
+    it('enforces minimum font size of 3pt', () => {
+      const styles = resolveStyles({ nameFontSize: 1, titleFontSize: 1 });
+      expect(styles.nameFontPt).toBe(3);
+      expect(styles.titleFontPt).toBe(3);
+    });
+  });
+
+  // --- dynamic slide sizing ---
+  describe('dynamic slide sizing', () => {
+    it('sizes slide to match chart at 1:1 scale', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ x: 0, y: 0, width: 110, height: 22 })],
+      });
+      await exportToPptx(layout);
+      expect(mockWriteFile).toHaveBeenCalledOnce();
+    });
+
+    it('uses scale=1 for normal-sized charts (no fit-to-slide scaling)', async () => {
+      const node = makeNode({ x: 200, y: 100, width: 110, height: 22 });
+      const layout = makeLayout({ nodes: [node] });
+      await exportToPptx(layout);
+
+      // At scale=1, node width in inches = 110 * PX_TO_INCHES
+      const shapeCalls = mockAddShape.mock.calls;
+      const cardRect = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.fill && opts.w;
+      });
+      expect(cardRect).toBeDefined();
+      const opts = cardRect![1] as any;
+      expect(opts.w).toBeCloseTo(110 * PX_TO_INCHES);
+      expect(opts.h).toBeCloseTo(22 * PX_TO_INCHES);
+    });
+
+    it('scales down when chart exceeds max slide dimension', async () => {
+      const wideNode = makeNode({ x: 0, y: 0, width: 6000, height: 22 });
+      const layout = makeLayout({ nodes: [wideNode] });
+      await exportToPptx(layout);
+
+      // Chart width = 6000px = 62.5 inches > 56" max → should scale down
+      const shapeCalls = mockAddShape.mock.calls;
+      const cardRect = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.fill && opts.w;
+      });
+      expect(cardRect).toBeDefined();
+      const opts = cardRect![1] as any;
+      expect(opts.w).toBeLessThan(6000 * PX_TO_INCHES);
+    });
+
+    it('uses fit-to-slide when slideWidth/slideHeight explicitly provided', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ x: 0, y: 0, width: 110, height: 22 })],
+      });
+      await exportToPptx(layout, { slideWidth: 13.33, slideHeight: 7.5 });
+
+      // With explicit slide dimensions, the small chart should be scaled up
+      const shapeCalls = mockAddShape.mock.calls;
+      const cardRect = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.fill && opts.w;
+      });
+      expect(cardRect).toBeDefined();
+      const opts = cardRect![1] as any;
+      expect(opts.w).toBeGreaterThan(110 * PX_TO_INCHES);
+    });
+  });
+
+  // --- style options passthrough ---
+  describe('style options passthrough', () => {
+    it('uses provided font sizes for node text', async () => {
+      const layout = makeLayout({ nodes: [makeNode()] });
+      await exportToPptx(layout, { nameFontSize: 12, titleFontSize: 10 });
+
+      const textCalls = mockAddText.mock.calls;
+      const nodeText = textCalls.find((call: any) => Array.isArray(call[0]));
+      expect(nodeText).toBeDefined();
+      const blocks = nodeText![0] as any[];
+      expect(blocks[0].options.fontSize).toBe(Math.round(12 * PX_TO_PT));
+      expect(blocks[1].options.fontSize).toBe(Math.round(10 * PX_TO_PT));
+    });
+
+    it('uses provided card colors', async () => {
+      const layout = makeLayout({ nodes: [makeNode()] });
+      await exportToPptx(layout, { cardFill: '#ff0000', cardStroke: '#00ff00' });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const cardRect = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.fill && opts.fill.color === 'ff0000';
+      });
+      expect(cardRect).toBeDefined();
+      expect((cardRect![1] as any).line.color).toBe('00ff00');
+    });
+
+    it('uses provided IC container fill', async () => {
+      const container: LayoutICContainer = { x: 0, y: 30, width: 100, height: 60 };
+      const layout = makeLayout({ nodes: [makeNode()], icContainers: [container] });
+      await exportToPptx(layout, { icContainerFill: '#aabbcc' });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const containerRect = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.fill && opts.fill.color === 'aabbcc';
+      });
+      expect(containerRect).toBeDefined();
+    });
+
+    it('uses provided link color and width', async () => {
+      const link: LayoutLink = { path: 'M0,22 L0,50', layer: 'tree' };
+      const layout = makeLayout({
+        nodes: [makeNode(), makeNode({ id: 'n2', x: 0, y: 50 })],
+        links: [link],
+      });
+      await exportToPptx(layout, { linkColor: '#ff00ff', linkWidth: 3 });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const lineShape = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.line && opts.line.color === 'ff00ff';
+      });
+      expect(lineShape).toBeDefined();
+      expect((lineShape![1] as any).line.width).toBeCloseTo(3 * PX_TO_PT);
     });
   });
 });

@@ -8,10 +8,13 @@ import type {
 import type { ColorCategory } from '../types';
 
 export const PX_TO_INCHES = 1 / 96;
+export const PX_TO_PT = 72 / 96;
 
 const DEFAULT_SLIDE_WIDTH = 13.33;
 const DEFAULT_SLIDE_HEIGHT = 7.5;
 const DEFAULT_PADDING = 0.5;
+const MAX_SLIDE_DIMENSION = 56;
+
 function generateFileName(): string {
   const now = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -33,11 +36,47 @@ export interface PptxExportOptions {
   slideHeight?: number;
   padding?: number;
   categories?: ColorCategory[];
+  nameFontSize?: number;
+  titleFontSize?: number;
+  cardFill?: string;
+  cardStroke?: string;
+  cardStrokeWidth?: number;
+  icContainerFill?: string;
+  linkColor?: string;
+  linkWidth?: number;
 }
 
 export interface Point {
   x: number;
   y: number;
+}
+
+interface ResolvedStyles {
+  nameFontPt: number;
+  titleFontPt: number;
+  cardFill: string;
+  cardStroke: string;
+  cardStrokeWidth: number;
+  icContainerFill: string;
+  linkColor: string;
+  linkWidth: number;
+}
+
+function stripHash(color: string): string {
+  return color.replace(/^#/, '');
+}
+
+export function resolveStyles(options?: PptxExportOptions): ResolvedStyles {
+  return {
+    nameFontPt: Math.max(3, Math.round((options?.nameFontSize ?? 11) * PX_TO_PT)),
+    titleFontPt: Math.max(3, Math.round((options?.titleFontSize ?? 9) * PX_TO_PT)),
+    cardFill: stripHash(options?.cardFill ?? '#FFFFFF'),
+    cardStroke: stripHash(options?.cardStroke ?? '#22C55E'),
+    cardStrokeWidth: (options?.cardStrokeWidth ?? 1) * PX_TO_PT,
+    icContainerFill: stripHash(options?.icContainerFill ?? '#E5E7EB'),
+    linkColor: stripHash(options?.linkColor ?? '#94A3B8'),
+    linkWidth: (options?.linkWidth ?? 1.5) * PX_TO_PT,
+  };
 }
 
 /** Parse an SVG path "M x,y L x,y ..." into an array of points. */
@@ -100,6 +139,7 @@ function addNodeShape(
   offsetY: number,
   scale: number,
   padding: number,
+  styles: ResolvedStyles,
   categories?: ColorCategory[],
 ): void {
   const topLeft = convertCoordinates(
@@ -112,29 +152,26 @@ function addNodeShape(
   );
   const w = node.width * scale * PX_TO_INCHES;
   const h = node.height * scale * PX_TO_INCHES;
-  const nameFontSize = Math.max(4, Math.round(7 * scale));
-  const titleFontSize = Math.max(3, nameFontSize - 1);
+  const nameFontSize = Math.max(3, Math.round(styles.nameFontPt * scale));
+  const titleFontSize = Math.max(3, Math.round(styles.titleFontPt * scale));
 
-  let fillColor = DEFAULT_CARD_FILL;
+  let fillColor = styles.cardFill;
   if (node.categoryId && categories) {
     const cat = categories.find((c) => c.id === node.categoryId);
     if (cat) {
-      // Strip '#' prefix for pptxgenjs (it expects hex without #)
-      fillColor = cat.color.replace(/^#/, '');
+      fillColor = stripHash(cat.color);
     }
   }
 
-  // Card rectangle with border
   slide.addShape('rect', {
     x: topLeft.x,
     y: topLeft.y,
     w,
     h,
     fill: { color: fillColor },
-    line: { color: DEFAULT_CARD_STROKE, width: 1 },
+    line: { color: styles.cardStroke, width: styles.cardStrokeWidth },
   });
 
-  // Text content: name (bold) + title
   slide.addText(
     [
       { text: node.name, options: { bold: true, breakLine: true, fontSize: nameFontSize } },
@@ -161,6 +198,7 @@ function addICContainer(
   offsetY: number,
   scale: number,
   padding: number,
+  styles: ResolvedStyles,
 ): void {
   const topLeft = convertCoordinates(container.x, container.y, offsetX, offsetY, scale, padding);
   const w = container.width * scale * PX_TO_INCHES;
@@ -171,7 +209,7 @@ function addICContainer(
     y: topLeft.y,
     w,
     h,
-    fill: { color: DEFAULT_IC_CONTAINER_FILL },
+    fill: { color: styles.icContainerFill },
   });
 }
 
@@ -182,6 +220,7 @@ function addLinkLines(
   offsetY: number,
   scale: number,
   padding: number,
+  styles: ResolvedStyles,
 ): void {
   const points = parseSvgPath(link.path);
   if (points.length < 2) return;
@@ -202,7 +241,6 @@ function addLinkLines(
     const w = Math.max(Math.abs(end.x - start.x), MIN_LINE_DIM);
     const h = Math.max(Math.abs(end.y - start.y), MIN_LINE_DIM);
 
-    // Flip line direction if needed
     const flipH = end.x < start.x;
     const flipV = end.y < start.y;
 
@@ -214,8 +252,8 @@ function addLinkLines(
       flipH,
       flipV,
       line: {
-        color: DEFAULT_LINK_COLOR,
-        width: 1,
+        color: styles.linkColor,
+        width: styles.linkWidth,
         ...(link.dottedLine && { dashType: 'dash' as const }),
       },
     });
@@ -226,10 +264,40 @@ export async function exportToPptx(
   layout: LayoutResult,
   options?: PptxExportOptions,
 ): Promise<void> {
-  const slideWidth = options?.slideWidth ?? DEFAULT_SLIDE_WIDTH;
-  const slideHeight = options?.slideHeight ?? DEFAULT_SLIDE_HEIGHT;
   const padding = options?.padding ?? DEFAULT_PADDING;
   const fileName = options?.fileName ?? generateFileName();
+  const styles = resolveStyles(options);
+
+  const hasExplicitSlideSize = options?.slideWidth != null || options?.slideHeight != null;
+  let slideWidth: number;
+  let slideHeight: number;
+  let scale: number;
+
+  if (hasExplicitSlideSize) {
+    slideWidth = options?.slideWidth ?? DEFAULT_SLIDE_WIDTH;
+    slideHeight = options?.slideHeight ?? DEFAULT_SLIDE_HEIGHT;
+    scale =
+      layout.nodes.length > 0
+        ? computeScale(layout.boundingBox, slideWidth, slideHeight, padding)
+        : 1;
+  } else if (layout.nodes.length === 0) {
+    slideWidth = DEFAULT_SLIDE_WIDTH;
+    slideHeight = DEFAULT_SLIDE_HEIGHT;
+    scale = 1;
+  } else {
+    const chartW = layout.boundingBox.width * PX_TO_INCHES + padding * 2;
+    const chartH = layout.boundingBox.height * PX_TO_INCHES + padding * 2;
+
+    if (chartW > MAX_SLIDE_DIMENSION || chartH > MAX_SLIDE_DIMENSION) {
+      slideWidth = Math.min(chartW, MAX_SLIDE_DIMENSION);
+      slideHeight = Math.min(chartH, MAX_SLIDE_DIMENSION);
+      scale = computeScale(layout.boundingBox, slideWidth, slideHeight, padding);
+    } else {
+      slideWidth = chartW;
+      slideHeight = chartH;
+      scale = 1;
+    }
+  }
 
   const { default: PptxGenJS } = await import('pptxgenjs');
   const pres = new PptxGenJS();
@@ -247,22 +315,21 @@ export async function exportToPptx(
   const { boundingBox } = layout;
   const offsetX = boundingBox.minX;
   const offsetY = boundingBox.minY;
-  const scale = computeScale(boundingBox, slideWidth, slideHeight, padding);
 
   // Layer 1: IC containers (behind everything)
   for (const container of layout.icContainers) {
-    addICContainer(slide, container, offsetX, offsetY, scale, padding);
+    addICContainer(slide, container, offsetX, offsetY, scale, padding, styles);
   }
 
   // Layer 2: Links
   for (const link of layout.links) {
-    addLinkLines(slide, link, offsetX, offsetY, scale, padding);
+    addLinkLines(slide, link, offsetX, offsetY, scale, padding, styles);
   }
 
   // Layer 3: Nodes (all types)
   const categories = options?.categories;
   for (const node of layout.nodes) {
-    addNodeShape(slide, node, offsetX, offsetY, scale, padding, categories);
+    addNodeShape(slide, node, offsetX, offsetY, scale, padding, styles, categories);
   }
 
   // Layer 4: Legend

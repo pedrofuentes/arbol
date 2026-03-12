@@ -790,12 +790,24 @@ function main(): void {
   exportBtn.setAttribute('data-tooltip', 'Export to PowerPoint (Ctrl+E)');
   footerRight.appendChild(exportBtn);
 
-  exportBtn.addEventListener('click', async () => {
+  const exportCurrentChart = async () => {
     const layout = renderer.getLastLayout();
-    if (layout) {
-      await exportToPptx(layout, { categories: categoryStore.getAll() });
-    }
-  });
+    if (!layout) return;
+    const rendererOpts = renderer.getOptions();
+    await exportToPptx(layout, {
+      categories: categoryStore.getAll(),
+      nameFontSize: rendererOpts.nameFontSize,
+      titleFontSize: rendererOpts.titleFontSize,
+      cardFill: rendererOpts.cardFill,
+      cardStroke: rendererOpts.cardStroke,
+      cardStrokeWidth: rendererOpts.cardStrokeWidth,
+      icContainerFill: rendererOpts.icContainerFill,
+      linkColor: rendererOpts.linkColor,
+      linkWidth: rendererOpts.linkWidth,
+    });
+  };
+
+  exportBtn.addEventListener('click', exportCurrentChart);
 
   const fitBtn = document.createElement('button');
   fitBtn.className = 'footer-btn';
@@ -855,10 +867,7 @@ function main(): void {
   shortcuts.register({
     key: 'e',
     ctrl: true,
-    handler: async () => {
-      const layout = renderer.getLastLayout();
-      if (layout) await exportToPptx(layout, { categories: categoryStore.getAll() });
-    },
+    handler: exportCurrentChart,
     description: 'Export PPTX',
   });
 
