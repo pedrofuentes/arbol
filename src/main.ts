@@ -818,7 +818,7 @@ function main(): void {
   footerRight.appendChild(resetZoomBtn);
 
   resetZoomBtn.addEventListener('click', () => {
-    renderer.getZoomManager()?.fitToContent();
+    renderer.getZoomManager()?.centerAtRealSize();
   });
 
   // Zoom level indicator (right side, after Reset)

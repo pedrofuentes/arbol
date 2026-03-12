@@ -11,7 +11,6 @@ export class ZoomManager {
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   private svgSelection: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private zoomListeners: Set<() => void> = new Set();
-  private baseScale: number = 1;
 
   constructor(svg: SVGSVGElement, g: SVGGElement) {
     this.svg = svg;
@@ -69,8 +68,30 @@ export class ZoomManager {
     const tx = svgWidth / 2 - (bbox.x + bbox.width / 2) * scale;
     const ty = padding - bbox.y * scale;
 
-    this.baseScale = scale;
     const transform = d3.zoomIdentity.translate(tx, ty).scale(scale);
+    this.svgSelection.call(this.zoom.transform, transform);
+  }
+
+  centerAtRealSize(padding: number = DEFAULT_FIT_PADDING): void {
+    const gNode = this.g;
+    if (typeof gNode.getBBox !== 'function') return;
+
+    let bbox: DOMRect;
+    try {
+      bbox = gNode.getBBox();
+    } catch {
+      return;
+    }
+
+    if (bbox.width === 0 || bbox.height === 0) return;
+
+    const svgWidth = this.svg.clientWidth || this.svg.getBoundingClientRect().width;
+    if (svgWidth === 0) return;
+
+    const tx = svgWidth / 2 - (bbox.x + bbox.width / 2);
+    const ty = padding - bbox.y;
+
+    const transform = d3.zoomIdentity.translate(tx, ty);
     this.svgSelection.call(this.zoom.transform, transform);
   }
 
@@ -87,11 +108,11 @@ export class ZoomManager {
   }
 
   getBaseScale(): number {
-    return this.baseScale;
+    return 1;
   }
 
   getRelativeZoomPercent(): number {
     const currentScale = this.getCurrentTransform().k;
-    return Math.round((currentScale / this.baseScale) * 100);
+    return Math.round(currentScale * 100);
   }
 }
