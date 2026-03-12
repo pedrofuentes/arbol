@@ -160,6 +160,34 @@ describe('isM1', () => {
   });
 });
 
+describe('manager counting via flattenTree + isLeaf', () => {
+  it('counts managers in a mixed tree', () => {
+    const tree = makeTree();
+    const all = flattenTree(tree);
+    const managers = all.filter((n) => !isLeaf(n));
+    expect(all).toHaveLength(5);
+    expect(managers).toHaveLength(2); // root (Alice) and Bob
+    expect(managers.map((n) => n.id)).toEqual(['root', 'b']);
+  });
+
+  it('returns zero managers for a single leaf node', () => {
+    const node: OrgNode = { id: '1', name: 'Solo', title: 'Only' };
+    const managers = flattenTree(node).filter((n) => !isLeaf(n));
+    expect(managers).toHaveLength(0);
+  });
+
+  it('counts root as a manager when it has children', () => {
+    const tree: OrgNode = {
+      id: 'root', name: 'Boss', title: 'CEO', children: [
+        { id: 'a', name: 'A', title: 'IC' },
+      ],
+    };
+    const managers = flattenTree(tree).filter((n) => !isLeaf(n));
+    expect(managers).toHaveLength(1);
+    expect(managers[0].id).toBe('root');
+  });
+});
+
 describe('stripM1Children', () => {
   it('removes IC children from M1 nodes and puts them in icMap', () => {
     const tree: OrgNode = {

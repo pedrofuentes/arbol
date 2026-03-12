@@ -10,7 +10,7 @@ import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { getMatchingNodeIds } from './utils/search';
 import { OrgNode } from './types';
-import { flattenTree } from './utils/tree';
+import { flattenTree, isLeaf } from './utils/tree';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
 
@@ -209,7 +209,6 @@ function main(): void {
 
   // Footer
   const footer = document.getElementById('footer')!;
-  const countNodes = (tree: OrgNode) => flattenTree(tree).length;
 
   // Footer: Status area (left side)
   const footerLeft = document.createElement('div');
@@ -243,8 +242,10 @@ function main(): void {
 
   const updateStatus = () => {
     const tree = store.getTree();
-    const count = countNodes(tree);
-    statusText.textContent = `${count} people`;
+    const allNodes = flattenTree(tree);
+    const count = allNodes.length;
+    const managerCount = allNodes.filter((n) => !isLeaf(n)).length;
+    statusText.textContent = `${count} people · ${managerCount} managers`;
   };
   store.onChange(updateStatus);
   updateStatus();
