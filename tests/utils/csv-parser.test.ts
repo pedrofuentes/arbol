@@ -540,3 +540,114 @@ describe('missing root auto-creation', () => {
     expect(result.nodeCount).toBe(3);
   });
 });
+
+describe('multi-line quoted fields', () => {
+  it('handles a quoted field spanning multiple lines', () => {
+    const csv = [
+      'name,title,manager_name',
+      '"Alice\nSmith",CEO,',
+      'Bob,CTO,"Alice\nSmith"',
+      'Carol,Engineer,Bob',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.name).toBe('Alice\nSmith');
+    expect(result.tree.children![0].name).toBe('Bob');
+    expect(result.nodeCount).toBe(3);
+  });
+
+  it('handles escaped quotes inside multi-line fields', () => {
+    const csv = [
+      'name,title,manager_name',
+      '"Alice ""The Boss""",CEO,',
+      'Bob,CTO,"Alice ""The Boss"""',
+      'Carol,Engineer,Bob',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.name).toBe('Alice "The Boss"');
+    expect(result.nodeCount).toBe(3);
+  });
+});
+
+describe('trailing metadata handling', () => {
+  it('ignores trailing separator row and metadata from HR export (Format A)', () => {
+    const csv = [
+      'id,name,title,parent_id',
+      '1,Alice,CEO,',
+      '2,Bob,CTO,1',
+      '3,Carol,Engineer,2',
+      ',,,',
+      '"Applied filters:',
+      'Some filter detail, with commas, and more, info',
+      'Another filter line',
+      'Last filter line",,,',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.name).toBe('Alice');
+    expect(result.nodeCount).toBe(3);
+  });
+
+  it('ignores trailing metadata with explicit mapping and auto-creates missing root', () => {
+    const csv = [
+      'Alias,Full Name,Reports To Alias,Address Book Title',
+      'ADSMITH,Adam Smith,pedrofuentes,Partner Software Eng Manager',
+      'BHAGRAWAL,Bhurvi Agrawal,pedrofuentes,Principal Group Eng Manager',
+      'JDOE,Jane Doe,adsmith,Software Engineer',
+      ',,,',
+      '"Applied filters:',
+      'Included (4)  1. Person (Detail Parameter Group) + Alias (Detail_Parameter),  1. Person (Detail Parameter Group) + Full Name (Detail_Parameter),  2. Reporting Hierarchy',
+      'Company Reporting Exclusion Ind is N',
+      'Position Type Group is Regular Position",,,',
+    ].join('\n');
+
+    const mapping: ColumnMapping = {
+      name: 'Full Name',
+      title: 'Address Book Title',
+      parentRef: 'Reports To Alias',
+      id: 'Alias',
+      parentRefType: 'id',
+      caseInsensitive: true,
+    };
+
+    const result = parseCsvToTree(csv, mapping);
+    expect(result.tree.name).toBe('pedrofuentes');
+    expect(result.tree.title).toBe('\u2014');
+    expect(result.tree.children).toHaveLength(2);
+    const adam = result.tree.children!.find(c => c.name === 'Adam Smith')!;
+    expect(adam.children).toHaveLength(1);
+    expect(adam.children![0].name).toBe('Jane Doe');
+    expect(result.nodeCount).toBe(4);
+  });
+
+  it('ignores rows with empty name field (Format B)', () => {
+    const csv = [
+      'name,title,manager_name',
+      'Alice,CEO,',
+      'Bob,CTO,Alice',
+      ',Garbage Title,Alice',
+      'Carol,Engineer,Bob',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.name).toBe('Alice');
+    expect(result.nodeCount).toBe(3);
+  });
+
+  it('handles trailing empty lines after metadata', () => {
+    const csv = [
+      'id,name,title,parent_id',
+      '1,Alice,CEO,',
+      '2,Bob,CTO,1',
+      '3,Carol,Engineer,2',
+      '',
+      '',
+      '',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.name).toBe('Alice');
+    expect(result.nodeCount).toBe(3);
+  });
+});

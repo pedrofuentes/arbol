@@ -84,6 +84,43 @@ function stripBom(text: string): string {
   return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
 
+/**
+ * Splits CSV text into logical rows, handling multi-line quoted fields (RFC 4180).
+ * Physical lines inside an open quoted field are joined into one logical row.
+ */
+function splitCsvRows(text: string): string[] {
+  const rows: string[] = [];
+  let currentRow = '';
+  let quoteCount = 0;
+
+  for (const line of text.split(/\r?\n/)) {
+    if (currentRow !== '') {
+      currentRow += '\n' + line;
+    } else {
+      currentRow = line;
+    }
+
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '"') quoteCount++;
+    }
+
+    // Odd quote count means we're still inside a quoted field
+    if (quoteCount % 2 === 0) {
+      if (currentRow.trim() !== '') {
+        rows.push(currentRow);
+      }
+      currentRow = '';
+      quoteCount = 0;
+    }
+  }
+
+  if (currentRow.trim() !== '') {
+    rows.push(currentRow);
+  }
+
+  return rows;
+}
+
 export function extractHeaders(csvText: string): string[] {
   const cleaned = stripBom(csvText);
   const firstLine = cleaned.split(/\r?\n/).find((line) => line.trim() !== '');
@@ -95,7 +132,7 @@ export function extractHeaders(csvText: string): string[] {
 
 export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvParseResult {
   const cleaned = stripBom(csvText);
-  const lines = cleaned.split(/\r?\n/).filter((line) => line.trim() !== '');
+  const lines = splitCsvRows(cleaned);
 
   if (lines.length < 1) {
     throw new Error('CSV must contain a header row and at least one data row.');
@@ -156,6 +193,7 @@ export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvPar
   for (const line of dataLines) {
     const fields = parseRow(line);
     const name = fields[colMap.name] ?? '';
+    if (!name.trim()) continue;
     const title = fields[colMap.title] ?? '';
     const parentRef = colMap.parent !== undefined ? (fields[colMap.parent] ?? '') : '';
     const id =
