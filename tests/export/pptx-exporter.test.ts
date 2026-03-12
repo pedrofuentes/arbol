@@ -175,7 +175,7 @@ describe('pptx-exporter', () => {
       expect(hasIcText).toBe(true);
     });
 
-    it('creates shapes for PAL nodes', async () => {
+    it('creates shapes for Advisor nodes', async () => {
       const layout = makeLayout({
         nodes: [
           makeNode({ type: 'manager' }),

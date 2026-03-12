@@ -8,7 +8,7 @@ function singleNode(): OrgNode {
   return { id: 'root', name: 'Solo', title: 'Boss' };
 }
 
-// Root with one M1 child (Bob) who has one IC (Diana), plus one PAL (Carol)
+// Root with one M1 child (Bob) who has one IC (Diana), plus one Advisor (Carol)
 function simpleTree(): OrgNode {
   return {
     id: 'root',
@@ -42,15 +42,15 @@ function m1WithICs(): OrgNode {
   };
 }
 
-// Manager with PALs + manager children
+// Manager with Advisors + manager children
 function managerWithPALs(): OrgNode {
   return {
     id: 'root',
     name: 'CEO',
     title: 'CEO',
     children: [
-      { id: 'pal1', name: 'PAL One', title: 'Advisor' },
-      { id: 'pal2', name: 'PAL Two', title: 'EA' },
+      { id: 'pal1', name: 'Advisor One', title: 'Advisor' },
+      { id: 'pal2', name: 'Advisor Two', title: 'EA' },
       {
         id: 'mgr1',
         name: 'CTO',
@@ -64,20 +64,20 @@ function managerWithPALs(): OrgNode {
   };
 }
 
-// Mixed: siblings where some have PALs and some don't
+// Mixed: siblings where some have Advisors and some don't
 function mixedSiblings(): OrgNode {
   return {
     id: 'root',
     name: 'CEO',
     title: 'CEO',
     children: [
-      { id: 'pal1', name: 'PAL', title: 'Advisor' },
+      { id: 'pal1', name: 'Advisor', title: 'Advisor' },
       {
         id: 'cto',
         name: 'CTO',
         title: 'CTO',
         children: [
-          { id: 'pal-cto', name: 'CTO PAL', title: 'Tech Advisor' },
+          { id: 'pal-cto', name: 'CTO Advisor', title: 'Tech Advisor' },
           {
             id: 'vp',
             name: 'VP Eng',
@@ -117,7 +117,7 @@ function mixedSiblings(): OrgNode {
   };
 }
 
-// Deep tree: 4 levels with no PALs
+// Deep tree: 4 levels with no Advisors
 function deepNoPALs(): OrgNode {
   return {
     id: 'root',
@@ -172,7 +172,7 @@ function getVerticalGap(container: HTMLElement, parentId: string, childId: strin
   return childY - parentY - nodeHeight;
 }
 
-// Single-child manager with no PALs (Fatima→Ethan case)
+// Single-child manager with no Advisors (Fatima→Ethan case)
 function singleChildNoPALs(): OrgNode {
   return {
     id: 'root',
@@ -193,20 +193,20 @@ function singleChildNoPALs(): OrgNode {
   };
 }
 
-// Sibling managers: one with PALs, one without (David vs CTO case)
+// Sibling managers: one with Advisors, one without (David vs CTO case)
 function siblingsMixedPALs(): OrgNode {
   return {
     id: 'root',
     name: 'CEO',
     title: 'CEO',
     children: [
-      { id: 'pal1', name: 'PAL', title: 'Advisor' },
+      { id: 'pal1', name: 'Advisor', title: 'Advisor' },
       {
         id: 'mgr-pal',
         name: 'CTO',
         title: 'CTO',
         children: [
-          { id: 'pal-cto', name: 'CTO PAL', title: 'Advisor' },
+          { id: 'pal-cto', name: 'CTO Advisor', title: 'Advisor' },
           { id: 'm1a', name: 'M1A', title: 'EM', children: [
             { id: 'ic1', name: 'IC1', title: 'Eng' },
           ]},
@@ -333,34 +333,34 @@ describe('ChartRenderer', () => {
     });
   });
 
-  describe('PAL rendering', () => {
-    it('renders PALs as pal-node class', () => {
+  describe('Advisor rendering', () => {
+    it('renders Advisors as pal-node class', () => {
       renderer.render(managerWithPALs());
       const palNodes = container.querySelectorAll('.pal-node');
       expect(palNodes.length).toBe(2);
     });
 
-    it('renders PAL connecting lines', () => {
+    it('renders Advisor connecting lines', () => {
       renderer.render(managerWithPALs());
-      // PAL links + tree link (root→CTO) + vertical connector
+      // Advisor links + tree link (root→CTO) + vertical connector
       const links = container.querySelectorAll('.link');
       expect(links.length).toBeGreaterThanOrEqual(3);
     });
 
-    it('does not render grey container for PALs', () => {
+    it('does not render grey container for Advisors', () => {
       renderer.render(managerWithPALs());
       const palContainers = container.querySelectorAll('.pal-container');
       expect(palContainers.length).toBe(0);
     });
 
-    it('renders PAL names', () => {
+    it('renders Advisor names', () => {
       renderer.render(managerWithPALs());
       const names = getNodeNames(container);
-      expect(names).toContain('PAL One');
-      expect(names).toContain('PAL Two');
+      expect(names).toContain('Advisor One');
+      expect(names).toContain('Advisor Two');
     });
 
-    it('renders all nodes (root + PALs + M1 + ICs)', () => {
+    it('renders all nodes (root + Advisors + M1 + ICs)', () => {
       renderer.render(managerWithPALs());
       const ids = getNodeIds(container);
       expect(ids).toContain('root');
@@ -371,12 +371,12 @@ describe('ChartRenderer', () => {
       expect(ids).toContain('ic2');
     });
 
-    it('odd number of PALs renders correctly', () => {
+    it('odd number of Advisors renders correctly', () => {
       const tree: OrgNode = {
         id: 'root', name: 'CEO', title: 'CEO', children: [
-          { id: 'pal1', name: 'P1', title: 'PAL' },
-          { id: 'pal2', name: 'P2', title: 'PAL' },
-          { id: 'pal3', name: 'P3', title: 'PAL' },
+          { id: 'pal1', name: 'P1', title: 'Advisor' },
+          { id: 'pal2', name: 'P2', title: 'Advisor' },
+          { id: 'pal3', name: 'P3', title: 'Advisor' },
           { id: 'mgr', name: 'CTO', title: 'CTO', children: [
             { id: 'ic1', name: 'IC', title: 'Eng' },
           ]},
@@ -387,10 +387,10 @@ describe('ChartRenderer', () => {
       expect(palNodes.length).toBe(3);
     });
 
-    it('single PAL is positioned to the left of the manager, not centered', () => {
+    it('single Advisor is positioned to the left of the manager, not centered', () => {
       const tree: OrgNode = {
         id: 'root', name: 'CEO', title: 'CEO', children: [
-          { id: 'pal1', name: 'Solo PAL', title: 'Advisor' },
+          { id: 'pal1', name: 'Solo Advisor', title: 'Advisor' },
           { id: 'mgr', name: 'CTO', title: 'CTO', children: [
             { id: 'ic1', name: 'IC', title: 'Eng' },
           ]},
@@ -400,7 +400,7 @@ describe('ChartRenderer', () => {
       const mgrNode = container.querySelector('.node[data-id="root"]');
       const palNode = container.querySelector('.pal-node[data-id="pal1"]');
       expect(palNode).not.toBeNull();
-      // PAL should be offset to the left, not at the same X as manager
+      // Advisor should be offset to the left, not at the same X as manager
       const mgrTransform = mgrNode!.getAttribute('transform')!;
       const palTransform = palNode!.getAttribute('transform')!;
       const mgrX = parseFloat(mgrTransform.match(/translate\(([^,]+)/)![1]);
@@ -408,18 +408,18 @@ describe('ChartRenderer', () => {
       expect(palX).toBeLessThan(mgrX);
     });
 
-    it('two PALs alternate left and right of the manager', () => {
+    it('two Advisors alternate left and right of the manager', () => {
       renderer.render(managerWithPALs());
       const palNodes = container.querySelectorAll('.pal-node');
       const transforms = Array.from(palNodes).map(n => {
         const t = n.getAttribute('transform')!;
         return parseFloat(t.match(/translate\(([^,]+)/)![1]);
       });
-      // First PAL (left) should have smaller X than second PAL (right)
+      // First Advisor (left) should have smaller X than second Advisor (right)
       expect(transforms[0]).toBeLessThan(transforms[1]);
     });
 
-    it('PAL is positioned below the manager card', () => {
+    it('Advisor is positioned below the manager card', () => {
       renderer.render(managerWithPALs());
       const mgrY = getNodeY(container, 'root')!;
       const palNodes = container.querySelectorAll('.pal-node');
@@ -435,7 +435,7 @@ describe('ChartRenderer', () => {
     it('renders complex mixed tree with all node types', () => {
       renderer.render(mixedSiblings());
       const ids = getNodeIds(container);
-      // PALs
+      // Advisors
       expect(ids).toContain('pal1');
       expect(ids).toContain('pal-cto');
       // Managers
@@ -453,16 +453,16 @@ describe('ChartRenderer', () => {
       expect(ids).toContain('ic5');
     });
 
-    it('manager without PALs alongside manager with PALs renders all nodes', () => {
+    it('manager without Advisors alongside manager with Advisors renders all nodes', () => {
       renderer.render(mixedSiblings());
-      // COO has no PALs, CTO has PALs — both should render correctly
+      // COO has no Advisors, CTO has Advisors — both should render correctly
       const coo = container.querySelector('.node[data-id="coo"]');
       const cto = container.querySelector('.node[data-id="cto"]');
       expect(coo).not.toBeNull();
       expect(cto).not.toBeNull();
     });
 
-    it('deep tree without PALs renders all levels', () => {
+    it('deep tree without Advisors renders all levels', () => {
       renderer.render(deepNoPALs());
       const ids = getNodeIds(container);
       expect(ids).toContain('root');
@@ -491,7 +491,7 @@ describe('ChartRenderer', () => {
 
   describe('vertical spacing', () => {
 
-    it('single-child non-PAL manager has gap equal to bottomVerticalSpacing', () => {
+    it('single-child non-Advisor manager has gap equal to bottomVerticalSpacing', () => {
       renderer.destroy();
       renderer = createRenderer({
         topVerticalSpacing: 5,
@@ -510,7 +510,7 @@ describe('ChartRenderer', () => {
         bottomVerticalSpacing: 12,
       });
       renderer.render(siblingsMixedPALs());
-      // root has 2 manager children + 1 PAL = multi-child
+      // root has 2 manager children + 1 Advisor = multi-child
       // mgr-nopal has 1 child = single-child
       const rootToChild = getVerticalGap(container, 'root', 'mgr-pal', NODE_HEIGHT);
       const singleGap = getVerticalGap(container, 'mgr-nopal', 'm1b', NODE_HEIGHT);
@@ -524,19 +524,19 @@ describe('ChartRenderer', () => {
       expect(yPal).toBe(yNoPal);
     });
 
-    it('PAL manager children are shifted down by PAL stack height', () => {
+    it('Advisor manager children are shifted down by Advisor stack height', () => {
       renderer.destroy();
       renderer = createRenderer({
         topVerticalSpacing: 5,
         bottomVerticalSpacing: 12,
       });
       renderer.render(managerWithPALs());
-      // root has PALs, so root→mgr1 gap should be > topVerticalSpacing + bottomVerticalSpacing
+      // root has Advisors, so root→mgr1 gap should be > topVerticalSpacing + bottomVerticalSpacing
       const gap = getVerticalGap(container, 'root', 'mgr1', NODE_HEIGHT);
       expect(gap).toBeGreaterThan(17); // 17 = top(5) + bottom(12)
     });
 
-    it('deep tree with no PALs: all single-child gaps use bottomVerticalSpacing', () => {
+    it('deep tree with no Advisors: all single-child gaps use bottomVerticalSpacing', () => {
       renderer.destroy();
       renderer = createRenderer({
         topVerticalSpacing: 5,
@@ -560,13 +560,13 @@ describe('ChartRenderer', () => {
       expect(unique.size).toBe(positions.length);
     });
 
-    it('single-PAL manager does not reserve space for phantom right PAL', () => {
-      // Manager with 1 PAL + 1 manager child, next to a manager with no PALs
+    it('single-Advisor manager does not reserve space for phantom right Advisor', () => {
+      // Manager with 1 Advisor + 1 manager child, next to a manager with no Advisors
       const tree: OrgNode = {
         id: 'root', name: 'CEO', title: 'CEO', children: [
           {
             id: 'mgr-1pal', name: 'VP1', title: 'VP', children: [
-              { id: 'pal1', name: 'PAL', title: 'Advisor' },
+              { id: 'pal1', name: 'Advisor', title: 'Advisor' },
               { id: 'm1a', name: 'M1A', title: 'EM', children: [
                 { id: 'ic1', name: 'IC1', title: 'Eng' },
               ]},
@@ -587,7 +587,7 @@ describe('ChartRenderer', () => {
       const vp2X = getNodeY(container, 'mgr-nopal');
       expect(vp1X).not.toBeNull();
       expect(vp2X).not.toBeNull();
-      // Both subtrees render without the single PAL creating phantom right space
+      // Both subtrees render without the single Advisor creating phantom right space
       expect(container.querySelectorAll('.pal-node').length).toBe(1);
     });
 
@@ -651,7 +651,7 @@ describe('ChartRenderer', () => {
       expect(handler.mock.calls[0][0]).toBe('ic1');
     });
 
-    it('fires right-click on PAL nodes', () => {
+    it('fires right-click on Advisor nodes', () => {
       const handler = vi.fn();
       renderer.setNodeRightClickHandler(handler);
       renderer.render(managerWithPALs());
@@ -683,7 +683,7 @@ describe('ChartRenderer', () => {
       expect(rect).not.toBeNull();
     });
 
-    it('returns DOMRect for PAL node', () => {
+    it('returns DOMRect for Advisor node', () => {
       renderer.render(managerWithPALs());
       const rect = renderer.getNodeScreenRect('pal1');
       expect(rect).not.toBeNull();
@@ -719,7 +719,7 @@ describe('ChartRenderer', () => {
       expect(ids).toContain('ic2');
     });
 
-    it('works with PAL nodes', () => {
+    it('works with Advisor nodes', () => {
       renderer.render(managerWithPALs());
       renderer.setMultiSelectedNodes(new Set(['pal1', 'pal2']));
       const selected = container.querySelectorAll('.multi-selected');

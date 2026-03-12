@@ -72,7 +72,7 @@ export function computeLayout(
 
   const treeData = treeLayout(hierarchy);
 
-  // Compute PAL stack height for a given node
+  // Compute Advisor stack height for a given node
   const getPalStackHeight = (nodeId: string): number => {
     const pals = palMap.get(nodeId);
     if (!pals || pals.length === 0) return 0;
@@ -88,7 +88,7 @@ export function computeLayout(
     }
   };
 
-  // Apply vertical shifts for PAL stacks, single-child, and multi-child nodes
+  // Apply vertical shifts for Advisor stacks, single-child, and multi-child nodes
   const extraNonPalShift = bottomVerticalSpacing - topVerticalSpacing;
   for (const node of treeData.descendants()) {
     const palHeight = getPalStackHeight(node.data.id);
@@ -206,7 +206,7 @@ export function computeLayout(
     links.push({ path, layer: 'tree' });
   }
 
-  // Vertical connectors through PAL area
+  // Vertical connectors through Advisor area
   for (const node of treeData.descendants()) {
     const palOffset = getPalStackHeight(node.data.id);
     if (palOffset > 0 && node.children && node.children.length > 0) {
@@ -249,7 +249,7 @@ export function computeLayout(
     }
   }
 
-  // PAL stacks
+  // Advisor stacks
   for (const treeNode of treeData.descendants()) {
     const pals = palMap.get(treeNode.data.id);
     if (pals && pals.length > 0) {

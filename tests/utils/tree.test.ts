@@ -206,7 +206,7 @@ describe('stripM1Children', () => {
     expect(flattenTree(layoutTree).map(n => n.id)).toEqual(['root', 'm1']);
     expect(icMap.has('m1')).toBe(true);
     expect(icMap.get('m1')!.map(n => n.id)).toEqual(['ic1', 'ic2']);
-    // dir is a PAL (leaf under non-M1 root)
+    // dir is an Advisor (leaf under non-M1 root)
     expect(palMap.has('root')).toBe(true);
     expect(palMap.get('root')!.map(n => n.id)).toEqual(['dir']);
   });
@@ -220,11 +220,11 @@ describe('stripM1Children', () => {
     expect(icMap.get('b')!.map(n => n.id)).toEqual(['d', 'e']);
   });
 
-  it('separates PALs from manager children', () => {
+  it('separates Advisors from manager children', () => {
     const tree: OrgNode = {
       id: 'root', name: 'CEO', title: 'CEO', children: [
-        { id: 'pal1', name: 'PAL1', title: 'PAL' },
-        { id: 'pal2', name: 'PAL2', title: 'PAL' },
+        { id: 'pal1', name: 'Advisor1', title: 'Advisor' },
+        { id: 'pal2', name: 'Advisor2', title: 'Advisor' },
         { id: 'm1', name: 'Mgr', title: 'M1', children: [
           { id: 'ic1', name: 'IC1', title: 'Eng' },
         ]},
@@ -321,7 +321,7 @@ describe('countManagersByLevel', () => {
         { id: 'vp2', name: 'VP2', title: 'VP', children: [
           { id: 'ic3', name: 'IC3', title: 'Eng' },
         ]},
-        { id: 'pal', name: 'PAL', title: 'Advisor' },
+        { id: 'pal', name: 'Advisor', title: 'Advisor' },
       ],
     };
     const levels = countManagersByLevel(tree);

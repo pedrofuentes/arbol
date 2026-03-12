@@ -17,7 +17,7 @@ export interface RendererOptions {
   icNodeWidth?: number;
   icGap?: number;
   icContainerPadding?: number;
-  // PAL options
+  // Advisor options
   palTopGap?: number;
   palBottomGap?: number;
   palRowGap?: number;
@@ -109,7 +109,7 @@ export class ChartRenderer {
 
     const{ nodeHeight, linkColor, linkWidth, icContainerFill } = this.opts;
 
-    // Layer 1: Tree links (elbow paths + vertical connectors through PAL area)
+    // Layer 1: Tree links (elbow paths + vertical connectors through Advisor area)
     const linksGroup = this.g.append('g').attr('class', 'links');
     for (const link of layout.links.filter((l) => l.layer === 'tree')) {
       linksGroup.append('path')
@@ -143,7 +143,7 @@ export class ChartRenderer {
       this.renderCardContent(sel as any, node.width, nodeHeight, () => node.id);
     }
 
-    // Layer 3: PAL stacks (on top of tree links)
+    // Layer 3: Advisor stacks (on top of tree links)
     const palGroup = this.g.append('g').attr('class', 'pal-stacks');
     for (const link of layout.links.filter((l) => l.layer === 'pal')) {
       palGroup.append('path')

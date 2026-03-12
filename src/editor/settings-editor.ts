@@ -52,12 +52,12 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
-    title: 'PAL Options',
+    title: 'Advisor Options',
     settings: [
-      { key: 'palTopGap', label: 'PAL Top Gap', type: 'range', min: 0, max: 40, step: 1 },
-      { key: 'palBottomGap', label: 'PAL Bottom Gap', type: 'range', min: 0, max: 40, step: 1 },
-      { key: 'palRowGap', label: 'PAL Row Gap', type: 'range', min: 0, max: 20, step: 1 },
-      { key: 'palCenterGap', label: 'PAL Center Gap', type: 'range', min: 10, max: 100, step: 1 },
+      { key: 'palTopGap', label: 'Advisor Top Gap', type: 'range', min: 0, max: 40, step: 1 },
+      { key: 'palBottomGap', label: 'Advisor Bottom Gap', type: 'range', min: 0, max: 40, step: 1 },
+      { key: 'palRowGap', label: 'Advisor Row Gap', type: 'range', min: 0, max: 20, step: 1 },
+      { key: 'palCenterGap', label: 'Advisor Center Gap', type: 'range', min: 10, max: 100, step: 1 },
     ],
   },
   {
