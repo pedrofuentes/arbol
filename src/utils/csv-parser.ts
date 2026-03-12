@@ -1,5 +1,7 @@
 import type { OrgNode, ColumnMapping } from '../types';
 
+export const MAX_NODES = 10_000;
+
 export interface CsvParseResult {
   tree: OrgNode;
   nodeCount: number;
@@ -208,6 +210,10 @@ export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvPar
     throw new Error('CSV must contain at least 2 data rows.');
   }
 
+  if (nodes.length > MAX_NODES) {
+    throw new Error(`CSV contains ${nodes.length} data rows, which exceeds the maximum of ${MAX_NODES}. Please reduce the dataset.`);
+  }
+
   // Detect circular references and orphans by building adjacency
   if (colMap.format === 'A') {
     return buildTreeById(nodes, caseInsensitive);
@@ -220,7 +226,12 @@ function buildTreeById(nodes: { id: string; name: string; title: string; parentR
   const normalize = caseInsensitive ? (s: string) => s.toLowerCase() : (s: string) => s;
   const idMap = new Map<string, { id: string; name: string; title: string; parentRef: string }>();
   for (const node of nodes) {
-    idMap.set(normalize(node.id), node);
+    const key = normalize(node.id);
+    const existing = idMap.get(key);
+    if (existing) {
+      throw new Error(`Duplicate ID "${node.id}": "${node.name}" and "${existing.name}" share the same identifier.`);
+    }
+    idMap.set(key, node);
   }
 
   // Find roots and collect orphan references
@@ -250,15 +261,15 @@ function buildTreeById(nodes: { id: string; name: string; title: string; parentR
     throw new Error(`Orphan reference: node "${orphanNodes[0].name}" references parent_id "${orphanNodes[0].parentRef}" which does not exist.`);
   }
 
+  // Detect cycles before root checks so cycle errors are descriptive
+  detectCycles(nodes, 'id', caseInsensitive);
+
   if (roots.length === 0) {
     throw new Error('No root node found (every node has a parent reference — possible circular reference).');
   }
   if (roots.length > 1) {
     throw new Error(`Multiple roots detected: ${roots.map((r) => `"${idMap.get(r)!.name}"`).join(', ')}. Only one root is allowed.`);
   }
-
-  // Detect cycles
-  detectCycles(nodes, 'id', caseInsensitive);
 
   const childrenMap = new Map<string, string[]>();
   for (const node of nodes) {
@@ -290,7 +301,12 @@ function buildTreeByName(nodes: { id: string; name: string; title: string; paren
   const normalize = caseInsensitive ? (s: string) => s.toLowerCase() : (s: string) => s;
   const nameMap = new Map<string, { id: string; name: string; title: string; parentRef: string }>();
   for (const node of nodes) {
-    nameMap.set(normalize(node.name), node);
+    const key = normalize(node.name);
+    const existing = nameMap.get(key);
+    if (existing) {
+      throw new Error(`Duplicate name "${node.name}": two people share the same name. Use ID-based import (with a unique alias column) to distinguish them.`);
+    }
+    nameMap.set(key, node);
   }
 
   const roots: string[] = [];
@@ -319,14 +335,15 @@ function buildTreeByName(nodes: { id: string; name: string; title: string; paren
     throw new Error(`Orphan reference: node "${orphanNodes[0].name}" references parent "${orphanNodes[0].parentRef}" which does not exist.`);
   }
 
+  // Detect cycles before root checks so cycle errors are descriptive
+  detectCycles(nodes, 'name', caseInsensitive);
+
   if (roots.length === 0) {
     throw new Error('No root node found (every node has a parent reference — possible circular reference).');
   }
   if (roots.length > 1) {
     throw new Error(`Multiple roots detected: ${roots.map((r) => `"${r}"`).join(', ')}. Only one root is allowed.`);
   }
-
-  detectCycles(nodes, 'name', caseInsensitive);
 
   const childrenMap = new Map<string, string[]>();
   for (const node of nodes) {
@@ -370,13 +387,22 @@ function detectCycles(
 
   for (const node of nodes) {
     const key = normalize(keyField === 'id' ? node.id : node.name);
-    const visited = new Set<string>();
+    const visited: string[] = [];
+    const visitedSet = new Set<string>();
     let current: string | undefined = key;
     while (current && parentMap.has(current)) {
-      if (visited.has(current)) {
-        throw new Error(`Circular reference detected involving node "${node.name}".`);
+      if (visitedSet.has(current)) {
+        const cycleStart = visited.indexOf(current);
+        const cyclePath = visited.slice(cycleStart);
+        cyclePath.push(current);
+        const nameForKey = (k: string) => {
+          const n = nodes.find(nd => normalize(keyField === 'id' ? nd.id : nd.name) === k);
+          return n ? n.name : k;
+        };
+        throw new Error(`Circular reference: ${cyclePath.map(nameForKey).join(' \u2192 ')}`);
       }
-      visited.add(current);
+      visited.push(current);
+      visitedSet.add(current);
       current = parentMap.get(current);
     }
   }

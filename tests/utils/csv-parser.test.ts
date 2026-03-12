@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseCsvToTree, extractHeaders } from '../../src/utils/csv-parser';
+import { parseCsvToTree, extractHeaders, MAX_NODES } from '../../src/utils/csv-parser';
 import type { ColumnMapping } from '../../src/types';
 
 describe('parseCsvToTree', () => {
@@ -649,5 +649,123 @@ describe('trailing metadata handling', () => {
     const result = parseCsvToTree(csv);
     expect(result.tree.name).toBe('Alice');
     expect(result.nodeCount).toBe(3);
+  });
+});
+
+describe('duplicate detection', () => {
+  it('throws on duplicate IDs in Format A', () => {
+    const csv = [
+      'id,name,title,parent_id',
+      '1,Alice,CEO,',
+      '1,Bob,CTO,1',
+      '2,Carol,Engineer,1',
+    ].join('\n');
+
+    expect(() => parseCsvToTree(csv)).toThrow(/duplicate id "1"/i);
+  });
+
+  it('throws on duplicate IDs with case-insensitive matching', () => {
+    const csv = [
+      'id,name,title,parent_id',
+      'jsmith,Alice,CEO,',
+      'JSMITH,Bob,CTO,jsmith',
+      'blee,Carol,Engineer,jsmith',
+    ].join('\n');
+
+    expect(() => parseCsvToTree(csv)).toThrow(/duplicate id/i);
+  });
+
+  it('throws on duplicate names in Format B', () => {
+    const csv = [
+      'name,title,manager_name',
+      'Alice,CEO,',
+      'Bob,CTO,Alice',
+      'Bob,Engineer,Alice',
+    ].join('\n');
+
+    expect(() => parseCsvToTree(csv)).toThrow(/duplicate name "Bob"/i);
+  });
+
+  it('throws on duplicate names with case-insensitive matching', () => {
+    const csv = [
+      'name,title,manager_name',
+      'Alice,CEO,',
+      'bob,CTO,Alice',
+      'BOB,Engineer,Alice',
+    ].join('\n');
+
+    expect(() => parseCsvToTree(csv)).toThrow(/duplicate name/i);
+  });
+
+  it('duplicate IDs with explicit mapping are detected', () => {
+    const csv = [
+      'alias,full_name,role,boss_alias',
+      'a1,Alice,CEO,',
+      'a1,Bob,CTO,a1',
+      'a2,Carol,Engineer,a1',
+    ].join('\n');
+
+    const mapping: ColumnMapping = {
+      name: 'full_name',
+      title: 'role',
+      parentRef: 'boss_alias',
+      id: 'alias',
+      parentRefType: 'id',
+    };
+
+    expect(() => parseCsvToTree(csv, mapping)).toThrow(/duplicate id/i);
+  });
+});
+
+describe('node count limit', () => {
+  it('exports MAX_NODES constant', () => {
+    expect(MAX_NODES).toBe(10_000);
+  });
+
+  it('throws when node count exceeds MAX_NODES', () => {
+    const header = 'id,name,title,parent_id';
+    const root = '0,Root,CEO,';
+    const rows = [header, root];
+    for (let i = 1; i <= MAX_NODES; i++) {
+      rows.push(`${i},Person ${i},Title,0`);
+    }
+    const csv = rows.join('\n');
+
+    expect(() => parseCsvToTree(csv)).toThrow(/exceeds the maximum/i);
+  });
+});
+
+describe('circular reference detection', () => {
+  it('detects self-referencing node', () => {
+    const csv = [
+      'id,name,title,parent_id',
+      '1,Alice,CEO,',
+      '2,Bob,CTO,2',
+      '3,Carol,Engineer,1',
+    ].join('\n');
+
+    expect(() => parseCsvToTree(csv)).toThrow(/circular reference/i);
+  });
+
+  it('includes cycle path in error message (Format A)', () => {
+    const csv = [
+      'id,name,title,parent_id',
+      '1,Alice,CEO,3',
+      '2,Bob,Manager,1',
+      '3,Carol,Engineer,2',
+    ].join('\n');
+
+    expect(() => parseCsvToTree(csv)).toThrow(/Alice.*→.*Carol.*→.*Bob.*→.*Alice/);
+  });
+
+  it('includes cycle path in error message (Format B)', () => {
+    const csv = [
+      'name,title,manager_name',
+      'Alice,CEO,Carol',
+      'Bob,Manager,Alice',
+      'Carol,Engineer,Bob',
+    ].join('\n');
+
+    expect(() => parseCsvToTree(csv)).toThrow(/Alice.*→.*Carol.*→.*Bob.*→.*Alice/);
   });
 });

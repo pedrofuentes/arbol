@@ -11,6 +11,7 @@ interface ParsedImport {
   nodeCount: number;
   format: 'JSON' | 'CSV';
   source: string;
+  warning?: string;
 }
 
 export class ImportEditor {
@@ -609,9 +610,13 @@ export class ImportEditor {
         try {
           const xlsx = await import('xlsx');
           const workbook = xlsx.read(reader.result, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const sheetName = workbook.SheetNames[0];
+          const firstSheet = workbook.Sheets[sheetName];
           const csvText = xlsx.utils.sheet_to_csv(firstSheet);
           const result = this.parseCsv(csvText, file.name);
+          if (workbook.SheetNames.length > 1) {
+            result.warning = `This workbook has ${workbook.SheetNames.length} sheets. Only "${sheetName}" was imported.`;
+          }
           this.pendingImport = result;
           this.showStatus(result);
         } catch (e: unknown) {
@@ -720,6 +725,13 @@ export class ImportEditor {
     info.append(strong);
     info.append(` people from ${result.format}`);
     this.statusArea.appendChild(info);
+
+    if (result.warning) {
+      const warning = document.createElement('div');
+      warning.style.cssText = 'font-size:12px;color:var(--text-warning, #b08800);margin-bottom:8px;font-family:var(--font-sans);';
+      warning.textContent = `⚠ ${result.warning}`;
+      this.statusArea.appendChild(warning);
+    }
 
     const btnGroup = document.createElement('div');
     btnGroup.className = 'btn-group';
