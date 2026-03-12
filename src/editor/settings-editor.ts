@@ -97,6 +97,62 @@ const DEFAULT_SETTINGS: Record<string, number | string> = {
   cardFill: '#ffffff', cardStroke: '#22c55e', cardStrokeWidth: 1, icContainerFill: '#e5e7eb',
 };
 
+export const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<RendererOptions> }[] = [
+  {
+    name: 'Compact',
+    icon: '▪',
+    sizes: {
+      nodeWidth: 90, nodeHeight: 18, horizontalSpacing: 20, branchSpacing: 6,
+      topVerticalSpacing: 3, bottomVerticalSpacing: 8,
+      icNodeWidth: 83, icGap: 3, icContainerPadding: 4,
+      palTopGap: 5, palBottomGap: 5, palRowGap: 3, palCenterGap: 40,
+      nameFontSize: 7, titleFontSize: 6, textPaddingTop: 3, textGap: 1,
+    },
+  },
+  {
+    name: 'Default',
+    icon: '▫',
+    sizes: {
+      nodeWidth: 110, nodeHeight: 22, horizontalSpacing: 30, branchSpacing: 10,
+      topVerticalSpacing: 5, bottomVerticalSpacing: 12,
+      icNodeWidth: 99, icGap: 4, icContainerPadding: 6,
+      palTopGap: 7, palBottomGap: 7, palRowGap: 4, palCenterGap: 50,
+      nameFontSize: 8, titleFontSize: 7, textPaddingTop: 4, textGap: 1,
+    },
+  },
+  {
+    name: 'Spacious',
+    icon: '▢',
+    sizes: {
+      nodeWidth: 140, nodeHeight: 28, horizontalSpacing: 40, branchSpacing: 16,
+      topVerticalSpacing: 8, bottomVerticalSpacing: 16,
+      icNodeWidth: 125, icGap: 5, icContainerPadding: 8,
+      palTopGap: 10, palBottomGap: 10, palRowGap: 5, palCenterGap: 60,
+      nameFontSize: 9, titleFontSize: 8, textPaddingTop: 5, textGap: 2,
+    },
+  },
+  {
+    name: 'Presentation',
+    icon: '▣',
+    sizes: {
+      nodeWidth: 160, nodeHeight: 34, horizontalSpacing: 50, branchSpacing: 20,
+      topVerticalSpacing: 10, bottomVerticalSpacing: 20,
+      icNodeWidth: 141, icGap: 6, icContainerPadding: 10,
+      palTopGap: 12, palBottomGap: 12, palRowGap: 6, palCenterGap: 70,
+      nameFontSize: 11, titleFontSize: 9, textPaddingTop: 6, textGap: 2,
+    },
+  },
+];
+
+const DEFAULT_LAYOUT_SIZES = LAYOUT_PRESETS.find((p) => p.name === 'Default')!.sizes;
+
+export const COMBINED_PRESETS: CombinedPreset[] = CHART_THEME_PRESETS.map((theme) => ({
+  id: theme.id,
+  name: theme.name,
+  colors: theme.colors,
+  sizes: DEFAULT_LAYOUT_SIZES,
+}));
+
 function sectionIdFromTitle(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 }
@@ -104,7 +160,6 @@ function sectionIdFromTitle(title: string): string {
 const ALL_SECTION_IDS = [
   'presets',
   'categories',
-  'layout-presets',
   ...SETTING_GROUPS.map((g) => sectionIdFromTitle(g.title)),
   'settings-io',
 ];
@@ -117,9 +172,11 @@ export class SettingsEditor {
   private categoryStore: CategoryStore | null;
 
   private static ACCORDION_STORAGE_KEY = 'arbol-accordion-state';
-  private static DEFAULT_EXPANDED = new Set(['presets', 'categories', 'layout-presets']);
+  private static DEFAULT_EXPANDED = new Set(['presets', 'categories']);
 
   private accordionState: Map<string, boolean> = new Map();
+
+  private static CUSTOM_PRESETS_KEY = 'arbol-custom-presets';
 
   constructor(
     container: HTMLElement,
@@ -172,6 +229,31 @@ export class SettingsEditor {
     const current = this.isExpanded(sectionId);
     this.accordionState.set(sectionId, !current);
     this.saveAccordionState();
+  }
+
+  private loadCustomPresets(): CombinedPreset[] {
+    try {
+      const raw = localStorage.getItem(SettingsEditor.CUSTOM_PRESETS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((p: Record<string, unknown>) => ({
+        ...p,
+        isCustom: true,
+      })) as CombinedPreset[];
+    } catch { return []; }
+  }
+
+  private saveCustomPresets(presets: CombinedPreset[]): void {
+    localStorage.setItem(
+      SettingsEditor.CUSTOM_PRESETS_KEY,
+      JSON.stringify(presets.map(({ id, name, colors, sizes }) => ({ id, name, colors, sizes }))),
+    );
+  }
+
+  private deleteCustomPreset(id: string): void {
+    const presets = this.loadCustomPresets().filter((p) => p.id !== id);
+    this.saveCustomPresets(presets);
   }
 
   private createAccordionSection(
@@ -293,53 +375,9 @@ export class SettingsEditor {
     actionsRow.appendChild(toggleAllBtn);
     this.container.appendChild(actionsRow);
 
-    // Theme Presets section
-    const presetGrid = document.createElement('div');
-    presetGrid.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:16px;';
-
-    for (const preset of CHART_THEME_PRESETS) {
-      const card = document.createElement('button');
-      card.className = 'preset-card';
-      card.style.cssText = `
-        display:flex;align-items:center;gap:6px;padding:6px 8px;
-        border:1px solid var(--border-default);border-radius:var(--radius-md);
-        background:var(--bg-elevated);cursor:pointer;text-align:left;
-        transition:all 120ms ease;font-family:var(--font-sans);
-      `;
-
-      const swatch = document.createElement('div');
-      swatch.style.cssText = `
-        width:20px;height:20px;border-radius:3px;flex-shrink:0;
-        background:${preset.colors.cardFill};
-        border:2px solid ${preset.colors.cardStroke};
-      `;
-      card.appendChild(swatch);
-
-      const name = document.createElement('span');
-      name.textContent = preset.name;
-      name.style.cssText = 'font-size:11px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-      card.appendChild(name);
-
-      card.addEventListener('mouseenter', () => {
-        card.style.borderColor = 'var(--accent)';
-        card.style.background = 'var(--bg-hover)';
-      });
-      card.addEventListener('mouseleave', () => {
-        card.style.borderColor = 'var(--border-default)';
-        card.style.background = 'var(--bg-elevated)';
-      });
-
-      card.addEventListener('click', () => {
-        this.renderer.updateOptions(preset.colors as Partial<RendererOptions>);
-        this.rerenderCallback();
-        this.build();
-      });
-
-      presetGrid.appendChild(card);
-    }
-
+    // Unified Presets section
     this.container.appendChild(
-      this.createAccordionSection('presets', 'Theme Presets', presetGrid),
+      this.createAccordionSection('presets', 'Presets', () => this.buildPresetsContent()),
     );
 
     // Node Categories section
@@ -350,13 +388,6 @@ export class SettingsEditor {
         ),
       );
     }
-
-    // Layout Presets section
-    this.container.appendChild(
-      this.createAccordionSection('layout-presets', 'Layout Presets', () =>
-        this.buildLayoutPresetsContent(),
-      ),
-    );
 
     // Setting groups
     for (const group of SETTING_GROUPS) {
@@ -591,95 +622,262 @@ export class SettingsEditor {
     return wrapper;
   }
 
-  private buildLayoutPresetsContent(): HTMLElement {
-    const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<RendererOptions> }[] = [
-      {
-        name: 'Compact',
-        icon: '▪',
-        sizes: {
-          nodeWidth: 90, nodeHeight: 18, horizontalSpacing: 20, branchSpacing: 6,
-          topVerticalSpacing: 3, bottomVerticalSpacing: 8,
-          icNodeWidth: 83, icGap: 3, icContainerPadding: 4,
-          palTopGap: 5, palBottomGap: 5, palRowGap: 3, palCenterGap: 40,
-          nameFontSize: 7, titleFontSize: 6, textPaddingTop: 3, textGap: 1,
-        },
-      },
-      {
-        name: 'Default',
-        icon: '▫',
-        sizes: {
-          nodeWidth: 110, nodeHeight: 22, horizontalSpacing: 30, branchSpacing: 10,
-          topVerticalSpacing: 5, bottomVerticalSpacing: 12,
-          icNodeWidth: 99, icGap: 4, icContainerPadding: 6,
-          palTopGap: 7, palBottomGap: 7, palRowGap: 4, palCenterGap: 50,
-          nameFontSize: 8, titleFontSize: 7, textPaddingTop: 4, textGap: 1,
-        },
-      },
-      {
-        name: 'Spacious',
-        icon: '▢',
-        sizes: {
-          nodeWidth: 140, nodeHeight: 28, horizontalSpacing: 40, branchSpacing: 16,
-          topVerticalSpacing: 8, bottomVerticalSpacing: 16,
-          icNodeWidth: 125, icGap: 5, icContainerPadding: 8,
-          palTopGap: 10, palBottomGap: 10, palRowGap: 5, palCenterGap: 60,
-          nameFontSize: 9, titleFontSize: 8, textPaddingTop: 5, textGap: 2,
-        },
-      },
-      {
-        name: 'Presentation',
-        icon: '▣',
-        sizes: {
-          nodeWidth: 160, nodeHeight: 34, horizontalSpacing: 50, branchSpacing: 20,
-          topVerticalSpacing: 10, bottomVerticalSpacing: 20,
-          icNodeWidth: 141, icGap: 6, icContainerPadding: 10,
-          palTopGap: 12, palBottomGap: 12, palRowGap: 6, palCenterGap: 70,
-          nameFontSize: 11, titleFontSize: 9, textPaddingTop: 6, textGap: 2,
-        },
-      },
-    ];
+  private buildPresetsContent(): HTMLElement {
+    const wrapper = document.createElement('div');
 
-    const grid = document.createElement('div');
-    grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;';
+    // Combined preset grid
+    const allPresets = [...COMBINED_PRESETS, ...this.loadCustomPresets()];
 
-    for (const preset of LAYOUT_PRESETS) {
-      const btn = document.createElement('button');
-      btn.style.cssText = `
-        display:flex;flex-direction:column;align-items:center;gap:2px;
-        padding:6px 4px;border:1px solid var(--border-default);
-        border-radius:var(--radius-md);background:var(--bg-elevated);
-        cursor:pointer;transition:all 120ms ease;font-family:var(--font-sans);
+    const presetGrid = document.createElement('div');
+    presetGrid.className = 'preset-grid';
+    presetGrid.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;';
+
+    for (const preset of allPresets) {
+      const card = document.createElement('button');
+      card.className = 'preset-card';
+      card.setAttribute('data-preset-id', preset.id);
+      card.style.cssText = `
+        display:flex;align-items:center;gap:6px;padding:6px 8px;position:relative;
+        border:1px solid var(--border-default);border-radius:var(--radius-md);
+        background:var(--bg-elevated);cursor:pointer;text-align:left;
+        transition:all 120ms ease;font-family:var(--font-sans);
       `;
 
-      const icon = document.createElement('span');
-      icon.textContent = preset.icon;
-      icon.style.cssText = 'font-size:14px;line-height:1;color:var(--text-secondary);';
-      btn.appendChild(icon);
+      const swatch = document.createElement('div');
+      swatch.className = 'preset-swatch';
+      swatch.style.cssText = `
+        width:20px;height:20px;border-radius:3px;flex-shrink:0;
+        background:${preset.colors.cardFill};
+        border:2px solid ${preset.colors.cardStroke};
+      `;
+      card.appendChild(swatch);
 
-      const label = document.createElement('span');
-      label.textContent = preset.name;
-      label.style.cssText = 'font-size:9px;color:var(--text-tertiary);font-weight:600;';
-      btn.appendChild(label);
+      const name = document.createElement('span');
+      name.textContent = preset.isCustom ? `⭐ ${preset.name}` : preset.name;
+      name.style.cssText = 'font-size:11px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;';
+      card.appendChild(name);
 
-      btn.addEventListener('mouseenter', () => {
-        btn.style.borderColor = 'var(--accent)';
-        btn.style.background = 'var(--bg-hover)';
-      });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.borderColor = 'var(--border-default)';
-        btn.style.background = 'var(--bg-elevated)';
-      });
+      if (preset.isCustom) {
+        const deleteBtn = document.createElement('span');
+        deleteBtn.className = 'preset-delete';
+        deleteBtn.textContent = '×';
+        deleteBtn.setAttribute('aria-label', `Delete preset ${preset.name}`);
+        deleteBtn.style.cssText = `
+          position:absolute;top:2px;right:4px;font-size:13px;line-height:1;
+          color:var(--text-tertiary);cursor:pointer;opacity:0;
+          transition:opacity 120ms ease;padding:0 2px;
+        `;
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.deleteCustomPreset(preset.id);
+          this.build();
+        });
+        card.appendChild(deleteBtn);
 
-      btn.addEventListener('click', () => {
-        this.renderer.updateOptions(preset.sizes);
+        card.addEventListener('mouseenter', () => {
+          card.style.borderColor = 'var(--accent)';
+          card.style.background = 'var(--bg-hover)';
+          deleteBtn.style.opacity = '1';
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.borderColor = 'var(--border-default)';
+          card.style.background = 'var(--bg-elevated)';
+          deleteBtn.style.opacity = '0';
+        });
+      } else {
+        card.addEventListener('mouseenter', () => {
+          card.style.borderColor = 'var(--accent)';
+          card.style.background = 'var(--bg-hover)';
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.borderColor = 'var(--border-default)';
+          card.style.background = 'var(--bg-elevated)';
+        });
+      }
+
+      card.addEventListener('click', () => {
+        this.renderer.updateOptions({
+          ...preset.colors,
+          ...preset.sizes,
+        } as Partial<RendererOptions>);
         this.rerenderCallback();
         this.build();
       });
 
-      grid.appendChild(btn);
+      presetGrid.appendChild(card);
     }
 
-    return grid;
+    wrapper.appendChild(presetGrid);
+
+    // Fine-grained control dropdowns
+    const controlRow = document.createElement('div');
+    controlRow.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;';
+
+    // Theme dropdown
+    const themeGroup = document.createElement('div');
+    themeGroup.style.cssText = 'flex:1;';
+
+    const themeLabel = document.createElement('label');
+    themeLabel.textContent = 'Theme';
+    themeLabel.style.cssText = 'display:block;font-size:10px;color:var(--text-tertiary);margin-bottom:3px;font-weight:600;';
+    themeGroup.appendChild(themeLabel);
+
+    const themeSelect = document.createElement('select');
+    themeSelect.setAttribute('aria-label', 'Theme');
+    themeSelect.style.cssText =
+      'width:100%;padding:4px 6px;font-size:11px;font-family:var(--font-sans);' +
+      'border:1px solid var(--border-default);border-radius:var(--radius-sm);' +
+      'background:var(--bg-surface);color:var(--text-primary);cursor:pointer;';
+
+    const themeDefaultOpt = document.createElement('option');
+    themeDefaultOpt.value = '';
+    themeDefaultOpt.textContent = 'Select theme…';
+    themeSelect.appendChild(themeDefaultOpt);
+
+    for (const theme of CHART_THEME_PRESETS) {
+      const opt = document.createElement('option');
+      opt.value = theme.id;
+      opt.textContent = theme.name;
+      themeSelect.appendChild(opt);
+    }
+
+    themeSelect.addEventListener('change', () => {
+      const theme = CHART_THEME_PRESETS.find((t) => t.id === themeSelect.value);
+      if (theme) {
+        this.renderer.updateOptions(theme.colors as Partial<RendererOptions>);
+        this.rerenderCallback();
+        this.build();
+      }
+    });
+    themeGroup.appendChild(themeSelect);
+    controlRow.appendChild(themeGroup);
+
+    // Layout dropdown
+    const layoutGroup = document.createElement('div');
+    layoutGroup.style.cssText = 'flex:1;';
+
+    const layoutLabel = document.createElement('label');
+    layoutLabel.textContent = 'Layout';
+    layoutLabel.style.cssText = 'display:block;font-size:10px;color:var(--text-tertiary);margin-bottom:3px;font-weight:600;';
+    layoutGroup.appendChild(layoutLabel);
+
+    const layoutSelect = document.createElement('select');
+    layoutSelect.setAttribute('aria-label', 'Layout');
+    layoutSelect.style.cssText =
+      'width:100%;padding:4px 6px;font-size:11px;font-family:var(--font-sans);' +
+      'border:1px solid var(--border-default);border-radius:var(--radius-sm);' +
+      'background:var(--bg-surface);color:var(--text-primary);cursor:pointer;';
+
+    const layoutDefaultOpt = document.createElement('option');
+    layoutDefaultOpt.value = '';
+    layoutDefaultOpt.textContent = 'Select layout…';
+    layoutSelect.appendChild(layoutDefaultOpt);
+
+    for (const lp of LAYOUT_PRESETS) {
+      const opt = document.createElement('option');
+      opt.value = lp.name;
+      opt.textContent = `${lp.icon} ${lp.name}`;
+      layoutSelect.appendChild(opt);
+    }
+
+    layoutSelect.addEventListener('change', () => {
+      const lp = LAYOUT_PRESETS.find((p) => p.name === layoutSelect.value);
+      if (lp) {
+        this.renderer.updateOptions(lp.sizes);
+        this.rerenderCallback();
+        this.build();
+      }
+    });
+    layoutGroup.appendChild(layoutSelect);
+    controlRow.appendChild(layoutGroup);
+
+    wrapper.appendChild(controlRow);
+
+    // Save as Preset button + inline name input
+    const saveRow = document.createElement('div');
+    saveRow.style.cssText = 'display:flex;gap:6px;align-items:center;';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'Preset name…';
+    nameInput.setAttribute('aria-label', 'Custom preset name');
+    nameInput.style.cssText =
+      'flex:1;padding:4px 8px;font-size:11px;font-family:var(--font-sans);' +
+      'border:1px solid var(--border-default);border-radius:var(--radius-sm);' +
+      'background:var(--bg-surface);color:var(--text-primary);display:none;';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn btn-secondary save-preset-btn';
+    saveBtn.textContent = '💾 Save as Preset';
+    saveBtn.style.cssText = 'font-size:11px;padding:4px 8px;width:100%;';
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'btn btn-primary';
+    confirmBtn.textContent = 'Save';
+    confirmBtn.style.cssText = 'font-size:11px;padding:4px 10px;display:none;';
+
+    saveBtn.addEventListener('click', () => {
+      nameInput.style.display = 'block';
+      confirmBtn.style.display = 'block';
+      saveBtn.style.display = 'none';
+      nameInput.focus();
+    });
+
+    const doSave = () => {
+      const presetName = nameInput.value.trim();
+      if (!presetName) return;
+
+      const opts = this.renderer.getOptions();
+      const newPreset: CombinedPreset = {
+        id: 'custom-' + generateId(),
+        name: presetName,
+        colors: {
+          cardFill: String(opts.cardFill),
+          cardStroke: String(opts.cardStroke),
+          cardStrokeWidth: Number(opts.cardStrokeWidth),
+          linkColor: String(opts.linkColor),
+          linkWidth: Number(opts.linkWidth),
+          icContainerFill: String(opts.icContainerFill),
+        },
+        sizes: {
+          nodeWidth: Number(opts.nodeWidth),
+          nodeHeight: Number(opts.nodeHeight),
+          horizontalSpacing: Number(opts.horizontalSpacing),
+          branchSpacing: Number(opts.branchSpacing),
+          topVerticalSpacing: Number(opts.topVerticalSpacing),
+          bottomVerticalSpacing: Number(opts.bottomVerticalSpacing),
+          icNodeWidth: Number(opts.icNodeWidth),
+          icGap: Number(opts.icGap),
+          icContainerPadding: Number(opts.icContainerPadding),
+          palTopGap: Number(opts.palTopGap),
+          palBottomGap: Number(opts.palBottomGap),
+          palRowGap: Number(opts.palRowGap),
+          palCenterGap: Number(opts.palCenterGap),
+          nameFontSize: Number(opts.nameFontSize),
+          titleFontSize: Number(opts.titleFontSize),
+          textPaddingTop: Number(opts.textPaddingTop),
+          textGap: Number(opts.textGap),
+        },
+        isCustom: true,
+      };
+
+      const customs = this.loadCustomPresets();
+      customs.push(newPreset);
+      this.saveCustomPresets(customs);
+      this.build();
+    };
+
+    confirmBtn.addEventListener('click', doSave);
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doSave();
+    });
+
+    saveRow.appendChild(saveBtn);
+    saveRow.appendChild(nameInput);
+    saveRow.appendChild(confirmBtn);
+    wrapper.appendChild(saveRow);
+
+    return wrapper;
   }
 
   private createControl(

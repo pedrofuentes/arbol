@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { SettingsEditor } from '../../src/editor/settings-editor';
+import { SettingsEditor, COMBINED_PRESETS, LAYOUT_PRESETS } from '../../src/editor/settings-editor';
+import { CHART_THEME_PRESETS } from '../../src/store/theme-presets';
 import { CategoryStore } from '../../src/store/category-store';
 import type { ChartRenderer, RendererOptions, ResolvedOptions } from '../../src/renderer/chart-renderer';
 
@@ -79,8 +80,9 @@ describe('SettingsEditor', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const titles = getAccordionTitles(container);
     expect(titles.length).toBeGreaterThan(0);
-    expect(titles).toContain('Theme Presets');
-    expect(titles).toContain('Layout Presets');
+    expect(titles).toContain('Presets');
+    expect(titles).not.toContain('Theme Presets');
+    expect(titles).not.toContain('Layout Presets');
   });
 
   it('renders expand-all / collapse-all button', () => {
@@ -95,8 +97,8 @@ describe('SettingsEditor', () => {
   it('wraps each setting group in an accordion section', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const sections = container.querySelectorAll('.accordion-section');
-    // presets + layout-presets + 7 groups + settings-io = 10 (no categories without store)
-    expect(sections.length).toBe(10);
+    // presets + 7 groups + settings-io = 9 (no categories without store)
+    expect(sections.length).toBe(9);
   });
 
   it('setting group accordions have reset buttons', () => {
@@ -142,7 +144,7 @@ describe('SettingsEditor', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const headers = container.querySelectorAll<HTMLButtonElement>('.accordion-header');
     const presetsHeader = Array.from(headers).find(
-      (h) => h.querySelector('.accordion-title')?.textContent === 'Theme Presets',
+      (h) => h.querySelector('.accordion-title')?.textContent === 'Presets',
     )!;
     // Collapse the presets section (starts expanded)
     presetsHeader.click();
@@ -286,15 +288,13 @@ describe('SettingsEditor', () => {
       expect(rerenderCb).toHaveBeenCalled();
     });
 
-    it('places categories section between Theme Presets and Layout Presets', () => {
+    it('places categories section after Presets', () => {
       const catStore = new CategoryStore();
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
       const titles = getAccordionTitles(container);
-      const themeIdx = titles.indexOf('Theme Presets');
+      const presetsIdx = titles.indexOf('Presets');
       const catIdx = titles.indexOf('Node Categories');
-      const layoutIdx = titles.indexOf('Layout Presets');
-      expect(themeIdx).toBeLessThan(catIdx);
-      expect(catIdx).toBeLessThan(layoutIdx);
+      expect(presetsIdx).toBeLessThan(catIdx);
     });
   });
 
@@ -312,6 +312,152 @@ describe('SettingsEditor', () => {
       expect(texts.length).toBe(2);
       expect(texts[0].textContent).toBe('Jane Doe');
       expect(texts[1].textContent).toBe('CEO');
+    });
+  });
+
+  describe('Unified Presets section', () => {
+    it('renders a single Presets accordion section', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const titles = getAccordionTitles(container);
+      expect(titles.filter((t) => t === 'Presets').length).toBe(1);
+      expect(titles).not.toContain('Theme Presets');
+      expect(titles).not.toContain('Layout Presets');
+    });
+
+    it('renders preset cards with swatches', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const cards = container.querySelectorAll('.preset-card');
+      expect(cards.length).toBe(COMBINED_PRESETS.length);
+      for (const card of Array.from(cards)) {
+        const swatch = card.querySelector('.preset-swatch');
+        expect(swatch).not.toBeNull();
+      }
+    });
+
+    it('renders Save as Preset button', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const saveBtn = container.querySelector('.save-preset-btn');
+      expect(saveBtn).not.toBeNull();
+      expect(saveBtn!.textContent).toBe('💾 Save as Preset');
+    });
+
+    it('clicking a preset applies both colors and layout', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const firstCard = container.querySelector<HTMLButtonElement>('.preset-card')!;
+      firstCard.click();
+      const calls = (renderer.updateOptions as ReturnType<typeof vi.fn>).mock.calls;
+      const lastCall = calls[calls.length - 1][0] as Partial<RendererOptions>;
+      // Should contain color keys
+      expect(lastCall).toHaveProperty('cardFill');
+      expect(lastCall).toHaveProperty('cardStroke');
+      // Should contain size keys
+      expect(lastCall).toHaveProperty('nodeWidth');
+      expect(lastCall).toHaveProperty('nodeHeight');
+      expect(rerenderCb).toHaveBeenCalled();
+    });
+
+    it('renders Theme and Layout dropdowns', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const themeSelect = container.querySelector<HTMLSelectElement>('select[aria-label="Theme"]');
+      const layoutSelect = container.querySelector<HTMLSelectElement>('select[aria-label="Layout"]');
+      expect(themeSelect).not.toBeNull();
+      expect(layoutSelect).not.toBeNull();
+      // Theme dropdown has 8 themes + placeholder
+      expect(themeSelect!.options.length).toBe(CHART_THEME_PRESETS.length + 1);
+      // Layout dropdown has 4 layouts + placeholder
+      expect(layoutSelect!.options.length).toBe(LAYOUT_PRESETS.length + 1);
+    });
+
+    it('theme dropdown applies only colors', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const themeSelect = container.querySelector<HTMLSelectElement>('select[aria-label="Theme"]')!;
+      themeSelect.value = 'corporate-blue';
+      themeSelect.dispatchEvent(new Event('change'));
+      const calls = (renderer.updateOptions as ReturnType<typeof vi.fn>).mock.calls;
+      const lastCall = calls[calls.length - 1][0] as Partial<RendererOptions>;
+      expect(lastCall.cardFill).toBe('#f8fafc');
+      expect(lastCall.cardStroke).toBe('#2563eb');
+      expect(lastCall).not.toHaveProperty('nodeWidth');
+    });
+
+    it('layout dropdown applies only sizes', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const layoutSelect = container.querySelector<HTMLSelectElement>('select[aria-label="Layout"]')!;
+      layoutSelect.value = 'Compact';
+      layoutSelect.dispatchEvent(new Event('change'));
+      const calls = (renderer.updateOptions as ReturnType<typeof vi.fn>).mock.calls;
+      const lastCall = calls[calls.length - 1][0] as Partial<RendererOptions>;
+      expect(lastCall.nodeWidth).toBe(90);
+      expect(lastCall).not.toHaveProperty('cardFill');
+    });
+
+    it('shows name input when Save as Preset is clicked', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const saveBtn = container.querySelector<HTMLButtonElement>('.save-preset-btn')!;
+      const nameInput = container.querySelector<HTMLInputElement>('input[aria-label="Custom preset name"]')!;
+      // Initially hidden
+      expect(nameInput.style.display).not.toBe('block');
+      saveBtn.click();
+      expect(nameInput.style.display).toBe('block');
+    });
+
+    it('saves custom preset to localStorage and renders it', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const saveBtn = container.querySelector<HTMLButtonElement>('.save-preset-btn')!;
+      saveBtn.click();
+      const nameInput = container.querySelector<HTMLInputElement>('input[aria-label="Custom preset name"]')!;
+      nameInput.value = 'My Custom';
+      const confirmBtn = container.querySelector<HTMLButtonElement>('.btn-primary')!;
+      confirmBtn.click();
+      // After save, preset grid should include the custom preset
+      const cards = container.querySelectorAll('.preset-card');
+      expect(cards.length).toBe(COMBINED_PRESETS.length + 1);
+      const customCard = Array.from(cards).find(
+        (c) => c.textContent?.includes('⭐ My Custom'),
+      );
+      expect(customCard).toBeDefined();
+      // Verify localStorage was written
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'arbol-custom-presets',
+        expect.any(String),
+      );
+    });
+
+    it('custom preset has delete button visible on hover', () => {
+      // Pre-populate a custom preset
+      localStorageMock.setItem(
+        'arbol-custom-presets',
+        JSON.stringify([{
+          id: 'custom-test',
+          name: 'Test',
+          colors: { cardFill: '#fff', cardStroke: '#000', cardStrokeWidth: 1, linkColor: '#888', linkWidth: 1, icContainerFill: '#eee' },
+          sizes: { nodeWidth: 110 },
+        }]),
+      );
+      new SettingsEditor(container, renderer, rerenderCb);
+      const customCard = container.querySelector('[data-preset-id="custom-test"]')!;
+      const deleteBtn = customCard.querySelector('.preset-delete') as HTMLElement;
+      expect(deleteBtn).not.toBeNull();
+      expect(deleteBtn.textContent).toBe('×');
+    });
+
+    it('deleting a custom preset removes it from grid and localStorage', () => {
+      localStorageMock.setItem(
+        'arbol-custom-presets',
+        JSON.stringify([{
+          id: 'custom-del',
+          name: 'ToDelete',
+          colors: { cardFill: '#fff', cardStroke: '#000', cardStrokeWidth: 1, linkColor: '#888', linkWidth: 1, icContainerFill: '#eee' },
+          sizes: { nodeWidth: 110 },
+        }]),
+      );
+      new SettingsEditor(container, renderer, rerenderCb);
+      let cards = container.querySelectorAll('.preset-card');
+      expect(cards.length).toBe(COMBINED_PRESETS.length + 1);
+      const deleteBtn = container.querySelector('.preset-delete') as HTMLElement;
+      deleteBtn.click();
+      cards = container.querySelectorAll('.preset-card');
+      expect(cards.length).toBe(COMBINED_PRESETS.length);
     });
   });
 
