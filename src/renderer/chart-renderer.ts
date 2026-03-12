@@ -39,7 +39,7 @@ export interface RendererOptions {
 
 export interface ResolvedOptions extends Required<RendererOptions> {}
 
-export type NodeClickHandler = (nodeId: string) => void;
+export type NodeClickHandler = (nodeId: string, event: MouseEvent) => void;
 export type NodeRightClickHandler = (nodeId: string, event: MouseEvent) => void;
 
 export class ChartRenderer {
@@ -238,7 +238,7 @@ export class ChartRenderer {
       .attr('stroke', cardStroke)
       .attr('stroke-width', cardStrokeWidth)
       .on('click', function (_event, d) {
-        if (self.onNodeClick) self.onNodeClick(getId(d));
+        if (self.onNodeClick) self.onNodeClick(getId(d), _event as MouseEvent);
       })
       .on('contextmenu', function (event, d) {
         if (self.onNodeRightClick) {
@@ -279,6 +279,18 @@ export class ChartRenderer {
       this.g.selectAll<SVGGElement, unknown>('.node')
         .filter(function () { return this.getAttribute('data-id') === nodeId; })
         .classed('selected', true);
+    }
+  }
+
+  setMultiSelectedNodes(nodeIds: Set<string> | null): void {
+    this.g.selectAll('.node, .ic-node, .pal-node').classed('multi-selected', false);
+    if (nodeIds && nodeIds.size > 0) {
+      this.g.selectAll<SVGGElement, unknown>('.node, .ic-node, .pal-node')
+        .filter(function () {
+          const id = this.getAttribute('data-id');
+          return id !== null && nodeIds.has(id);
+        })
+        .classed('multi-selected', true);
     }
   }
 

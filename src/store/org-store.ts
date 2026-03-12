@@ -149,6 +149,55 @@ export class OrgStore {
     this.emit();
   }
 
+  bulkMoveNodes(nodeIds: string[], newParentId: string): void {
+    const newParent = findNodeById(this.root, newParentId);
+    if (!newParent) throw new Error(`Target parent "${newParentId}" not found`);
+
+    // Filter out root and nodes already under target, validate all exist
+    const validIds = nodeIds.filter((id) => {
+      if (this.root.id === id) return false;
+      const node = findNodeById(this.root, id);
+      if (!node) return false;
+      if (this.isDescendant(id, newParentId)) return false;
+      const currentParent = findParent(this.root, id);
+      return !(currentParent && currentParent.id === newParentId);
+    });
+
+    if (validIds.length === 0) return;
+
+    this.snapshot();
+    for (const id of validIds) {
+      const node = findNodeById(this.root, id);
+      if (!node) continue;
+      const currentParent = findParent(this.root, id);
+      if (currentParent) {
+        currentParent.children = currentParent.children?.filter((c) => c.id !== id);
+        if (currentParent.children?.length === 0) currentParent.children = undefined;
+      }
+      if (!newParent.children) newParent.children = [];
+      newParent.children.push(node);
+    }
+    this.emit();
+  }
+
+  bulkRemoveNodes(ids: string[]): void {
+    const validIds = ids.filter((id) => {
+      if (this.root.id === id) return false;
+      return findNodeById(this.root, id) !== null;
+    });
+
+    if (validIds.length === 0) return;
+
+    this.snapshot();
+    for (const id of validIds) {
+      const parent = findParent(this.root, id);
+      if (!parent) continue;
+      parent.children = parent.children?.filter((c) => c.id !== id);
+      if (parent.children?.length === 0) parent.children = undefined;
+    }
+    this.emit();
+  }
+
   private isDescendant(ancestorId: string, nodeId: string): boolean {
     const ancestor = findNodeById(this.root, ancestorId);
     if (!ancestor) return false;

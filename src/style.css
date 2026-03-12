@@ -625,3 +625,10 @@ body {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Multi-select highlight for SVG card groups */
+.multi-selected rect {
+  stroke: var(--accent) !important;
+  stroke-width: 2 !important;
+  filter: drop-shadow(0 0 4px var(--accent-glow));
+}

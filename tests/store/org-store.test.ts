@@ -522,4 +522,136 @@ describe('OrgStore', () => {
       expect(root.children![0].id).toBe('a1');
     });
   });
+
+  describe('bulkMoveNodes', () => {
+    const makeTree = (): OrgNode => ({
+      id: 'r', name: 'Root', title: 'CEO', children: [
+        { id: 'a', name: 'A', title: 'VP', children: [
+          { id: 'a1', name: 'A1', title: 'Dir' },
+          { id: 'a2', name: 'A2', title: 'Dir' },
+        ]},
+        { id: 'b', name: 'B', title: 'VP', children: [
+          { id: 'b1', name: 'B1', title: 'Dir' },
+        ]},
+      ],
+    });
+
+    it('moves multiple nodes to a new parent', () => {
+      const store = new OrgStore(makeTree());
+      store.bulkMoveNodes(['a1', 'a2'], 'b');
+      const b = findNodeById(store.getTree(), 'b')!;
+      expect(b.children!.map((c) => c.id)).toContain('a1');
+      expect(b.children!.map((c) => c.id)).toContain('a2');
+      const a = findNodeById(store.getTree(), 'a')!;
+      expect(a.children).toBeUndefined();
+    });
+
+    it('creates a single undo snapshot', () => {
+      const store = new OrgStore(makeTree());
+      store.bulkMoveNodes(['a1', 'a2'], 'b');
+      expect(store.getUndoStackSize()).toBe(1);
+    });
+
+    it('skips root node silently', () => {
+      const store = new OrgStore(makeTree());
+      store.bulkMoveNodes(['r', 'a1'], 'b');
+      const b = findNodeById(store.getTree(), 'b')!;
+      expect(b.children!.map((c) => c.id)).toContain('a1');
+      expect(b.children!.map((c) => c.id)).not.toContain('r');
+    });
+
+    it('skips nodes already under target parent', () => {
+      const store = new OrgStore(makeTree());
+      store.bulkMoveNodes(['b1', 'a1'], 'b');
+      const b = findNodeById(store.getTree(), 'b')!;
+      expect(b.children!.map((c) => c.id)).toContain('b1');
+      expect(b.children!.map((c) => c.id)).toContain('a1');
+      // b1 was already there so it should not be duplicated
+      expect(b.children!.filter((c) => c.id === 'b1').length).toBe(1);
+    });
+
+    it('skips nodes that do not exist', () => {
+      const store = new OrgStore(makeTree());
+      store.bulkMoveNodes(['nonexistent', 'a1'], 'b');
+      const b = findNodeById(store.getTree(), 'b')!;
+      expect(b.children!.map((c) => c.id)).toContain('a1');
+    });
+
+    it('is no-op when no valid nodes to move', () => {
+      const store = new OrgStore(makeTree());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.bulkMoveNodes(['r', 'nonexistent'], 'b');
+      expect(listener).not.toHaveBeenCalled();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('emits change event once', () => {
+      const store = new OrgStore(makeTree());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.bulkMoveNodes(['a1', 'a2'], 'b');
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('bulkRemoveNodes', () => {
+    const makeTree = (): OrgNode => ({
+      id: 'r', name: 'Root', title: 'CEO', children: [
+        { id: 'a', name: 'A', title: 'VP', children: [
+          { id: 'a1', name: 'A1', title: 'Dir' },
+          { id: 'a2', name: 'A2', title: 'Dir' },
+        ]},
+        { id: 'b', name: 'B', title: 'VP' },
+      ],
+    });
+
+    it('removes multiple leaf nodes', () => {
+      const store = new OrgStore(makeTree());
+      store.bulkRemoveNodes(['a1', 'a2']);
+      const tree = store.getTree();
+      expect(findNodeById(tree, 'a1')).toBeNull();
+      expect(findNodeById(tree, 'a2')).toBeNull();
+      const a = findNodeById(tree, 'a')!;
+      expect(a.children).toBeUndefined();
+    });
+
+    it('creates a single undo snapshot', () => {
+      const store = new OrgStore(makeTree());
+      store.bulkRemoveNodes(['a1', 'a2']);
+      expect(store.getUndoStackSize()).toBe(1);
+    });
+
+    it('skips root node silently', () => {
+      const store = new OrgStore(makeTree());
+      store.bulkRemoveNodes(['r', 'a1']);
+      const tree = store.getTree();
+      expect(tree.id).toBe('r');
+      expect(findNodeById(tree, 'a1')).toBeNull();
+    });
+
+    it('skips nodes that do not exist', () => {
+      const store = new OrgStore(makeTree());
+      store.bulkRemoveNodes(['nonexistent', 'a1']);
+      expect(findNodeById(store.getTree(), 'a1')).toBeNull();
+      expect(findNodeById(store.getTree(), 'a2')).not.toBeNull();
+    });
+
+    it('is no-op when no valid nodes to remove', () => {
+      const store = new OrgStore(makeTree());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.bulkRemoveNodes(['r', 'nonexistent']);
+      expect(listener).not.toHaveBeenCalled();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('emits change event once', () => {
+      const store = new OrgStore(makeTree());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.bulkRemoveNodes(['a1', 'a2']);
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
 });
