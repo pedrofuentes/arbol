@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { searchTree, getMatchingNodeIds, getVisibleNodesForMatches } from '../../src/utils/search';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { searchTree, getMatchingNodeIds, getVisibleNodesForMatches, clearSearchCache } from '../../src/utils/search';
 import { OrgNode } from '../../src/types';
 
 const SAMPLE_TREE: OrgNode = {
@@ -28,6 +28,10 @@ const SAMPLE_TREE: OrgNode = {
 };
 
 describe('searchTree', () => {
+  beforeEach(() => {
+    clearSearchCache();
+  });
+
   it('finds nodes by name substring (case-insensitive)', () => {
     const results = searchTree(SAMPLE_TREE, 'chen');
     expect(results).toHaveLength(2);
@@ -71,6 +75,40 @@ describe('searchTree', () => {
   it('handles single-node tree', () => {
     const single: OrgNode = { id: 'a', name: 'Alice', title: 'CEO' };
     expect(searchTree(single, 'Alice')).toHaveLength(1);
+  });
+});
+
+describe('clearSearchCache', () => {
+  beforeEach(() => {
+    clearSearchCache();
+  });
+
+  it('returns cached results for same root and query', () => {
+    const results1 = searchTree(SAMPLE_TREE, 'chen');
+    const results2 = searchTree(SAMPLE_TREE, 'chen');
+    expect(results2).toBe(results1); // same reference = cache hit
+  });
+
+  it('invalidates cache when query changes', () => {
+    const results1 = searchTree(SAMPLE_TREE, 'chen');
+    const results2 = searchTree(SAMPLE_TREE, 'marcus');
+    expect(results2).not.toBe(results1);
+    expect(results2).toHaveLength(1);
+  });
+
+  it('invalidates cache when root id changes', () => {
+    const results1 = searchTree(SAMPLE_TREE, 'chen');
+    const altTree: OrgNode = { ...SAMPLE_TREE, id: 'alt-ceo' };
+    const results2 = searchTree(altTree, 'chen');
+    expect(results2).not.toBe(results1);
+  });
+
+  it('clearSearchCache forces fresh results', () => {
+    const results1 = searchTree(SAMPLE_TREE, 'chen');
+    clearSearchCache();
+    const results2 = searchTree(SAMPLE_TREE, 'chen');
+    expect(results2).not.toBe(results1); // different reference after cache clear
+    expect(results2).toEqual(results1);  // same data
   });
 });
 

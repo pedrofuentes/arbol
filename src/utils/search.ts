@@ -8,18 +8,28 @@ export interface SearchResult {
   matchField: 'name' | 'title' | 'both';
 }
 
+let lastRootId = '';
+let lastQuery = '';
+let lastResults: SearchResult[] = [];
+
 /**
  * Search the org tree for nodes matching the query string.
  * Performs case-insensitive substring matching on name and title.
+ * Results are cached and invalidated when the tree root or query changes.
  */
 export function searchTree(root: OrgNode, query: string): SearchResult[] {
   const trimmed = query.trim();
   if (!trimmed) return [];
 
+  // Simple cache: invalidate when tree root changes or query changes
+  if (root.id === lastRootId && trimmed === lastQuery) {
+    return lastResults;
+  }
+
   const lower = trimmed.toLowerCase();
   const nodes = flattenTree(root);
 
-  return nodes
+  const results = nodes
     .map((node) => {
       const nameMatch = node.name.toLowerCase().includes(lower);
       const titleMatch = node.title.toLowerCase().includes(lower);
@@ -31,6 +41,18 @@ export function searchTree(root: OrgNode, query: string): SearchResult[] {
       return { id: node.id, name: node.name, title: node.title, matchField };
     })
     .filter((r): r is SearchResult => r !== null);
+
+  lastRootId = root.id;
+  lastQuery = trimmed;
+  lastResults = results;
+
+  return results;
+}
+
+export function clearSearchCache(): void {
+  lastRootId = '';
+  lastQuery = '';
+  lastResults = [];
 }
 
 /**

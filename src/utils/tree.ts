@@ -19,7 +19,7 @@ export function findParent(root: OrgNode, id: string): OrgNode | null {
 }
 
 export function cloneTree(node: OrgNode): OrgNode {
-  return JSON.parse(JSON.stringify(node));
+  return structuredClone(node);
 }
 
 export function filterVisibleTree(
@@ -36,9 +36,18 @@ export function filterVisibleTree(
 }
 
 export function flattenTree(node: OrgNode): OrgNode[] {
-  const result: OrgNode[] = [node];
-  for (const child of node.children ?? []) {
-    result.push(...flattenTree(child));
+  const result: OrgNode[] = [];
+  const stack: OrgNode[] = [node];
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    result.push(current);
+    const children = current.children;
+    if (children) {
+      // Push in reverse to maintain left-to-right order
+      for (let i = children.length - 1; i >= 0; i--) {
+        stack.push(children[i]);
+      }
+    }
   }
   return result;
 }
