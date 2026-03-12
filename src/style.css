@@ -239,6 +239,7 @@ body {
   display: grid;
   grid-template-columns: 300px 1fr;
   overflow: hidden;
+  position: relative;
   transition: grid-template-columns 200ms ease-out;
 }
 
@@ -278,8 +279,8 @@ body {
 .sidebar-collapse-chevron {
   position: absolute;
   top: 50%;
-  right: -1px;
-  transform: translateY(-50%) translateX(50%);
+  left: 300px;
+  transform: translateY(-50%) translateX(-50%);
   width: 20px;
   height: 40px;
   border: 1px solid var(--border-default);
@@ -293,11 +294,11 @@ body {
   font-size: 9px;
   z-index: 10;
   opacity: 0;
-  transition: opacity 200ms ease, color var(--transition-fast), background var(--transition-fast);
+  transition: opacity 200ms ease, left 200ms ease-out, color var(--transition-fast), background var(--transition-fast);
   pointer-events: none;
 }
 
-#sidebar:hover .sidebar-collapse-chevron,
+#main:hover > .sidebar-collapse-chevron,
 .sidebar-collapse-chevron:focus-visible {
   opacity: 1;
   pointer-events: auto;
@@ -314,14 +315,9 @@ body {
   outline-offset: 2px;
 }
 
-/* When collapsed: chevron sits at the left of the chart area, always visible */
-.sidebar-collapsed .sidebar-collapse-chevron {
-  position: fixed;
+/* When collapsed: chevron follows the narrow sidebar */
+#main.sidebar-collapsed > .sidebar-collapse-chevron {
   left: 40px;
-  top: 50%;
-  right: auto;
-  transform: translateY(-50%);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
   opacity: 1;
   pointer-events: auto;
 }
