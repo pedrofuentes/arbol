@@ -75,6 +75,17 @@ Understanding these concepts is essential for working on the renderer:
 - Store modules should test persistence, serialization, and edge cases
 - UI modules with business logic need unit tests; purely presentational DOM builders are optional
 
+## Versioning
+
+Arbol follows [Semantic Versioning](https://semver.org/). Before every merge to `main`:
+
+1. **Bump the version** in `package.json` (`patch` for fixes, `minor` for features, `major` for breaking changes)
+2. **Update `CHANGELOG.md`** with what changed
+3. **Update `docs/roadmap.md`** to mark completed items
+4. **Update any other affected docs** (README, contributing, AGENTS.md)
+
+The version in `package.json` is the single source of truth — it's injected into the app at build time and displayed in the footer. See [AGENTS.md — Version & Docs Update](../AGENTS.md#4-version--docs-update-pre-merge) for the full process.
+
 ## Need Help?
 
 - Check the [roadmap](roadmap.md) for what's been done and what's planned

@@ -20,7 +20,7 @@ Editor (Add / Load / Edit) → OrgStore (data + events) → Renderer (D3 + SVG)
 
 ## Project Structure
 
-31 TypeScript source files in `src/`, organized by concern:
+32 TypeScript source files in `src/`, organized by concern:
 
 ```
 src/
@@ -61,6 +61,7 @@ src/
 │   ├── shortcuts.ts           # Keyboard shortcut manager (register combos, prevent defaults)
 │   └── id.ts                  # UUID generation via crypto.randomUUID()
 ├── types.ts                   # Interfaces: OrgNode, ColumnMapping, MappingPreset
+├── version.ts                 # App version (injected from package.json at build time)
 ├── main.ts                    # App entry point — wires stores, renderer, editors, menus, shortcuts
 └── style.css                  # Global styles, CSS custom properties, dark/light themes
 ```
@@ -213,7 +214,7 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **466 tests across 24 files** — all must pass before committing
+- **468 tests across 25 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
@@ -246,6 +247,7 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `tests/ui/inline-editor.test.ts` | Inline editing, save/cancel, validation |
 | `tests/ui/add-popover.test.ts` | Add-child popover, parent pre-selection, form validation |
 | `tests/ui/manager-picker.test.ts` | Manager search, selection, move target filtering |
+| `tests/version.test.ts` | APP_VERSION export, semver format validation |
 
 ## Development
 
@@ -290,7 +292,26 @@ For every change, follow the Red → Green → Refactor cycle:
 - Build must succeed (`npm run build`) before considering the branch ready.
 - Commit messages use conventional format: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`.
 
-### 4. Merge Only With User Approval
+### 4. Version & Docs Update (Pre-Merge)
+
+Before requesting merge approval, complete these updates as the **final commit** on the feature branch:
+
+1. **Bump `version` in `package.json`** using [Semantic Versioning](https://semver.org/):
+   - **patch** (`0.0.x`) — bug fixes, small improvements, documentation-only changes
+   - **minor** (`0.x.0`) — new features, non-breaking enhancements
+   - **major** (`x.0.0`) — breaking changes (API changes, data format changes)
+
+2. **Update `CHANGELOG.md`** — add a new `## [x.y.z]` section at the top with subsections (Added / Changed / Fixed / Removed) describing what changed.
+
+3. **Update `docs/roadmap.md`** — mark completed items with `[x]`, add new items under the appropriate version section.
+
+4. **Update other docs if affected** — if the change impacts `README.md`, `docs/contributing.md`, or `AGENTS.md`, update them too.
+
+5. **Commit** with message: `chore: bump version to x.y.z`
+
+> **Why this step exists:** The version in `package.json` is the single source of truth — it's injected into the app at build time and displayed in the footer. Every merge to `main` must represent a versioned release.
+
+### 5. Merge Only With User Approval
 
 - When work is complete on the feature branch, **ask the user for explicit approval** before merging into `main`.
 - Present a summary of changes (files modified, tests added/changed, what the feature does).
@@ -304,6 +325,7 @@ For every change, follow the Red → Green → Refactor cycle:
 | Work on feature branch | **Always** — never commit to `main` directly |
 | TDD (tests first) | **Always** — Red → Green → Refactor |
 | Tests pass before commit | **Always** — `npm run test` must exit 0 |
+| Version bump before merge | **Always** — bump `package.json`, update CHANGELOG + roadmap + docs |
 | Merge to `main` | **Only** with explicit user approval |
 | Conventional commits | **Always** — `feat:`, `fix:`, etc. |
 

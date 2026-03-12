@@ -13,6 +13,7 @@ import { OrgNode } from './types';
 import { flattenTree, findNodeById, isLeaf, countLeaves, countManagersByLevel } from './utils/tree';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
+import { APP_VERSION } from './version';
 import { showContextMenu, dismissContextMenu } from './ui/context-menu';
 import { showInlineEditor, dismissInlineEditor } from './ui/inline-editor';
 import { showAddPopover, dismissAddPopover } from './ui/add-popover';
@@ -503,6 +504,18 @@ function main(): void {
   footerLeft.className = 'footer-left';
   footerLeft.style.cssText = 'display:flex;align-items:center;gap:8px;margin-right:auto;';
   footer.appendChild(footerLeft);
+
+  const versionLabel = document.createElement('span');
+  versionLabel.className = 'footer-version';
+  versionLabel.id = 'footer-version';
+  versionLabel.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
+  versionLabel.textContent = `v${APP_VERSION}`;
+  footerLeft.appendChild(versionLabel);
+
+  const versionSeparator = document.createElement('span');
+  versionSeparator.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
+  versionSeparator.textContent = '·';
+  footerLeft.appendChild(versionSeparator);
 
   const statusText = document.createElement('span');
   statusText.className = 'footer-status';
