@@ -84,4 +84,62 @@ describe('ZoomManager', () => {
     expect(t.x).toBe(0);
     expect(t.y).toBe(0);
   });
+
+  it('getBaseScale() returns 1 initially', () => {
+    const zm = new ZoomManager(svgEl, gEl);
+    expect(zm.getBaseScale()).toBe(1);
+  });
+
+  it('getRelativeZoomPercent() returns 100 when at identity with default base scale', () => {
+    const zm = new ZoomManager(svgEl, gEl);
+    zm.resetZoom();
+    expect(zm.getRelativeZoomPercent()).toBe(100);
+  });
+
+  it('getRelativeZoomPercent() calculates correctly relative to base scale', () => {
+    const zm = new ZoomManager(svgEl, gEl);
+    // Simulate a fitToContent that set base scale to 1.5
+    // by applying a transform at 1.5, then checking relative %
+    zm.applyTransform(d3.zoomIdentity.scale(1.5));
+    // Base scale is still 1, so relative % = 150
+    expect(zm.getRelativeZoomPercent()).toBe(150);
+  });
+
+  it('getRelativeZoomPercent() returns 100 after fitToContent when getBBox is available', () => {
+    const zm = new ZoomManager(svgEl, gEl);
+    // Mock getBBox to return a valid bounding box
+    const originalGetBBox = gEl.getBBox;
+    gEl.getBBox = () => ({ x: 0, y: 0, width: 400, height: 300 }) as DOMRect;
+    // Mock clientWidth/clientHeight
+    Object.defineProperty(svgEl, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(svgEl, 'clientHeight', { value: 600, configurable: true });
+
+    zm.fitToContent();
+
+    // After fitToContent, the relative zoom should always be 100%
+    expect(zm.getRelativeZoomPercent()).toBe(100);
+    expect(zm.getBaseScale()).toBeGreaterThan(0);
+
+    gEl.getBBox = originalGetBBox;
+  });
+
+  it('getRelativeZoomPercent() reflects manual zoom relative to base', () => {
+    const zm = new ZoomManager(svgEl, gEl);
+    // Mock getBBox for fitToContent
+    gEl.getBBox = () => ({ x: 0, y: 0, width: 400, height: 300 }) as DOMRect;
+    Object.defineProperty(svgEl, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(svgEl, 'clientHeight', { value: 600, configurable: true });
+
+    zm.fitToContent();
+    const baseScale = zm.getBaseScale();
+
+    // Now zoom in 2x from the base
+    const currentTransform = zm.getCurrentTransform();
+    zm.applyTransform(d3.zoomIdentity.translate(currentTransform.x, currentTransform.y).scale(baseScale * 2));
+    expect(zm.getRelativeZoomPercent()).toBe(200);
+
+    // Zoom out to half of base
+    zm.applyTransform(d3.zoomIdentity.translate(currentTransform.x, currentTransform.y).scale(baseScale * 0.5));
+    expect(zm.getRelativeZoomPercent()).toBe(50);
+  });
 });

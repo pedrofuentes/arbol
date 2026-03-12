@@ -729,9 +729,8 @@ function main(): void {
 
   const zoomManager = renderer.getZoomManager();
   const updateZoomIndicator = () => {
-    const transform = zoomManager?.getCurrentTransform?.();
-    if (transform) {
-      const pct = Math.round(transform.k * 100);
+    if (zoomManager) {
+      const pct = zoomManager.getRelativeZoomPercent();
       zoomIndicator.textContent = `${pct}%`;
     }
   };
@@ -779,11 +778,11 @@ function main(): void {
   resetZoomBtn.dataset.action = 'reset-zoom';
   resetZoomBtn.textContent = '⟲ Reset';
   resetZoomBtn.setAttribute('aria-label', 'Reset zoom');
-  resetZoomBtn.setAttribute('data-tooltip', 'Reset zoom to 100%');
+  resetZoomBtn.setAttribute('data-tooltip', 'Reset zoom');
   footerRight.appendChild(resetZoomBtn);
 
   resetZoomBtn.addEventListener('click', () => {
-    renderer.getZoomManager()?.resetZoom();
+    renderer.getZoomManager()?.fitToContent();
   });
 
   // Zoom level indicator (right side, after Reset)
