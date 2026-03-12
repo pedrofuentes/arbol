@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ChartRenderer } from '../../src/renderer/chart-renderer';
 import { OrgNode } from '../../src/types';
 
@@ -601,6 +601,147 @@ describe('ChartRenderer', () => {
         const icY = parseFloat(match![1]);
         expect(icY).toBeGreaterThan(parentY + NODE_HEIGHT);
       }
+    });
+  });
+
+  describe('right-click support', () => {
+    it('fires right-click handler with nodeId on contextmenu event', () => {
+      const handler = vi.fn();
+      renderer.setNodeRightClickHandler(handler);
+      renderer.render(simpleTree());
+
+      const rect = container.querySelector('.node[data-id="root"] rect')!;
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+      rect.dispatchEvent(event);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler.mock.calls[0][0]).toBe('root');
+    });
+
+    it('prevents default browser context menu', () => {
+      renderer.setNodeRightClickHandler(() => {});
+      renderer.render(simpleTree());
+
+      const rect = container.querySelector('.node[data-id="root"] rect')!;
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+      rect.dispatchEvent(event);
+
+      expect(event.defaultPrevented).toBe(true);
+    });
+
+    it('does not prevent default when no handler is set', () => {
+      renderer.render(simpleTree());
+
+      const rect = container.querySelector('.node[data-id="root"] rect')!;
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+      rect.dispatchEvent(event);
+
+      expect(event.defaultPrevented).toBe(false);
+    });
+
+    it('fires right-click on IC nodes', () => {
+      const handler = vi.fn();
+      renderer.setNodeRightClickHandler(handler);
+      renderer.render(m1WithICs());
+
+      const rect = container.querySelector('.ic-node[data-id="ic1"] rect')!;
+      rect.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler.mock.calls[0][0]).toBe('ic1');
+    });
+
+    it('fires right-click on PAL nodes', () => {
+      const handler = vi.fn();
+      renderer.setNodeRightClickHandler(handler);
+      renderer.render(managerWithPALs());
+
+      const rect = container.querySelector('.pal-node[data-id="pal1"] rect')!;
+      rect.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler.mock.calls[0][0]).toBe('pal1');
+    });
+  });
+
+  describe('getNodeScreenRect', () => {
+    it('returns DOMRect for existing node', () => {
+      renderer.render(simpleTree());
+      const rect = renderer.getNodeScreenRect('root');
+      expect(rect).not.toBeNull();
+    });
+
+    it('returns null for non-existent node', () => {
+      renderer.render(simpleTree());
+      const rect = renderer.getNodeScreenRect('zzz');
+      expect(rect).toBeNull();
+    });
+
+    it('returns DOMRect for IC node', () => {
+      renderer.render(m1WithICs());
+      const rect = renderer.getNodeScreenRect('ic1');
+      expect(rect).not.toBeNull();
+    });
+
+    it('returns DOMRect for PAL node', () => {
+      renderer.render(managerWithPALs());
+      const rect = renderer.getNodeScreenRect('pal1');
+      expect(rect).not.toBeNull();
+    });
+  });
+
+  describe('multi-select', () => {
+    it('applies .multi-selected class to specified nodes', () => {
+      renderer.render(simpleTree());
+      renderer.setMultiSelectedNodes(new Set(['b', 'c']));
+      const selected = container.querySelectorAll('.multi-selected');
+      expect(selected.length).toBe(2);
+      const ids = Array.from(selected).map((el) => el.getAttribute('data-id'));
+      expect(ids).toContain('b');
+      expect(ids).toContain('c');
+    });
+
+    it('clears all .multi-selected classes when called with null', () => {
+      renderer.render(simpleTree());
+      renderer.setMultiSelectedNodes(new Set(['b', 'c']));
+      expect(container.querySelectorAll('.multi-selected').length).toBe(2);
+      renderer.setMultiSelectedNodes(null);
+      expect(container.querySelectorAll('.multi-selected').length).toBe(0);
+    });
+
+    it('works with IC nodes', () => {
+      renderer.render(m1WithICs());
+      renderer.setMultiSelectedNodes(new Set(['ic1', 'ic2']));
+      const selected = container.querySelectorAll('.multi-selected');
+      expect(selected.length).toBe(2);
+      const ids = Array.from(selected).map((el) => el.getAttribute('data-id'));
+      expect(ids).toContain('ic1');
+      expect(ids).toContain('ic2');
+    });
+
+    it('works with PAL nodes', () => {
+      renderer.render(managerWithPALs());
+      renderer.setMultiSelectedNodes(new Set(['pal1', 'pal2']));
+      const selected = container.querySelectorAll('.multi-selected');
+      expect(selected.length).toBe(2);
+      const ids = Array.from(selected).map((el) => el.getAttribute('data-id'));
+      expect(ids).toContain('pal1');
+      expect(ids).toContain('pal2');
+    });
+
+    it('click handler passes MouseEvent as second argument', () => {
+      const handler = vi.fn();
+      renderer.setNodeClickHandler(handler);
+      renderer.render(simpleTree());
+
+      const rect = container.querySelector('.node[data-id="root"] rect')!;
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+      rect.dispatchEvent(event);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler.mock.calls[0].length).toBe(2);
+      expect(handler.mock.calls[0][0]).toBe('root');
+      expect(handler.mock.calls[0][1]).toBeInstanceOf(MouseEvent);
     });
   });
 });

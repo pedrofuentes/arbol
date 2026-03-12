@@ -10,9 +10,14 @@ import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { getMatchingNodeIds } from './utils/search';
 import { OrgNode } from './types';
-import { flattenTree, isLeaf } from './utils/tree';
+import { flattenTree, findNodeById, isLeaf } from './utils/tree';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
+import { showContextMenu, dismissContextMenu } from './ui/context-menu';
+import { showInlineEditor, dismissInlineEditor } from './ui/inline-editor';
+import { showAddPopover, dismissAddPopover } from './ui/add-popover';
+import { showManagerPicker } from './ui/manager-picker';
+import { showConfirmDialog } from './ui/confirm-dialog';
 
 const ORG_STORAGE_KEY = 'arbol-org-data';
 
@@ -174,9 +179,9 @@ function main(): void {
 
   // Sidebar tabs
   const tabSwitcher = new TabSwitcher(sidebar, [
-    { id: 'form', label: 'Form' },
-    { id: 'import', label: 'Load Data' },
-    { id: 'json', label: 'Edit Tree' },
+    { id: 'form', label: 'Add' },
+    { id: 'import', label: 'Load' },
+    { id: 'json', label: 'Edit' },
     { id: 'settings', label: 'Settings' },
   ]);
 
@@ -192,19 +197,254 @@ function main(): void {
   const settingsContainer = tabSwitcher.getContentContainer('settings')!;
   new SettingsEditor(settingsContainer, renderer, rerender, settingsStore);
 
+  // Multi-select state
+  const multiSelectedIds = new Set<string>();
+
+  const clearMultiSelection = () => {
+    multiSelectedIds.clear();
+    renderer.setMultiSelectedNodes(null);
+  };
+
   store.onChange(() => {
     rerender();
     formEditor.refresh();
     jsonEditor.refresh();
+    clearMultiSelection();
   });
 
-  renderer.setNodeClickHandler((nodeId: string) => {
-    formEditor.selectNode(nodeId);
-    renderer.setSelectedNode(nodeId);
+  renderer.setNodeClickHandler((nodeId: string, event: MouseEvent) => {
+    if (event.shiftKey) {
+      // Shift+click: toggle multi-selection (root excluded)
+      const tree = store.getTree();
+      if (tree.id === nodeId) return;
+
+      if (multiSelectedIds.has(nodeId)) {
+        multiSelectedIds.delete(nodeId);
+      } else {
+        multiSelectedIds.add(nodeId);
+      }
+      renderer.setMultiSelectedNodes(multiSelectedIds.size > 0 ? multiSelectedIds : null);
+    } else {
+      // Regular click: clear multi-selection, highlight card only (no sidebar form)
+      clearMultiSelection();
+      renderer.setSelectedNode(nodeId);
+    }
   });
 
-  formEditor.setSelectionChangeHandler((nodeId: string | null) => {
-    renderer.setSelectedNode(nodeId);
+  // Dismiss all floating UI on chart zoom/pan
+  const dismissAllOverlays = () => {
+    dismissContextMenu();
+    dismissInlineEditor();
+    dismissAddPopover();
+  };
+  renderer.getZoomManager().onZoom(dismissAllOverlays);
+
+  // Helper: show single-card context menu
+  const showSingleCardMenu = (nodeId: string, event: MouseEvent) => {
+    const tree = store.getTree();
+    const node = findNodeById(tree, nodeId);
+    if (!node) return;
+
+    const isRoot = tree.id === nodeId;
+    const nodeIsLeaf = isLeaf(node);
+
+    showContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      items: [
+        {
+          label: 'Edit',
+          icon: '✏️',
+          action: () => {
+            const rect = renderer.getNodeScreenRect(nodeId);
+            if (!rect) return;
+            showInlineEditor({
+              rect,
+              name: node.name,
+              title: node.title,
+              onSave: (name, title) => {
+                store.updateNode(nodeId, { name, title });
+              },
+              onCancel: () => {},
+            });
+          },
+        },
+        {
+          label: 'Add',
+          icon: '➕',
+          action: () => {
+            const rect = renderer.getNodeScreenRect(nodeId);
+            if (!rect) return;
+            showAddPopover({
+              anchor: rect,
+              parentName: node.name,
+              onAdd: (name, title) => {
+                store.addChild(nodeId, { name, title });
+              },
+              onCancel: () => {},
+            });
+          },
+        },
+        {
+          label: 'Move',
+          icon: '↗️',
+          disabled: isRoot,
+          action: async () => {
+            const allNodes = flattenTree(tree);
+            const descendants = flattenTree(node);
+            const descendantIds = new Set(descendants.map((n) => n.id));
+            const managers = allNodes
+              .filter((n) => !descendantIds.has(n.id))
+              .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+
+            const targetId = await showManagerPicker({
+              title: `Move "${node.name}" to…`,
+              managers,
+            });
+            if (targetId) {
+              store.moveNode(nodeId, targetId);
+            }
+          },
+        },
+        {
+          label: 'Remove',
+          icon: '🗑️',
+          danger: true,
+          disabled: isRoot,
+          action: async () => {
+            if (nodeIsLeaf) {
+              const confirmed = await showConfirmDialog({
+                title: 'Remove Person',
+                message: `Remove "${node.name}"? This cannot be undone (but you can use Ctrl+Z to undo).`,
+                confirmLabel: 'Remove',
+                danger: true,
+              });
+              if (confirmed) store.removeNode(nodeId);
+            } else {
+              const allNodes = flattenTree(tree);
+              const descendants = flattenTree(node);
+              const descendantIds = new Set(descendants.map((n) => n.id));
+              const managers = allNodes
+                .filter((n) => !descendantIds.has(n.id))
+                .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+
+              const targetId = await showManagerPicker({
+                title: `Reassign "${node.name}"'s reports to…`,
+                managers,
+              });
+              if (targetId) {
+                store.removeNodeWithReassign(nodeId, targetId);
+              }
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  // Helper: show multi-select context menu
+  const showMultiSelectMenu = (event: MouseEvent) => {
+    const count = multiSelectedIds.size;
+    const selectedArray = Array.from(multiSelectedIds);
+
+    showContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      items: [
+        {
+          label: `Move all (${count} people)`,
+          icon: '↗️',
+          action: async () => {
+            const tree = store.getTree();
+            const allNodes = flattenTree(tree);
+            // Exclude selected nodes and their descendants
+            const excludeIds = new Set<string>();
+            for (const id of selectedArray) {
+              const n = findNodeById(tree, id);
+              if (n) flattenTree(n).forEach((d) => excludeIds.add(d.id));
+            }
+            const managers = allNodes
+              .filter((n) => !excludeIds.has(n.id))
+              .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+
+            const targetId = await showManagerPicker({
+              title: `Move ${count} people to…`,
+              managers,
+            });
+            if (targetId) {
+              store.bulkMoveNodes(selectedArray, targetId);
+            }
+          },
+        },
+        {
+          label: `Remove all (${count} people)`,
+          icon: '🗑️',
+          danger: true,
+          action: async () => {
+            const tree = store.getTree();
+            // Check if any selected nodes have children
+            const hasManagers = selectedArray.some((id) => {
+              const n = findNodeById(tree, id);
+              return n && !isLeaf(n);
+            });
+
+            if (hasManagers) {
+              // Some are managers — ask where to reassign children
+              const allNodes = flattenTree(tree);
+              const excludeIds = new Set<string>();
+              for (const id of selectedArray) {
+                const n = findNodeById(tree, id);
+                if (n) flattenTree(n).forEach((d) => excludeIds.add(d.id));
+              }
+              const managers = allNodes
+                .filter((n) => !excludeIds.has(n.id))
+                .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+
+              const targetId = await showManagerPicker({
+                title: `Reassign children of selected managers to…`,
+                managers,
+              });
+              if (targetId) {
+                // Reassign children of managers first, then remove all
+                for (const id of selectedArray) {
+                  const n = findNodeById(store.getTree(), id);
+                  if (n && !isLeaf(n)) {
+                    store.removeNodeWithReassign(id, targetId);
+                  } else if (n) {
+                    store.removeNode(id);
+                  }
+                }
+              }
+            } else {
+              // All leaves — simple confirm and bulk remove
+              const confirmed = await showConfirmDialog({
+                title: 'Remove Selected',
+                message: `Remove ${count} people? You can use Ctrl+Z to undo.`,
+                confirmLabel: 'Remove All',
+                danger: true,
+              });
+              if (confirmed) {
+                store.bulkRemoveNodes(selectedArray);
+              }
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  // Right-click context menu
+  renderer.setNodeRightClickHandler((nodeId: string, event: MouseEvent) => {
+    dismissAllOverlays();
+
+    if (multiSelectedIds.size > 0 && multiSelectedIds.has(nodeId)) {
+      // Right-clicked on a multi-selected card → show bulk menu
+      showMultiSelectMenu(event);
+    } else {
+      // Right-clicked on non-selected card → clear multi-selection, show single menu
+      clearMultiSelection();
+      showSingleCardMenu(nodeId, event);
+    }
   });
 
   // Footer
@@ -342,6 +582,8 @@ function main(): void {
         renderer.setHighlightedNodes(null);
         return;
       }
+      // Clear multi-selection
+      clearMultiSelection();
       // Deselect node
       formEditor.selectNode(null);
       renderer.setSelectedNode(null);

@@ -10,6 +10,7 @@ export class ZoomManager {
   private g: SVGGElement;
   private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
   private svgSelection: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+  private zoomListeners: Set<() => void> = new Set();
 
   constructor(svg: SVGSVGElement, g: SVGGElement) {
     this.svg = svg;
@@ -25,9 +26,15 @@ export class ZoomManager {
       })
       .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
         d3.select(this.g).attr('transform', event.transform.toString());
+        for (const listener of this.zoomListeners) listener();
       });
 
     this.svgSelection.call(this.zoom);
+  }
+
+  onZoom(listener: () => void): () => void {
+    this.zoomListeners.add(listener);
+    return () => { this.zoomListeners.delete(listener); };
   }
 
   fitToContent(padding: number = DEFAULT_FIT_PADDING): void {

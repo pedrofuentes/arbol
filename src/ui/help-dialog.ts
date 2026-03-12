@@ -3,16 +3,16 @@ const HELP_SECTIONS = [
     title: 'Getting Started',
     items: [
       ['The chart displays your organization hierarchy. Pan by dragging the canvas, zoom with scroll wheel.'],
-      ['Click any card on the chart to select and edit that person.'],
+      ['Right-click any card for edit, add, move, or remove options.'],
       ['Use the sidebar tabs to manage your data.'],
     ],
   },
   {
     title: 'Sidebar Tabs',
     items: [
-      [{ tag: 'strong', text: 'Form' }, ' — Add new people under a parent, or edit/delete the selected person.'],
-      [{ tag: 'strong', text: 'Load Data' }, ' — Import an org chart from a JSON or CSV file, or paste data directly.'],
-      [{ tag: 'strong', text: 'Edit Tree' }, ' — View and edit the raw JSON tree. Click Apply to update the chart.'],
+      [{ tag: 'strong', text: 'Add' }, ' — Add new people under a selected parent.'],
+      [{ tag: 'strong', text: 'Load' }, ' — Import an org chart from a JSON or CSV file, or paste data directly.'],
+      [{ tag: 'strong', text: 'Edit' }, ' — View and edit the raw JSON tree. Click Apply to update the chart.'],
       [{ tag: 'strong', text: 'Settings' }, ' — Adjust card sizes, spacing, colors, and typography. Choose a preset theme or fine-tune individual values.'],
     ],
   },
@@ -28,8 +28,11 @@ const HELP_SECTIONS = [
   {
     title: 'Chart Interactions',
     items: [
-      [{ tag: 'strong', text: 'Click' }, ' a card to select it for editing.'],
-      [{ tag: 'strong', text: 'Drag' }, ' a manager card to move them (and their reports) under a new parent.'],
+      [{ tag: 'strong', text: 'Click' }, ' — Select and highlight a card.'],
+      [{ tag: 'strong', text: 'Right-click' }, ' — Context menu with Edit, Add, Move, and Remove options.'],
+      [{ tag: 'strong', text: 'Shift+click' }, ' — Multi-select cards, then right-click for bulk Move or Remove.'],
+      [{ tag: 'strong', text: 'Escape' }, ' — Clear selection.'],
+      [{ tag: 'strong', text: 'Inline editing' }, ' — Right-click a card and choose Edit to edit directly on the card.'],
       [{ tag: 'strong', text: 'Collapse/Expand' }, ' — Click the ▾/▸ indicator below a manager to toggle their subtree.'],
       [{ tag: 'strong', text: 'Search' }, ' — Type in the search bar to highlight matching people. Non-matches are dimmed.'],
     ],

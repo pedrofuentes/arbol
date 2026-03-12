@@ -2,12 +2,15 @@
 
 An interactive org chart editor for the browser.
 
-**[Live Demo →](https://arbol.pedrofuent.es)**
+**[Try Arbol →](https://arbol.pedrofuent.es)**
 
 ## Features
 
 - Interactive hierarchical org chart visualization
-- Three editing modes: Form, JSON, CSV import (3 formats auto-detected)
+- Three editing tabs: Add (form), Load (JSON/CSV import, 3 formats auto-detected), Edit (JSON tree)
+- Right-click context menu on cards (Edit, Add Child, Move, Remove)
+- Inline card editing — double-click to edit name/title directly on the chart
+- Shift+click multi-select with bulk Move and Remove operations
 - PowerPoint export (.pptx) with editable shapes and connectors
 - PAL (Personal Advisor) role support with special 2-column layout
 - Smart M1 detection (compact layout for manager groups)
@@ -43,7 +46,7 @@ TypeScript, Vite, D3.js, pptxgenjs — no UI framework.
 
 ```
 src/
-├── editor/      # Data editing modes (form, JSON, CSV)
+├── editor/      # Data editing tabs (Add, Load, Edit)
 ├── renderer/    # D3-based chart rendering and layout
 ├── store/       # State management and undo/redo
 ├── export/      # PowerPoint export

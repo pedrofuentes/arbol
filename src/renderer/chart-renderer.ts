@@ -39,13 +39,15 @@ export interface RendererOptions {
 
 export interface ResolvedOptions extends Required<RendererOptions> {}
 
-export type NodeClickHandler = (nodeId: string) => void;
+export type NodeClickHandler = (nodeId: string, event: MouseEvent) => void;
+export type NodeRightClickHandler = (nodeId: string, event: MouseEvent) => void;
 
 export class ChartRenderer {
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private g: d3.Selection<SVGGElement, unknown, null, undefined>;
   private opts: ResolvedOptions;
   private onNodeClick: NodeClickHandler | null = null;
+  private onNodeRightClick: NodeRightClickHandler | null = null;
   private lastLayout: LayoutResult | null = null;
   private zoomManager: ZoomManager;
   private hasRendered = false;
@@ -86,6 +88,10 @@ export class ChartRenderer {
 
   setNodeClickHandler(handler: NodeClickHandler): void {
     this.onNodeClick = handler;
+  }
+
+  setNodeRightClickHandler(handler: NodeRightClickHandler): void {
+    this.onNodeRightClick = handler;
   }
 
   setHighlightedNodes(nodeIds: Set<string> | null): void {
@@ -232,9 +238,16 @@ export class ChartRenderer {
       .attr('stroke', cardStroke)
       .attr('stroke-width', cardStrokeWidth)
       .on('click', function (_event, d) {
-        if (self.onNodeClick) self.onNodeClick(getId(d));
+        if (self.onNodeClick) self.onNodeClick(getId(d), _event as MouseEvent);
+      })
+      .on('contextmenu', function (event, d) {
+        if (self.onNodeRightClick) {
+          event.preventDefault();
+          self.onNodeRightClick(getId(d), event as MouseEvent);
+        }
       });
 
+    // Text elements pass pointer events through to the rect beneath
     selection.append('text')
       .attr('class', 'node-name')
       .attr('x', width / 2)
@@ -244,6 +257,7 @@ export class ChartRenderer {
       .attr('font-weight', 'bold')
       .attr('font-family', 'Calibri, sans-serif')
       .attr('font-size', `${nameFontSize}px`)
+      .attr('pointer-events', 'none')
       .text((d: any) => d.data?.name ?? d.name);
 
     selection.append('text')
@@ -255,6 +269,7 @@ export class ChartRenderer {
       .attr('font-family', 'Calibri, sans-serif')
       .attr('font-size', `${titleFontSize}px`)
       .attr('fill', '#64748b')
+      .attr('pointer-events', 'none')
       .text((d: any) => d.data?.title ?? d.title);
   }
 
@@ -264,6 +279,18 @@ export class ChartRenderer {
       this.g.selectAll<SVGGElement, unknown>('.node')
         .filter(function () { return this.getAttribute('data-id') === nodeId; })
         .classed('selected', true);
+    }
+  }
+
+  setMultiSelectedNodes(nodeIds: Set<string> | null): void {
+    this.g.selectAll('.node, .ic-node, .pal-node').classed('multi-selected', false);
+    if (nodeIds && nodeIds.size > 0) {
+      this.g.selectAll<SVGGElement, unknown>('.node, .ic-node, .pal-node')
+        .filter(function () {
+          const id = this.getAttribute('data-id');
+          return id !== null && nodeIds.has(id);
+        })
+        .classed('multi-selected', true);
     }
   }
 
@@ -281,6 +308,12 @@ export class ChartRenderer {
 
   getChartGroup(): SVGGElement {
     return this.g.node()!;
+  }
+
+  getNodeScreenRect(nodeId: string): DOMRect | null {
+    const node = this.g.select<SVGGElement>(`.node[data-id="${nodeId}"], .ic-node[data-id="${nodeId}"], .pal-node[data-id="${nodeId}"]`);
+    if (node.empty()) return null;
+    return node.node()!.getBoundingClientRect();
   }
 
   destroy(): void {

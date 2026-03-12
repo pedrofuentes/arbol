@@ -36,7 +36,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 ### Phase 4 — Editor Panels
 - [x] **Form editor** — parent dropdown, name/title fields, add/edit/delete people
 - [x] **JSON editor** — textarea with full tree, Apply button, error feedback
-- [x] **Tab switcher** — Form, Load Data, Edit Tree, Settings
+- [x] **Tab switcher** — Add, Load, Edit, Settings
 
 ### Phase 5 — Pan/Zoom
 - [x] `d3-zoom` integration with `ZoomManager`
@@ -167,20 +167,20 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 ## Architecture
 
 ```
-Editor (Form / JSON / CSV) → OrgStore (data + events) → Renderer (D3 + SVG)
-                                    ↕
-                              SettingsStore (localStorage)
+Editor (Add / Load / Edit) → OrgStore (data + events) → Renderer (D3 + SVG)
+                                    ↕                            ↑
+                              SettingsStore (localStorage)       Right-click / Inline edit / Multi-select
                               ThemeManager (dark/light + presets)
                               MappingStore (CSV column presets)
 ```
 
 ```
 src/
-├── editor/        # Data editing modes (form, JSON, CSV import, settings)
+├── editor/        # Data editing tabs (Add, Load, Edit, Settings)
 ├── export/        # PowerPoint export
 ├── renderer/      # D3-based chart rendering, layout engine, zoom
 ├── store/         # State management (org data, settings, themes, mappings)
-├── ui/            # Dialogs (help, confirm, column mapper, preset creator)
+├── ui/            # Dialogs, context menu, inline editor, popovers, pickers
 ├── utils/         # Shared helpers (tree, search, CSV parser, shortcuts, ID)
 ├── types.ts       # Shared type definitions
 ├── main.ts        # Application entry point and wiring
