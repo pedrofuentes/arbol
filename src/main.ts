@@ -10,9 +10,14 @@ import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { getMatchingNodeIds } from './utils/search';
 import { OrgNode } from './types';
-import { flattenTree } from './utils/tree';
+import { flattenTree, findNodeById, isLeaf } from './utils/tree';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
+import { showContextMenu, dismissContextMenu } from './ui/context-menu';
+import { showInlineEditor, dismissInlineEditor } from './ui/inline-editor';
+import { showAddPopover, dismissAddPopover } from './ui/add-popover';
+import { showManagerPicker } from './ui/manager-picker';
+import { showConfirmDialog } from './ui/confirm-dialog';
 
 const ORG_STORAGE_KEY = 'arbol-org-data';
 
@@ -205,6 +210,120 @@ function main(): void {
 
   formEditor.setSelectionChangeHandler((nodeId: string | null) => {
     renderer.setSelectedNode(nodeId);
+  });
+
+  // Dismiss all floating UI on chart zoom/pan
+  const dismissAllOverlays = () => {
+    dismissContextMenu();
+    dismissInlineEditor();
+    dismissAddPopover();
+  };
+  renderer.getZoomManager().onZoom(dismissAllOverlays);
+
+  // Right-click context menu
+  renderer.setNodeRightClickHandler((nodeId: string, event: MouseEvent) => {
+    dismissAllOverlays();
+
+    const tree = store.getTree();
+    const node = findNodeById(tree, nodeId);
+    if (!node) return;
+
+    const isRoot = tree.id === nodeId;
+    const nodeIsLeaf = isLeaf(node);
+
+    showContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      items: [
+        {
+          label: 'Edit',
+          icon: '✏️',
+          action: () => {
+            const rect = renderer.getNodeScreenRect(nodeId);
+            if (!rect) return;
+            showInlineEditor({
+              rect,
+              name: node.name,
+              title: node.title,
+              onSave: (name, title) => {
+                store.updateNode(nodeId, { name, title });
+              },
+              onCancel: () => {},
+            });
+          },
+        },
+        {
+          label: 'Add',
+          icon: '➕',
+          action: () => {
+            const rect = renderer.getNodeScreenRect(nodeId);
+            if (!rect) return;
+            showAddPopover({
+              anchor: rect,
+              onAdd: (name, title) => {
+                store.addChild(nodeId, { name, title });
+              },
+              onCancel: () => {},
+            });
+          },
+        },
+        {
+          label: 'Move',
+          icon: '↗️',
+          disabled: isRoot,
+          action: async () => {
+            const allNodes = flattenTree(tree);
+            // Exclude self + descendants from the picker
+            const descendants = flattenTree(node);
+            const descendantIds = new Set(descendants.map((n) => n.id));
+            const managers = allNodes
+              .filter((n) => !descendantIds.has(n.id))
+              .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+
+            const targetId = await showManagerPicker({
+              title: `Move "${node.name}" to…`,
+              managers,
+            });
+            if (targetId) {
+              store.moveNode(nodeId, targetId);
+            }
+          },
+        },
+        {
+          label: 'Remove',
+          icon: '🗑️',
+          danger: true,
+          disabled: isRoot,
+          action: async () => {
+            if (nodeIsLeaf) {
+              const confirmed = await showConfirmDialog({
+                title: 'Remove Person',
+                message: `Remove "${node.name}"? This cannot be undone (but you can use Ctrl+Z to undo).`,
+                confirmLabel: 'Remove',
+                danger: true,
+              });
+              if (confirmed) store.removeNode(nodeId);
+            } else {
+              // Manager with children — ask where to reassign
+              const allNodes = flattenTree(tree);
+              const descendants = flattenTree(node);
+              const descendantIds = new Set(descendants.map((n) => n.id));
+              const managers = allNodes
+                .filter((n) => !descendantIds.has(n.id))
+                .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+
+              const targetId = await showManagerPicker({
+                title: `Reassign "${node.name}"'s reports to…`,
+                managers,
+              });
+              if (targetId) {
+                store.removeNodeWithReassign(nodeId, targetId);
+              }
+            }
+          },
+        },
+      ],
+    });
   });
 
   // Footer

@@ -430,4 +430,96 @@ describe('OrgStore', () => {
       expect(store.getDescendantCount('r')).toBe(4);
     });
   });
+
+  describe('removeNodeWithReassign', () => {
+    const makeTree = (): OrgNode => ({
+      id: 'r', name: 'Root', title: 'CEO', children: [
+        { id: 'a', name: 'A', title: 'VP', children: [
+          { id: 'a1', name: 'A1', title: 'Dir' },
+          { id: 'a2', name: 'A2', title: 'Dir' },
+        ]},
+        { id: 'b', name: 'B', title: 'VP' },
+      ],
+    });
+
+    it('moves children to new parent and removes the node', () => {
+      const store = new OrgStore(makeTree());
+      store.removeNodeWithReassign('a', 'b');
+      const tree = store.getTree();
+      const b = findNodeById(tree, 'b')!;
+      expect(b.children).toHaveLength(2);
+      expect(b.children!.map(c => c.id)).toContain('a1');
+      expect(b.children!.map(c => c.id)).toContain('a2');
+      expect(findNodeById(tree, 'a')).toBeNull();
+    });
+
+    it('removes leaf node without children (no reassignment needed)', () => {
+      const store = new OrgStore(makeTree());
+      store.removeNodeWithReassign('b', 'r');
+      const tree = store.getTree();
+      expect(findNodeById(tree, 'b')).toBeNull();
+      expect(tree.children).toHaveLength(1);
+    });
+
+    it('is a single undo operation', () => {
+      const store = new OrgStore(makeTree());
+      store.removeNodeWithReassign('a', 'b');
+      expect(store.getUndoStackSize()).toBe(1);
+      store.undo();
+      const tree = store.getTree();
+      const a = findNodeById(tree, 'a')!;
+      expect(a.children).toHaveLength(2);
+      const b = findNodeById(tree, 'b')!;
+      expect(b.children).toBeUndefined();
+    });
+
+    it('throws when removing root', () => {
+      const store = new OrgStore(makeTree());
+      expect(() => store.removeNodeWithReassign('r', 'a')).toThrow('Cannot remove root node');
+    });
+
+    it('throws when node does not exist', () => {
+      const store = new OrgStore(makeTree());
+      expect(() => store.removeNodeWithReassign('zzz', 'b')).toThrow('Node "zzz" not found');
+    });
+
+    it('throws when target parent does not exist', () => {
+      const store = new OrgStore(makeTree());
+      expect(() => store.removeNodeWithReassign('a', 'zzz')).toThrow('Target parent "zzz" not found');
+    });
+
+    it('throws when reassigning to the node being removed', () => {
+      const store = new OrgStore(makeTree());
+      expect(() => store.removeNodeWithReassign('a', 'a')).toThrow('Cannot reassign children to the node being removed');
+    });
+
+    it('throws when reassigning to a descendant', () => {
+      const store = new OrgStore(makeTree());
+      expect(() => store.removeNodeWithReassign('a', 'a1')).toThrow('Cannot reassign children to a descendant');
+    });
+
+    it('emits change event', () => {
+      const store = new OrgStore(makeTree());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.removeNodeWithReassign('a', 'b');
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('cleans up empty children array on original parent', () => {
+      const tree: OrgNode = {
+        id: 'r', name: 'Root', title: 'CEO', children: [
+          { id: 'a', name: 'A', title: 'VP', children: [
+            { id: 'a1', name: 'A1', title: 'Dir' },
+          ]},
+        ],
+      };
+      const store = new OrgStore(tree);
+      store.removeNodeWithReassign('a', 'r');
+      const root = store.getTree();
+      // a1 should now be under root, and root should have children
+      expect(root.children).toHaveLength(1);
+      expect(root.children![0].id).toBe('a1');
+    });
+  });
 });

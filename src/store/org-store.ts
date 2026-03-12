@@ -84,6 +84,35 @@ export class OrgStore {
     this.emit();
   }
 
+  removeNodeWithReassign(nodeId: string, newParentId: string): void {
+    if (this.root.id === nodeId) throw new Error('Cannot remove root node');
+    const node = findNodeById(this.root, nodeId);
+    if (!node) throw new Error(`Node "${nodeId}" not found`);
+    const newParent = findNodeById(this.root, newParentId);
+    if (!newParent) throw new Error(`Target parent "${newParentId}" not found`);
+    if (nodeId === newParentId) throw new Error('Cannot reassign children to the node being removed');
+    if (this.isDescendant(nodeId, newParentId))
+      throw new Error('Cannot reassign children to a descendant of the node being removed');
+
+    this.snapshot();
+
+    // Move children to new parent
+    if (node.children && node.children.length > 0) {
+      if (!newParent.children) newParent.children = [];
+      newParent.children.push(...node.children);
+      node.children = undefined;
+    }
+
+    // Remove the now-childless node
+    const parent = findParent(this.root, nodeId);
+    if (parent) {
+      parent.children = parent.children?.filter((c) => c.id !== nodeId);
+      if (parent.children?.length === 0) parent.children = undefined;
+    }
+
+    this.emit();
+  }
+
   updateNode(id: string, fields: { name?: string; title?: string }): void {
     this.snapshot();
     const node = findNodeById(this.root, id);

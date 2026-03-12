@@ -40,12 +40,14 @@ export interface RendererOptions {
 export interface ResolvedOptions extends Required<RendererOptions> {}
 
 export type NodeClickHandler = (nodeId: string) => void;
+export type NodeRightClickHandler = (nodeId: string, event: MouseEvent) => void;
 
 export class ChartRenderer {
   private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
   private g: d3.Selection<SVGGElement, unknown, null, undefined>;
   private opts: ResolvedOptions;
   private onNodeClick: NodeClickHandler | null = null;
+  private onNodeRightClick: NodeRightClickHandler | null = null;
   private lastLayout: LayoutResult | null = null;
   private zoomManager: ZoomManager;
   private hasRendered = false;
@@ -86,6 +88,10 @@ export class ChartRenderer {
 
   setNodeClickHandler(handler: NodeClickHandler): void {
     this.onNodeClick = handler;
+  }
+
+  setNodeRightClickHandler(handler: NodeRightClickHandler): void {
+    this.onNodeRightClick = handler;
   }
 
   setHighlightedNodes(nodeIds: Set<string> | null): void {
@@ -233,6 +239,12 @@ export class ChartRenderer {
       .attr('stroke-width', cardStrokeWidth)
       .on('click', function (_event, d) {
         if (self.onNodeClick) self.onNodeClick(getId(d));
+      })
+      .on('contextmenu', function (event, d) {
+        if (self.onNodeRightClick) {
+          event.preventDefault();
+          self.onNodeRightClick(getId(d), event as MouseEvent);
+        }
       });
 
     selection.append('text')
@@ -281,6 +293,12 @@ export class ChartRenderer {
 
   getChartGroup(): SVGGElement {
     return this.g.node()!;
+  }
+
+  getNodeScreenRect(nodeId: string): DOMRect | null {
+    const node = this.g.select<SVGGElement>(`.node[data-id="${nodeId}"], .ic-node[data-id="${nodeId}"], .pal-node[data-id="${nodeId}"]`);
+    if (node.empty()) return null;
+    return node.node()!.getBoundingClientRect();
   }
 
   destroy(): void {
