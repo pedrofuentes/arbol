@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { showCategoryLegend, dismissCategoryLegend } from '../../src/ui/category-legend';
 import type { ColorCategory } from '../../src/types';
 
@@ -82,7 +82,7 @@ describe('CategoryLegend', () => {
       showCategoryLegend({ categories: sampleCategories, container });
       const toggle = getToggleButton()!;
       toggle.click();
-      const items = getLegendItems();
+      getLegendItems();
       // Items should be hidden (parent has data-collapsed="true")
       const legend = getLegend()!;
       expect(legend.getAttribute('data-collapsed')).toBe('true');

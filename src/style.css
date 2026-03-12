@@ -137,6 +137,26 @@ body {
   transition: background var(--transition-slow), color var(--transition-slow);
 }
 
+/* Skip navigation link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--accent);
+  color: #fff;
+  padding: 8px 16px;
+  z-index: 10000;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  text-decoration: none;
+  border-radius: 0 0 var(--radius-md) 0;
+  transition: top 150ms ease;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
 /* ======================================================================
    App Grid — 3-row layout: header | main | footer
    ====================================================================== */
@@ -374,6 +394,11 @@ body {
   pointer-events: none;
 }
 
+.icon-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* ======================================================================
    Search Input — The lookout
    ====================================================================== */
@@ -494,6 +519,13 @@ body {
   cursor: pointer;
 }
 
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 /* ======================================================================
    Buttons — Tactile with depth
    ====================================================================== */
@@ -559,6 +591,13 @@ body {
   display: flex;
   gap: var(--space-1);
   margin-top: var(--space-2);
+}
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* ======================================================================
@@ -757,4 +796,16 @@ body {
   stroke: var(--accent) !important;
   stroke-width: 2 !important;
   filter: drop-shadow(0 0 4px var(--accent-glow));
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

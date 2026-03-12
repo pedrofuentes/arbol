@@ -7,7 +7,7 @@ export class ThemeManager {
 
   constructor() {
     const saved = localStorage.getItem(ThemeManager.STORAGE_KEY);
-    this.currentTheme = (saved === 'light' || saved === 'dark') ? saved : 'dark';
+    this.currentTheme = saved === 'light' || saved === 'dark' ? saved : 'dark';
     this.apply();
   }
 
@@ -28,7 +28,9 @@ export class ThemeManager {
 
   onChange(listener: (theme: Theme) => void): () => void {
     this.listeners.add(listener);
-    return () => { this.listeners.delete(listener); };
+    return () => {
+      this.listeners.delete(listener);
+    };
   }
 
   private apply(): void {

@@ -84,16 +84,19 @@ export class ImportEditor {
       if (presets.length === 0) {
         const empty = document.createElement('div');
         empty.textContent = 'No saved presets.';
-        empty.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
+        empty.style.cssText =
+          'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
         presetListContainer.appendChild(empty);
         return;
       }
       for (const preset of presets) {
         const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:3px 0;';
+        row.style.cssText =
+          'display:flex;align-items:center;justify-content:space-between;padding:3px 0;';
         const label = document.createElement('span');
         label.textContent = preset.name;
-        label.style.cssText = 'font-size:11px;color:var(--text-primary);font-family:var(--font-sans);';
+        label.style.cssText =
+          'font-size:11px;color:var(--text-primary);font-family:var(--font-sans);';
 
         const btnGroup = document.createElement('div');
         btnGroup.style.cssText = 'display:flex;gap:4px;';
@@ -158,7 +161,8 @@ export class ImportEditor {
 
     // --- Dynamic slot for inline forms ---
     this.manageSlot = document.createElement('div');
-    this.manageSlot.style.cssText = 'display:none;padding:8px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);margin-bottom:8px;';
+    this.manageSlot.style.cssText =
+      'display:none;padding:8px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);margin-bottom:8px;';
     this.container.appendChild(this.manageSlot);
 
     // --- Action button handlers ---
@@ -202,7 +206,8 @@ export class ImportEditor {
       const loadFileLink = document.createElement('a');
       loadFileLink.textContent = 'Or load file';
       loadFileLink.href = '#';
-      loadFileLink.style.cssText = 'font-size:10px;color:var(--accent);display:block;margin-bottom:8px;font-family:var(--font-sans);';
+      loadFileLink.style.cssText =
+        'font-size:10px;color:var(--accent);display:block;margin-bottom:8px;font-family:var(--font-sans);';
       this.manageSlot.appendChild(loadFileLink);
 
       const jsonFileInput = document.createElement('input');
@@ -216,6 +221,11 @@ export class ImportEditor {
         jsonFileInput.click();
       });
 
+      const importMsg = document.createElement('div');
+      importMsg.style.cssText =
+        'font-size:11px;font-family:var(--font-sans);margin-bottom:6px;min-height:0;';
+      this.manageSlot.appendChild(importMsg);
+
       jsonFileInput.addEventListener('change', () => {
         const file = jsonFileInput.files?.[0];
         if (!file) return;
@@ -223,12 +233,12 @@ export class ImportEditor {
         reader.onload = () => {
           textarea.value = reader.result as string;
         };
+        reader.onerror = () => {
+          importMsg.textContent = 'Failed to read file';
+          importMsg.style.color = 'var(--danger)';
+        };
         reader.readAsText(file);
       });
-
-      const importMsg = document.createElement('div');
-      importMsg.style.cssText = 'font-size:11px;font-family:var(--font-sans);margin-bottom:6px;min-height:0;';
-      this.manageSlot.appendChild(importMsg);
 
       const btnRow = document.createElement('div');
       btnRow.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;';
@@ -276,7 +286,8 @@ export class ImportEditor {
         this.manageSlot.style.display = 'block';
         const msg = document.createElement('div');
         msg.textContent = 'No presets to export';
-        msg.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
+        msg.style.cssText =
+          'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
         this.manageSlot.appendChild(msg);
         setTimeout(() => this.clearManageSlot(), 2000);
         return;
@@ -320,13 +331,22 @@ export class ImportEditor {
     `;
 
     const dropLabel = document.createElement('div');
-    dropLabel.innerHTML = '<span style="font-size:20px">📂</span>&nbsp;&nbsp;Drop file or <strong style="color:var(--accent);cursor:pointer;">browse</strong>';
-    dropLabel.style.cssText = 'color:var(--text-secondary);font-size:12px;font-family:var(--font-sans);';
+    const icon = document.createElement('span');
+    icon.style.fontSize = '20px';
+    icon.textContent = '📂';
+    const browseLabel = document.createElement('strong');
+    browseLabel.style.color = 'var(--accent)';
+    browseLabel.style.cursor = 'pointer';
+    browseLabel.textContent = 'browse';
+    dropLabel.append(icon, '\u00A0\u00A0Drop file or ', browseLabel);
+    dropLabel.style.cssText =
+      'color:var(--text-secondary);font-size:12px;font-family:var(--font-sans);';
     dropZone.appendChild(dropLabel);
 
     const dropHint = document.createElement('div');
     dropHint.textContent = 'Supports .json, .csv, and .xlsx files';
-    dropHint.style.cssText = 'color:var(--text-tertiary);font-size:10px;margin-top:4px;font-family:var(--font-sans);';
+    dropHint.style.cssText =
+      'color:var(--text-tertiary);font-size:10px;margin-top:4px;font-family:var(--font-sans);';
     dropZone.appendChild(dropHint);
 
     dropZone.addEventListener('click', () => this.fileInput.click());
@@ -440,7 +460,8 @@ export class ImportEditor {
       // Custom arrow
       summary.textContent = '';
       const arrow = document.createElement('span');
-      arrow.style.cssText = 'display:inline-block;margin-right:6px;font-size:9px;transition:transform 150ms ease;';
+      arrow.style.cssText =
+        'display:inline-block;margin-right:6px;font-size:9px;transition:transform 150ms ease;';
       arrow.textContent = '▶';
       summary.append(arrow, fmt.label);
       details.appendChild(summary);
@@ -497,13 +518,16 @@ export class ImportEditor {
   private processFile(file: File): void {
     this.clearStatus();
     if (file.size > ImportEditor.MAX_FILE_SIZE) {
-      this.showError(`File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum is 10MB.`);
+      this.showError(
+        `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum is 10MB.`,
+      );
       return;
     }
 
-    const ext = file.name.lastIndexOf('.') >= 0
-      ? file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
-      : '';
+    const ext =
+      file.name.lastIndexOf('.') >= 0
+        ? file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
+        : '';
 
     if (ext === '.xlsx' || ext === '.xls') {
       const reader = new FileReader();
@@ -525,7 +549,7 @@ export class ImportEditor {
           if (msg.includes('Encrypted') || msg.includes('EncryptionInfo')) {
             this.showError(
               'This file is encrypted or rights-protected. ' +
-              'Open it in Excel, save as a new unprotected .xlsx or .csv, then import that file.',
+                'Open it in Excel, save as a new unprotected .xlsx or .csv, then import that file.',
             );
           } else {
             this.showError(msg);
@@ -553,9 +577,8 @@ export class ImportEditor {
   }
 
   private parseContent(text: string, source: string): ParsedImport {
-    const ext = source.lastIndexOf('.') >= 0
-      ? source.slice(source.lastIndexOf('.')).toLowerCase()
-      : '';
+    const ext =
+      source.lastIndexOf('.') >= 0 ? source.slice(source.lastIndexOf('.')).toLowerCase() : '';
 
     if (ext === '.csv') return this.parseCsv(text, source);
     if (ext === '.json') return this.parseJson(text, source);
@@ -563,10 +586,22 @@ export class ImportEditor {
     // No extension (pasted data) — try JSON first, fall back to CSV
     const trimmed = text.trimStart();
     if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-      try { return this.parseJson(text, source); } catch { /* fall through */ }
+      try {
+        return this.parseJson(text, source);
+      } catch {
+        /* fall through */
+      }
     }
-    try { return this.parseCsv(text, source); } catch { /* fall through */ }
-    try { return this.parseJson(text, source); } catch { /* fall through */ }
+    try {
+      return this.parseCsv(text, source);
+    } catch {
+      /* fall through */
+    }
+    try {
+      return this.parseJson(text, source);
+    } catch {
+      /* fall through */
+    }
     throw new Error('Could not parse as JSON or CSV. Check your data format.');
   }
 
@@ -577,7 +612,10 @@ export class ImportEditor {
       if (preset) {
         const { tree, nodeCount } = parseCsvToTree(text, preset.mapping);
         return {
-          tree, nodeCount, format: 'CSV', source,
+          tree,
+          nodeCount,
+          format: 'CSV',
+          source,
           nameNormalization: preset.mapping.nameNormalization,
           titleNormalization: preset.mapping.titleNormalization,
         };
@@ -591,7 +629,7 @@ export class ImportEditor {
       this.pendingCsvText = text;
       const headers = extractHeaders(text);
       this.showColumnMapper(headers);
-      throw new Error('Auto-detection failed. Please map columns below.');
+      throw new Error('Auto-detection failed. Please map columns below.', { cause: e });
     }
   }
 
@@ -622,7 +660,8 @@ export class ImportEditor {
       'margin-top:12px;border:1px solid var(--border-default);';
 
     const info = document.createElement('div');
-    info.style.cssText = 'font-size:13px;color:var(--text-primary);margin-bottom:8px;font-family:var(--font-sans);';
+    info.style.cssText =
+      'font-size:13px;color:var(--text-primary);margin-bottom:8px;font-family:var(--font-sans);';
     info.textContent = '';
     info.append('✓ Parsed ');
     const strong = document.createElement('strong');
@@ -633,7 +672,8 @@ export class ImportEditor {
 
     if (result.warning) {
       const warning = document.createElement('div');
-      warning.style.cssText = 'font-size:12px;color:var(--text-warning, #b08800);margin-bottom:8px;font-family:var(--font-sans);';
+      warning.style.cssText =
+        'font-size:12px;color:var(--text-warning, #b08800);margin-bottom:8px;font-family:var(--font-sans);';
       warning.textContent = `⚠ ${result.warning}`;
       this.statusArea.appendChild(warning);
     }
@@ -769,7 +809,10 @@ export class ImportEditor {
         try {
           const { tree, nodeCount } = parseCsvToTree(this.pendingCsvText, mapping);
           this.pendingImport = {
-            tree, nodeCount, format: 'CSV', source: 'mapped CSV',
+            tree,
+            nodeCount,
+            format: 'CSV',
+            source: 'mapped CSV',
             nameNormalization: mapping.nameNormalization,
             titleNormalization: mapping.titleNormalization,
           };

@@ -10,9 +10,7 @@ describe('ZoomManager', () => {
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
-    const svg = d3.select(container).append('svg')
-      .attr('width', '800')
-      .attr('height', '600');
+    const svg = d3.select(container).append('svg').attr('width', '800').attr('height', '600');
     const g = svg.append('g');
     svgEl = svg.node()!;
     gEl = g.node()!;
@@ -135,11 +133,15 @@ describe('ZoomManager', () => {
 
     // Now zoom in 2x from the base
     const currentTransform = zm.getCurrentTransform();
-    zm.applyTransform(d3.zoomIdentity.translate(currentTransform.x, currentTransform.y).scale(baseScale * 2));
+    zm.applyTransform(
+      d3.zoomIdentity.translate(currentTransform.x, currentTransform.y).scale(baseScale * 2),
+    );
     expect(zm.getRelativeZoomPercent()).toBe(200);
 
     // Zoom out to half of base
-    zm.applyTransform(d3.zoomIdentity.translate(currentTransform.x, currentTransform.y).scale(baseScale * 0.5));
+    zm.applyTransform(
+      d3.zoomIdentity.translate(currentTransform.x, currentTransform.y).scale(baseScale * 0.5),
+    );
     expect(zm.getRelativeZoomPercent()).toBe(50);
   });
 });

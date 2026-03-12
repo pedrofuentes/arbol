@@ -57,12 +57,9 @@ describe('parseCsvToTree', () => {
 
   // Format C tests
   it('parses name,title,reports_to format', () => {
-    const csv = [
-      'name,title,reports_to',
-      'Alice,CEO,',
-      'Bob,CTO,Alice',
-      'Carol,Engineer,Bob',
-    ].join('\n');
+    const csv = ['name,title,reports_to', 'Alice,CEO,', 'Bob,CTO,Alice', 'Carol,Engineer,Bob'].join(
+      '\n',
+    );
 
     const result = parseCsvToTree(csv);
     expect(result.tree.name).toBe('Alice');
@@ -99,12 +96,9 @@ describe('parseCsvToTree', () => {
 
   // Edge cases
   it('handles BOM at start of file', () => {
-    const csv = '\uFEFF' + [
-      'name,title,manager_name',
-      'Alice,CEO,',
-      'Bob,CTO,Alice',
-      'Carol,Engineer,Bob',
-    ].join('\n');
+    const csv =
+      '\uFEFF' +
+      ['name,title,manager_name', 'Alice,CEO,', 'Bob,CTO,Alice', 'Carol,Engineer,Bob'].join('\n');
 
     const result = parseCsvToTree(csv);
     expect(result.tree.name).toBe('Alice');
@@ -204,20 +198,13 @@ describe('parseCsvToTree', () => {
 
   // Error handling
   it('throws on unrecognizable columns', () => {
-    const csv = [
-      'foo,bar,baz',
-      'a,b,c',
-      'd,e,f',
-    ].join('\n');
+    const csv = ['foo,bar,baz', 'a,b,c', 'd,e,f'].join('\n');
 
     expect(() => parseCsvToTree(csv)).toThrow(/unrecognizable/i);
   });
 
   it('throws on fewer than 2 data rows', () => {
-    const csv = [
-      'name,title,manager_name',
-      'Alice,CEO,',
-    ].join('\n');
+    const csv = ['name,title,manager_name', 'Alice,CEO,'].join('\n');
 
     expect(() => parseCsvToTree(csv)).toThrow(/at least 2/i);
   });
@@ -262,11 +249,7 @@ describe('extractHeaders', () => {
 
   it('handles quoted headers with commas', () => {
     const csv = '"First, Name","Job Title","Reports To"\nAlice,CEO,';
-    expect(extractHeaders(csv)).toEqual([
-      'First, Name',
-      'Job Title',
-      'Reports To',
-    ]);
+    expect(extractHeaders(csv)).toEqual(['First, Name', 'Job Title', 'Reports To']);
   });
 });
 
@@ -319,16 +302,9 @@ describe('parseCsvToTree with explicit ColumnMapping', () => {
   });
 
   it('throws when a mapped column does not exist in headers', () => {
-    const csv = [
-      'col_a,col_b,col_c',
-      'Jane,CEO,',
-      'John,VP,Jane',
-      'Alice,Mgr,John',
-    ].join('\n');
+    const csv = ['col_a,col_b,col_c', 'Jane,CEO,', 'John,VP,Jane', 'Alice,Mgr,John'].join('\n');
 
-    expect(() => parseCsvToTree(csv, nameMapping)).toThrow(
-      /column mapping error/i,
-    );
+    expect(() => parseCsvToTree(csv, nameMapping)).toThrow(/column mapping error/i);
   });
 
   it('performs case-insensitive header matching with mapping', () => {
@@ -519,11 +495,9 @@ describe('missing root auto-creation', () => {
   });
 
   it('auto-creates missing root with explicit name-based mapping', () => {
-    const csv = [
-      'employee,job,supervisor',
-      'Alice,Director,Big Boss',
-      'Bob,Manager,Alice',
-    ].join('\n');
+    const csv = ['employee,job,supervisor', 'Alice,Director,Big Boss', 'Bob,Manager,Alice'].join(
+      '\n',
+    );
 
     const mapping: ColumnMapping = {
       name: 'employee',
@@ -615,7 +589,7 @@ describe('trailing metadata handling', () => {
     expect(result.tree.name).toBe('pedrofuentes');
     expect(result.tree.title).toBe('\u2014');
     expect(result.tree.children).toHaveLength(2);
-    const adam = result.tree.children!.find(c => c.name === 'Adam Smith')!;
+    const adam = result.tree.children!.find((c) => c.name === 'Adam Smith')!;
     expect(adam.children).toHaveLength(1);
     expect(adam.children![0].name).toBe('Jane Doe');
     expect(result.nodeCount).toBe(4);

@@ -1,18 +1,20 @@
 export interface ShortcutAction {
-  key: string;           // e.g., 'z', 'e', 'f'
+  key: string; // e.g., 'z', 'e', 'f'
   ctrl?: boolean;
   shift?: boolean;
   alt?: boolean;
   handler: () => void;
-  description: string;   // For tooltip display
+  description: string; // For tooltip display
 }
 
 export class ShortcutManager {
   private shortcuts: ShortcutAction[] = [];
   private active: boolean = true;
+  private boundHandler: (e: KeyboardEvent) => void;
 
   constructor() {
-    document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+    this.boundHandler = (e: KeyboardEvent) => this.handleKeyDown(e);
+    document.addEventListener('keydown', this.boundHandler);
   }
 
   register(action: ShortcutAction): void {
@@ -24,7 +26,7 @@ export class ShortcutManager {
   }
 
   getShortcutLabel(description: string): string | null {
-    const action = this.shortcuts.find(s => s.description === description);
+    const action = this.shortcuts.find((s) => s.description === description);
     if (!action) return null;
     const parts: string[] = [];
     if (action.ctrl) parts.push('Ctrl');
@@ -39,7 +41,11 @@ export class ShortcutManager {
 
     // Don't intercept when typing in input/textarea/select
     const target = e.target as HTMLElement;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+    if (
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'SELECT'
+    ) {
       // Exception: Escape should still work in inputs (to blur/deselect)
       if (e.key !== 'Escape') return;
     }
@@ -59,6 +65,6 @@ export class ShortcutManager {
   }
 
   destroy(): void {
-    // Could remove event listener if needed
+    document.removeEventListener('keydown', this.boundHandler);
   }
 }

@@ -106,9 +106,7 @@ describe('normalizeTreeText', () => {
         id: 'child1',
         name: 'john smith',
         title: 'VP ENGINEERING',
-        children: [
-          { id: 'grandchild', name: 'BOB JONES', title: 'senior engineer' },
-        ],
+        children: [{ id: 'grandchild', name: 'BOB JONES', title: 'senior engineer' }],
       },
       { id: 'child2', name: 'alice BROWN', title: 'vp SALES' },
     ],

@@ -82,6 +82,7 @@ export function showContextMenu(options: ContextMenuOptions): void {
 
     if (item.icon) {
       const iconSpan = document.createElement('span');
+      iconSpan.setAttribute('aria-hidden', 'true');
       iconSpan.textContent = item.icon;
       iconSpan.style.cssText = 'flex-shrink:0;width:16px;text-align:center;';
       btn.appendChild(iconSpan);
@@ -111,7 +112,8 @@ export function showContextMenu(options: ContextMenuOptions): void {
     if (item.submenu) {
       const arrowSpan = document.createElement('span');
       arrowSpan.textContent = '▸';
-      arrowSpan.style.cssText = 'margin-left:auto;padding-left:12px;font-size:10px;color:var(--text-tertiary);';
+      arrowSpan.style.cssText =
+        'margin-left:auto;padding-left:12px;font-size:10px;color:var(--text-tertiary);';
       btn.appendChild(arrowSpan);
 
       let submenuEl: HTMLDivElement | null = null;
@@ -121,7 +123,10 @@ export function showContextMenu(options: ContextMenuOptions): void {
         hideTimeout = setTimeout(() => hideSubmenu(), 100);
       };
       const cancelHide = () => {
-        if (hideTimeout) { clearTimeout(hideTimeout); hideTimeout = null; }
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+          hideTimeout = null;
+        }
       };
 
       const showSubmenu = () => {
@@ -148,6 +153,7 @@ export function showContextMenu(options: ContextMenuOptions): void {
 
           if (subItem.icon) {
             const iconSpan = document.createElement('span');
+            iconSpan.setAttribute('aria-hidden', 'true');
             iconSpan.textContent = subItem.icon;
             iconSpan.style.cssText = 'flex-shrink:0;width:16px;text-align:center;';
             subBtn.appendChild(iconSpan);
@@ -213,7 +219,11 @@ export function showContextMenu(options: ContextMenuOptions): void {
 
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (submenuEl) { hideSubmenu(); } else { showSubmenu(); }
+        if (submenuEl) {
+          hideSubmenu();
+        } else {
+          showSubmenu();
+        }
       });
     } else {
       btn.addEventListener('click', () => {
@@ -233,17 +243,13 @@ export function showContextMenu(options: ContextMenuOptions): void {
 
   // Viewport clamping
   const rect = menu.getBoundingClientRect();
-  const x = options.x + rect.width > window.innerWidth
-    ? options.x - rect.width
-    : options.x;
-  const y = options.y + rect.height > window.innerHeight
-    ? options.y - rect.height
-    : options.y;
+  const x = options.x + rect.width > window.innerWidth ? options.x - rect.width : options.x;
+  const y = options.y + rect.height > window.innerHeight ? options.y - rect.height : options.y;
   const current = menu.getAttribute('style') ?? '';
   menu.setAttribute('style', `${current};left:${x}px;top:${y}px`);
 
   // Focus first enabled item
-  const firstEnabled = buttons.find(b => !b.disabled);
+  const firstEnabled = buttons.find((b) => !b.disabled);
   if (firstEnabled) firstEnabled.focus();
 
   // Keyboard navigation
@@ -283,7 +289,7 @@ export function showContextMenu(options: ContextMenuOptions): void {
   // Dismiss on click outside
   const outsideHandler = (e: MouseEvent) => {
     const target = e.target as Node;
-    if (!menu.contains(target) && !activeSubmenus.some(sub => sub.contains(target))) {
+    if (!menu.contains(target) && !activeSubmenus.some((sub) => sub.contains(target))) {
       dismissContextMenu();
     }
   };

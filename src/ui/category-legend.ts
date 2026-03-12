@@ -23,27 +23,30 @@ export function showCategoryLegend(options: CategoryLegendOptions): void {
   legend.setAttribute('data-testid', 'category-legend');
   legend.setAttribute('data-collapsed', 'false');
 
-  legend.setAttribute('style', [
-    'position:absolute',
-    'bottom:var(--space-3, 12px)',
-    'left:var(--space-3, 12px)',
-    'z-index:50',
-    'display:flex',
-    'flex-direction:column',
-    'gap:0',
-    'padding:var(--space-2, 8px) var(--space-3, 12px)',
-    'background:var(--bg-surface)',
-    'border:1px solid var(--border-subtle)',
-    'border-radius:var(--radius-md, 6px)',
-    'box-shadow:var(--shadow-sm)',
-    'font-family:var(--font-sans)',
-    'font-size:11px',
-    'color:var(--text-secondary)',
-    'pointer-events:auto',
-    'max-width:200px',
-    'opacity:0.9',
-    'transition:opacity var(--transition-fast, 100ms ease)',
-  ].join(';'));
+  legend.setAttribute(
+    'style',
+    [
+      'position:absolute',
+      'bottom:var(--space-3, 12px)',
+      'left:var(--space-3, 12px)',
+      'z-index:50',
+      'display:flex',
+      'flex-direction:column',
+      'gap:0',
+      'padding:var(--space-2, 8px) var(--space-3, 12px)',
+      'background:var(--bg-surface)',
+      'border:1px solid var(--border-subtle)',
+      'border-radius:var(--radius-md, 6px)',
+      'box-shadow:var(--shadow-sm)',
+      'font-family:var(--font-sans)',
+      'font-size:11px',
+      'color:var(--text-secondary)',
+      'pointer-events:auto',
+      'max-width:200px',
+      'opacity:0.9',
+      'transition:opacity var(--transition-fast, 100ms ease)',
+    ].join(';'),
+  );
 
   legend.addEventListener('mouseenter', () => {
     legend.style.opacity = '1';
@@ -54,10 +57,12 @@ export function showCategoryLegend(options: CategoryLegendOptions): void {
 
   // Header row with toggle
   const headerRow = document.createElement('div');
-  headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:6px;';
+  headerRow.style.cssText =
+    'display:flex;align-items:center;justify-content:space-between;gap:6px;';
 
   const headerLabel = document.createElement('span');
-  headerLabel.style.cssText = 'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);';
+  headerLabel.style.cssText =
+    'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);';
   headerLabel.textContent = 'Categories';
   headerRow.appendChild(headerLabel);
 

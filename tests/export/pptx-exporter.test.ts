@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { LayoutResult, LayoutNode, LayoutLink, LayoutICContainer } from '../../src/renderer/layout-engine';
+import type {
+  LayoutResult,
+  LayoutNode,
+  LayoutLink,
+  LayoutICContainer,
+} from '../../src/renderer/layout-engine';
 import type { ColorCategory } from '../../src/types';
 
 // Mock pptxgenjs before importing exporter
@@ -28,12 +33,7 @@ vi.mock('pptxgenjs', () => {
   };
 });
 
-import {
-  exportToPptx,
-  parseSvgPath,
-  convertCoordinates,
-  PX_TO_INCHES,
-} from '../../src/export/pptx-exporter';
+import { exportToPptx, parseSvgPath, convertCoordinates } from '../../src/export/pptx-exporter';
 
 function makeNode(overrides: Partial<LayoutNode> = {}): LayoutNode {
   return {
@@ -52,14 +52,22 @@ function makeNode(overrides: Partial<LayoutNode> = {}): LayoutNode {
 function makeLayout(overrides: Partial<LayoutResult> = {}): LayoutResult {
   const nodes = overrides.nodes ?? [makeNode()];
   // Derive bounding box from nodes if not provided
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
   for (const n of nodes) {
     minX = Math.min(minX, n.x - n.width / 2);
     maxX = Math.max(maxX, n.x + n.width / 2);
     minY = Math.min(minY, n.y);
     maxY = Math.max(maxY, n.y + n.height);
   }
-  if (!isFinite(minX)) { minX = 0; minY = 0; maxX = 0; maxY = 0; }
+  if (!isFinite(minX)) {
+    minX = 0;
+    minY = 0;
+    maxX = 0;
+    maxY = 0;
+  }
 
   return {
     nodes,
@@ -150,8 +158,9 @@ describe('pptx-exporter', () => {
       const textCalls = mockAddText.mock.calls;
       const hasManagerText = textCalls.some((call: any) => {
         const textBlocks = call[0];
-        return Array.isArray(textBlocks) && textBlocks.some(
-          (t: any) => typeof t.text === 'string' && t.text.includes('Boss'),
+        return (
+          Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => typeof t.text === 'string' && t.text.includes('Boss'))
         );
       });
       expect(hasManagerText).toBe(true);
@@ -168,8 +177,9 @@ describe('pptx-exporter', () => {
       const textCalls = mockAddText.mock.calls;
       const hasIcText = textCalls.some((call: any) => {
         const textBlocks = call[0];
-        return Array.isArray(textBlocks) && textBlocks.some(
-          (t: any) => typeof t.text === 'string' && t.text.includes('Dev'),
+        return (
+          Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => typeof t.text === 'string' && t.text.includes('Dev'))
         );
       });
       expect(hasIcText).toBe(true);
@@ -186,8 +196,9 @@ describe('pptx-exporter', () => {
       const textCalls = mockAddText.mock.calls;
       const hasPalText = textCalls.some((call: any) => {
         const textBlocks = call[0];
-        return Array.isArray(textBlocks) && textBlocks.some(
-          (t: any) => typeof t.text === 'string' && t.text.includes('Advisor'),
+        return (
+          Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => typeof t.text === 'string' && t.text.includes('Advisor'))
         );
       });
       expect(hasPalText).toBe(true);
@@ -302,7 +313,9 @@ describe('pptx-exporter', () => {
       const shapeCalls = mockAddShape.mock.calls;
       const cardRect = shapeCalls.find((call: any) => {
         const opts = call[1];
-        return opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line && opts.line.width === 1;
+        return (
+          opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line && opts.line.width === 1
+        );
       });
       expect(cardRect).toBeDefined();
     });
@@ -316,7 +329,9 @@ describe('pptx-exporter', () => {
       const shapeCalls = mockAddShape.mock.calls;
       const cardRect = shapeCalls.find((call: any) => {
         const opts = call[1];
-        return opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line && opts.line.width === 1;
+        return (
+          opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line && opts.line.width === 1
+        );
       });
       expect(cardRect).toBeDefined();
     });
@@ -339,8 +354,13 @@ describe('pptx-exporter', () => {
       const shapeCalls = mockAddShape.mock.calls;
       const legendBg = shapeCalls.find((call: any) => {
         const opts = call[1];
-        return opts && opts.fill && opts.fill.color === 'FFFFFF'
-          && opts.line && opts.line.color === 'E2E8F0';
+        return (
+          opts &&
+          opts.fill &&
+          opts.fill.color === 'FFFFFF' &&
+          opts.line &&
+          opts.line.color === 'E2E8F0'
+        );
       });
       expect(legendBg).toBeDefined();
 
@@ -369,8 +389,13 @@ describe('pptx-exporter', () => {
       const shapeCalls = mockAddShape.mock.calls;
       const legendBg = shapeCalls.find((call: any) => {
         const opts = call[1];
-        return opts && opts.fill && opts.fill.color === 'FFFFFF'
-          && opts.line && opts.line.color === 'E2E8F0';
+        return (
+          opts &&
+          opts.fill &&
+          opts.fill.color === 'FFFFFF' &&
+          opts.line &&
+          opts.line.color === 'E2E8F0'
+        );
       });
       expect(legendBg).toBeUndefined();
 

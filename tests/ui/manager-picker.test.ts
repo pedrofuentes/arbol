@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { showManagerPicker, ManagerPickerItem } from '../../src/ui/manager-picker';
 
 const sampleManagers: ManagerPickerItem[] = [

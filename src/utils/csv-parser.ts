@@ -211,7 +211,9 @@ export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvPar
   }
 
   if (nodes.length > MAX_NODES) {
-    throw new Error(`CSV contains ${nodes.length} data rows, which exceeds the maximum of ${MAX_NODES}. Please reduce the dataset.`);
+    throw new Error(
+      `CSV contains ${nodes.length} data rows, which exceeds the maximum of ${MAX_NODES}. Please reduce the dataset.`,
+    );
   }
 
   // Detect circular references and orphans by building adjacency
@@ -222,14 +224,19 @@ export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvPar
   }
 }
 
-function buildTreeById(nodes: { id: string; name: string; title: string; parentRef: string }[], caseInsensitive: boolean): CsvParseResult {
+function buildTreeById(
+  nodes: { id: string; name: string; title: string; parentRef: string }[],
+  caseInsensitive: boolean,
+): CsvParseResult {
   const normalize = caseInsensitive ? (s: string) => s.toLowerCase() : (s: string) => s;
   const idMap = new Map<string, { id: string; name: string; title: string; parentRef: string }>();
   for (const node of nodes) {
     const key = normalize(node.id);
     const existing = idMap.get(key);
     if (existing) {
-      throw new Error(`Duplicate ID "${node.id}": "${node.name}" and "${existing.name}" share the same identifier.`);
+      throw new Error(
+        `Duplicate ID "${node.id}": "${node.name}" and "${existing.name}" share the same identifier.`,
+      );
     }
     idMap.set(key, node);
   }
@@ -248,7 +255,7 @@ function buildTreeById(nodes: { id: string; name: string; title: string; parentR
   // Auto-create missing root if all orphans reference the same parent
   if (roots.length === 0 && missingParents.size === 1) {
     const missingId = [...missingParents][0];
-    const originalRef = nodes.find(n => normalize(n.parentRef) === missingId)!.parentRef;
+    const originalRef = nodes.find((n) => normalize(n.parentRef) === missingId)!.parentRef;
     const placeholder = { id: originalRef, name: originalRef, title: '\u2014', parentRef: '' };
     nodes.push(placeholder);
     idMap.set(missingId, placeholder);
@@ -257,18 +264,24 @@ function buildTreeById(nodes: { id: string; name: string; title: string; parentR
   }
 
   if (missingParents.size > 0) {
-    const orphanNodes = nodes.filter(n => n.parentRef && !idMap.has(normalize(n.parentRef)));
-    throw new Error(`Orphan reference: node "${orphanNodes[0].name}" references parent_id "${orphanNodes[0].parentRef}" which does not exist.`);
+    const orphanNodes = nodes.filter((n) => n.parentRef && !idMap.has(normalize(n.parentRef)));
+    throw new Error(
+      `Orphan reference: node "${orphanNodes[0].name}" references parent_id "${orphanNodes[0].parentRef}" which does not exist.`,
+    );
   }
 
   // Detect cycles before root checks so cycle errors are descriptive
   detectCycles(nodes, 'id', caseInsensitive);
 
   if (roots.length === 0) {
-    throw new Error('No root node found (every node has a parent reference — possible circular reference).');
+    throw new Error(
+      'No root node found (every node has a parent reference — possible circular reference).',
+    );
   }
   if (roots.length > 1) {
-    throw new Error(`Multiple roots detected: ${roots.map((r) => `"${idMap.get(r)!.name}"`).join(', ')}. Only one root is allowed.`);
+    throw new Error(
+      `Multiple roots detected: ${roots.map((r) => `"${idMap.get(r)!.name}"`).join(', ')}. Only one root is allowed.`,
+    );
   }
 
   const childrenMap = new Map<string, string[]>();
@@ -297,14 +310,19 @@ function buildTreeById(nodes: { id: string; name: string; title: string; parentR
   return { tree, nodeCount: count };
 }
 
-function buildTreeByName(nodes: { id: string; name: string; title: string; parentRef: string }[], caseInsensitive: boolean): CsvParseResult {
+function buildTreeByName(
+  nodes: { id: string; name: string; title: string; parentRef: string }[],
+  caseInsensitive: boolean,
+): CsvParseResult {
   const normalize = caseInsensitive ? (s: string) => s.toLowerCase() : (s: string) => s;
   const nameMap = new Map<string, { id: string; name: string; title: string; parentRef: string }>();
   for (const node of nodes) {
     const key = normalize(node.name);
     const existing = nameMap.get(key);
     if (existing) {
-      throw new Error(`Duplicate name "${node.name}": two people share the same name. Use ID-based import (with a unique alias column) to distinguish them.`);
+      throw new Error(
+        `Duplicate name "${node.name}": two people share the same name. Use ID-based import (with a unique alias column) to distinguish them.`,
+      );
     }
     nameMap.set(key, node);
   }
@@ -322,8 +340,13 @@ function buildTreeByName(nodes: { id: string; name: string; title: string; paren
   // Auto-create missing root if all orphans reference the same parent
   if (roots.length === 0 && missingParents.size === 1) {
     const missingName = [...missingParents][0];
-    const originalRef = nodes.find(n => normalize(n.parentRef) === missingName)!.parentRef;
-    const placeholder = { id: crypto.randomUUID(), name: originalRef, title: '\u2014', parentRef: '' };
+    const originalRef = nodes.find((n) => normalize(n.parentRef) === missingName)!.parentRef;
+    const placeholder = {
+      id: crypto.randomUUID(),
+      name: originalRef,
+      title: '\u2014',
+      parentRef: '',
+    };
     nodes.push(placeholder);
     nameMap.set(missingName, placeholder);
     roots.push(missingName);
@@ -331,18 +354,24 @@ function buildTreeByName(nodes: { id: string; name: string; title: string; paren
   }
 
   if (missingParents.size > 0) {
-    const orphanNodes = nodes.filter(n => n.parentRef && !nameMap.has(normalize(n.parentRef)));
-    throw new Error(`Orphan reference: node "${orphanNodes[0].name}" references parent "${orphanNodes[0].parentRef}" which does not exist.`);
+    const orphanNodes = nodes.filter((n) => n.parentRef && !nameMap.has(normalize(n.parentRef)));
+    throw new Error(
+      `Orphan reference: node "${orphanNodes[0].name}" references parent "${orphanNodes[0].parentRef}" which does not exist.`,
+    );
   }
 
   // Detect cycles before root checks so cycle errors are descriptive
   detectCycles(nodes, 'name', caseInsensitive);
 
   if (roots.length === 0) {
-    throw new Error('No root node found (every node has a parent reference — possible circular reference).');
+    throw new Error(
+      'No root node found (every node has a parent reference — possible circular reference).',
+    );
   }
   if (roots.length > 1) {
-    throw new Error(`Multiple roots detected: ${roots.map((r) => `"${r}"`).join(', ')}. Only one root is allowed.`);
+    throw new Error(
+      `Multiple roots detected: ${roots.map((r) => `"${r}"`).join(', ')}. Only one root is allowed.`,
+    );
   }
 
   const childrenMap = new Map<string, string[]>();
@@ -396,7 +425,7 @@ function detectCycles(
         const cyclePath = visited.slice(cycleStart);
         cyclePath.push(current);
         const nameForKey = (k: string) => {
-          const n = nodes.find(nd => normalize(keyField === 'id' ? nd.id : nd.name) === k);
+          const n = nodes.find((nd) => normalize(keyField === 'id' ? nd.id : nd.name) === k);
           return n ? n.name : k;
         };
         throw new Error(`Circular reference: ${cyclePath.map(nameForKey).join(' \u2192 ')}`);

@@ -11,7 +11,9 @@ function makeAnchor(overrides: Partial<DOMRect> = {}): DOMRect {
     height: 50,
     x: 200,
     y: 100,
-    toJSON() { return this; },
+    toJSON() {
+      return this;
+    },
     ...overrides,
   } as DOMRect;
 }
@@ -164,7 +166,9 @@ describe('AddPopover', () => {
     const origDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
     Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
       configurable: true,
-      get() { return 120; },
+      get() {
+        return 120;
+      },
     });
 
     // Anchor near bottom of viewport — jsdom default innerHeight is 768

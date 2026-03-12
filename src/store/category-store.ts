@@ -94,7 +94,8 @@ export class CategoryStore {
           typeof (item as ColorCategory).label === 'string' &&
           typeof (item as ColorCategory).color === 'string',
       );
-    } catch {
+    } catch (e) {
+      console.warn('Failed to load categories from localStorage:', e);
       return [];
     }
   }

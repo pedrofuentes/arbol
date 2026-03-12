@@ -59,8 +59,7 @@ export class ColumnMapper {
 
     // Description
     const desc = document.createElement('p');
-    desc.textContent =
-      "We couldn't auto-detect your CSV format. Please map each column below.";
+    desc.textContent = "We couldn't auto-detect your CSV format. Please map each column below.";
     desc.style.cssText =
       'margin:0 0 12px;font-size:var(--text-sm);color:var(--text-secondary);line-height:var(--leading-normal);';
     this.container.appendChild(desc);
@@ -171,8 +170,14 @@ export class ColumnMapper {
     this.container.appendChild(group);
 
     // Update Reports To label when toggle changes
-    this.byNameRadio.addEventListener('change', () => { this.updateParentRefLabel(); this.updatePresetBtnState(); });
-    this.byIdRadio.addEventListener('change', () => { this.updateParentRefLabel(); this.updatePresetBtnState(); });
+    this.byNameRadio.addEventListener('change', () => {
+      this.updateParentRefLabel();
+      this.updatePresetBtnState();
+    });
+    this.byIdRadio.addEventListener('change', () => {
+      this.updateParentRefLabel();
+      this.updatePresetBtnState();
+    });
   }
 
   private buildCaseInsensitiveOption(): void {
@@ -302,7 +307,11 @@ export class ColumnMapper {
     if (new Set(selected).size !== selected.length) return null;
 
     return {
-      name, title, parentRef, id, parentRefType,
+      name,
+      title,
+      parentRef,
+      id,
+      parentRefType,
       caseInsensitive: this.caseInsensitiveCheckbox.checked,
       nameNormalization: this.nameNormSelect.value as TextNormalization,
       titleNormalization: this.titleNormSelect.value as TextNormalization,
@@ -333,12 +342,17 @@ export class ColumnMapper {
     const selected = [name, title, parentRef];
     if (id) selected.push(id);
     if (new Set(selected).size !== selected.length) {
-      this.errorArea.textContent = 'Each column can only be mapped to one field. Please remove duplicates.';
+      this.errorArea.textContent =
+        'Each column can only be mapped to one field. Please remove duplicates.';
       return;
     }
 
     this.onApply({
-      name, title, parentRef, id, parentRefType,
+      name,
+      title,
+      parentRef,
+      id,
+      parentRefType,
       caseInsensitive: this.caseInsensitiveCheckbox.checked,
       nameNormalization: this.nameNormSelect.value as TextNormalization,
       titleNormalization: this.titleNormSelect.value as TextNormalization,

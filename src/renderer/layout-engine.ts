@@ -7,8 +7,8 @@ export interface LayoutNode {
   id: string;
   name: string;
   title: string;
-  x: number;       // center X in pixels
-  y: number;       // top Y in pixels
+  x: number; // center X in pixels
+  y: number; // top Y in pixels
   width: number;
   height: number;
   type: 'manager' | 'ic' | 'pal';
@@ -17,7 +17,7 @@ export interface LayoutNode {
 }
 
 export interface LayoutLink {
-  path: string;    // SVG path d attribute "M... L..."
+  path: string; // SVG path d attribute "M... L..."
   layer: 'tree' | 'pal';
 }
 
@@ -35,18 +35,24 @@ export interface LayoutResult {
   boundingBox: { minX: number; minY: number; width: number; height: number };
 }
 
-export function computeLayout(
-  root: OrgNode,
-  opts: ResolvedOptions,
-): LayoutResult {
+export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResult {
   const visibleTree = filterVisibleTree(root);
   const { layoutTree, icMap, palMap } = stripM1Children(visibleTree);
 
   const {
-    nodeWidth, nodeHeight, horizontalSpacing,
-    topVerticalSpacing, bottomVerticalSpacing,
-    palCenterGap, palTopGap, palBottomGap, palRowGap,
-    branchSpacing, icNodeWidth, icGap, icContainerPadding,
+    nodeWidth,
+    nodeHeight,
+    horizontalSpacing,
+    topVerticalSpacing,
+    bottomVerticalSpacing,
+    palCenterGap,
+    palTopGap,
+    palBottomGap,
+    palRowGap,
+    branchSpacing,
+    icNodeWidth,
+    icGap,
+    icContainerPadding,
   } = opts;
 
   const totalVerticalSpacing = topVerticalSpacing + bottomVerticalSpacing;
@@ -56,10 +62,7 @@ export function computeLayout(
 
   const treeLayout = d3
     .tree<OrgNode>()
-    .nodeSize([
-      nodeWidth + horizontalSpacing,
-      nodeHeight + totalVerticalSpacing,
-    ])
+    .nodeSize([nodeWidth + horizontalSpacing, nodeHeight + totalVerticalSpacing])
     .separation((a, b) => {
       const aHasPals = palMap.has(a.data.id);
       const bHasPals = palMap.has(b.data.id);
@@ -222,7 +225,8 @@ export function computeLayout(
     const ics = icMap.get(treeNode.data.id);
     if (ics && ics.length > 0) {
       const startY = treeNode.y + nodeHeight;
-      const totalHeight = ics.length * nodeHeight + (ics.length - 1) * icGap + icContainerPadding * 2;
+      const totalHeight =
+        ics.length * nodeHeight + (ics.length - 1) * icGap + icContainerPadding * 2;
       const totalWidth = icNodeWidth + icContainerPadding * 2;
 
       icContainers.push({
@@ -305,7 +309,10 @@ export function computeLayout(
   }
 
   // Bounding box
-  let bbMinX = Infinity, bbMinY = Infinity, bbMaxX = -Infinity, bbMaxY = -Infinity;
+  let bbMinX = Infinity,
+    bbMinY = Infinity,
+    bbMaxX = -Infinity,
+    bbMaxY = -Infinity;
 
   for (const node of nodes) {
     const left = node.x - node.width / 2;
@@ -324,7 +331,10 @@ export function computeLayout(
   }
 
   if (!isFinite(bbMinX)) {
-    bbMinX = 0; bbMinY = 0; bbMaxX = 0; bbMaxY = 0;
+    bbMinX = 0;
+    bbMinY = 0;
+    bbMaxX = 0;
+    bbMaxY = 0;
   }
 
   return {

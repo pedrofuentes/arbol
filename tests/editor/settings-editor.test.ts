@@ -1,16 +1,25 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { SettingsEditor, COMBINED_PRESETS, LAYOUT_PRESETS } from '../../src/editor/settings-editor';
-import { CHART_THEME_PRESETS } from '../../src/store/theme-presets';
+import { SettingsEditor, COMBINED_PRESETS } from '../../src/editor/settings-editor';
 import { CategoryStore } from '../../src/store/category-store';
-import type { ChartRenderer, RendererOptions, ResolvedOptions } from '../../src/renderer/chart-renderer';
+import type {
+  ChartRenderer,
+  RendererOptions,
+  ResolvedOptions,
+} from '../../src/renderer/chart-renderer';
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
     getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
-    removeItem: vi.fn((key: string) => { delete store[key]; }),
-    clear: vi.fn(() => { store = {}; }),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
   };
 })();
 
@@ -113,7 +122,7 @@ describe('SettingsEditor', () => {
     const resetBtn = container.querySelector<HTMLButtonElement>('.accordion-reset');
     expect(resetBtn).not.toBeNull();
     resetBtn!.click();
-    expect((renderer.updateOptions as ReturnType<typeof vi.fn>)).toHaveBeenCalled();
+    expect(renderer.updateOptions as ReturnType<typeof vi.fn>).toHaveBeenCalled();
     expect(rerenderCb).toHaveBeenCalled();
   });
 
@@ -152,14 +161,15 @@ describe('SettingsEditor', () => {
       'arbol-accordion-state',
       expect.any(String),
     );
-    const saved = JSON.parse(
-      localStorageMock.setItem.mock.calls.at(-1)![1] as string,
-    );
+    const saved = JSON.parse(localStorageMock.setItem.mock.calls.at(-1)![1] as string);
     expect(saved.presets).toBe(false);
   });
 
   it('loads accordion state from localStorage', () => {
-    localStorageMock.setItem('arbol-accordion-state', JSON.stringify({ presets: false, 'card-dimensions': true }));
+    localStorageMock.setItem(
+      'arbol-accordion-state',
+      JSON.stringify({ presets: false, 'card-dimensions': true }),
+    );
     new SettingsEditor(container, renderer, rerenderCb);
 
     const presetsContent = container.querySelector('#accordion-presets');
@@ -187,7 +197,9 @@ describe('SettingsEditor', () => {
       const catStore = new CategoryStore();
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
       const categories = catStore.getAll();
-      const colorInputs = container.querySelectorAll<HTMLInputElement>('input[type="color"][aria-label^="Color for"]');
+      const colorInputs = container.querySelectorAll<HTMLInputElement>(
+        'input[type="color"][aria-label^="Color for"]',
+      );
       expect(colorInputs.length).toBe(categories.length);
     });
 
@@ -196,12 +208,16 @@ describe('SettingsEditor', () => {
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
       const categories = catStore.getAll();
       for (const cat of categories) {
-        const colorInput = container.querySelector<HTMLInputElement>(`input[aria-label="Color for ${cat.label}"]`);
+        const colorInput = container.querySelector<HTMLInputElement>(
+          `input[aria-label="Color for ${cat.label}"]`,
+        );
         expect(colorInput).not.toBeNull();
         expect(colorInput!.type).toBe('color');
         expect(colorInput!.value).toBe(cat.color);
       }
-      const labelInputs = container.querySelectorAll<HTMLInputElement>('input[aria-label="Category label"]');
+      const labelInputs = container.querySelectorAll<HTMLInputElement>(
+        'input[aria-label="Category label"]',
+      );
       expect(labelInputs.length).toBe(categories.length);
     });
 
@@ -210,7 +226,9 @@ describe('SettingsEditor', () => {
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
       const categories = catStore.getAll();
       for (const cat of categories) {
-        const btn = container.querySelector<HTMLButtonElement>(`button[aria-label="Remove ${cat.label}"]`);
+        const btn = container.querySelector<HTMLButtonElement>(
+          `button[aria-label="Remove ${cat.label}"]`,
+        );
         expect(btn).not.toBeNull();
         expect(btn!.textContent).toBe('×');
       }
@@ -243,7 +261,9 @@ describe('SettingsEditor', () => {
       const catStore = new CategoryStore();
       const updateSpy = vi.spyOn(catStore, 'update');
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
-      const labelInputs = container.querySelectorAll<HTMLInputElement>('input[aria-label="Category label"]');
+      const labelInputs = container.querySelectorAll<HTMLInputElement>(
+        'input[aria-label="Category label"]',
+      );
       const categories = catStore.getAll();
       labelInputs[0].value = 'Renamed';
       labelInputs[0].dispatchEvent(new Event('change'));
@@ -256,7 +276,9 @@ describe('SettingsEditor', () => {
       const updateSpy = vi.spyOn(catStore, 'update');
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
       const categories = catStore.getAll();
-      const labelInputs = container.querySelectorAll<HTMLInputElement>('input[aria-label="Category label"]');
+      const labelInputs = container.querySelectorAll<HTMLInputElement>(
+        'input[aria-label="Category label"]',
+      );
       labelInputs[0].value = '   ';
       labelInputs[0].dispatchEvent(new Event('change'));
       expect(updateSpy).not.toHaveBeenCalled();
@@ -345,7 +367,9 @@ describe('SettingsEditor', () => {
       const buttons = container.querySelectorAll('button');
       const layoutBtnTexts = Array.from(buttons)
         .map((b) => b.textContent)
-        .filter((t) => t && ['Compact', 'Default', 'Spacious', 'Presentation'].some((n) => t.includes(n)));
+        .filter(
+          (t) => t && ['Compact', 'Default', 'Spacious', 'Presentation'].some((n) => t.includes(n)),
+        );
       expect(layoutBtnTexts.length).toBe(4);
     });
 
@@ -364,7 +388,9 @@ describe('SettingsEditor', () => {
     it('shows name input when Save as Preset is clicked', () => {
       new SettingsEditor(container, renderer, rerenderCb);
       const saveBtn = container.querySelector<HTMLButtonElement>('.save-preset-btn')!;
-      const nameInput = container.querySelector<HTMLInputElement>('input[aria-label="Custom preset name"]')!;
+      const nameInput = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Custom preset name"]',
+      )!;
       // Initially hidden
       expect(nameInput.style.display).not.toBe('block');
       saveBtn.click();
@@ -375,16 +401,16 @@ describe('SettingsEditor', () => {
       new SettingsEditor(container, renderer, rerenderCb);
       const saveBtn = container.querySelector<HTMLButtonElement>('.save-preset-btn')!;
       saveBtn.click();
-      const nameInput = container.querySelector<HTMLInputElement>('input[aria-label="Custom preset name"]')!;
+      const nameInput = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Custom preset name"]',
+      )!;
       nameInput.value = 'My Custom';
       const confirmBtn = container.querySelector<HTMLButtonElement>('.btn-primary')!;
       confirmBtn.click();
       // After save, preset grid should include the custom preset
       const cards = container.querySelectorAll('.preset-card');
       expect(cards.length).toBe(COMBINED_PRESETS.length + 1);
-      const customCard = Array.from(cards).find(
-        (c) => c.textContent?.includes('⭐ My Custom'),
-      );
+      const customCard = Array.from(cards).find((c) => c.textContent?.includes('⭐ My Custom'));
       expect(customCard).toBeDefined();
       // Verify localStorage was written
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
@@ -397,12 +423,21 @@ describe('SettingsEditor', () => {
       // Pre-populate a custom preset
       localStorageMock.setItem(
         'arbol-custom-presets',
-        JSON.stringify([{
-          id: 'custom-test',
-          name: 'Test',
-          colors: { cardFill: '#fff', cardStroke: '#000', cardStrokeWidth: 1, linkColor: '#888', linkWidth: 1, icContainerFill: '#eee' },
-          sizes: { nodeWidth: 110 },
-        }]),
+        JSON.stringify([
+          {
+            id: 'custom-test',
+            name: 'Test',
+            colors: {
+              cardFill: '#fff',
+              cardStroke: '#000',
+              cardStrokeWidth: 1,
+              linkColor: '#888',
+              linkWidth: 1,
+              icContainerFill: '#eee',
+            },
+            sizes: { nodeWidth: 110 },
+          },
+        ]),
       );
       new SettingsEditor(container, renderer, rerenderCb);
       const customCard = container.querySelector('[data-preset-id="custom-test"]')!;
@@ -414,12 +449,21 @@ describe('SettingsEditor', () => {
     it('deleting a custom preset removes it from grid and localStorage', () => {
       localStorageMock.setItem(
         'arbol-custom-presets',
-        JSON.stringify([{
-          id: 'custom-del',
-          name: 'ToDelete',
-          colors: { cardFill: '#fff', cardStroke: '#000', cardStrokeWidth: 1, linkColor: '#888', linkWidth: 1, icContainerFill: '#eee' },
-          sizes: { nodeWidth: 110 },
-        }]),
+        JSON.stringify([
+          {
+            id: 'custom-del',
+            name: 'ToDelete',
+            colors: {
+              cardFill: '#fff',
+              cardStroke: '#000',
+              cardStrokeWidth: 1,
+              linkColor: '#888',
+              linkWidth: 1,
+              icContainerFill: '#eee',
+            },
+            sizes: { nodeWidth: 110 },
+          },
+        ]),
       );
       new SettingsEditor(container, renderer, rerenderCb);
       let cards = container.querySelectorAll('.preset-card');
@@ -448,19 +492,24 @@ describe('SettingsEditor', () => {
 
     it('renders filter input with placeholder', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]');
+      const input = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Filter settings"]',
+      );
       expect(input).not.toBeNull();
       expect(input!.placeholder).toContain('Filter');
     });
 
     it('dims non-matching sections when filtering', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      const input = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Filter settings"]',
+      )!;
       triggerFilter(input, 'typography');
 
       const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
       const nonMatching = Array.from(sections).filter(
-        (s) => !s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
+        (s) =>
+          !s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
       );
       for (const section of nonMatching) {
         expect(section.style.opacity).toBe('0.3');
@@ -469,12 +518,14 @@ describe('SettingsEditor', () => {
 
     it('shows matching sections with full opacity', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      const input = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Filter settings"]',
+      )!;
       triggerFilter(input, 'typography');
 
       const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
-      const matching = Array.from(sections).find(
-        (s) => s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
+      const matching = Array.from(sections).find((s) =>
+        s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
       );
       expect(matching).toBeDefined();
       expect(matching!.style.opacity).toBe('1');
@@ -482,7 +533,9 @@ describe('SettingsEditor', () => {
 
     it('restores all sections when filter is cleared', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      const input = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Filter settings"]',
+      )!;
 
       triggerFilter(input, 'typography');
       triggerFilter(input, '');
@@ -495,8 +548,12 @@ describe('SettingsEditor', () => {
 
     it('shows clear button when filter has text', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
-      const clearButton = container.querySelector<HTMLButtonElement>('button[aria-label="Clear filter"]')!;
+      const input = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Filter settings"]',
+      )!;
+      const clearButton = container.querySelector<HTMLButtonElement>(
+        'button[aria-label="Clear filter"]',
+      )!;
 
       expect(clearButton.style.display).toBe('none');
 
@@ -506,8 +563,12 @@ describe('SettingsEditor', () => {
 
     it('clears filter when clear button is clicked', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
-      const clearButton = container.querySelector<HTMLButtonElement>('button[aria-label="Clear filter"]')!;
+      const input = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Filter settings"]',
+      )!;
+      const clearButton = container.querySelector<HTMLButtonElement>(
+        'button[aria-label="Clear filter"]',
+      )!;
 
       triggerFilter(input, 'card');
       clearButton.click();
@@ -524,11 +585,13 @@ describe('SettingsEditor', () => {
 
     it('auto-expands matching sections during filter', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      const input = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Filter settings"]',
+      )!;
       triggerFilter(input, 'typography');
 
-      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find(
-        (s) => s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
+      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
+        s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
       )!;
       const content = typoSection.querySelector('.accordion-content')!;
       expect(content.getAttribute('data-expanded')).toBe('true');
@@ -536,24 +599,29 @@ describe('SettingsEditor', () => {
 
     it('matches on setting labels within sections', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      const input = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Filter settings"]',
+      )!;
       triggerFilter(input, 'node width');
 
-      const cardDimSection = Array.from(container.querySelectorAll<HTMLElement>('.accordion-section')).find(
-        (s) => s.querySelector('.accordion-title')?.textContent === 'Card Dimensions',
-      );
+      const cardDimSection = Array.from(
+        container.querySelectorAll<HTMLElement>('.accordion-section'),
+      ).find((s) => s.querySelector('.accordion-title')?.textContent === 'Card Dimensions');
       expect(cardDimSection).toBeDefined();
       expect(cardDimSection!.style.opacity).toBe('1');
     });
 
     it('disables pointer events on non-matching sections', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const input = container.querySelector<HTMLInputElement>('input[aria-label="Filter settings"]')!;
+      const input = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Filter settings"]',
+      )!;
       triggerFilter(input, 'typography');
 
       const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
       const nonMatching = Array.from(sections).filter(
-        (s) => !s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
+        (s) =>
+          !s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
       );
       for (const section of nonMatching) {
         expect(section.style.pointerEvents).toBe('none');

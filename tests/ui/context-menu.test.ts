@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import { showContextMenu, dismissContextMenu, ContextMenuItem } from '../../src/ui/context-menu';
 
 function makeItems(overrides?: Partial<ContextMenuItem>[]): ContextMenuItem[] {
@@ -29,7 +29,7 @@ describe('ContextMenu', () => {
       showContextMenu({ x: 100, y: 100, items: makeItems() });
       const items = getMenuItems();
       expect(items).toHaveLength(3);
-      items.forEach(item => {
+      items.forEach((item) => {
         expect(item.tagName).toBe('BUTTON');
         expect(item.getAttribute('role')).toBe('menuitem');
       });
@@ -51,9 +51,7 @@ describe('ContextMenu', () => {
     });
 
     it('renders icon prefix when icon is provided', () => {
-      const items: ContextMenuItem[] = [
-        { label: 'Edit', icon: '✏️', action: vi.fn() },
-      ];
+      const items: ContextMenuItem[] = [{ label: 'Edit', icon: '✏️', action: vi.fn() }];
       showContextMenu({ x: 100, y: 100, items });
       const btn = getMenuItems()[0];
       const spans = btn.querySelectorAll('span');
@@ -96,18 +94,14 @@ describe('ContextMenu', () => {
     });
 
     it('applies reduced opacity to disabled items', () => {
-      const items: ContextMenuItem[] = [
-        { label: 'Disabled', disabled: true, action: vi.fn() },
-      ];
+      const items: ContextMenuItem[] = [{ label: 'Disabled', disabled: true, action: vi.fn() }];
       showContextMenu({ x: 100, y: 100, items });
       expect(getMenuItems()[0].style.opacity).toBe('0.4');
     });
 
     it('does not fire action on disabled item click', () => {
       const action = vi.fn();
-      const items: ContextMenuItem[] = [
-        { label: 'Disabled', disabled: true, action },
-      ];
+      const items: ContextMenuItem[] = [{ label: 'Disabled', disabled: true, action }];
       showContextMenu({ x: 100, y: 100, items });
       getMenuItems()[0].click();
       expect(action).not.toHaveBeenCalled();
@@ -148,7 +142,7 @@ describe('ContextMenu', () => {
       showContextMenu({ x: 100, y: 100, items: makeItems() });
       expect(getMenu()).not.toBeNull();
       // The outside click handler is deferred with setTimeout(0)
-      await new Promise(r => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 0));
       document.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       expect(getMenu()).toBeNull();
     });
@@ -270,9 +264,7 @@ describe('ContextMenu', () => {
   describe('submenu support', () => {
     it('renders arrow indicator for items with submenu', () => {
       const items: ContextMenuItem[] = [
-        { label: 'Category', submenu: [
-          { label: 'Engineering', action: vi.fn() },
-        ]},
+        { label: 'Category', submenu: [{ label: 'Engineering', action: vi.fn() }] },
       ];
       showContextMenu({ x: 100, y: 100, items });
       const btn = getMenuItems()[0];
@@ -281,10 +273,13 @@ describe('ContextMenu', () => {
 
     it('shows submenu on hover', () => {
       const items: ContextMenuItem[] = [
-        { label: 'Category', submenu: [
-          { label: 'Engineering', action: vi.fn() },
-          { label: 'Design', action: vi.fn() },
-        ]},
+        {
+          label: 'Category',
+          submenu: [
+            { label: 'Engineering', action: vi.fn() },
+            { label: 'Design', action: vi.fn() },
+          ],
+        },
       ];
       showContextMenu({ x: 100, y: 100, items });
       const btn = getMenuItems()[0];
@@ -302,9 +297,7 @@ describe('ContextMenu', () => {
     it('clicking submenu item dismisses entire menu and calls action', () => {
       const action = vi.fn();
       const items: ContextMenuItem[] = [
-        { label: 'Category', submenu: [
-          { label: 'Engineering', action },
-        ]},
+        { label: 'Category', submenu: [{ label: 'Engineering', action }] },
       ];
       showContextMenu({ x: 100, y: 100, items });
       const btn = getMenuItems()[0];
@@ -320,9 +313,7 @@ describe('ContextMenu', () => {
 
     it('renders submenu items with icons', () => {
       const items: ContextMenuItem[] = [
-        { label: 'Category', submenu: [
-          { label: 'Engineering', icon: '🔧', action: vi.fn() },
-        ]},
+        { label: 'Category', submenu: [{ label: 'Engineering', icon: '🔧', action: vi.fn() }] },
       ];
       showContextMenu({ x: 100, y: 100, items });
       const btn = getMenuItems()[0];
@@ -340,9 +331,7 @@ describe('ContextMenu', () => {
       vi.useFakeTimers();
       try {
         const items: ContextMenuItem[] = [
-          { label: 'Category', submenu: [
-            { label: 'Engineering', action: vi.fn() },
-          ]},
+          { label: 'Category', submenu: [{ label: 'Engineering', action: vi.fn() }] },
         ];
         showContextMenu({ x: 100, y: 100, items });
         const btn = getMenuItems()[0];
@@ -363,9 +352,11 @@ describe('ContextMenu', () => {
     it('does not call parent action for submenu items', () => {
       const parentAction = vi.fn();
       const items: ContextMenuItem[] = [
-        { label: 'Category', action: parentAction, submenu: [
-          { label: 'Engineering', action: vi.fn() },
-        ]},
+        {
+          label: 'Category',
+          action: parentAction,
+          submenu: [{ label: 'Engineering', action: vi.fn() }],
+        },
       ];
       showContextMenu({ x: 100, y: 100, items });
       const btn = getMenuItems()[0];

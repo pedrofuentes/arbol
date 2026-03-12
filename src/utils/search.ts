@@ -67,10 +67,7 @@ export function getMatchingNodeIds(root: OrgNode, query: string): Set<string> {
  * Returns a Set of node IDs that should be visible to show all matches.
  * This includes the matching nodes AND all their ancestors up to root.
  */
-export function getVisibleNodesForMatches(
-  root: OrgNode,
-  matchIds: Set<string>,
-): Set<string> {
+export function getVisibleNodesForMatches(root: OrgNode, matchIds: Set<string>): Set<string> {
   if (matchIds.size === 0) return new Set();
 
   const visible = new Set<string>();

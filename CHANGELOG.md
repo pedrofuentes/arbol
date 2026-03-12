@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] — 2026-03-12
+
+### Security
+- Pinned `xlsx` dependency to exact version `0.18.5` (known prototype pollution and ReDoS vulnerabilities in `^0.18.x` range)
+- Hardened Content Security Policy with `form-action`, `frame-ancestors`, `base-uri`, `object-src`, and `connect-src` directives
+- Replaced `innerHTML` usage in import editor drop zone with safe DOM construction
+
+### Fixed
+- Added missing `FileReader.onerror` handler in import editor preset file loader
+- Wrapped all async context menu actions (Move, Remove, bulk operations) in try/catch to prevent unhandled promise rejections
+- Added `console.warn` logging to 5 silent `catch` blocks in stores (`CategoryStore`, `MappingStore`, `SettingsStore`) and `main.ts`
+- Implemented `ShortcutManager.destroy()` — now properly removes the keydown event listener
+- Replaced `as any` type assertions in chart renderer with proper `CardDatum` D3 generics
+
+### Improved
+- **Performance**: `flattenTree()` rewritten as iterative (avoids stack overflow on deep trees), `cloneTree()` uses `structuredClone`, search results memoized with auto-invalidation
+- **Accessibility**: Added `:focus-visible` outlines on all buttons/inputs, skip-navigation link, `@media (prefers-reduced-motion: reduce)`, focus traps in all modal dialogs, `aria-hidden` on decorative emoji icons
+- **Reusability**: Extracted shared `dialog-utils.ts` with `createOverlay()`, `createDialogPanel()`, and `trapFocus()` — refactored confirm dialog, manager picker, and help dialog to use them
+
+### Added
+- ESLint + Prettier tooling with `lint`, `lint:fix`, `format`, `format:check`, and `type-check` npm scripts
+- `<meta name="description">` and `<meta name="theme-color">` tags in `index.html`
+- `.prettierrc` and `.prettierignore` configuration files
+- 52 new tests across 4 new test files: `confirm-dialog`, `help-dialog`, `preset-creator`, `column-mapper` (722 total across 34 files)
+- Extended `.gitignore` with `*.log`, `.env`, `.env.local`, `.DS_Store`, `*.swp`, `*.swo`
+
 ## [1.3.0] — 2026-03-12
 
 ### Added

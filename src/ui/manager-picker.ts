@@ -1,3 +1,5 @@
+import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
+
 export interface ManagerPickerItem {
   id: string;
   name: string;
@@ -13,10 +15,12 @@ export interface ManagerPickerOptions {
 export function showManagerPicker(options: ManagerPickerOptions): Promise<string | null> {
   return new Promise((resolve) => {
     let resolved = false;
+    let removeTrap: (() => void) | null = null;
 
     const dismiss = (result: string | null) => {
       if (resolved) return;
       resolved = true;
+      removeTrap?.();
       document.removeEventListener('keydown', escHandler);
       if (document.body.contains(overlay)) {
         document.body.removeChild(overlay);
@@ -24,30 +28,14 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<string
       resolve(result);
     };
 
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-      position:fixed;top:0;left:0;right:0;bottom:0;
-      background:rgba(0,0,0,0.5);z-index:1000;
-      display:flex;align-items:center;justify-content:center;
-      backdrop-filter:blur(2px);
-      animation:fadeIn 150ms ease;
-    `;
+    const overlay = createOverlay();
 
     const dialogTitleId = 'manager-picker-title';
-    const dialog = document.createElement('div');
-    dialog.setAttribute('role', 'dialog');
-    dialog.setAttribute('aria-modal', 'true');
-    dialog.setAttribute('aria-labelledby', dialogTitleId);
-    dialog.style.cssText = `
-      background:var(--bg-elevated);
-      border:1px solid var(--border-default);
-      border-radius:var(--radius-xl);
-      padding:24px;
-      min-width:360px;
-      max-width:480px;
-      box-shadow:var(--shadow-lg);
-      animation:slideUp 200ms ease;
-    `;
+    const dialog = createDialogPanel({
+      ariaLabelledBy: dialogTitleId,
+      minWidth: '360px',
+      maxWidth: '480px',
+    });
 
     const titleEl = document.createElement('h3');
     titleEl.id = dialogTitleId;
@@ -175,6 +163,8 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<string
       }
     };
     document.addEventListener('keydown', escHandler);
+
+    removeTrap = trapFocus(dialog);
 
     document.body.appendChild(overlay);
     searchInput.focus();

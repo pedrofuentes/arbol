@@ -112,7 +112,9 @@ describe('FormEditor', () => {
       editor.selectNode('b');
 
       const editName = container.querySelector<HTMLInputElement>('input[data-field="edit-name"]')!;
-      const editTitle = container.querySelector<HTMLInputElement>('input[data-field="edit-title"]')!;
+      const editTitle = container.querySelector<HTMLInputElement>(
+        'input[data-field="edit-title"]',
+      )!;
       const saveBtn = container.querySelector<HTMLButtonElement>('button[data-action="save"]')!;
 
       editName.value = 'Robert';
@@ -145,7 +147,9 @@ describe('FormEditor', () => {
       editor.setSelectionChangeHandler(handler);
 
       editor.selectNode('b');
-      const cancelBtn = container.querySelector<HTMLButtonElement>('button[data-action="deselect"]')!;
+      const cancelBtn = container.querySelector<HTMLButtonElement>(
+        'button[data-action="deselect"]',
+      )!;
       cancelBtn.click();
 
       expect(handler).toHaveBeenCalledWith(null);

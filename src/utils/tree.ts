@@ -22,15 +22,11 @@ export function cloneTree(node: OrgNode): OrgNode {
   return structuredClone(node);
 }
 
-export function filterVisibleTree(
-  node: OrgNode,
-): OrgNode {
+export function filterVisibleTree(node: OrgNode): OrgNode {
   const clone: OrgNode = { id: node.id, name: node.name, title: node.title };
   if (node.categoryId !== undefined) clone.categoryId = node.categoryId;
   if (node.children && node.children.length > 0) {
-    clone.children = node.children.map((child) =>
-      filterVisibleTree(child),
-    );
+    clone.children = node.children.map((child) => filterVisibleTree(child));
   }
   return clone;
 }
@@ -61,9 +57,11 @@ export function isM1(node: OrgNode): boolean {
   return node.children.every(isLeaf);
 }
 
-export function stripM1Children(
-  node: OrgNode,
-): { layoutTree: OrgNode; icMap: Map<string, OrgNode[]>; palMap: Map<string, OrgNode[]> } {
+export function stripM1Children(node: OrgNode): {
+  layoutTree: OrgNode;
+  icMap: Map<string, OrgNode[]>;
+  palMap: Map<string, OrgNode[]>;
+} {
   const icMap = new Map<string, OrgNode[]>();
   const palMap = new Map<string, OrgNode[]>();
 

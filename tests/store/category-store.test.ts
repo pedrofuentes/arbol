@@ -7,9 +7,15 @@ const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
     getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
-    removeItem: vi.fn((key: string) => { delete store[key]; }),
-    clear: vi.fn(() => { store = {}; }),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
   };
 })();
 
@@ -62,9 +68,21 @@ describe('CategoryStore', () => {
     it('default categories have correct ids, labels, and colors', () => {
       const categories = store.getAll();
 
-      expect(categories[0]).toEqual({ id: 'open-position', label: 'Open Position', color: '#fbbf24' });
-      expect(categories[1]).toEqual({ id: 'offer-pending', label: 'Offer Pending', color: '#60a5fa' });
-      expect(categories[2]).toEqual({ id: 'future-start', label: 'Future Start', color: '#a78bfa' });
+      expect(categories[0]).toEqual({
+        id: 'open-position',
+        label: 'Open Position',
+        color: '#fbbf24',
+      });
+      expect(categories[1]).toEqual({
+        id: 'offer-pending',
+        label: 'Offer Pending',
+        color: '#60a5fa',
+      });
+      expect(categories[2]).toEqual({
+        id: 'future-start',
+        label: 'Future Start',
+        color: '#a78bfa',
+      });
     });
 
     it('does not auto-save defaults to localStorage', () => {
@@ -178,16 +196,15 @@ describe('CategoryStore', () => {
 
     it('throws on empty label', () => {
       expect(() => store.update('open-position', { label: '' })).toThrow('label must not be empty');
-      expect(() => store.update('open-position', { label: '   ' })).toThrow('label must not be empty');
+      expect(() => store.update('open-position', { label: '   ' })).toThrow(
+        'label must not be empty',
+      );
     });
 
     it('saves to localStorage', () => {
       store.update('open-position', { label: 'Vacant' });
 
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        STORAGE_KEY,
-        expect.any(String),
-      );
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(STORAGE_KEY, expect.any(String));
       const stored = JSON.parse(localStorageMock.setItem.mock.calls[0][1]);
       const updated = stored.find((c: { id: string }) => c.id === 'open-position');
       expect(updated.label).toBe('Vacant');

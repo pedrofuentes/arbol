@@ -18,12 +18,16 @@ export class ZoomManager {
     this.g = g;
     this.svgSelection = d3.select(svg);
 
-    this.zoom = d3.zoom<SVGSVGElement, unknown>()
+    this.zoom = d3
+      .zoom<SVGSVGElement, unknown>()
       .scaleExtent([MIN_ZOOM, MAX_ZOOM])
       .extent(() => {
         const w = this.svg.clientWidth || this.svg.getBoundingClientRect().width || 1;
         const h = this.svg.clientHeight || this.svg.getBoundingClientRect().height || 1;
-        return [[0, 0], [w, h]] as [[number, number], [number, number]];
+        return [
+          [0, 0],
+          [w, h],
+        ] as [[number, number], [number, number]];
       })
       .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
         d3.select(this.g).attr('transform', event.transform.toString());
@@ -35,7 +39,9 @@ export class ZoomManager {
 
   onZoom(listener: () => void): () => void {
     this.zoomListeners.add(listener);
-    return () => { this.zoomListeners.delete(listener); };
+    return () => {
+      this.zoomListeners.delete(listener);
+    };
   }
 
   fitToContent(padding: number = DEFAULT_FIT_PADDING): void {
@@ -86,6 +92,6 @@ export class ZoomManager {
 
   getRelativeZoomPercent(): number {
     const currentScale = this.getCurrentTransform().k;
-    return Math.round(currentScale / this.baseScale * 100);
+    return Math.round((currentScale / this.baseScale) * 100);
   }
 }

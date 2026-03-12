@@ -1,11 +1,23 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { showInlineEditor, dismissInlineEditor, InlineEditorOptions } from '../../src/ui/inline-editor';
+import {
+  showInlineEditor,
+  dismissInlineEditor,
+  InlineEditorOptions,
+} from '../../src/ui/inline-editor';
 
 function makeRect(overrides: Partial<DOMRect> = {}): DOMRect {
   return {
-    left: 100, top: 200, width: 180, height: 60,
-    right: 280, bottom: 260, x: 100, y: 200,
-    toJSON() { return {}; },
+    left: 100,
+    top: 200,
+    width: 180,
+    height: 60,
+    right: 280,
+    bottom: 260,
+    x: 100,
+    y: 200,
+    toJSON() {
+      return {};
+    },
     ...overrides,
   };
 }

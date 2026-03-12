@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { OrgStore } from '../../src/store/org-store';
 import { OrgNode } from '../../src/types';
 import { JsonEditor } from '../../src/editor/json-editor';

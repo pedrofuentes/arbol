@@ -68,7 +68,13 @@ describe('ShortcutManager', () => {
     const undoHandler = vi.fn();
     const redoHandler = vi.fn();
     manager.register({ key: 'z', ctrl: true, handler: undoHandler, description: 'Undo' });
-    manager.register({ key: 'z', ctrl: true, shift: true, handler: redoHandler, description: 'Redo' });
+    manager.register({
+      key: 'z',
+      ctrl: true,
+      shift: true,
+      handler: redoHandler,
+      description: 'Redo',
+    });
 
     fireKey('z', { ctrlKey: true, shiftKey: true });
     expect(redoHandler).toHaveBeenCalledOnce();

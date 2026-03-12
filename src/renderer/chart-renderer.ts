@@ -3,6 +3,15 @@ import { OrgNode, ColorCategory } from '../types';
 import { computeLayout, LayoutResult } from './layout-engine';
 import { ZoomManager } from './zoom-manager';
 
+interface CardDatum {
+  data: {
+    id: string;
+    name: string;
+    title: string;
+    categoryId?: string;
+  };
+}
+
 export interface RendererOptions {
   container: HTMLElement;
   // Card dimensions
@@ -38,7 +47,7 @@ export interface RendererOptions {
   categories?: ColorCategory[];
 }
 
-export interface ResolvedOptions extends Required<RendererOptions> {}
+export type ResolvedOptions = Required<RendererOptions>;
 
 export type NodeClickHandler = (nodeId: string, event: MouseEvent) => void;
 export type NodeRightClickHandler = (nodeId: string, event: MouseEvent) => void;
@@ -107,12 +116,13 @@ export class ChartRenderer {
 
     this.g.selectAll('*').remove();
 
-    const{ nodeHeight, linkColor, linkWidth, icContainerFill } = this.opts;
+    const { nodeHeight, linkColor, linkWidth, icContainerFill } = this.opts;
 
     // Layer 1: Tree links (elbow paths + vertical connectors through Advisor area)
     const linksGroup = this.g.append('g').attr('class', 'links');
     for (const link of layout.links.filter((l) => l.layer === 'tree')) {
-      linksGroup.append('path')
+      linksGroup
+        .append('path')
         .attr('class', 'link')
         .attr('d', link.path)
         .attr('fill', 'none')
@@ -123,7 +133,8 @@ export class ChartRenderer {
     // Layer 2: IC stacks (behind manager nodes)
     const icGroup = this.g.append('g').attr('class', 'ic-stacks');
     for (const container of layout.icContainers) {
-      icGroup.append('rect')
+      icGroup
+        .append('rect')
         .attr('class', 'ic-container')
         .attr('x', container.x)
         .attr('y', container.y)
@@ -133,20 +144,29 @@ export class ChartRenderer {
     }
 
     for (const node of layout.nodes.filter((n) => n.type === 'ic')) {
-      const g = icGroup.append('g')
+      const g = icGroup
+        .append('g')
         .attr('class', 'node ic-node')
         .attr('data-id', node.id)
         .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
 
-      const datum = { data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId } };
+      const datum = {
+        data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId },
+      };
       const sel = d3.select(g.node()!).datum(datum);
-      this.renderCardContent(sel as any, node.width, nodeHeight, () => node.id);
+      this.renderCardContent(
+        sel as d3.Selection<SVGGElement, CardDatum, null, undefined>,
+        node.width,
+        nodeHeight,
+        () => node.id,
+      );
     }
 
     // Layer 3: Advisor stacks (on top of tree links)
     const palGroup = this.g.append('g').attr('class', 'pal-stacks');
     for (const link of layout.links.filter((l) => l.layer === 'pal')) {
-      palGroup.append('path')
+      palGroup
+        .append('path')
         .attr('class', 'link')
         .attr('d', link.path)
         .attr('fill', 'none')
@@ -155,14 +175,22 @@ export class ChartRenderer {
     }
 
     for (const node of layout.nodes.filter((n) => n.type === 'pal')) {
-      const g = palGroup.append('g')
+      const g = palGroup
+        .append('g')
         .attr('class', 'node pal-node')
         .attr('data-id', node.id)
         .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
 
-      const datum = { data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId } };
+      const datum = {
+        data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId },
+      };
       const sel = d3.select(g.node()!).datum(datum);
-      this.renderCardContent(sel as any, node.width, nodeHeight, () => node.id);
+      this.renderCardContent(
+        sel as d3.Selection<SVGGElement, CardDatum, null, undefined>,
+        node.width,
+        nodeHeight,
+        () => node.id,
+      );
     }
 
     // Layer 4: Manager nodes (topmost)
@@ -170,14 +198,22 @@ export class ChartRenderer {
     const managerNodes = layout.nodes.filter((n) => n.type === 'manager');
 
     for (const node of managerNodes) {
-      const g = nodesGroup.append('g')
+      const g = nodesGroup
+        .append('g')
         .attr('class', 'node')
         .attr('data-id', node.id)
         .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
 
-      const datum = { data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId } };
+      const datum = {
+        data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId },
+      };
       const sel = d3.select(g.node()!).datum(datum);
-      this.renderCardContent(sel as any, node.width, nodeHeight, (d: any) => d.data.id);
+      this.renderCardContent(
+        sel as d3.Selection<SVGGElement, CardDatum, null, undefined>,
+        node.width,
+        nodeHeight,
+        (d) => d.data.id,
+      );
     }
 
     if (this.hasRendered) {
@@ -224,20 +260,29 @@ export class ChartRenderer {
   }
 
   private renderCardContent(
-    selection: d3.Selection<SVGGElement, any, any, any>,
+    selection: d3.Selection<SVGGElement, CardDatum, null, undefined>,
     width: number,
     height: number,
-    getId: (d: any) => string,
+    getId: (d: CardDatum) => string,
   ): void {
-    const { textPaddingTop, nameFontSize, titleFontSize, textGap,
-            cardFill, cardStroke, cardStrokeWidth } = this.opts;
+    const {
+      textPaddingTop,
+      nameFontSize,
+      titleFontSize,
+      textGap,
+      cardFill,
+      cardStroke,
+      cardStrokeWidth,
+    } = this.opts;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const titleY = textPaddingTop + nameFontSize + textGap;
 
-    selection.append('rect')
+    selection
+      .append('rect')
       .attr('width', width)
       .attr('height', height)
-      .attr('fill', (d: any) => {
+      .attr('fill', (d: CardDatum) => {
         const catId = d.data?.categoryId;
         if (catId && self.opts.categories.length > 0) {
           const cat = self.opts.categories.find((c: ColorCategory) => c.id === catId);
@@ -258,7 +303,8 @@ export class ChartRenderer {
       });
 
     // Text elements pass pointer events through to the rect beneath
-    selection.append('text')
+    selection
+      .append('text')
       .attr('class', 'node-name')
       .attr('x', width / 2)
       .attr('y', textPaddingTop)
@@ -268,9 +314,10 @@ export class ChartRenderer {
       .attr('font-family', 'Calibri, sans-serif')
       .attr('font-size', `${nameFontSize}px`)
       .attr('pointer-events', 'none')
-      .text((d: any) => d.data?.name ?? d.name);
+      .text((d: CardDatum) => d.data.name);
 
-    selection.append('text')
+    selection
+      .append('text')
       .attr('class', 'node-title')
       .attr('x', width / 2)
       .attr('y', titleY)
@@ -280,7 +327,7 @@ export class ChartRenderer {
       .attr('font-size', `${titleFontSize}px`)
       .attr('fill', '#64748b')
       .attr('pointer-events', 'none')
-      .text((d: any) => d.data?.title ?? d.title);
+      .text((d: CardDatum) => d.data.title);
   }
 
   private renderLegend(layout: LayoutResult): void {
@@ -298,20 +345,23 @@ export class ChartRenderer {
     const legendX = boundingBox.minX;
     const legendY = boundingBox.minY + boundingBox.height + 20;
 
-    const legendGroup = this.g.append('g')
-      .attr('class', 'legend');
+    const legendGroup = this.g.append('g').attr('class', 'legend');
 
     // Background rectangle (drawn after we know dimensions)
-    const bgRect = legendGroup.append('rect')
-      .attr('class', 'legend-bg');
+    const bgRect = legendGroup.append('rect').attr('class', 'legend-bg');
 
     let maxTextWidth = 0;
 
     categories.forEach((cat, i) => {
-      const rowG = legendGroup.append('g')
-        .attr('transform', `translate(${legendX + legendPadding}, ${legendY + legendPadding + i * rowHeight})`);
+      const rowG = legendGroup
+        .append('g')
+        .attr(
+          'transform',
+          `translate(${legendX + legendPadding}, ${legendY + legendPadding + i * rowHeight})`,
+        );
 
-      rowG.append('rect')
+      rowG
+        .append('rect')
         .attr('width', swatchSize)
         .attr('height', swatchSize)
         .attr('fill', cat.color)
@@ -319,7 +369,8 @@ export class ChartRenderer {
         .attr('stroke-width', 0.5)
         .attr('rx', 1);
 
-      const text = rowG.append('text')
+      const text = rowG
+        .append('text')
         .attr('x', swatchSize + textGap)
         .attr('y', swatchSize / 2)
         .attr('dominant-baseline', 'central')
@@ -354,8 +405,11 @@ export class ChartRenderer {
   setSelectedNode(nodeId: string | null): void {
     this.g.selectAll('.node').classed('selected', false);
     if (nodeId) {
-      this.g.selectAll<SVGGElement, unknown>('.node')
-        .filter(function () { return this.getAttribute('data-id') === nodeId; })
+      this.g
+        .selectAll<SVGGElement, unknown>('.node')
+        .filter(function () {
+          return this.getAttribute('data-id') === nodeId;
+        })
         .classed('selected', true);
     }
   }
@@ -363,7 +417,8 @@ export class ChartRenderer {
   setMultiSelectedNodes(nodeIds: Set<string> | null): void {
     this.g.selectAll('.node, .ic-node, .pal-node').classed('multi-selected', false);
     if (nodeIds && nodeIds.size > 0) {
-      this.g.selectAll<SVGGElement, unknown>('.node, .ic-node, .pal-node')
+      this.g
+        .selectAll<SVGGElement, unknown>('.node, .ic-node, .pal-node')
         .filter(function () {
           const id = this.getAttribute('data-id');
           return id !== null && nodeIds.has(id);
@@ -389,7 +444,9 @@ export class ChartRenderer {
   }
 
   getNodeScreenRect(nodeId: string): DOMRect | null {
-    const node = this.g.select<SVGGElement>(`.node[data-id="${nodeId}"], .ic-node[data-id="${nodeId}"], .pal-node[data-id="${nodeId}"]`);
+    const node = this.g.select<SVGGElement>(
+      `.node[data-id="${nodeId}"], .ic-node[data-id="${nodeId}"], .pal-node[data-id="${nodeId}"]`,
+    );
     if (node.empty()) return null;
     return node.node()!.getBoundingClientRect();
   }

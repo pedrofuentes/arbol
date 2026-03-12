@@ -49,7 +49,11 @@ export function parseSvgPath(d: string): Point[] {
   if (!commands) return [];
 
   for (const cmd of commands) {
-    const nums = cmd.slice(1).trim().split(/[\s,]+/).map(Number);
+    const nums = cmd
+      .slice(1)
+      .trim()
+      .split(/[\s,]+/)
+      .map(Number);
     if (nums.length >= 2 && isFinite(nums[0]) && isFinite(nums[1])) {
       points.push({ x: nums[0], y: nums[1] });
     }
@@ -113,7 +117,7 @@ function addNodeShape(
 
   let fillColor = DEFAULT_CARD_FILL;
   if (node.categoryId && categories) {
-    const cat = categories.find(c => c.id === node.categoryId);
+    const cat = categories.find((c) => c.id === node.categoryId);
     if (cat) {
       // Strip '#' prefix for pptxgenjs (it expects hex without #)
       fillColor = cat.color.replace(/^#/, '');
@@ -184,7 +188,14 @@ function addLinkLines(
 
   for (let i = 0; i < points.length - 1; i++) {
     const start = convertCoordinates(points[i].x, points[i].y, offsetX, offsetY, scale, padding);
-    const end = convertCoordinates(points[i + 1].x, points[i + 1].y, offsetX, offsetY, scale, padding);
+    const end = convertCoordinates(
+      points[i + 1].x,
+      points[i + 1].y,
+      offsetX,
+      offsetY,
+      scale,
+      padding,
+    );
 
     const x = Math.min(start.x, end.x);
     const y = Math.min(start.y, end.y);

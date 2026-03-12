@@ -8,9 +8,7 @@ const VALID_JSON = JSON.stringify({
   id: 'ceo',
   name: 'Jane Doe',
   title: 'CEO',
-  children: [
-    { id: 'vp', name: 'John Smith', title: 'VP Eng' },
-  ],
+  children: [{ id: 'vp', name: 'John Smith', title: 'VP Eng' }],
 });
 
 const VALID_CSV = [
@@ -37,18 +35,12 @@ describe('ImportEditor', () => {
     document.body.removeChild(container);
   });
 
-  const getParseBtn = () =>
-    container.querySelector('button.btn-primary') as HTMLButtonElement;
-  const getTextarea = () =>
-    container.querySelector('textarea') as HTMLTextAreaElement;
-  const getStatus = () =>
-    container.querySelector('[data-field="status"]') as HTMLDivElement;
-  const getError = () =>
-    container.querySelector('[data-field="error"]') as HTMLDivElement;
-  const getApplyBtn = () =>
-    container.querySelector('[data-action="apply"]') as HTMLButtonElement;
-  const getCancelBtn = () =>
-    container.querySelector('[data-action="cancel"]') as HTMLButtonElement;
+  const getParseBtn = () => container.querySelector('button.btn-primary') as HTMLButtonElement;
+  const getTextarea = () => container.querySelector('textarea') as HTMLTextAreaElement;
+  const getStatus = () => container.querySelector('[data-field="status"]') as HTMLDivElement;
+  const getError = () => container.querySelector('[data-field="error"]') as HTMLDivElement;
+  const getApplyBtn = () => container.querySelector('[data-action="apply"]') as HTMLButtonElement;
+  const getCancelBtn = () => container.querySelector('[data-action="cancel"]') as HTMLButtonElement;
 
   it('renders a drop zone and paste textarea', () => {
     expect(getTextarea()).not.toBeNull();
@@ -60,9 +52,7 @@ describe('ImportEditor', () => {
   it('renders format help sections (details elements)', () => {
     const details = container.querySelectorAll('details');
     expect(details.length).toBeGreaterThanOrEqual(2);
-    const summaries = Array.from(details).map(
-      (d) => d.querySelector('summary')!.textContent,
-    );
+    const summaries = Array.from(details).map((d) => d.querySelector('summary')!.textContent);
     expect(summaries.some((s) => s?.includes('CSV'))).toBe(true);
     expect(summaries.some((s) => s?.includes('JSON'))).toBe(true);
   });
@@ -182,9 +172,7 @@ describe('ImportEditor — Preset selector UI', () => {
   });
 
   it('renders action buttons: + New, 📂 Import, 💾 Export All', () => {
-    const buttons = Array.from(container.querySelectorAll('button')).map(
-      (b) => b.textContent,
-    );
+    const buttons = Array.from(container.querySelectorAll('button')).map((b) => b.textContent);
     expect(buttons).toContain('+ New');
     expect(buttons).toContain('📂 Import');
     expect(buttons).toContain('💾 Export All');
@@ -214,12 +202,9 @@ describe('ImportEditor — Mapping flow on auto-detect failure', () => {
     document.body.removeChild(container);
   });
 
-  const getParseBtn = () =>
-    container.querySelector('button.btn-primary') as HTMLButtonElement;
-  const getTextarea = () =>
-    container.querySelector('textarea') as HTMLTextAreaElement;
-  const getError = () =>
-    container.querySelector('[data-field="error"]') as HTMLDivElement;
+  const getParseBtn = () => container.querySelector('button.btn-primary') as HTMLButtonElement;
+  const getTextarea = () => container.querySelector('textarea') as HTMLTextAreaElement;
+  const getError = () => container.querySelector('[data-field="error"]') as HTMLDivElement;
 
   it('shows auto-detection failed error and mapping area when non-standard CSV is pasted', () => {
     getTextarea().value = NON_STANDARD_CSV;
@@ -255,9 +240,9 @@ describe('ImportEditor — Inline preset actions', () => {
   });
 
   const findButton = (text: string) =>
-    Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent === text,
-    ) as HTMLButtonElement | undefined;
+    Array.from(container.querySelectorAll('button')).find((b) => b.textContent === text) as
+      | HTMLButtonElement
+      | undefined;
 
   it('clicking "+ New" shows the preset creator form', () => {
     findButton('+ New')!.click();
@@ -307,9 +292,7 @@ const UPPERCASE_JSON = JSON.stringify({
   id: 'ceo',
   name: 'JANE DOE',
   title: 'CHIEF EXECUTIVE OFFICER',
-  children: [
-    { id: 'vp', name: 'JOHN SMITH', title: 'VP ENGINEERING' },
-  ],
+  children: [{ id: 'vp', name: 'JOHN SMITH', title: 'VP ENGINEERING' }],
 });
 
 describe('ImportEditor — Text Normalization', () => {
@@ -329,12 +312,9 @@ describe('ImportEditor — Text Normalization', () => {
     document.body.removeChild(container);
   });
 
-  const getParseBtn = () =>
-    container.querySelector('button.btn-primary') as HTMLButtonElement;
-  const getTextarea = () =>
-    container.querySelector('textarea') as HTMLTextAreaElement;
-  const getApplyBtn = () =>
-    container.querySelector('[data-action="apply"]') as HTMLButtonElement;
+  const getParseBtn = () => container.querySelector('button.btn-primary') as HTMLButtonElement;
+  const getTextarea = () => container.querySelector('textarea') as HTMLTextAreaElement;
+  const getApplyBtn = () => container.querySelector('[data-action="apply"]') as HTMLButtonElement;
   const getNormSection = () =>
     container.querySelector('[data-section="normalization"]') as HTMLElement;
   const getNameNormSelect = () =>
@@ -364,10 +344,10 @@ describe('ImportEditor — Text Normalization', () => {
     getTextarea().value = UPPERCASE_CSV;
     getParseBtn().click();
 
-    const nameOptions = Array.from(getNameNormSelect().options).map(o => o.value);
+    const nameOptions = Array.from(getNameNormSelect().options).map((o) => o.value);
     expect(nameOptions).toEqual(['none', 'titleCase', 'uppercase', 'lowercase']);
 
-    const titleOptions = Array.from(getTitleNormSelect().options).map(o => o.value);
+    const titleOptions = Array.from(getTitleNormSelect().options).map((o) => o.value);
     expect(titleOptions).toEqual(['none', 'titleCase', 'uppercase', 'lowercase']);
   });
 

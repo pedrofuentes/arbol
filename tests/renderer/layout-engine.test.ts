@@ -295,12 +295,17 @@ describe('computeLayout', () => {
   describe('categoryId propagation', () => {
     it('passes categoryId from OrgNode to manager LayoutNode', () => {
       const tree: OrgNode = {
-        id: 'root', name: 'CEO', title: 'CEO', categoryId: 'cat-exec',
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        categoryId: 'cat-exec',
         children: [
-          { id: 'mgr1', name: 'CTO', title: 'CTO', categoryId: 'cat-tech',
-            children: [
-              { id: 'ic1', name: 'IC', title: 'Eng' },
-            ],
+          {
+            id: 'mgr1',
+            name: 'CTO',
+            title: 'CTO',
+            categoryId: 'cat-tech',
+            children: [{ id: 'ic1', name: 'IC', title: 'Eng' }],
           },
         ],
       };
@@ -313,7 +318,9 @@ describe('computeLayout', () => {
 
     it('passes categoryId from OrgNode to IC LayoutNode', () => {
       const tree: OrgNode = {
-        id: 'root', name: 'Manager', title: 'M1',
+        id: 'root',
+        name: 'Manager',
+        title: 'M1',
         children: [
           { id: 'ic1', name: 'IC One', title: 'Eng', categoryId: 'cat-eng' },
           { id: 'ic2', name: 'IC Two', title: 'Eng', categoryId: 'cat-design' },
@@ -329,14 +336,16 @@ describe('computeLayout', () => {
 
     it('passes categoryId from OrgNode to Advisor LayoutNode', () => {
       const tree: OrgNode = {
-        id: 'root', name: 'CEO', title: 'CEO',
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
         children: [
           { id: 'pal1', name: 'Advisor One', title: 'Advisor', categoryId: 'cat-advisor' },
           {
-            id: 'mgr1', name: 'CTO', title: 'CTO',
-            children: [
-              { id: 'ic1', name: 'IC', title: 'Eng' },
-            ],
+            id: 'mgr1',
+            name: 'CTO',
+            title: 'CTO',
+            children: [{ id: 'ic1', name: 'IC', title: 'Eng' }],
           },
         ],
       };

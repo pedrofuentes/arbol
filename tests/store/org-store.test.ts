@@ -51,9 +51,9 @@ describe('OrgStore', () => {
 
     it('throws if parent does not exist', () => {
       const store = new OrgStore(makeRoot());
-      expect(() =>
-        store.addChild('zzz', { name: 'X', title: 'X' }),
-      ).toThrow('Parent node "zzz" not found');
+      expect(() => store.addChild('zzz', { name: 'X', title: 'X' })).toThrow(
+        'Parent node "zzz" not found',
+      );
     });
   });
 
@@ -77,13 +77,11 @@ describe('OrgStore', () => {
 
     it('removes the entire subtree', () => {
       const root = makeRoot();
-      root.children![0].children = [
-        { id: 'd', name: 'Dan', title: 'Eng' },
-      ];
+      root.children![0].children = [{ id: 'd', name: 'Dan', title: 'Eng' }];
       const store = new OrgStore(root);
       store.removeNode('b');
       const allNodes = flattenTree(store.getTree());
-      expect(allNodes.map(n => n.id)).not.toContain('d');
+      expect(allNodes.map((n) => n.id)).not.toContain('d');
     });
   });
 
@@ -110,9 +108,7 @@ describe('OrgStore', () => {
 
     it('throws if node not found', () => {
       const store = new OrgStore(makeRoot());
-      expect(() => store.updateNode('zzz', { name: 'X' })).toThrow(
-        'Node "zzz" not found',
-      );
+      expect(() => store.updateNode('zzz', { name: 'X' })).toThrow('Node "zzz" not found');
     });
   });
 
@@ -336,14 +332,20 @@ describe('OrgStore', () => {
 
   describe('moveNode', () => {
     const makeTree = (): OrgNode => ({
-      id: 'r', name: 'Root', title: 'CEO', children: [
-        { id: 'a', name: 'A', title: 'VP', children: [
-          { id: 'a1', name: 'A1', title: 'Dir' },
-          { id: 'a2', name: 'A2', title: 'Dir' },
-        ]},
-        { id: 'b', name: 'B', title: 'VP', children: [
-          { id: 'b1', name: 'B1', title: 'Dir' },
-        ]},
+      id: 'r',
+      name: 'Root',
+      title: 'CEO',
+      children: [
+        {
+          id: 'a',
+          name: 'A',
+          title: 'VP',
+          children: [
+            { id: 'a1', name: 'A1', title: 'Dir' },
+            { id: 'a2', name: 'A2', title: 'Dir' },
+          ],
+        },
+        { id: 'b', name: 'B', title: 'VP', children: [{ id: 'b1', name: 'B1', title: 'Dir' }] },
       ],
     });
 
@@ -368,7 +370,9 @@ describe('OrgStore', () => {
 
     it('throws when moving to own descendant', () => {
       const store = new OrgStore(makeTree());
-      expect(() => store.moveNode('a', 'a1')).toThrow('Cannot move a node under its own descendant');
+      expect(() => store.moveNode('a', 'a1')).toThrow(
+        'Cannot move a node under its own descendant',
+      );
     });
 
     it('throws when newParentId does not exist', () => {
@@ -408,22 +412,34 @@ describe('OrgStore', () => {
   describe('getDescendantCount', () => {
     it('returns 0 for leaf node', () => {
       const store = new OrgStore({
-        id: 'r', name: 'Root', title: 'CEO', children: [
-          { id: 'a', name: 'A', title: 'VP' },
-        ],
+        id: 'r',
+        name: 'Root',
+        title: 'CEO',
+        children: [{ id: 'a', name: 'A', title: 'VP' }],
       });
       expect(store.getDescendantCount('a')).toBe(0);
     });
 
     it('returns correct count for subtree', () => {
       const store = new OrgStore({
-        id: 'r', name: 'Root', title: 'CEO', children: [
-          { id: 'a', name: 'A', title: 'VP', children: [
-            { id: 'a1', name: 'A1', title: 'Dir' },
-            { id: 'a2', name: 'A2', title: 'Dir', children: [
-              { id: 'a2x', name: 'A2X', title: 'Eng' },
-            ]},
-          ]},
+        id: 'r',
+        name: 'Root',
+        title: 'CEO',
+        children: [
+          {
+            id: 'a',
+            name: 'A',
+            title: 'VP',
+            children: [
+              { id: 'a1', name: 'A1', title: 'Dir' },
+              {
+                id: 'a2',
+                name: 'A2',
+                title: 'Dir',
+                children: [{ id: 'a2x', name: 'A2X', title: 'Eng' }],
+              },
+            ],
+          },
         ],
       });
       expect(store.getDescendantCount('a')).toBe(3);
@@ -433,11 +449,19 @@ describe('OrgStore', () => {
 
   describe('removeNodeWithReassign', () => {
     const makeTree = (): OrgNode => ({
-      id: 'r', name: 'Root', title: 'CEO', children: [
-        { id: 'a', name: 'A', title: 'VP', children: [
-          { id: 'a1', name: 'A1', title: 'Dir' },
-          { id: 'a2', name: 'A2', title: 'Dir' },
-        ]},
+      id: 'r',
+      name: 'Root',
+      title: 'CEO',
+      children: [
+        {
+          id: 'a',
+          name: 'A',
+          title: 'VP',
+          children: [
+            { id: 'a1', name: 'A1', title: 'Dir' },
+            { id: 'a2', name: 'A2', title: 'Dir' },
+          ],
+        },
         { id: 'b', name: 'B', title: 'VP' },
       ],
     });
@@ -448,8 +472,8 @@ describe('OrgStore', () => {
       const tree = store.getTree();
       const b = findNodeById(tree, 'b')!;
       expect(b.children).toHaveLength(2);
-      expect(b.children!.map(c => c.id)).toContain('a1');
-      expect(b.children!.map(c => c.id)).toContain('a2');
+      expect(b.children!.map((c) => c.id)).toContain('a1');
+      expect(b.children!.map((c) => c.id)).toContain('a2');
       expect(findNodeById(tree, 'a')).toBeNull();
     });
 
@@ -485,17 +509,23 @@ describe('OrgStore', () => {
 
     it('throws when target parent does not exist', () => {
       const store = new OrgStore(makeTree());
-      expect(() => store.removeNodeWithReassign('a', 'zzz')).toThrow('Target parent "zzz" not found');
+      expect(() => store.removeNodeWithReassign('a', 'zzz')).toThrow(
+        'Target parent "zzz" not found',
+      );
     });
 
     it('throws when reassigning to the node being removed', () => {
       const store = new OrgStore(makeTree());
-      expect(() => store.removeNodeWithReassign('a', 'a')).toThrow('Cannot reassign children to the node being removed');
+      expect(() => store.removeNodeWithReassign('a', 'a')).toThrow(
+        'Cannot reassign children to the node being removed',
+      );
     });
 
     it('throws when reassigning to a descendant', () => {
       const store = new OrgStore(makeTree());
-      expect(() => store.removeNodeWithReassign('a', 'a1')).toThrow('Cannot reassign children to a descendant');
+      expect(() => store.removeNodeWithReassign('a', 'a1')).toThrow(
+        'Cannot reassign children to a descendant',
+      );
     });
 
     it('emits change event', () => {
@@ -508,10 +538,11 @@ describe('OrgStore', () => {
 
     it('cleans up empty children array on original parent', () => {
       const tree: OrgNode = {
-        id: 'r', name: 'Root', title: 'CEO', children: [
-          { id: 'a', name: 'A', title: 'VP', children: [
-            { id: 'a1', name: 'A1', title: 'Dir' },
-          ]},
+        id: 'r',
+        name: 'Root',
+        title: 'CEO',
+        children: [
+          { id: 'a', name: 'A', title: 'VP', children: [{ id: 'a1', name: 'A1', title: 'Dir' }] },
         ],
       };
       const store = new OrgStore(tree);
@@ -525,14 +556,20 @@ describe('OrgStore', () => {
 
   describe('bulkMoveNodes', () => {
     const makeTree = (): OrgNode => ({
-      id: 'r', name: 'Root', title: 'CEO', children: [
-        { id: 'a', name: 'A', title: 'VP', children: [
-          { id: 'a1', name: 'A1', title: 'Dir' },
-          { id: 'a2', name: 'A2', title: 'Dir' },
-        ]},
-        { id: 'b', name: 'B', title: 'VP', children: [
-          { id: 'b1', name: 'B1', title: 'Dir' },
-        ]},
+      id: 'r',
+      name: 'Root',
+      title: 'CEO',
+      children: [
+        {
+          id: 'a',
+          name: 'A',
+          title: 'VP',
+          children: [
+            { id: 'a1', name: 'A1', title: 'Dir' },
+            { id: 'a2', name: 'A2', title: 'Dir' },
+          ],
+        },
+        { id: 'b', name: 'B', title: 'VP', children: [{ id: 'b1', name: 'B1', title: 'Dir' }] },
       ],
     });
 
@@ -597,11 +634,19 @@ describe('OrgStore', () => {
 
   describe('bulkRemoveNodes', () => {
     const makeTree = (): OrgNode => ({
-      id: 'r', name: 'Root', title: 'CEO', children: [
-        { id: 'a', name: 'A', title: 'VP', children: [
-          { id: 'a1', name: 'A1', title: 'Dir' },
-          { id: 'a2', name: 'A2', title: 'Dir' },
-        ]},
+      id: 'r',
+      name: 'Root',
+      title: 'CEO',
+      children: [
+        {
+          id: 'a',
+          name: 'A',
+          title: 'VP',
+          children: [
+            { id: 'a1', name: 'A1', title: 'Dir' },
+            { id: 'a2', name: 'A2', title: 'Dir' },
+          ],
+        },
         { id: 'b', name: 'B', title: 'VP' },
       ],
     });
@@ -673,7 +718,9 @@ describe('OrgStore', () => {
 
     it('throws for unknown node', () => {
       const store = new OrgStore(makeRoot());
-      expect(() => store.setNodeCategory('nonexistent', 'cat-x')).toThrow('"nonexistent" not found');
+      expect(() => store.setNodeCategory('nonexistent', 'cat-x')).toThrow(
+        '"nonexistent" not found',
+      );
     });
 
     it('creates undo snapshot', () => {
@@ -747,9 +794,11 @@ describe('OrgStore', () => {
     it('accepts nodes with valid categoryId', () => {
       const store = new OrgStore(makeRoot());
       const json = JSON.stringify({
-        id: 'r', name: 'Root', title: 'CEO', categoryId: 'cat-exec', children: [
-          { id: 'a', name: 'A', title: 'VP', categoryId: 'cat-eng' },
-        ],
+        id: 'r',
+        name: 'Root',
+        title: 'CEO',
+        categoryId: 'cat-exec',
+        children: [{ id: 'a', name: 'A', title: 'VP', categoryId: 'cat-eng' }],
       });
       store.fromJSON(json);
       expect(findNodeById(store.getTree(), 'r')!.categoryId).toBe('cat-exec');
@@ -771,7 +820,12 @@ describe('OrgStore', () => {
 
     it('rejects categoryId over 100 chars', () => {
       const store = new OrgStore(makeRoot());
-      const json = JSON.stringify({ id: 'r', name: 'Root', title: 'CEO', categoryId: 'x'.repeat(101) });
+      const json = JSON.stringify({
+        id: 'r',
+        name: 'Root',
+        title: 'CEO',
+        categoryId: 'x'.repeat(101),
+      });
       expect(() => store.fromJSON(json)).toThrow('categoryId too long');
     });
   });

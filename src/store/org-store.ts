@@ -90,7 +90,8 @@ export class OrgStore {
     if (!node) throw new Error(`Node "${nodeId}" not found`);
     const newParent = findNodeById(this.root, newParentId);
     if (!newParent) throw new Error(`Target parent "${newParentId}" not found`);
-    if (nodeId === newParentId) throw new Error('Cannot reassign children to the node being removed');
+    if (nodeId === newParentId)
+      throw new Error('Cannot reassign children to the node being removed');
     if (this.isDescendant(nodeId, newParentId))
       throw new Error('Cannot reassign children to a descendant of the node being removed');
 
@@ -252,17 +253,22 @@ export class OrgStore {
     if (++count.value > 50000) throw new Error('Tree exceeds maximum of 50,000 nodes');
     if (!node || typeof node !== 'object') throw new Error('Invalid node: expected an object');
     const obj = node as Record<string, unknown>;
-    if (typeof obj.id !== 'string' || !obj.id.trim()) throw new Error('Each node must have a non-empty string id');
+    if (typeof obj.id !== 'string' || !obj.id.trim())
+      throw new Error('Each node must have a non-empty string id');
     if (typeof obj.name !== 'string') throw new Error('Each node must have a string name');
     if (typeof obj.title !== 'string') throw new Error('Each node must have a string title');
     if (obj.name.length > 500) throw new Error(`Name too long (max 500 chars) on node "${obj.id}"`);
-    if (obj.title.length > 500) throw new Error(`Title too long (max 500 chars) on node "${obj.id}"`);
+    if (obj.title.length > 500)
+      throw new Error(`Title too long (max 500 chars) on node "${obj.id}"`);
     if (obj.categoryId !== undefined) {
-      if (typeof obj.categoryId !== 'string') throw new Error(`Invalid categoryId on node "${obj.id}": expected a string`);
-      if (obj.categoryId.length > 100) throw new Error(`categoryId too long (max 100 chars) on node "${obj.id}"`);
+      if (typeof obj.categoryId !== 'string')
+        throw new Error(`Invalid categoryId on node "${obj.id}": expected a string`);
+      if (obj.categoryId.length > 100)
+        throw new Error(`categoryId too long (max 100 chars) on node "${obj.id}"`);
     }
     if (obj.children !== undefined) {
-      if (!Array.isArray(obj.children)) throw new Error(`Invalid children on node "${obj.id}": expected an array`);
+      if (!Array.isArray(obj.children))
+        throw new Error(`Invalid children on node "${obj.id}": expected an array`);
       for (const child of obj.children) {
         this.validateTree(child, depth + 1, count);
       }

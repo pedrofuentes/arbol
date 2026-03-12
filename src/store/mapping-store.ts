@@ -10,15 +10,23 @@ export class MappingStore {
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
       return parsed.filter((item: unknown) => this.isValidPreset(item)) as MappingPreset[];
-    } catch {
+    } catch (e) {
+      console.warn('Failed to load mapping presets from localStorage:', e);
       return [];
     }
   }
 
   savePreset(preset: MappingPreset): void {
     const { name, mapping } = preset;
-    if (!name?.trim() || !mapping?.name?.trim() || !mapping?.title?.trim() || !mapping?.parentRef?.trim()) {
-      throw new Error('Preset must have a non-empty name, mapping.name, mapping.title, and mapping.parentRef');
+    if (
+      !name?.trim() ||
+      !mapping?.name?.trim() ||
+      !mapping?.title?.trim() ||
+      !mapping?.parentRef?.trim()
+    ) {
+      throw new Error(
+        'Preset must have a non-empty name, mapping.name, mapping.title, and mapping.parentRef',
+      );
     }
 
     const presets = this.getPresets();

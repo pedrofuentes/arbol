@@ -37,8 +37,8 @@ function loadSavedOrg(): OrgNode {
   try {
     const raw = localStorage.getItem(ORG_STORAGE_KEY);
     if (raw) return JSON.parse(raw);
-  } catch {
-    // Corrupted data — fall back to default
+  } catch (e) {
+    console.warn('Failed to load org data from localStorage:', e);
   }
   return INITIAL_DATA;
 }
@@ -112,7 +112,7 @@ function main(): void {
     }
 
     const treeToRender = focusedNodeId
-      ? findNodeById(fullTree, focusedNodeId) ?? fullTree
+      ? (findNodeById(fullTree, focusedNodeId) ?? fullTree)
       : fullTree;
 
     // Refresh categories so renderer picks up any changes
@@ -199,7 +199,7 @@ function main(): void {
   divider.className = 'header-divider';
   headerRight.insertBefore(divider, themeBtn);
 
-  const updateUndoRedoState= () => {
+  const updateUndoRedoState = () => {
     undoBtn.disabled = !store.canUndo();
     redoBtn.disabled = !store.canRedo();
     undoBtn.style.opacity = store.canUndo() ? '1' : '0.4';
@@ -251,7 +251,8 @@ function main(): void {
 
   // Text normalization section
   const normSeparator = document.createElement('hr');
-  normSeparator.style.cssText = 'border:none;border-top:1px solid var(--border-subtle);margin:16px 0;';
+  normSeparator.style.cssText =
+    'border:none;border-top:1px solid var(--border-subtle);margin:16px 0;';
   importContainer.appendChild(normSeparator);
   const normWrapper = document.createElement('div');
   importContainer.appendChild(normWrapper);
@@ -259,7 +260,8 @@ function main(): void {
 
   // JSON Editor as collapsible details
   const jsonSeparator = document.createElement('hr');
-  jsonSeparator.style.cssText = 'border:none;border-top:1px solid var(--border-subtle);margin:16px 0;';
+  jsonSeparator.style.cssText =
+    'border:none;border-top:1px solid var(--border-subtle);margin:16px 0;';
   importContainer.appendChild(jsonSeparator);
 
   const jsonDetails = document.createElement('details');
@@ -290,7 +292,8 @@ function main(): void {
 
   // Load sample org button (after Edit JSON, at the bottom)
   const sampleSeparator = document.createElement('hr');
-  sampleSeparator.style.cssText = 'border:none;border-top:1px solid var(--border-subtle);margin:14px 0;';
+  sampleSeparator.style.cssText =
+    'border:none;border-top:1px solid var(--border-subtle);margin:14px 0;';
   importContainer.appendChild(sampleSeparator);
 
   const sampleBtn = document.createElement('button');
@@ -403,7 +406,7 @@ function main(): void {
         {
           label: 'Focus on sub-org',
           icon: '🔎',
-          disabled: nodeIsLeaf || (focusedNodeId === nodeId),
+          disabled: nodeIsLeaf || focusedNodeId === nodeId,
           action: () => {
             focusedNodeId = nodeId;
             rerender();
@@ -421,13 +424,15 @@ function main(): void {
                 store.setNodeCategory(nodeId, null);
               },
             },
-            ...categoryStore.getAll().map((cat): ContextMenuItem => ({
-              label: cat.label,
-              icon: node.categoryId === cat.id ? '✓' : ' ',
-              action: () => {
-                store.setNodeCategory(nodeId, cat.id);
-              },
-            })),
+            ...categoryStore.getAll().map(
+              (cat): ContextMenuItem => ({
+                label: cat.label,
+                icon: node.categoryId === cat.id ? '✓' : ' ',
+                action: () => {
+                  store.setNodeCategory(nodeId, cat.id);
+                },
+              }),
+            ),
           ],
         },
         {
@@ -435,19 +440,23 @@ function main(): void {
           icon: '↗️',
           disabled: isRoot,
           action: async () => {
-            const allNodes = flattenTree(tree);
-            const descendants = flattenTree(node);
-            const descendantIds = new Set(descendants.map((n) => n.id));
-            const managers = allNodes
-              .filter((n) => !descendantIds.has(n.id))
-              .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+            try {
+              const allNodes = flattenTree(tree);
+              const descendants = flattenTree(node);
+              const descendantIds = new Set(descendants.map((n) => n.id));
+              const managers = allNodes
+                .filter((n) => !descendantIds.has(n.id))
+                .map((n) => ({ id: n.id, name: n.name, title: n.title }));
 
-            const targetId = await showManagerPicker({
-              title: `Move "${node.name}" to…`,
-              managers,
-            });
-            if (targetId) {
-              store.moveNode(nodeId, targetId);
+              const targetId = await showManagerPicker({
+                title: `Move "${node.name}" to…`,
+                managers,
+              });
+              if (targetId) {
+                store.moveNode(nodeId, targetId);
+              }
+            } catch (e) {
+              console.error('Operation failed:', e);
             }
           },
         },
@@ -457,29 +466,33 @@ function main(): void {
           danger: true,
           disabled: isRoot,
           action: async () => {
-            if (nodeIsLeaf) {
-              const confirmed = await showConfirmDialog({
-                title: 'Remove Person',
-                message: `Remove "${node.name}"? This cannot be undone (but you can use Ctrl+Z to undo).`,
-                confirmLabel: 'Remove',
-                danger: true,
-              });
-              if (confirmed) store.removeNode(nodeId);
-            } else {
-              const allNodes = flattenTree(tree);
-              const descendants = flattenTree(node);
-              const descendantIds = new Set(descendants.map((n) => n.id));
-              const managers = allNodes
-                .filter((n) => !descendantIds.has(n.id))
-                .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+            try {
+              if (nodeIsLeaf) {
+                const confirmed = await showConfirmDialog({
+                  title: 'Remove Person',
+                  message: `Remove "${node.name}"? This cannot be undone (but you can use Ctrl+Z to undo).`,
+                  confirmLabel: 'Remove',
+                  danger: true,
+                });
+                if (confirmed) store.removeNode(nodeId);
+              } else {
+                const allNodes = flattenTree(tree);
+                const descendants = flattenTree(node);
+                const descendantIds = new Set(descendants.map((n) => n.id));
+                const managers = allNodes
+                  .filter((n) => !descendantIds.has(n.id))
+                  .map((n) => ({ id: n.id, name: n.name, title: n.title }));
 
-              const targetId = await showManagerPicker({
-                title: `Reassign "${node.name}"'s reports to…`,
-                managers,
-              });
-              if (targetId) {
-                store.removeNodeWithReassign(nodeId, targetId);
+                const targetId = await showManagerPicker({
+                  title: `Reassign "${node.name}"'s reports to…`,
+                  managers,
+                });
+                if (targetId) {
+                  store.removeNodeWithReassign(nodeId, targetId);
+                }
               }
+            } catch (e) {
+              console.error('Operation failed:', e);
             }
           },
         },
@@ -506,54 +519,24 @@ function main(): void {
                 store.bulkSetCategory(selectedArray, null);
               },
             },
-            ...categoryStore.getAll().map((cat): ContextMenuItem => ({
-              label: cat.label,
-              action: () => {
-                store.bulkSetCategory(selectedArray, cat.id);
-              },
-            })),
+            ...categoryStore.getAll().map(
+              (cat): ContextMenuItem => ({
+                label: cat.label,
+                action: () => {
+                  store.bulkSetCategory(selectedArray, cat.id);
+                },
+              }),
+            ),
           ],
         },
         {
           label: `Move all (${count} people)`,
           icon: '↗️',
           action: async () => {
-            const tree = store.getTree();
-            const allNodes = flattenTree(tree);
-            // Exclude selected nodes and their descendants
-            const excludeIds = new Set<string>();
-            for (const id of selectedArray) {
-              const n = findNodeById(tree, id);
-              if (n) flattenTree(n).forEach((d) => excludeIds.add(d.id));
-            }
-            const managers = allNodes
-              .filter((n) => !excludeIds.has(n.id))
-              .map((n) => ({ id: n.id, name: n.name, title: n.title }));
-
-            const targetId = await showManagerPicker({
-              title: `Move ${count} people to…`,
-              managers,
-            });
-            if (targetId) {
-              store.bulkMoveNodes(selectedArray, targetId);
-            }
-          },
-        },
-        {
-          label: `Remove all (${count} people)`,
-          icon: '🗑️',
-          danger: true,
-          action: async () => {
-            const tree = store.getTree();
-            // Check if any selected nodes have children
-            const hasManagers = selectedArray.some((id) => {
-              const n = findNodeById(tree, id);
-              return n && !isLeaf(n);
-            });
-
-            if (hasManagers) {
-              // Some are managers — ask where to reassign children
+            try {
+              const tree = store.getTree();
               const allNodes = flattenTree(tree);
+              // Exclude selected nodes and their descendants
               const excludeIds = new Set<string>();
               for (const id of selectedArray) {
                 const n = findNodeById(tree, id);
@@ -564,31 +547,71 @@ function main(): void {
                 .map((n) => ({ id: n.id, name: n.name, title: n.title }));
 
               const targetId = await showManagerPicker({
-                title: `Reassign children of selected managers to…`,
+                title: `Move ${count} people to…`,
                 managers,
               });
               if (targetId) {
-                // Reassign children of managers first, then remove all
+                store.bulkMoveNodes(selectedArray, targetId);
+              }
+            } catch (e) {
+              console.error('Operation failed:', e);
+            }
+          },
+        },
+        {
+          label: `Remove all (${count} people)`,
+          icon: '🗑️',
+          danger: true,
+          action: async () => {
+            try {
+              const tree = store.getTree();
+              // Check if any selected nodes have children
+              const hasManagers = selectedArray.some((id) => {
+                const n = findNodeById(tree, id);
+                return n && !isLeaf(n);
+              });
+
+              if (hasManagers) {
+                // Some are managers — ask where to reassign children
+                const allNodes = flattenTree(tree);
+                const excludeIds = new Set<string>();
                 for (const id of selectedArray) {
-                  const n = findNodeById(store.getTree(), id);
-                  if (n && !isLeaf(n)) {
-                    store.removeNodeWithReassign(id, targetId);
-                  } else if (n) {
-                    store.removeNode(id);
+                  const n = findNodeById(tree, id);
+                  if (n) flattenTree(n).forEach((d) => excludeIds.add(d.id));
+                }
+                const managers = allNodes
+                  .filter((n) => !excludeIds.has(n.id))
+                  .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+
+                const targetId = await showManagerPicker({
+                  title: `Reassign children of selected managers to…`,
+                  managers,
+                });
+                if (targetId) {
+                  // Reassign children of managers first, then remove all
+                  for (const id of selectedArray) {
+                    const n = findNodeById(store.getTree(), id);
+                    if (n && !isLeaf(n)) {
+                      store.removeNodeWithReassign(id, targetId);
+                    } else if (n) {
+                      store.removeNode(id);
+                    }
                   }
                 }
+              } else {
+                // All leaves — simple confirm and bulk remove
+                const confirmed = await showConfirmDialog({
+                  title: 'Remove Selected',
+                  message: `Remove ${count} people? You can use Ctrl+Z to undo.`,
+                  confirmLabel: 'Remove All',
+                  danger: true,
+                });
+                if (confirmed) {
+                  store.bulkRemoveNodes(selectedArray);
+                }
               }
-            } else {
-              // All leaves — simple confirm and bulk remove
-              const confirmed = await showConfirmDialog({
-                title: 'Remove Selected',
-                message: `Remove ${count} people? You can use Ctrl+Z to undo.`,
-                confirmLabel: 'Remove All',
-                danger: true,
-              });
-              if (confirmed) {
-                store.bulkRemoveNodes(selectedArray);
-              }
+            } catch (e) {
+              console.error('Operation failed:', e);
             }
           },
         },
@@ -622,19 +645,22 @@ function main(): void {
   const versionLabel = document.createElement('span');
   versionLabel.className = 'footer-version';
   versionLabel.id = 'footer-version';
-  versionLabel.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
+  versionLabel.style.cssText =
+    'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
   versionLabel.textContent = `v${APP_VERSION}`;
   footerLeft.appendChild(versionLabel);
 
   const versionSeparator = document.createElement('span');
-  versionSeparator.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
+  versionSeparator.style.cssText =
+    'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
   versionSeparator.textContent = '·';
   footerLeft.appendChild(versionSeparator);
 
   const statusText = document.createElement('span');
   statusText.className = 'footer-status';
   statusText.id = 'footer-status';
-  statusText.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
+  statusText.style.cssText =
+    'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
   footerLeft.appendChild(statusText);
 
   // Save indicator — flashes briefly when settings are persisted
@@ -657,9 +683,7 @@ function main(): void {
 
   const updateStatus = () => {
     const fullTree = store.getTree();
-    const tree = focusedNodeId
-      ? findNodeById(fullTree, focusedNodeId) ?? fullTree
-      : fullTree;
+    const tree = focusedNodeId ? (findNodeById(fullTree, focusedNodeId) ?? fullTree) : fullTree;
     const allNodes = flattenTree(tree);
     const total = allNodes.length;
     const managerCount = allNodes.filter((n) => !isLeaf(n)).length;
@@ -679,7 +703,8 @@ function main(): void {
   // Footer: Center area (GitHub links + selection indicator)
   const footerCenter = document.createElement('div');
   footerCenter.className = 'footer-center';
-  footerCenter.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--font-sans);';
+  footerCenter.style.cssText =
+    'position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--font-sans);';
 
   const selectionIndicator = document.createElement('span');
   selectionIndicator.style.cssText = 'color:var(--accent);font-weight:600;display:none;';
@@ -725,7 +750,8 @@ function main(): void {
 
   // Zoom indicator (will be appended to footer right, after Reset button)
   const zoomIndicator = document.createElement('span');
-  zoomIndicator.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-mono);min-width:36px;text-align:right;';
+  zoomIndicator.style.cssText =
+    'font-size:11px;color:var(--text-tertiary);font-family:var(--font-mono);min-width:36px;text-align:right;';
 
   const zoomManager = renderer.getZoomManager();
   const updateZoomIndicator = () => {
@@ -795,25 +821,30 @@ function main(): void {
   const shortcuts = new ShortcutManager();
 
   shortcuts.register({
-    key: 'z', ctrl: true,
+    key: 'z',
+    ctrl: true,
     handler: () => store.undo(),
     description: 'Undo',
   });
 
   shortcuts.register({
-    key: 'z', ctrl: true, shift: true,
+    key: 'z',
+    ctrl: true,
+    shift: true,
     handler: () => store.redo(),
     description: 'Redo',
   });
 
   shortcuts.register({
-    key: 'y', ctrl: true,
+    key: 'y',
+    ctrl: true,
     handler: () => store.redo(),
     description: 'Redo (alt)',
   });
 
   shortcuts.register({
-    key: 'e', ctrl: true,
+    key: 'e',
+    ctrl: true,
     handler: async () => {
       const layout = renderer.getLastLayout();
       if (layout) await exportToPptx(layout, { categories: categoryStore.getAll() });
@@ -822,7 +853,8 @@ function main(): void {
   });
 
   shortcuts.register({
-    key: 'f', ctrl: true,
+    key: 'f',
+    ctrl: true,
     handler: () => {
       searchInput.focus();
     },

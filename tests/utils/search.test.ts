@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { searchTree, getMatchingNodeIds, getVisibleNodesForMatches, clearSearchCache } from '../../src/utils/search';
+import {
+  searchTree,
+  getMatchingNodeIds,
+  getVisibleNodesForMatches,
+  clearSearchCache,
+} from '../../src/utils/search';
 import { OrgNode } from '../../src/types';
 
 const SAMPLE_TREE: OrgNode = {
@@ -20,9 +25,7 @@ const SAMPLE_TREE: OrgNode = {
       id: 'cfo',
       name: 'Lisa Park',
       title: 'CFO',
-      children: [
-        { id: 'acct1', name: 'Amy Chen', title: 'Sr Accountant' },
-      ],
+      children: [{ id: 'acct1', name: 'Amy Chen', title: 'Sr Accountant' }],
     },
   ],
 };
@@ -35,8 +38,8 @@ describe('searchTree', () => {
   it('finds nodes by name substring (case-insensitive)', () => {
     const results = searchTree(SAMPLE_TREE, 'chen');
     expect(results).toHaveLength(2);
-    expect(results.map(r => r.id)).toContain('ceo');
-    expect(results.map(r => r.id)).toContain('acct1');
+    expect(results.map((r) => r.id)).toContain('ceo');
+    expect(results.map((r) => r.id)).toContain('acct1');
   });
 
   it('finds nodes by title substring', () => {
@@ -108,7 +111,7 @@ describe('clearSearchCache', () => {
     clearSearchCache();
     const results2 = searchTree(SAMPLE_TREE, 'chen');
     expect(results2).not.toBe(results1); // different reference after cache clear
-    expect(results2).toEqual(results1);  // same data
+    expect(results2).toEqual(results1); // same data
   });
 });
 

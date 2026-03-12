@@ -118,7 +118,7 @@ describe('flattenTree', () => {
   it('flattens all nodes in pre-order', () => {
     const tree = makeTree();
     const flat = flattenTree(tree);
-    expect(flat.map(n => n.id)).toEqual(['root', 'b', 'd', 'e', 'c']);
+    expect(flat.map((n) => n.id)).toEqual(['root', 'b', 'd', 'e', 'c']);
   });
 
   it('handles a single node', () => {
@@ -145,7 +145,10 @@ describe('isLeaf', () => {
 describe('isM1', () => {
   it('returns true when all children are leaf nodes', () => {
     const m1: OrgNode = {
-      id: 'm1', name: 'M', title: 'Manager', children: [
+      id: 'm1',
+      name: 'M',
+      title: 'Manager',
+      children: [
         { id: 'ic1', name: 'IC1', title: 'Eng' },
         { id: 'ic2', name: 'IC2', title: 'Eng' },
       ],
@@ -181,9 +184,10 @@ describe('manager counting via flattenTree + isLeaf', () => {
 
   it('counts root as a manager when it has children', () => {
     const tree: OrgNode = {
-      id: 'root', name: 'Boss', title: 'CEO', children: [
-        { id: 'a', name: 'A', title: 'IC' },
-      ],
+      id: 'root',
+      name: 'Boss',
+      title: 'CEO',
+      children: [{ id: 'a', name: 'A', title: 'IC' }],
     };
     const managers = flattenTree(tree).filter((n) => !isLeaf(n));
     expect(managers).toHaveLength(1);
@@ -194,21 +198,29 @@ describe('manager counting via flattenTree + isLeaf', () => {
 describe('stripM1Children', () => {
   it('removes IC children from M1 nodes and puts them in icMap', () => {
     const tree: OrgNode = {
-      id: 'root', name: 'CEO', title: 'CEO', children: [
-        { id: 'm1', name: 'Mgr', title: 'M1', children: [
-          { id: 'ic1', name: 'IC1', title: 'Eng' },
-          { id: 'ic2', name: 'IC2', title: 'Eng' },
-        ]},
+      id: 'root',
+      name: 'CEO',
+      title: 'CEO',
+      children: [
+        {
+          id: 'm1',
+          name: 'Mgr',
+          title: 'M1',
+          children: [
+            { id: 'ic1', name: 'IC1', title: 'Eng' },
+            { id: 'ic2', name: 'IC2', title: 'Eng' },
+          ],
+        },
         { id: 'dir', name: 'Dir', title: 'Director' },
       ],
     };
     const { layoutTree, icMap, palMap } = stripM1Children(tree);
-    expect(flattenTree(layoutTree).map(n => n.id)).toEqual(['root', 'm1']);
+    expect(flattenTree(layoutTree).map((n) => n.id)).toEqual(['root', 'm1']);
     expect(icMap.has('m1')).toBe(true);
-    expect(icMap.get('m1')!.map(n => n.id)).toEqual(['ic1', 'ic2']);
+    expect(icMap.get('m1')!.map((n) => n.id)).toEqual(['ic1', 'ic2']);
     // dir is an Advisor (leaf under non-M1 root)
     expect(palMap.has('root')).toBe(true);
-    expect(palMap.get('root')!.map(n => n.id)).toEqual(['dir']);
+    expect(palMap.get('root')!.map((n) => n.id)).toEqual(['dir']);
   });
 
   it('strips children from M1 nodes in complex tree', () => {
@@ -217,23 +229,29 @@ describe('stripM1Children', () => {
     const bob = findNodeById(layoutTree, 'b')!;
     expect(bob.children).toBeUndefined();
     expect(icMap.has('b')).toBe(true);
-    expect(icMap.get('b')!.map(n => n.id)).toEqual(['d', 'e']);
+    expect(icMap.get('b')!.map((n) => n.id)).toEqual(['d', 'e']);
   });
 
   it('separates Advisors from manager children', () => {
     const tree: OrgNode = {
-      id: 'root', name: 'CEO', title: 'CEO', children: [
+      id: 'root',
+      name: 'CEO',
+      title: 'CEO',
+      children: [
         { id: 'pal1', name: 'Advisor1', title: 'Advisor' },
         { id: 'pal2', name: 'Advisor2', title: 'Advisor' },
-        { id: 'm1', name: 'Mgr', title: 'M1', children: [
-          { id: 'ic1', name: 'IC1', title: 'Eng' },
-        ]},
+        {
+          id: 'm1',
+          name: 'Mgr',
+          title: 'M1',
+          children: [{ id: 'ic1', name: 'IC1', title: 'Eng' }],
+        },
       ],
     };
     const { layoutTree, icMap, palMap } = stripM1Children(tree);
-    expect(flattenTree(layoutTree).map(n => n.id)).toEqual(['root', 'm1']);
-    expect(palMap.get('root')!.map(n => n.id)).toEqual(['pal1', 'pal2']);
-    expect(icMap.get('m1')!.map(n => n.id)).toEqual(['ic1']);
+    expect(flattenTree(layoutTree).map((n) => n.id)).toEqual(['root', 'm1']);
+    expect(palMap.get('root')!.map((n) => n.id)).toEqual(['pal1', 'pal2']);
+    expect(icMap.get('m1')!.map((n) => n.id)).toEqual(['ic1']);
   });
 });
 
@@ -249,10 +267,11 @@ describe('countLeaves', () => {
 
   it('returns 0 leaves for a tree where every node has children', () => {
     const tree: OrgNode = {
-      id: 'a', name: 'A', title: 'A', children: [
-        { id: 'b', name: 'B', title: 'B', children: [
-          { id: 'c', name: 'C', title: 'C' },
-        ]},
+      id: 'a',
+      name: 'A',
+      title: 'A',
+      children: [
+        { id: 'b', name: 'B', title: 'B', children: [{ id: 'c', name: 'C', title: 'C' }] },
       ],
     };
     expect(countLeaves(tree)).toBe(1); // only C is a leaf
@@ -266,7 +285,10 @@ describe('managerLevel', () => {
 
   it('returns 1 (M1) for a manager with only IC children', () => {
     const m1: OrgNode = {
-      id: 'm', name: 'M', title: 'M', children: [
+      id: 'm',
+      name: 'M',
+      title: 'M',
+      children: [
         { id: 'a', name: 'A', title: 'IC' },
         { id: 'b', name: 'B', title: 'IC' },
       ],
@@ -281,12 +303,23 @@ describe('managerLevel', () => {
 
   it('returns 3 (M3) for a manager with M2 children', () => {
     const tree: OrgNode = {
-      id: 'ceo', name: 'CEO', title: 'CEO', children: [
-        { id: 'vp', name: 'VP', title: 'VP', children: [
-          { id: 'dir', name: 'Dir', title: 'Dir', children: [
-            { id: 'ic', name: 'IC', title: 'Eng' },
-          ]},
-        ]},
+      id: 'ceo',
+      name: 'CEO',
+      title: 'CEO',
+      children: [
+        {
+          id: 'vp',
+          name: 'VP',
+          title: 'VP',
+          children: [
+            {
+              id: 'dir',
+              name: 'Dir',
+              title: 'Dir',
+              children: [{ id: 'ic', name: 'IC', title: 'Eng' }],
+            },
+          ],
+        },
       ],
     };
     expect(managerLevel(tree)).toBe(3); // CEO→VP(M2)→Dir(M1)→IC
@@ -309,18 +342,35 @@ describe('countManagersByLevel', () => {
 
   it('counts multiple levels in a deep tree', () => {
     const tree: OrgNode = {
-      id: 'ceo', name: 'CEO', title: 'CEO', children: [
-        { id: 'vp1', name: 'VP1', title: 'VP', children: [
-          { id: 'dir1', name: 'Dir1', title: 'Dir', children: [
-            { id: 'ic1', name: 'IC1', title: 'Eng' },
-          ]},
-          { id: 'dir2', name: 'Dir2', title: 'Dir', children: [
-            { id: 'ic2', name: 'IC2', title: 'Eng' },
-          ]},
-        ]},
-        { id: 'vp2', name: 'VP2', title: 'VP', children: [
-          { id: 'ic3', name: 'IC3', title: 'Eng' },
-        ]},
+      id: 'ceo',
+      name: 'CEO',
+      title: 'CEO',
+      children: [
+        {
+          id: 'vp1',
+          name: 'VP1',
+          title: 'VP',
+          children: [
+            {
+              id: 'dir1',
+              name: 'Dir1',
+              title: 'Dir',
+              children: [{ id: 'ic1', name: 'IC1', title: 'Eng' }],
+            },
+            {
+              id: 'dir2',
+              name: 'Dir2',
+              title: 'Dir',
+              children: [{ id: 'ic2', name: 'IC2', title: 'Eng' }],
+            },
+          ],
+        },
+        {
+          id: 'vp2',
+          name: 'VP2',
+          title: 'VP',
+          children: [{ id: 'ic3', name: 'IC3', title: 'Eng' }],
+        },
         { id: 'pal', name: 'Advisor', title: 'Advisor' },
       ],
     };
@@ -335,7 +385,10 @@ describe('countManagersByLevel', () => {
 
   it('returns only M1 when root has only leaf children', () => {
     const tree: OrgNode = {
-      id: 'root', name: 'R', title: 'R', children: [
+      id: 'root',
+      name: 'R',
+      title: 'R',
+      children: [
         { id: 'a', name: 'A', title: 'IC' },
         { id: 'b', name: 'B', title: 'IC' },
       ],

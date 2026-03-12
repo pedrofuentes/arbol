@@ -19,9 +19,7 @@ function simpleTree(): OrgNode {
         id: 'b',
         name: 'Bob',
         title: 'CTO',
-        children: [
-          { id: 'd', name: 'Diana', title: 'Engineer' },
-        ],
+        children: [{ id: 'd', name: 'Diana', title: 'Engineer' }],
       },
       { id: 'c', name: 'Carol', title: 'CFO' },
     ],
@@ -107,9 +105,7 @@ function mixedSiblings(): OrgNode {
             id: 'vp-ops',
             name: 'VP Ops',
             title: 'VP',
-            children: [
-              { id: 'ic5', name: 'IC Five', title: 'Ops' },
-            ],
+            children: [{ id: 'ic5', name: 'IC Five', title: 'Ops' }],
           },
         ],
       },
@@ -145,13 +141,11 @@ function deepNoPALs(): OrgNode {
 }
 
 function getNodeIds(container: HTMLElement): string[] {
-  return Array.from(container.querySelectorAll('.node'))
-    .map((el) => el.getAttribute('data-id')!);
+  return Array.from(container.querySelectorAll('.node')).map((el) => el.getAttribute('data-id')!);
 }
 
 function getNodeNames(container: HTMLElement): string[] {
-  return Array.from(container.querySelectorAll('.node-name'))
-    .map((el) => el.textContent!);
+  return Array.from(container.querySelectorAll('.node-name')).map((el) => el.textContent!);
 }
 
 // Extract Y position from a node's transform attribute
@@ -165,7 +159,12 @@ function getNodeY(container: HTMLElement, nodeId: string): number | null {
 }
 
 // Get vertical gap between two nodes (parent bottom to child top)
-function getVerticalGap(container: HTMLElement, parentId: string, childId: string, nodeHeight: number): number | null {
+function getVerticalGap(
+  container: HTMLElement,
+  parentId: string,
+  childId: string,
+  nodeHeight: number,
+): number | null {
   const parentY = getNodeY(container, parentId);
   const childY = getNodeY(container, childId);
   if (parentY === null || childY === null) return null;
@@ -184,9 +183,12 @@ function singleChildNoPALs(): OrgNode {
         name: 'Director',
         title: 'Dir',
         children: [
-          { id: 'm1', name: 'Manager', title: 'M1', children: [
-            { id: 'ic1', name: 'IC', title: 'Eng' },
-          ]},
+          {
+            id: 'm1',
+            name: 'Manager',
+            title: 'M1',
+            children: [{ id: 'ic1', name: 'IC', title: 'Eng' }],
+          },
         ],
       },
     ],
@@ -207,9 +209,12 @@ function siblingsMixedPALs(): OrgNode {
         title: 'CTO',
         children: [
           { id: 'pal-cto', name: 'CTO Advisor', title: 'Advisor' },
-          { id: 'm1a', name: 'M1A', title: 'EM', children: [
-            { id: 'ic1', name: 'IC1', title: 'Eng' },
-          ]},
+          {
+            id: 'm1a',
+            name: 'M1A',
+            title: 'EM',
+            children: [{ id: 'ic1', name: 'IC1', title: 'Eng' }],
+          },
         ],
       },
       {
@@ -217,9 +222,12 @@ function siblingsMixedPALs(): OrgNode {
         name: 'COO',
         title: 'COO',
         children: [
-          { id: 'm1b', name: 'M1B', title: 'EM', children: [
-            { id: 'ic2', name: 'IC2', title: 'Eng' },
-          ]},
+          {
+            id: 'm1b',
+            name: 'M1B',
+            title: 'EM',
+            children: [{ id: 'ic2', name: 'IC2', title: 'Eng' }],
+          },
         ],
       },
     ],
@@ -373,13 +381,19 @@ describe('ChartRenderer', () => {
 
     it('odd number of Advisors renders correctly', () => {
       const tree: OrgNode = {
-        id: 'root', name: 'CEO', title: 'CEO', children: [
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
           { id: 'pal1', name: 'P1', title: 'Advisor' },
           { id: 'pal2', name: 'P2', title: 'Advisor' },
           { id: 'pal3', name: 'P3', title: 'Advisor' },
-          { id: 'mgr', name: 'CTO', title: 'CTO', children: [
-            { id: 'ic1', name: 'IC', title: 'Eng' },
-          ]},
+          {
+            id: 'mgr',
+            name: 'CTO',
+            title: 'CTO',
+            children: [{ id: 'ic1', name: 'IC', title: 'Eng' }],
+          },
         ],
       };
       renderer.render(tree);
@@ -389,11 +403,17 @@ describe('ChartRenderer', () => {
 
     it('single Advisor is positioned to the left of the manager, not centered', () => {
       const tree: OrgNode = {
-        id: 'root', name: 'CEO', title: 'CEO', children: [
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
           { id: 'pal1', name: 'Solo Advisor', title: 'Advisor' },
-          { id: 'mgr', name: 'CTO', title: 'CTO', children: [
-            { id: 'ic1', name: 'IC', title: 'Eng' },
-          ]},
+          {
+            id: 'mgr',
+            name: 'CTO',
+            title: 'CTO',
+            children: [{ id: 'ic1', name: 'IC', title: 'Eng' }],
+          },
         ],
       };
       renderer.render(tree);
@@ -411,7 +431,7 @@ describe('ChartRenderer', () => {
     it('two Advisors alternate left and right of the manager', () => {
       renderer.render(managerWithPALs());
       const palNodes = container.querySelectorAll('.pal-node');
-      const transforms = Array.from(palNodes).map(n => {
+      const transforms = Array.from(palNodes).map((n) => {
         const t = n.getAttribute('transform')!;
         return parseFloat(t.match(/translate\(([^,]+)/)![1]);
       });
@@ -490,7 +510,6 @@ describe('ChartRenderer', () => {
   const NODE_HEIGHT = 22;
 
   describe('vertical spacing', () => {
-
     it('single-child non-Advisor manager has gap equal to bottomVerticalSpacing', () => {
       renderer.destroy();
       renderer = createRenderer({
@@ -555,7 +574,7 @@ describe('ChartRenderer', () => {
     it('no two manager nodes share the same position', () => {
       renderer.render(mixedSiblings());
       const nodes = Array.from(container.querySelectorAll('.node:not(.ic-node):not(.pal-node)'));
-      const positions = nodes.map(n => n.getAttribute('transform'));
+      const positions = nodes.map((n) => n.getAttribute('transform'));
       const unique = new Set(positions);
       expect(unique.size).toBe(positions.length);
     });
@@ -563,20 +582,35 @@ describe('ChartRenderer', () => {
     it('single-Advisor manager does not reserve space for phantom right Advisor', () => {
       // Manager with 1 Advisor + 1 manager child, next to a manager with no Advisors
       const tree: OrgNode = {
-        id: 'root', name: 'CEO', title: 'CEO', children: [
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
           {
-            id: 'mgr-1pal', name: 'VP1', title: 'VP', children: [
+            id: 'mgr-1pal',
+            name: 'VP1',
+            title: 'VP',
+            children: [
               { id: 'pal1', name: 'Advisor', title: 'Advisor' },
-              { id: 'm1a', name: 'M1A', title: 'EM', children: [
-                { id: 'ic1', name: 'IC1', title: 'Eng' },
-              ]},
+              {
+                id: 'm1a',
+                name: 'M1A',
+                title: 'EM',
+                children: [{ id: 'ic1', name: 'IC1', title: 'Eng' }],
+              },
             ],
           },
           {
-            id: 'mgr-nopal', name: 'VP2', title: 'VP', children: [
-              { id: 'm1b', name: 'M1B', title: 'EM', children: [
-                { id: 'ic2', name: 'IC2', title: 'Eng' },
-              ]},
+            id: 'mgr-nopal',
+            name: 'VP2',
+            title: 'VP',
+            children: [
+              {
+                id: 'm1b',
+                name: 'M1B',
+                title: 'EM',
+                children: [{ id: 'ic2', name: 'IC2', title: 'Eng' }],
+              },
             ],
           },
         ],
@@ -782,20 +816,26 @@ describe('ChartRenderer', () => {
       renderer.destroy();
       renderer = createRenderer({ categories });
       const tree: OrgNode = {
-        id: 'root', name: 'CEO', title: 'CEO', categoryId: 'eng',
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        categoryId: 'eng',
         children: [
           {
-            id: 'mgr', name: 'Manager', title: 'M1', categoryId: 'sales',
-            children: [
-              { id: 'ic1', name: 'IC', title: 'Eng', categoryId: 'eng' },
-            ],
+            id: 'mgr',
+            name: 'Manager',
+            title: 'M1',
+            categoryId: 'sales',
+            children: [{ id: 'ic1', name: 'IC', title: 'Eng', categoryId: 'eng' }],
           },
         ],
       };
       renderer.render(tree);
       const rootRect = container.querySelector('.node[data-id="root"] rect')!;
       expect(rootRect.getAttribute('fill')).toBe('#3b82f6');
-      const mgrRect = container.querySelector('.node[data-id="mgr"] rect, .ic-node[data-id="mgr"] rect, .pal-node[data-id="mgr"] rect')!;
+      const mgrRect = container.querySelector(
+        '.node[data-id="mgr"] rect, .ic-node[data-id="mgr"] rect, .pal-node[data-id="mgr"] rect',
+      )!;
       expect(mgrRect.getAttribute('fill')).toBe('#ef4444');
       const icRect = container.querySelector('.ic-node[data-id="ic1"] rect')!;
       expect(icRect.getAttribute('fill')).toBe('#3b82f6');

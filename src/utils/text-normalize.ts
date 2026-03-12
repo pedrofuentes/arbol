@@ -34,9 +34,7 @@ export function normalizeTreeText(
     result.categoryId = tree.categoryId;
   }
   if (tree.children) {
-    result.children = tree.children.map((child) =>
-      normalizeTreeText(child, nameMode, titleMode),
-    );
+    result.children = tree.children.map((child) => normalizeTreeText(child, nameMode, titleMode));
   }
   return result;
 }

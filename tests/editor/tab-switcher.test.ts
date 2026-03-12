@@ -83,13 +83,13 @@ describe('TabSwitcher', () => {
   });
 
   it('active tab button has primary text color', () => {
-    const switcher = new TabSwitcher(container, TABS);
+    new TabSwitcher(container, TABS);
     const btnA = container.querySelectorAll<HTMLButtonElement>('button.tab-btn')[0];
     expect(btnA.style.color).toBe('var(--text-primary)');
   });
 
   it('inactive tab buttons have tertiary text color', () => {
-    const switcher = new TabSwitcher(container, TABS);
+    new TabSwitcher(container, TABS);
     const buttons = container.querySelectorAll<HTMLButtonElement>('button.tab-btn');
     expect(buttons[1].style.color).toBe('var(--text-tertiary)');
     expect(buttons[2].style.color).toBe('var(--text-tertiary)');

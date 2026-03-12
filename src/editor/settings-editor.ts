@@ -37,10 +37,31 @@ const SETTING_GROUPS: SettingGroup[] = [
   {
     title: 'Tree Spacing',
     settings: [
-      { key: 'horizontalSpacing', label: 'Horizontal Spacing', type: 'range', min: 5, max: 100, step: 1 },
+      {
+        key: 'horizontalSpacing',
+        label: 'Horizontal Spacing',
+        type: 'range',
+        min: 5,
+        max: 100,
+        step: 1,
+      },
       { key: 'branchSpacing', label: 'Branch Spacing', type: 'range', min: 0, max: 60, step: 1 },
-      { key: 'topVerticalSpacing', label: 'Top Vertical Spacing', type: 'range', min: 0, max: 50, step: 1 },
-      { key: 'bottomVerticalSpacing', label: 'Bottom Vertical Spacing', type: 'range', min: 0, max: 50, step: 1 },
+      {
+        key: 'topVerticalSpacing',
+        label: 'Top Vertical Spacing',
+        type: 'range',
+        min: 0,
+        max: 50,
+        step: 1,
+      },
+      {
+        key: 'bottomVerticalSpacing',
+        label: 'Bottom Vertical Spacing',
+        type: 'range',
+        min: 0,
+        max: 50,
+        step: 1,
+      },
     ],
   },
   {
@@ -48,7 +69,14 @@ const SETTING_GROUPS: SettingGroup[] = [
     settings: [
       { key: 'icNodeWidth', label: 'IC Node Width', type: 'range', min: 40, max: 200, step: 1 },
       { key: 'icGap', label: 'IC Gap', type: 'range', min: 0, max: 20, step: 1 },
-      { key: 'icContainerPadding', label: 'IC Container Padding', type: 'range', min: 0, max: 20, step: 1 },
+      {
+        key: 'icContainerPadding',
+        label: 'IC Container Padding',
+        type: 'range',
+        min: 0,
+        max: 20,
+        step: 1,
+      },
     ],
   },
   {
@@ -57,7 +85,14 @@ const SETTING_GROUPS: SettingGroup[] = [
       { key: 'palTopGap', label: 'Advisor Top Gap', type: 'range', min: 0, max: 40, step: 1 },
       { key: 'palBottomGap', label: 'Advisor Bottom Gap', type: 'range', min: 0, max: 40, step: 1 },
       { key: 'palRowGap', label: 'Advisor Row Gap', type: 'range', min: 0, max: 20, step: 1 },
-      { key: 'palCenterGap', label: 'Advisor Center Gap', type: 'range', min: 10, max: 100, step: 1 },
+      {
+        key: 'palCenterGap',
+        label: 'Advisor Center Gap',
+        type: 'range',
+        min: 10,
+        max: 100,
+        step: 1,
+      },
     ],
   },
   {
@@ -79,7 +114,14 @@ const SETTING_GROUPS: SettingGroup[] = [
   {
     title: 'Card Style',
     settings: [
-      { key: 'cardStrokeWidth', label: 'Card Stroke Width', type: 'range', min: 0.5, max: 5, step: 0.5 },
+      {
+        key: 'cardStrokeWidth',
+        label: 'Card Stroke Width',
+        type: 'range',
+        min: 0.5,
+        max: 5,
+        step: 0.5,
+      },
       { key: 'cardStroke', label: 'Card Stroke', type: 'color' },
       { key: 'cardFill', label: 'Card Fill', type: 'color' },
       { key: 'icContainerFill', label: 'IC Container Fill', type: 'color' },
@@ -88,13 +130,29 @@ const SETTING_GROUPS: SettingGroup[] = [
 ];
 
 const DEFAULT_SETTINGS: Record<string, number | string> = {
-  nodeWidth: 110, nodeHeight: 22, horizontalSpacing: 30, branchSpacing: 10,
-  topVerticalSpacing: 5, bottomVerticalSpacing: 12,
-  icNodeWidth: 99, icGap: 4, icContainerPadding: 6,
-  palTopGap: 7, palBottomGap: 7, palRowGap: 4, palCenterGap: 50,
-  nameFontSize: 8, titleFontSize: 7, textPaddingTop: 4, textGap: 1,
-  linkColor: '#94a3b8', linkWidth: 1.5,
-  cardFill: '#ffffff', cardStroke: '#22c55e', cardStrokeWidth: 1, icContainerFill: '#e5e7eb',
+  nodeWidth: 110,
+  nodeHeight: 22,
+  horizontalSpacing: 30,
+  branchSpacing: 10,
+  topVerticalSpacing: 5,
+  bottomVerticalSpacing: 12,
+  icNodeWidth: 99,
+  icGap: 4,
+  icContainerPadding: 6,
+  palTopGap: 7,
+  palBottomGap: 7,
+  palRowGap: 4,
+  palCenterGap: 50,
+  nameFontSize: 8,
+  titleFontSize: 7,
+  textPaddingTop: 4,
+  textGap: 1,
+  linkColor: '#94a3b8',
+  linkWidth: 1.5,
+  cardFill: '#ffffff',
+  cardStroke: '#22c55e',
+  cardStrokeWidth: 1,
+  icContainerFill: '#e5e7eb',
 };
 
 export const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<RendererOptions> }[] = [
@@ -102,44 +160,92 @@ export const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<Render
     name: 'Compact',
     icon: '▪',
     sizes: {
-      nodeWidth: 90, nodeHeight: 18, horizontalSpacing: 20, branchSpacing: 6,
-      topVerticalSpacing: 3, bottomVerticalSpacing: 8,
-      icNodeWidth: 83, icGap: 3, icContainerPadding: 4,
-      palTopGap: 5, palBottomGap: 5, palRowGap: 3, palCenterGap: 40,
-      nameFontSize: 7, titleFontSize: 6, textPaddingTop: 3, textGap: 1,
+      nodeWidth: 90,
+      nodeHeight: 18,
+      horizontalSpacing: 20,
+      branchSpacing: 6,
+      topVerticalSpacing: 3,
+      bottomVerticalSpacing: 8,
+      icNodeWidth: 83,
+      icGap: 3,
+      icContainerPadding: 4,
+      palTopGap: 5,
+      palBottomGap: 5,
+      palRowGap: 3,
+      palCenterGap: 40,
+      nameFontSize: 7,
+      titleFontSize: 6,
+      textPaddingTop: 3,
+      textGap: 1,
     },
   },
   {
     name: 'Default',
     icon: '▫',
     sizes: {
-      nodeWidth: 110, nodeHeight: 22, horizontalSpacing: 30, branchSpacing: 10,
-      topVerticalSpacing: 5, bottomVerticalSpacing: 12,
-      icNodeWidth: 99, icGap: 4, icContainerPadding: 6,
-      palTopGap: 7, palBottomGap: 7, palRowGap: 4, palCenterGap: 50,
-      nameFontSize: 8, titleFontSize: 7, textPaddingTop: 4, textGap: 1,
+      nodeWidth: 110,
+      nodeHeight: 22,
+      horizontalSpacing: 30,
+      branchSpacing: 10,
+      topVerticalSpacing: 5,
+      bottomVerticalSpacing: 12,
+      icNodeWidth: 99,
+      icGap: 4,
+      icContainerPadding: 6,
+      palTopGap: 7,
+      palBottomGap: 7,
+      palRowGap: 4,
+      palCenterGap: 50,
+      nameFontSize: 8,
+      titleFontSize: 7,
+      textPaddingTop: 4,
+      textGap: 1,
     },
   },
   {
     name: 'Spacious',
     icon: '▢',
     sizes: {
-      nodeWidth: 140, nodeHeight: 28, horizontalSpacing: 40, branchSpacing: 16,
-      topVerticalSpacing: 8, bottomVerticalSpacing: 16,
-      icNodeWidth: 125, icGap: 5, icContainerPadding: 8,
-      palTopGap: 10, palBottomGap: 10, palRowGap: 5, palCenterGap: 60,
-      nameFontSize: 9, titleFontSize: 8, textPaddingTop: 5, textGap: 2,
+      nodeWidth: 140,
+      nodeHeight: 28,
+      horizontalSpacing: 40,
+      branchSpacing: 16,
+      topVerticalSpacing: 8,
+      bottomVerticalSpacing: 16,
+      icNodeWidth: 125,
+      icGap: 5,
+      icContainerPadding: 8,
+      palTopGap: 10,
+      palBottomGap: 10,
+      palRowGap: 5,
+      palCenterGap: 60,
+      nameFontSize: 9,
+      titleFontSize: 8,
+      textPaddingTop: 5,
+      textGap: 2,
     },
   },
   {
     name: 'Presentation',
     icon: '▣',
     sizes: {
-      nodeWidth: 160, nodeHeight: 34, horizontalSpacing: 50, branchSpacing: 20,
-      topVerticalSpacing: 10, bottomVerticalSpacing: 20,
-      icNodeWidth: 141, icGap: 6, icContainerPadding: 10,
-      palTopGap: 12, palBottomGap: 12, palRowGap: 6, palCenterGap: 70,
-      nameFontSize: 11, titleFontSize: 9, textPaddingTop: 6, textGap: 2,
+      nodeWidth: 160,
+      nodeHeight: 34,
+      horizontalSpacing: 50,
+      branchSpacing: 20,
+      topVerticalSpacing: 10,
+      bottomVerticalSpacing: 20,
+      icNodeWidth: 141,
+      icGap: 6,
+      icContainerPadding: 10,
+      palTopGap: 12,
+      palBottomGap: 12,
+      palRowGap: 6,
+      palCenterGap: 70,
+      nameFontSize: 11,
+      titleFontSize: 9,
+      textPaddingTop: 6,
+      textGap: 2,
     },
   },
 ];
@@ -207,7 +313,9 @@ export class SettingsEditor {
           }
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   private saveAccordionState(): void {
@@ -241,7 +349,9 @@ export class SettingsEditor {
         ...p,
         isCustom: true,
       })) as CombinedPreset[];
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   }
 
   private saveCustomPresets(presets: CombinedPreset[]): void {
@@ -482,9 +592,7 @@ export class SettingsEditor {
     });
     ioBtnGroup.appendChild(importSettingsBtn);
 
-    this.container.appendChild(
-      this.createAccordionSection('settings-io', 'Settings', ioBtnGroup),
-    );
+    this.container.appendChild(this.createAccordionSection('settings-io', 'Settings', ioBtnGroup));
 
     // Filter handler — wired after all sections are built
     let filterTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -560,7 +668,8 @@ export class SettingsEditor {
       const colorInput = document.createElement('input');
       colorInput.type = 'color';
       colorInput.value = cat.color;
-      colorInput.style.cssText = 'width:28px;height:22px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
+      colorInput.style.cssText =
+        'width:28px;height:22px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
       colorInput.setAttribute('aria-label', `Color for ${cat.label}`);
       colorInput.addEventListener('input', () => {
         this.categoryStore!.update(cat.id, { color: colorInput.value });
@@ -571,7 +680,8 @@ export class SettingsEditor {
       const labelInput = document.createElement('input');
       labelInput.type = 'text';
       labelInput.value = cat.label;
-      labelInput.style.cssText = 'flex:1;padding:3px 6px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font-size:11px;font-family:var(--font-sans);min-width:0;';
+      labelInput.style.cssText =
+        'flex:1;padding:3px 6px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font-size:11px;font-family:var(--font-sans);min-width:0;';
       labelInput.setAttribute('aria-label', 'Category label');
       labelInput.addEventListener('change', () => {
         const newLabel = labelInput.value.trim();
@@ -586,7 +696,8 @@ export class SettingsEditor {
 
       const deleteBtn = document.createElement('button');
       deleteBtn.textContent = '×';
-      deleteBtn.style.cssText = 'width:22px;height:22px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;';
+      deleteBtn.style.cssText =
+        'width:22px;height:22px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;';
       deleteBtn.setAttribute('aria-label', `Remove ${cat.label}`);
       deleteBtn.addEventListener('mouseenter', () => {
         deleteBtn.style.color = 'var(--danger)';
@@ -628,7 +739,8 @@ export class SettingsEditor {
 
     const presetGrid = document.createElement('div');
     presetGrid.className = 'preset-grid';
-    presetGrid.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;';
+    presetGrid.style.cssText =
+      'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;';
 
     for (const preset of allPresets) {
       const card = document.createElement('button');
@@ -652,7 +764,8 @@ export class SettingsEditor {
 
       const name = document.createElement('span');
       name.textContent = preset.isCustom ? `⭐ ${preset.name}` : preset.name;
-      name.style.cssText = 'font-size:11px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;';
+      name.style.cssText =
+        'font-size:11px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;';
       card.appendChild(name);
 
       if (preset.isCustom) {
@@ -710,11 +823,13 @@ export class SettingsEditor {
     // Layout preset buttons (4-column grid)
     const layoutHeading = document.createElement('div');
     layoutHeading.textContent = 'Layout';
-    layoutHeading.style.cssText = 'font-size:10px;color:var(--text-tertiary);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;';
+    layoutHeading.style.cssText =
+      'font-size:10px;color:var(--text-tertiary);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;';
     wrapper.appendChild(layoutHeading);
 
     const layoutGrid = document.createElement('div');
-    layoutGrid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;';
+    layoutGrid.style.cssText =
+      'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;';
 
     for (const lp of LAYOUT_PRESETS) {
       const btn = document.createElement('button');
@@ -842,10 +957,7 @@ export class SettingsEditor {
     return wrapper;
   }
 
-  private createControl(
-    setting: SettingDef,
-    currentValue: number | string,
-  ): HTMLDivElement {
+  private createControl(setting: SettingDef, currentValue: number | string): HTMLDivElement {
     const wrapper = document.createElement('div');
     wrapper.className = 'form-group';
 

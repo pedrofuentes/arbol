@@ -37,15 +37,32 @@ interface StorageEnvelope {
 }
 
 const NUMERIC_KEYS: ReadonlySet<string> = new Set<string>([
-  'nodeWidth', 'nodeHeight', 'horizontalSpacing', 'branchSpacing',
-  'topVerticalSpacing', 'bottomVerticalSpacing', 'icNodeWidth', 'icGap',
-  'icContainerPadding', 'palTopGap', 'palBottomGap', 'palRowGap',
-  'palCenterGap', 'nameFontSize', 'titleFontSize', 'textPaddingTop',
-  'textGap', 'linkWidth', 'cardStrokeWidth',
+  'nodeWidth',
+  'nodeHeight',
+  'horizontalSpacing',
+  'branchSpacing',
+  'topVerticalSpacing',
+  'bottomVerticalSpacing',
+  'icNodeWidth',
+  'icGap',
+  'icContainerPadding',
+  'palTopGap',
+  'palBottomGap',
+  'palRowGap',
+  'palCenterGap',
+  'nameFontSize',
+  'titleFontSize',
+  'textPaddingTop',
+  'textGap',
+  'linkWidth',
+  'cardStrokeWidth',
 ]);
 
 const STRING_KEYS: ReadonlySet<string> = new Set<string>([
-  'linkColor', 'cardFill', 'cardStroke', 'icContainerFill',
+  'linkColor',
+  'cardFill',
+  'cardStroke',
+  'icContainerFill',
 ]);
 
 const ALL_KEYS = [...NUMERIC_KEYS, ...STRING_KEYS];
@@ -64,8 +81,10 @@ function validateSettings(obj: Record<string, unknown>): Partial<PersistableSett
       if (typeof val !== 'string') {
         throw new Error(`Invalid value for "${key}": expected a string`);
       }
-      if (!/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d\s,.\/%]+\)$|^var\(--[\w-]+\)$/.test(val)) {
-        throw new Error(`Invalid color value for "${key}": must be a hex color, rgb(), or CSS variable`);
+      if (!/^#[0-9a-fA-F]{3,8}$|^rgba?\([\d\s,./%]+\)$|^var\(--[\w-]+\)$/.test(val)) {
+        throw new Error(
+          `Invalid color value for "${key}": must be a hex color, rgb(), or CSS variable`,
+        );
       }
       result[key] = val;
     }
@@ -106,7 +125,8 @@ export class SettingsStore {
       }
       const validated = validateSettings(envelope.settings as Record<string, unknown>);
       return { ...defaults, ...validated };
-    } catch {
+    } catch (e) {
+      console.warn('Failed to load settings from localStorage:', e);
       return { ...defaults };
     }
   }
@@ -202,7 +222,8 @@ export class SettingsStore {
       const envelope: StorageEnvelope = JSON.parse(raw);
       if (!envelope || typeof envelope !== 'object' || !envelope.settings) return null;
       return envelope.settings;
-    } catch {
+    } catch (e) {
+      console.warn('Failed to load raw settings from localStorage:', e);
       return null;
     }
   }

@@ -6,9 +6,7 @@ const ROOT = {
   id: 'ceo',
   name: 'JANE DOE',
   title: 'chief executive officer',
-  children: [
-    { id: 'vp', name: 'john smith', title: 'VP ENGINEERING' },
-  ],
+  children: [{ id: 'vp', name: 'john smith', title: 'VP ENGINEERING' }],
 };
 
 describe('UtilitiesEditor', () => {
@@ -34,8 +32,7 @@ describe('UtilitiesEditor', () => {
     container.querySelector('select[data-norm-field="title-format"]') as HTMLSelectElement;
   const getApplyBtn = () =>
     container.querySelector('[data-action="applyNorm"]') as HTMLButtonElement;
-  const getStatus = () =>
-    container.querySelector('[data-field="normStatus"]') as HTMLDivElement;
+  const getStatus = () => container.querySelector('[data-field="normStatus"]') as HTMLDivElement;
 
   it('renders text normalization section with heading and description', () => {
     expect(container.textContent).toContain('Text Normalization');
@@ -48,10 +45,10 @@ describe('UtilitiesEditor', () => {
   });
 
   it('dropdowns have all four options', () => {
-    const nameOptions = Array.from(getNameSelect().options).map(o => o.value);
+    const nameOptions = Array.from(getNameSelect().options).map((o) => o.value);
     expect(nameOptions).toEqual(['none', 'titleCase', 'uppercase', 'lowercase']);
 
-    const titleOptions = Array.from(getTitleSelect().options).map(o => o.value);
+    const titleOptions = Array.from(getTitleSelect().options).map((o) => o.value);
     expect(titleOptions).toEqual(['none', 'titleCase', 'uppercase', 'lowercase']);
   });
 

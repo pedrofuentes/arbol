@@ -75,9 +75,7 @@ describe('Renderer-Store Integration', () => {
       id: 'new-root',
       name: 'Zara',
       title: 'Founder',
-      children: [
-        { id: 'x', name: 'Xavier', title: 'CTO' },
-      ],
+      children: [{ id: 'x', name: 'Xavier', title: 'CTO' }],
     };
     store.fromJSON(JSON.stringify(newTree));
 

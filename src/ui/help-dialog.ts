@@ -1,8 +1,12 @@
+import { createOverlay, trapFocus } from './dialog-utils';
+
 const HELP_SECTIONS = [
   {
     title: 'Getting Started',
     items: [
-      ['The chart displays your organization hierarchy. Pan by dragging the canvas, zoom with scroll wheel.'],
+      [
+        'The chart displays your organization hierarchy. Pan by dragging the canvas, zoom with scroll wheel.',
+      ],
       ['Right-click any card for edit, add, move, or remove options.'],
       ['Use the sidebar tabs to manage your data.'],
     ],
@@ -10,17 +14,47 @@ const HELP_SECTIONS = [
   {
     title: 'Sidebar Tabs',
     items: [
-      [{ tag: 'strong', text: 'People' }, ' — Add new people under a selected parent, or edit the selected person.'],
-      [{ tag: 'strong', text: 'Import' }, ' — Import an org chart from JSON, CSV, or XLSX files. Paste data, normalize text, or edit the raw JSON tree.'],
-      [{ tag: 'strong', text: 'Settings' }, ' — Adjust card sizes, spacing, colors, and typography. Choose a preset theme or fine-tune individual values. Use the filter to find specific settings.'],
+      [
+        { tag: 'strong', text: 'People' },
+        ' — Add new people under a selected parent, or edit the selected person.',
+      ],
+      [
+        { tag: 'strong', text: 'Import' },
+        ' — Import an org chart from JSON, CSV, or XLSX files. Paste data, normalize text, or edit the raw JSON tree.',
+      ],
+      [
+        { tag: 'strong', text: 'Settings' },
+        ' — Adjust card sizes, spacing, colors, and typography. Choose a preset theme or fine-tune individual values. Use the filter to find specific settings.',
+      ],
     ],
   },
   {
     title: 'Importing Data',
     items: [
-      [{ tag: 'strong', text: 'JSON' }, ' — Nested tree with ', { tag: 'code', text: 'id' }, ', ', { tag: 'code', text: 'name' }, ', ', { tag: 'code', text: 'title' }, ', and optional ', { tag: 'code', text: 'children' }, ' array.'],
-      [{ tag: 'strong', text: 'CSV with IDs' }, ' — Columns: ', { tag: 'code', text: 'id, name, title, parent_id' }, ' (root has empty parent).'],
-      [{ tag: 'strong', text: 'CSV by name' }, ' — Columns: ', { tag: 'code', text: 'name, title, manager_name' }, ' (matched by name).'],
+      [
+        { tag: 'strong', text: 'JSON' },
+        ' — Nested tree with ',
+        { tag: 'code', text: 'id' },
+        ', ',
+        { tag: 'code', text: 'name' },
+        ', ',
+        { tag: 'code', text: 'title' },
+        ', and optional ',
+        { tag: 'code', text: 'children' },
+        ' array.',
+      ],
+      [
+        { tag: 'strong', text: 'CSV with IDs' },
+        ' — Columns: ',
+        { tag: 'code', text: 'id, name, title, parent_id' },
+        ' (root has empty parent).',
+      ],
+      [
+        { tag: 'strong', text: 'CSV by name' },
+        ' — Columns: ',
+        { tag: 'code', text: 'name, title, manager_name' },
+        ' (matched by name).',
+      ],
       ['Drop a file on the drop zone, or paste text and click Parse & Preview.'],
     ],
   },
@@ -28,19 +62,38 @@ const HELP_SECTIONS = [
     title: 'Chart Interactions',
     items: [
       [{ tag: 'strong', text: 'Click' }, ' — Select and highlight a card.'],
-      [{ tag: 'strong', text: 'Right-click' }, ' — Context menu with Edit, Add, Move, and Remove options.'],
-      [{ tag: 'strong', text: 'Shift+click' }, ' — Multi-select cards, then right-click for bulk Move or Remove.'],
+      [
+        { tag: 'strong', text: 'Right-click' },
+        ' — Context menu with Edit, Add, Move, and Remove options.',
+      ],
+      [
+        { tag: 'strong', text: 'Shift+click' },
+        ' — Multi-select cards, then right-click for bulk Move or Remove.',
+      ],
       [{ tag: 'strong', text: 'Escape' }, ' — Clear selection.'],
-      [{ tag: 'strong', text: 'Inline editing' }, ' — Right-click a card and choose Edit to edit directly on the card.'],
-      [{ tag: 'strong', text: 'Collapse/Expand' }, ' — Click the ▾/▸ indicator below a manager to toggle their subtree.'],
-      [{ tag: 'strong', text: 'Search' }, ' — Type in the search bar to highlight matching people. Non-matches are dimmed.'],
+      [
+        { tag: 'strong', text: 'Inline editing' },
+        ' — Right-click a card and choose Edit to edit directly on the card.',
+      ],
+      [
+        { tag: 'strong', text: 'Collapse/Expand' },
+        ' — Click the ▾/▸ indicator below a manager to toggle their subtree.',
+      ],
+      [
+        { tag: 'strong', text: 'Search' },
+        ' — Type in the search bar to highlight matching people. Non-matches are dimmed.',
+      ],
     ],
   },
   {
     title: 'Settings & Persistence',
     items: [
       ['All visual settings auto-save to your browser and restore on next visit.'],
-      ['Use ', { tag: 'strong', text: 'Export Settings' }, ' to download your configuration as a file.'],
+      [
+        'Use ',
+        { tag: 'strong', text: 'Export Settings' },
+        ' to download your configuration as a file.',
+      ],
       ['Use ', { tag: 'strong', text: 'Import Settings' }, ' to load a saved configuration.'],
       ['Theme presets apply a full color scheme in one click.'],
     ],
@@ -58,7 +111,10 @@ const HELP_SECTIONS = [
   {
     title: 'Exporting',
     items: [
-      [{ tag: 'strong', text: 'Export PPTX' }, ' — Downloads the chart as an editable PowerPoint file with native shapes and text.'],
+      [
+        { tag: 'strong', text: 'Export PPTX' },
+        ' — Downloads the chart as an editable PowerPoint file with native shapes and text.',
+      ],
       ['The export auto-scales to fit a widescreen slide.'],
     ],
   },
@@ -88,14 +144,9 @@ function buildHelpItem(fragments: HelpFragment[]): DocumentFragment {
 }
 
 export function showHelpDialog(): void {
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `
-    position:fixed;top:0;left:0;right:0;bottom:0;
-    background:rgba(0,0,0,0.6);z-index:1000;
-    display:flex;align-items:center;justify-content:center;
-    backdrop-filter:blur(3px);
-    animation:fadeIn 150ms ease;
-  `;
+  const overlay = createOverlay();
+  overlay.style.background = 'rgba(0,0,0,0.6)';
+  overlay.style.backdropFilter = 'blur(3px)';
 
   const dialog = document.createElement('div');
   dialog.setAttribute('role', 'dialog');
@@ -208,8 +259,11 @@ export function showHelpDialog(): void {
   dialog.classList.add('help-dialog');
   dialog.prepend(styleTag);
 
+  const removeTrap = trapFocus(dialog);
+
   // Close handlers
   const close = () => {
+    removeTrap();
     if (document.body.contains(overlay)) {
       document.body.removeChild(overlay);
     }
