@@ -8,7 +8,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
-## 🚀 v1.1.0 (Current Release)
+## 🚀 v1.2.0 (Current Release)
 
 ### Phase 1 — Project Foundation
 - [x] Initialize project with Vite + TypeScript + D3.js + Vitest
@@ -36,7 +36,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 ### Phase 4 — Editor Panels
 - [x] **Form editor** — parent dropdown, name/title fields, add/edit/delete people
 - [x] **JSON editor** — textarea with full tree, Apply button, error feedback
-- [x] **Tab switcher** — Add, Load, Edit, Settings
+- [x] **Tab switcher** — Add, Load, Edit, Settings, Utilities
 
 ### Phase 5 — Pan/Zoom
 - [x] `d3-zoom` integration with `ZoomManager`
@@ -133,17 +133,38 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Undo/redo support for category assignment operations
 - [x] JSON serialization preserves `categoryId` with validation
 
+### Phase 16 — Text Normalization & Utilities Tab
+- [x] `TextNormalization` type (`none`, `titleCase`, `uppercase`, `lowercase`) and fields on `ColumnMapping`
+- [x] `normalizeText()` utility — handles hyphens, apostrophes (e.g., "O'Brien", "Mary-Jane")
+- [x] `normalizeTreeText()` — deep immutable tree normalization for name and title independently
+- [x] Text normalization dropdowns in import preview step (all import types: CSV, JSON, XLSX)
+- [x] Text normalization dropdowns in Column Mapper UI, saved as part of mapping presets
+- [x] Preset normalization values pre-populate import preview dropdowns
+- [x] **Utilities sidebar tab** — new 5th tab in sidebar
+- [x] `UtilitiesEditor` — normalize all names/titles in the current org chart with one click
+- [x] Apply button disabled when no normalization selected (none/none guard)
+- [x] Normalization is undoable via OrgStore undo stack
+- [x] Success/error feedback after applying normalization
+
+### Testing
+- [x] **621 tests across 30 test files** — all passing
+- [x] TDD approach from day one
+- [x] Unit tests: OrgStore, tree utilities, search, ID generation, version, text normalization
+- [x] Integration tests: renderer output, IC/PAL stacks, spacing regression
+- [x] Store tests: settings-store, mapping-store, theme-manager, theme-presets, category-store
+- [x] Editor tests: import-editor, tab-switcher, shortcuts, utilities-editor
+
 ---
 
 ## 🔲 Planned / Ideas
 
-### v1.2.0 — Drag-and-Drop Reorganization
+### v1.3.0 — Drag-and-Drop Reorganization
 - [ ] Drag-and-drop node reorganization with visual feedback
 - [ ] Confirmation dialog for large moves (>5 reports)
 - [ ] Full test coverage for drag interactions
 - [ ] Drag-and-drop file import refinement
 
-### v1.3.0 — Collapsible Subtrees
+### v1.4.0 — Collapsible Subtrees
 - [ ] Collapse/expand subtrees with toggle indicators
 - [ ] Persist collapse state across re-renders
 - [ ] Full test coverage for collapse/expand behavior
@@ -195,7 +216,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 ## Architecture
 
 ```
-Editor (Add / Load / Edit) → OrgStore (data + events) → Renderer (D3 + SVG)
+Editor (Add / Load / Edit / Utilities) → OrgStore (data + events) → Renderer (D3 + SVG)
                                     ↕                            ↑
                               SettingsStore (localStorage)       Right-click / Inline edit / Multi-select
                               ThemeManager (dark/light + presets)
@@ -205,7 +226,7 @@ Editor (Add / Load / Edit) → OrgStore (data + events) → Renderer (D3 + SVG)
 
 ```
 src/
-├── editor/        # Data editing tabs (Add, Load, Edit, Settings)
+├── editor/        # Data editing tabs (Add, Load, Edit, Settings, Utilities)
 ├── export/        # PowerPoint export
 ├── renderer/      # D3-based chart rendering, layout engine, zoom
 ├── store/         # State management (org data, settings, themes, mappings)

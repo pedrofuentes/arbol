@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-03-12
+
+### Added
+- **Text normalization on import** — Title Case / UPPERCASE / lowercase options for name and title fields independently, available in the import preview step for all import types (CSV, JSON, XLSX)
+- **Utilities sidebar tab** — new tab with text normalization for the existing org chart (apply Title Case / UPPERCASE / lowercase to all names and/or titles with a single click)
+- Normalization dropdowns in Column Mapper UI, saved as part of mapping presets
+- `TextNormalization` type and `nameNormalization` / `titleNormalization` fields on `ColumnMapping`
+- `normalizeText()` utility with title case support for hyphens and apostrophes (e.g., "O'Brien", "Mary-Jane")
+- `normalizeTreeText()` for deep immutable tree normalization
+- `UtilitiesEditor` class following existing editor pattern with apply/undo support
+- 52 new tests (621 total across 30 files)
+
 ## [1.1.0] — 2026-03-12
 
 ### Added
