@@ -252,7 +252,7 @@ function main(): void {
   collapseChevron.setAttribute('aria-label', 'Toggle sidebar');
   collapseChevron.setAttribute('data-tooltip', 'Toggle sidebar (Ctrl+B)');
   collapseChevron.textContent = '◀';
-  mainEl.appendChild(collapseChevron);
+  sidebar.appendChild(collapseChevron);
 
   const iconStrip = document.createElement('div');
   iconStrip.className = 'sidebar-icon-strip';
