@@ -179,9 +179,9 @@ function main(): void {
 
   // Sidebar tabs
   const tabSwitcher = new TabSwitcher(sidebar, [
-    { id: 'form', label: 'Form' },
-    { id: 'import', label: 'Load Data' },
-    { id: 'json', label: 'Edit Tree' },
+    { id: 'form', label: 'Add' },
+    { id: 'import', label: 'Load' },
+    { id: 'json', label: 'Edit' },
     { id: 'settings', label: 'Settings' },
   ]);
 
