@@ -247,6 +247,7 @@ export class ChartRenderer {
         }
       });
 
+    // Text elements pass pointer events through to the rect beneath
     selection.append('text')
       .attr('class', 'node-name')
       .attr('x', width / 2)
@@ -256,6 +257,7 @@ export class ChartRenderer {
       .attr('font-weight', 'bold')
       .attr('font-family', 'Calibri, sans-serif')
       .attr('font-size', `${nameFontSize}px`)
+      .attr('pointer-events', 'none')
       .text((d: any) => d.data?.name ?? d.name);
 
     selection.append('text')
@@ -267,6 +269,7 @@ export class ChartRenderer {
       .attr('font-family', 'Calibri, sans-serif')
       .attr('font-size', `${titleFontSize}px`)
       .attr('fill', '#64748b')
+      .attr('pointer-events', 'none')
       .text((d: any) => d.data?.title ?? d.title);
   }
 
