@@ -20,45 +20,49 @@ Editor (Add / Load / Edit) → OrgStore (data + events) → Renderer (D3 + SVG)
 
 ## Project Structure
 
+31 TypeScript source files in `src/`, organized by concern:
+
 ```
 src/
+├── data/
+│   └── sample-org.ts          # Sample org data (52 employees, used as default)
 ├── editor/
-│   ├── form-editor.ts        # Add people via form UI
-│   ├── json-editor.ts        # Raw JSON tree editor with Apply button
-│   ├── import-editor.ts      # File import (JSON/CSV) + paste + column mapping
-│   ├── settings-editor.ts    # Visual settings panel with sliders, presets
-│   └── tab-switcher.ts       # Sidebar tab management
+│   ├── form-editor.ts         # Add/edit people via form UI (parent dropdown, name/title inputs)
+│   ├── json-editor.ts         # Raw JSON tree editor with Apply/validate
+│   ├── import-editor.ts       # File import (JSON/CSV) + paste + column mapping + presets
+│   ├── settings-editor.ts     # Visual settings panel (sliders, color pickers, presets)
+│   └── tab-switcher.ts        # Sidebar tab management (Add / Load / Edit / Settings)
 ├── export/
-│   └── pptx-exporter.ts      # PowerPoint export (code-split, lazy loaded)
+│   └── pptx-exporter.ts       # PowerPoint export — takes LayoutResult, writes .pptx file
 ├── renderer/
-│   ├── chart-renderer.ts     # Main D3 SVG renderer (~700 lines, core logic)
-│   ├── layout-engine.ts      # Shared layout computation extracted from renderer
-│   └── zoom-manager.ts       # d3-zoom integration, auto-fit, transform persistence
+│   ├── chart-renderer.ts      # Main D3 SVG renderer — draws cards, links, IC/PAL stacks
+│   ├── layout-engine.ts       # Computes x/y positions, bounding box, IC containers, PAL assignments
+│   └── zoom-manager.ts        # d3-zoom integration, fitToContent(), resetZoom(), transform persistence
 ├── store/
-│   ├── org-store.ts           # OrgNode CRUD, events, undo/redo, serialization
-│   ├── settings-store.ts      # Persist/load settings from localStorage
-│   ├── theme-manager.ts       # Dark/light toggle, theme class management
-│   ├── theme-presets.ts       # Color + layout preset definitions
-│   └── mapping-store.ts       # CSV column mapping preset storage
+│   ├── org-store.ts           # OrgNode CRUD, undo/redo (50-entry stack), event emitter, validation
+│   ├── settings-store.ts      # Persist/load renderer settings from localStorage
+│   ├── theme-manager.ts       # Dark/light toggle — applies class to <html>, persists to localStorage
+│   ├── theme-presets.ts       # Color + layout preset definitions (Emerald, Corporate Blue, etc.)
+│   └── mapping-store.ts       # CSV column mapping preset storage (localStorage)
 ├── ui/
-│   ├── column-mapper.ts       # UI for mapping CSV columns to OrgNode fields
-│   ├── confirm-dialog.ts      # Modal confirmation dialog
-│   ├── context-menu.ts        # Right-click context menu (Edit, Add Child, Focus, Move, Remove)
-│   ├── inline-editor.ts       # Inline card editing (name/title on double-click)
-│   ├── add-popover.ts         # Popover form for adding a child from context menu
-│   ├── manager-picker.ts      # Manager selection UI for Move operations
-│   ├── focus-banner.ts        # Focus mode banner with exit button
-│   ├── help-dialog.ts         # Help/about overlay
-│   └── preset-creator.ts     # UI for creating/naming presets
+│   ├── column-mapper.ts       # Interactive UI for mapping CSV columns to OrgNode fields
+│   ├── confirm-dialog.ts      # Modal confirmation dialog (title, message, danger flag)
+│   ├── context-menu.ts        # Right-click context menu with keyboard nav (↑↓ Enter Esc)
+│   ├── inline-editor.ts       # Inline card editing — text inputs overlaid on SVG card
+│   ├── add-popover.ts         # Fixed-position popover for adding child nodes (name/title)
+│   ├── manager-picker.ts      # Modal for selecting target node (Move/Reassign operations)
+│   ├── focus-banner.ts        # Focus mode banner — "Viewing [Name]'s org" + "Show full org" exit
+│   ├── help-dialog.ts         # Help/about overlay (sections on interactions, shortcuts, imports)
+│   └── preset-creator.ts      # Modal form for creating/naming CSV column mapping presets
 ├── utils/
-│   ├── tree.ts                # Tree traversal (flatten, find, parent, depth)
-│   ├── search.ts              # Name/title search with fuzzy matching
-│   ├── csv-parser.ts          # CSV parsing with auto-format detection
-│   ├── shortcuts.ts           # Keyboard shortcut manager
-│   └── id.ts                  # UUID generation
-├── types.ts                   # OrgNode, ColumnMapping, MappingPreset interfaces
-├── main.ts                    # App entry point — wires everything together
-└── style.css                  # Global styles, CSS custom properties, themes
+│   ├── tree.ts                # Tree traversal: findNodeById, findParent, flattenTree, cloneTree, isLeaf, isM1, stripM1Children, countLeaves, managerLevel, countManagersByLevel
+│   ├── search.ts              # Case-insensitive substring search on name/title, returns matching IDs
+│   ├── csv-parser.ts          # CSV parsing (quoted fields, escapes) + tree building from flat CSV
+│   ├── shortcuts.ts           # Keyboard shortcut manager (register combos, prevent defaults)
+│   └── id.ts                  # UUID generation via crypto.randomUUID()
+├── types.ts                   # Interfaces: OrgNode, ColumnMapping, MappingPreset
+├── main.ts                    # App entry point — wires stores, renderer, editors, menus, shortcuts
+└── style.css                  # Global styles, CSS custom properties, dark/light themes
 ```
 
 ## Coding Standards
@@ -81,71 +85,167 @@ These are **mandatory** for all changes:
 
 ### Node Types
 - **Manager** — has children who are also managers. Connected by tree lines.
-- **M1 (First-line manager)** — manager where ALL children are leaf nodes (ICs). Detected automatically.
+- **M1 (First-line manager)** — manager where ALL children are leaf nodes (ICs). Detected automatically via `isM1()`.
 - **IC (Individual Contributor)** — leaf node under an M1. Rendered as vertical stack in a grey container, no connecting lines.
 - **PAL (Personal Advisor)** — leaf node under a non-M1 manager. Rendered in alternating left/right columns with side-entry elbow connectors.
 
-### Spacing Model
-All spacing is configurable via `RendererOptions`:
-- `topVerticalSpacing` — manager bottom → horizontal connecting line
-- `bottomVerticalSpacing` — horizontal line → child top
-- `branchSpacing` — exact horizontal gap between sibling subtree boundaries
-- `palTopGap`, `palBottomGap`, `palRowGap`, `palCenterGap` — PAL stack spacing
-- `icGap`, `icContainerPadding` — IC stack spacing
-
-### Interactions
-- **Click** — highlights the card (visual selection only; does not open sidebar editor).
-- **Double-click** — opens inline editor on the card for name/title.
-- **Right-click** — shows context menu with Edit, Add Child, Focus on sub-org, Move to…, Remove.
-- **Shift+click** — toggles multi-select; bulk operations (Move, Remove) appear when ≥1 node is selected.
-
-### Focus Mode
-Right-click a non-leaf node → **"Focus on sub-org"** renders only that subtree. A banner shows `"Viewing [Name]'s org"` with a **"Show full org"** button. `Escape` also exits focus mode. Focus is a rendering-only filter — the store is unchanged. PPTX export in focus mode exports only the visible sub-org. If the focused node is removed (e.g., via undo), the view gracefully falls back to full org.
-
-### Store Bulk Methods
-- `bulkMoveNodes(ids, newParentId)` — moves multiple nodes under a new parent in one undo step.
-- `bulkRemoveNodes(ids)` — removes multiple nodes (re-parents their children) in one undo step.
-- `removeNodeWithReassign(id)` — removes a node and re-assigns its children to the removed node's parent.
-
 ### Data Format
+
 ```typescript
 interface OrgNode {
-  id: string;
-  name: string;
-  title: string;
-  children?: OrgNode[];
+  id: string;          // UUID (generated by crypto.randomUUID())
+  name: string;        // Person's name
+  title: string;       // Job title
+  children?: OrgNode[];  // Omit for leaf nodes
+}
+
+interface ColumnMapping {
+  name: string;              // CSV column header for name
+  title: string;             // CSV column header for title
+  parentRef: string;         // CSV column header for parent reference
+  id?: string;               // CSV column header for node ID (optional)
+  parentRefType: 'id' | 'name';  // Match parents by ID or name
+  caseInsensitive?: boolean;     // Ignore case in parent matching
+}
+
+interface MappingPreset {
+  name: string;              // Preset display name
+  mapping: ColumnMapping;    // The column mapping configuration
 }
 ```
 
 CSV imports support: `id,name,title,parent_id` or `name,title,manager_name` (auto-detected).
 
+### Spacing Model
+
+All spacing is configurable via `RendererOptions`:
+- `nodeWidth`, `nodeHeight` — card dimensions
+- `horizontalSpacing` — minimum space between adjacent cards
+- `branchSpacing` — exact horizontal gap between sibling subtree boundaries
+- `topVerticalSpacing` — manager bottom → horizontal connecting line
+- `bottomVerticalSpacing` — horizontal line → child top
+- `palTopGap`, `palBottomGap`, `palRowGap`, `palCenterGap` — PAL stack spacing
+- `icGap`, `icContainerPadding`, `icNodeWidth` — IC stack spacing and sizing
+- `nameFontSize`, `titleFontSize`, `textPaddingTop`, `textGap` — typography
+- `linkColor`, `linkWidth` — connector lines
+- `cardFill`, `cardStroke`, `cardStrokeWidth` — card appearance
+- `icContainerFill` — IC group background
+
+### OrgStore API
+
+All public methods on `OrgStore` (defined in `src/store/org-store.ts`):
+
+| Method | Signature | Purpose |
+|--------|-----------|---------|
+| `getTree()` | `(): OrgNode` | Returns current root node |
+| `addChild()` | `(parentId, {name, title}): OrgNode` | Creates child under parent; snapshot + emit |
+| `removeNode()` | `(id): void` | Deletes node (must be leaf; errors on root) |
+| `removeNodeWithReassign()` | `(nodeId, newParentId): void` | Moves node's children to newParent, then deletes node |
+| `updateNode()` | `(id, {name?, title?}): void` | Updates node name and/or title |
+| `moveNode()` | `(nodeId, newParentId): void` | Re-parents node (validates no circular ancestry) |
+| `bulkMoveNodes()` | `(ids[], newParentId): void` | Moves multiple nodes in one undo step |
+| `bulkRemoveNodes()` | `(ids[]): void` | Removes multiple leaf nodes in one undo step |
+| `undo()` / `redo()` | `(): boolean` | Pop undo/redo stack; max 50 entries |
+| `canUndo()` / `canRedo()` | `(): boolean` | Check stack availability |
+| `getUndoStackSize()` / `getRedoStackSize()` | `(): number` | Stack depths |
+| `toJSON()` | `(): string` | Serialize tree (2-space indent) |
+| `fromJSON()` | `(json): void` | Parse, validate, replace root; snapshot + emit |
+| `onChange()` | `(listener): () => void` | Register change listener; returns unsubscribe fn |
+| `getDescendantCount()` | `(nodeId): number` | Count all descendants of a node |
+| `isDescendant()` | `(ancestorId, nodeId): boolean` | Ancestry check for move validation |
+
+All mutating methods call `snapshot()` (saves undo state) then `emit()` (notifies listeners).
+
+### Interactions
+
+| Input | Target | Behavior |
+|-------|--------|----------|
+| **Click** | Card | Highlights card (visual only); clears multi-selection |
+| **Double-click** | Card | Opens inline editor for name/title directly on the card |
+| **Right-click** | Card | Shows context menu (see below) |
+| **Shift+click** | Card | Toggles multi-select; root excluded |
+| **Drag** | Canvas | Pan chart (d3-zoom) |
+| **Scroll wheel** | Canvas | Zoom in/out (0.1x–4.0x via d3-zoom) |
+| **Type** | Search bar | Highlights matching nodes; dims non-matches |
+
+### Context Menu Items
+
+**Single-card menu** (right-click on unselected card):
+
+| Label | Icon | Disabled when | Action |
+|-------|------|---------------|--------|
+| Edit | ✏️ | Never | Opens inline editor overlay on the card |
+| Add | ➕ | Never | Opens add-child popover |
+| Focus on sub-org | 🔎 | Node is leaf, or already focused on this node | Enters focus mode — renders only this subtree |
+| Move | ↗️ | Node is root | Opens manager picker to select new parent |
+| Remove | 🗑️ | Node is root | Leaf: confirm dialog → remove. Manager: picker for reassigning children → remove |
+
+**Multi-select menu** (right-click on one of N selected cards):
+
+| Label | Icon | Action |
+|-------|------|--------|
+| Move all (N people) | ↗️ | Opens manager picker → `bulkMoveNodes()` |
+| Remove all (N people) | 🗑️ | Managers: reassign children first; Leaves: confirm → `bulkRemoveNodes()` |
+
+### Focus Mode
+
+Right-click a non-leaf node → **"Focus on sub-org"** renders only that subtree as if it were the full org. Focus is a **rendering-only filter** — `OrgStore` is unchanged; `main.ts` passes `findNodeById(fullTree, focusedNodeId)` to `renderer.render()` instead of the full tree.
+
+- **Banner**: Floating bar at chart top — `"🔎 Viewing [Name]'s org"` + `"Show full org"` button
+- **Exit**: Click "Show full org" button, or press `Escape`
+- **PPTX export**: Automatically exports only the focused sub-org (the exporter uses `renderer.getLastLayout()` which reflects the rendered subtree)
+- **Status bar**: Shows stats for the focused subtree only
+- **Fallback**: If the focused node is deleted (e.g., via undo), the view falls back to full org
+
+### Keyboard Shortcuts
+
+All shortcuts are registered in `main.ts` via `ShortcutManager`:
+
+| Key | Action |
+|-----|--------|
+| `Ctrl+Z` | Undo |
+| `Ctrl+Shift+Z` | Redo |
+| `Ctrl+Y` | Redo (alternative) |
+| `Ctrl+E` | Export to PPTX |
+| `Ctrl+F` | Focus search input |
+| `Escape` | Priority chain: (1) clear search if focused → (2) exit focus mode → (3) clear multi-selection → (4) deselect node |
+
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
 - **466 tests across 24 files** — all must pass before committing
-- **Run tests:** `npm run test`
-- **Watch mode:** `npm run test:watch`
-- **TDD is mandatory** — see [Agent Workflow](#agent-workflow-mandatory) above
+- **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
+- **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
 
-### Test Categories
-| Category | Scope |
-|---|---|
-| `utils/tree.test.ts` | Tree traversal, flatten, find, parent |
-| `utils/search.test.ts` | Name/title search matching |
-| `utils/id.test.ts` | UUID generation |
-| `store/org-store.test.ts` | CRUD, events, undo/redo, serialization |
-| `store/settings-store.test.ts` | Settings persistence |
-| `store/mapping-store.test.ts` | CSV mapping presets |
-| `store/theme-manager.test.ts` | Dark/light toggle |
-| `renderer/chart-renderer.test.ts` | SVG output, IC/PAL stacks, spacing regression |
-| `export/pptx-exporter.test.ts` | PowerPoint export shapes |
-| `editor/*.test.ts` | Import, tab switching, shortcuts |
-| `ui/context-menu.test.ts` | Context menu show/hide, actions, positioning |
-| `ui/focus-banner.test.ts` | Focus mode banner rendering, exit action, singleton |
-| `ui/inline-editor.test.ts` | Inline card editing, save/cancel, validation |
-| `ui/add-popover.test.ts` | Add-child popover form, parent pre-selection |
-| `ui/manager-picker.test.ts` | Manager picker search, selection, move targets |
+### Test Files (all 24)
+
+| File | Scope |
+|------|-------|
+| `tests/utils/tree.test.ts` | findNodeById, findParent, flattenTree, cloneTree, isLeaf, isM1, stripM1Children, countLeaves, managerLevel |
+| `tests/utils/search.test.ts` | Name/title substring matching, case insensitivity |
+| `tests/utils/id.test.ts` | UUID generation format |
+| `tests/utils/csv-parser.test.ts` | CSV parsing (quotes, escapes), tree building from flat data |
+| `tests/utils/shortcuts.test.ts` | Shortcut registration, key combos, prevent defaults |
+| `tests/store/org-store.test.ts` | Node CRUD, events, undo/redo, serialization, validation, bulk ops |
+| `tests/store/settings-store.test.ts` | Settings save/load from localStorage |
+| `tests/store/mapping-store.test.ts` | CSV mapping preset CRUD in localStorage |
+| `tests/store/theme-manager.test.ts` | Dark/light toggle, class application, persistence |
+| `tests/store/theme-presets.test.ts` | Preset definitions, color tuple validation |
+| `tests/renderer/chart-renderer.test.ts` | SVG output, IC/PAL stacks, card rendering, spacing regression |
+| `tests/renderer/layout-engine.test.ts` | Position computation, bounding box, IC containers, PAL assignments |
+| `tests/renderer/integration.test.ts` | End-to-end renderer + layout integration |
+| `tests/renderer/zoom-manager.test.ts` | Zoom/pan, fitToContent, resetZoom |
+| `tests/export/pptx-exporter.test.ts` | PowerPoint slide generation, shapes, positioning |
+| `tests/editor/form-editor.test.ts` | Form inputs, parent dropdown, add/edit workflow |
+| `tests/editor/import-editor.test.ts` | JSON/CSV import, paste, column mapping, file parsing |
+| `tests/editor/json-editor.test.ts` | JSON validation, apply, error display |
+| `tests/editor/tab-switcher.test.ts` | Tab activation, content switching, aria-selected |
+| `tests/ui/context-menu.test.ts` | Menu rendering, item actions, keyboard nav, dismiss, viewport clamping |
+| `tests/ui/focus-banner.test.ts` | Banner rendering, exit action, dismiss, singleton, theme styling |
+| `tests/ui/inline-editor.test.ts` | Inline editing, save/cancel, validation |
+| `tests/ui/add-popover.test.ts` | Add-child popover, parent pre-selection, form validation |
+| `tests/ui/manager-picker.test.ts` | Manager search, selection, move target filtering |
 
 ## Development
 
@@ -218,3 +318,7 @@ For every change, follow the Red → Green → Refactor cycle:
 4. **IC detection is automatic.** A manager is an M1 if ALL children are leaf nodes. Adding a grandchild under an IC converts the parent from M1 to regular manager — this changes rendering. Test both states.
 
 5. **Settings editor wiring.** `SettingsStore` must be passed to `SettingsEditor` for export/import to work. Check `main.ts` wiring if buttons silently fail.
+
+6. **Focus mode is rendering-only.** The `OrgStore` always holds the full tree. Focus mode filters at render time by passing a subtree to `renderer.render()`. Never modify the store to implement focus — only change what is passed to the renderer.
+
+7. **Context menu styling.** Uses `setAttribute('style', ...)` (not `style.cssText`) for CSS variables to work in jsdom tests. Follow this pattern for new UI components.
