@@ -99,12 +99,20 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] MIT LICENSE file
 
 ### Testing
-- [x] **327 tests across 19 test files** — all passing
+- [x] **468 tests across 25 test files** — all passing
 - [x] TDD approach from day one
-- [x] Unit tests: OrgStore, tree utilities, search, ID generation
+- [x] Unit tests: OrgStore, tree utilities, search, ID generation, version
 - [x] Integration tests: renderer output, IC/PAL stacks, spacing regression
 - [x] Store tests: settings-store, mapping-store, theme-manager, theme-presets
 - [x] Editor tests: import-editor, tab-switcher, shortcuts
+
+### Phase 14 — Versioning Workflow
+- [x] `CHANGELOG.md` with Keep-a-Changelog format
+- [x] Version management step in Agent Workflow (AGENTS.md step 4)
+- [x] Version display in footer (left side, before people count)
+- [x] Build-time version injection via Vite (`__APP_VERSION__` from `package.json`)
+- [x] `src/version.ts` — single source of truth for app version
+- [x] Versioning section in `docs/contributing.md`
 
 ---
 
