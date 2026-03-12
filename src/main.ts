@@ -733,18 +733,33 @@ function main(): void {
   store.onChange(updateStatus);
   updateStatus();
 
-  // Footer: Center area (selection count + zoom level)
+  // Footer: Center area (GitHub links + selection indicator)
   const footerCenter = document.createElement('div');
   footerCenter.className = 'footer-center';
-  footerCenter.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-size:11px;font-family:var(--font-sans);';
+  footerCenter.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--font-sans);';
 
   const selectionIndicator = document.createElement('span');
   selectionIndicator.style.cssText = 'color:var(--accent);font-weight:600;display:none;';
   footerCenter.appendChild(selectionIndicator);
 
-  const zoomIndicator = document.createElement('span');
-  zoomIndicator.style.cssText = 'color:var(--text-tertiary);';
-  footerCenter.appendChild(zoomIndicator);
+  const githubLink = document.createElement('a');
+  githubLink.href = 'https://github.com/pedrofuentes/arbol';
+  githubLink.target = '_blank';
+  githubLink.rel = 'noopener noreferrer';
+  githubLink.textContent = '✦ Built with Arbol';
+  footerCenter.appendChild(githubLink);
+
+  const centerSeparator = document.createElement('span');
+  centerSeparator.style.color = 'var(--text-tertiary)';
+  centerSeparator.textContent = '·';
+  footerCenter.appendChild(centerSeparator);
+
+  const issuesLink = document.createElement('a');
+  issuesLink.href = 'https://github.com/pedrofuentes/arbol/issues';
+  issuesLink.target = '_blank';
+  issuesLink.rel = 'noopener noreferrer';
+  issuesLink.textContent = 'Report bugs & request features';
+  footerCenter.appendChild(issuesLink);
 
   footer.appendChild(footerCenter);
 
@@ -753,12 +768,22 @@ function main(): void {
     if (multiSelectedIds.size > 0) {
       selectionIndicator.textContent = `${multiSelectedIds.size} selected`;
       selectionIndicator.style.display = '';
+      // Hide links when selection is active
+      githubLink.style.display = 'none';
+      centerSeparator.style.display = 'none';
+      issuesLink.style.display = 'none';
     } else {
       selectionIndicator.style.display = 'none';
+      githubLink.style.display = '';
+      centerSeparator.style.display = '';
+      issuesLink.style.display = '';
     }
   };
 
-  // Update zoom indicator
+  // Zoom indicator (will be appended to footer right, after Reset button)
+  const zoomIndicator = document.createElement('span');
+  zoomIndicator.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-family:var(--font-mono);min-width:36px;text-align:right;';
+
   const zoomManager = renderer.getZoomManager();
   const updateZoomIndicator = () => {
     const transform = zoomManager?.getCurrentTransform?.();
@@ -817,6 +842,12 @@ function main(): void {
   resetZoomBtn.addEventListener('click', () => {
     renderer.getZoomManager()?.resetZoom();
   });
+
+  // Zoom level indicator (right side, after Reset)
+  const zoomSeparator = document.createElement('span');
+  zoomSeparator.style.cssText = 'width:1px;height:14px;background:var(--border-default);';
+  footerRight.appendChild(zoomSeparator);
+  footerRight.appendChild(zoomIndicator);
 
   // Keyboard shortcuts
   const shortcuts = new ShortcutManager();
