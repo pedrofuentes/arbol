@@ -46,6 +46,7 @@ const DEFAULT_OPTS: ResolvedOptions = {
   textGap: 1,
   linkWidth: 1,
   linkColor: '#888888',
+  dottedLineDash: '6,4',
   cardStrokeWidth: 1,
   cardStroke: '#cccccc',
   cardFill: '#ffffff',

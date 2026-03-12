@@ -3,6 +3,7 @@ export interface OrgNode {
   name: string;
   title: string;
   categoryId?: string;
+  dottedLine?: boolean;
   children?: OrgNode[];
 }
 

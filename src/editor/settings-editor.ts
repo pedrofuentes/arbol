@@ -7,7 +7,7 @@ import { generateId } from '../utils/id';
 interface SettingDef {
   key: keyof RendererOptions;
   label: string;
-  type: 'range' | 'color';
+  type: 'range' | 'color' | 'text';
   min?: number;
   max?: number;
   step?: number;
@@ -109,6 +109,7 @@ const SETTING_GROUPS: SettingGroup[] = [
     settings: [
       { key: 'linkWidth', label: 'Link Width', type: 'range', min: 0.5, max: 5, step: 0.5 },
       { key: 'linkColor', label: 'Link Color', type: 'color' },
+      { key: 'dottedLineDash', label: 'Dotted Line Pattern', type: 'text' },
     ],
   },
   {
@@ -149,6 +150,7 @@ const DEFAULT_SETTINGS: Record<string, number | string> = {
   textGap: 1,
   linkColor: '#94a3b8',
   linkWidth: 1.5,
+  dottedLineDash: '6,4',
   cardFill: '#ffffff',
   cardStroke: '#22c55e',
   cardStrokeWidth: 1,
@@ -980,6 +982,30 @@ export class SettingsEditor {
         const val = parseFloat(input.value);
         valueSpan.textContent = String(val);
         this.renderer.updateOptions({ [setting.key]: val } as Partial<RendererOptions>);
+        this.rerenderCallback();
+      });
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(input);
+    } else if (setting.type === 'text') {
+      const label = document.createElement('label');
+      label.textContent = setting.label;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = String(currentValue);
+      input.style.cssText = `
+        width:100%;box-sizing:border-box;
+        padding:4px 8px;font-size:13px;
+        font-family:var(--font-sans);
+        border:1px solid var(--border-default);
+        border-radius:var(--radius-md);
+        background:var(--bg-base);
+        color:var(--text-primary);
+      `;
+
+      input.addEventListener('change', () => {
+        this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
       });
 

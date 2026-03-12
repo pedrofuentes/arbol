@@ -71,6 +71,7 @@ function main(): void {
     textGap: 1,
     linkColor: '#94a3b8',
     linkWidth: 1.5,
+    dottedLineDash: '6,4',
     cardFill: '#ffffff',
     cardStroke: '#22c55e',
     cardStrokeWidth: 1,
@@ -436,6 +437,14 @@ function main(): void {
           ],
         },
         {
+          label: node.dottedLine ? 'Remove dotted line' : 'Set as dotted line',
+          icon: '┈',
+          disabled: isRoot,
+          action: () => {
+            store.setDottedLine(nodeId, !node.dottedLine);
+          },
+        },
+        {
           label: 'Move',
           icon: '↗️',
           disabled: isRoot,
@@ -448,12 +457,13 @@ function main(): void {
                 .filter((n) => !descendantIds.has(n.id))
                 .map((n) => ({ id: n.id, name: n.name, title: n.title }));
 
-              const targetId = await showManagerPicker({
+              const result = await showManagerPicker({
                 title: `Move "${node.name}" to…`,
                 managers,
+                showDottedLineOption: true,
               });
-              if (targetId) {
-                store.moveNode(nodeId, targetId);
+              if (result) {
+                store.moveNode(nodeId, result.managerId, result.dottedLine);
               }
             } catch (e) {
               console.error('Operation failed:', e);
@@ -483,12 +493,12 @@ function main(): void {
                   .filter((n) => !descendantIds.has(n.id))
                   .map((n) => ({ id: n.id, name: n.name, title: n.title }));
 
-                const targetId = await showManagerPicker({
+                const result = await showManagerPicker({
                   title: `Reassign "${node.name}"'s reports to…`,
                   managers,
                 });
-                if (targetId) {
-                  store.removeNodeWithReassign(nodeId, targetId);
+                if (result) {
+                  store.removeNodeWithReassign(nodeId, result.managerId);
                 }
               }
             } catch (e) {
@@ -546,12 +556,12 @@ function main(): void {
                 .filter((n) => !excludeIds.has(n.id))
                 .map((n) => ({ id: n.id, name: n.name, title: n.title }));
 
-              const targetId = await showManagerPicker({
+              const result = await showManagerPicker({
                 title: `Move ${count} people to…`,
                 managers,
               });
-              if (targetId) {
-                store.bulkMoveNodes(selectedArray, targetId);
+              if (result) {
+                store.bulkMoveNodes(selectedArray, result.managerId);
               }
             } catch (e) {
               console.error('Operation failed:', e);
@@ -583,16 +593,16 @@ function main(): void {
                   .filter((n) => !excludeIds.has(n.id))
                   .map((n) => ({ id: n.id, name: n.name, title: n.title }));
 
-                const targetId = await showManagerPicker({
+                const result = await showManagerPicker({
                   title: `Reassign children of selected managers to…`,
                   managers,
                 });
-                if (targetId) {
+                if (result) {
                   // Reassign children of managers first, then remove all
                   for (const id of selectedArray) {
                     const n = findNodeById(store.getTree(), id);
                     if (n && !isLeaf(n)) {
-                      store.removeNodeWithReassign(id, targetId);
+                      store.removeNodeWithReassign(id, result.managerId);
                     } else if (n) {
                       store.removeNode(id);
                     }
