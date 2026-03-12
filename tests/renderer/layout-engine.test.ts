@@ -61,8 +61,8 @@ function managerWithPALsAndM1(): OrgNode {
     name: 'CEO',
     title: 'CEO',
     children: [
-      { id: 'pal1', name: 'PAL One', title: 'Advisor' },
-      { id: 'pal2', name: 'PAL Two', title: 'EA' },
+      { id: 'pal1', name: 'Advisor One', title: 'Advisor' },
+      { id: 'pal2', name: 'Advisor Two', title: 'EA' },
       {
         id: 'mgr1',
         name: 'CTO',
@@ -82,13 +82,13 @@ function mixedTree(): OrgNode {
     name: 'CEO',
     title: 'CEO',
     children: [
-      { id: 'pal1', name: 'PAL', title: 'Advisor' },
+      { id: 'pal1', name: 'Advisor', title: 'Advisor' },
       {
         id: 'cto',
         name: 'CTO',
         title: 'CTO',
         children: [
-          { id: 'pal-cto', name: 'CTO PAL', title: 'Tech Advisor' },
+          { id: 'pal-cto', name: 'CTO Advisor', title: 'Tech Advisor' },
           {
             id: 'vp',
             name: 'VP Eng',
@@ -184,19 +184,19 @@ describe('computeLayout', () => {
     });
   });
 
-  describe('manager with 2 PALs + 1 M1', () => {
-    it('returns manager + 2 PAL + M1 + 2 IC nodes', () => {
+  describe('manager with 2 Advisors + 1 M1', () => {
+    it('returns manager + 2 Advisor + M1 + 2 IC nodes', () => {
       const result = computeLayout(managerWithPALsAndM1(), defaultOpts());
       expect(nodesByType(result, 'manager').length).toBe(2); // root + mgr1
       expect(nodesByType(result, 'pal').length).toBe(2);
       expect(nodesByType(result, 'ic').length).toBe(2);
     });
 
-    it('returns PAL links and tree links', () => {
+    it('returns Advisor links and tree links', () => {
       const result = computeLayout(managerWithPALsAndM1(), defaultOpts());
       const palLinks = result.links.filter((l) => l.layer === 'pal');
       const treeLinks = result.links.filter((l) => l.layer === 'tree');
-      expect(palLinks.length).toBe(2); // one per PAL
+      expect(palLinks.length).toBe(2); // one per Advisor
       expect(treeLinks.length).toBeGreaterThanOrEqual(2); // tree link + vertical connector
     });
 
@@ -205,7 +205,7 @@ describe('computeLayout', () => {
       expect(result.icContainers.length).toBe(1);
     });
 
-    it('PAL nodes are positioned below the manager card', () => {
+    it('Advisor nodes are positioned below the manager card', () => {
       const opts = defaultOpts();
       const result = computeLayout(managerWithPALsAndM1(), opts);
       const root = nodesByType(result, 'manager').find((n) => n.id === 'root')!;
@@ -214,7 +214,7 @@ describe('computeLayout', () => {
       }
     });
 
-    it('first PAL is to the left, second PAL is to the right', () => {
+    it('first Advisor is to the left, second Advisor is to the right', () => {
       const result = computeLayout(managerWithPALsAndM1(), defaultOpts());
       const pals = nodesByType(result, 'pal');
       expect(pals[0].x).toBeLessThan(pals[1].x);
@@ -229,7 +229,7 @@ describe('computeLayout', () => {
       const ics = nodesByType(result, 'ic');
       // Managers: root, cto, cfo, vp
       expect(managers.length).toBe(4);
-      // PALs: pal1 (under root), pal-cto (under cto)
+      // Advisors: pal1 (under root), pal-cto (under cto)
       expect(pals.length).toBe(2);
       // ICs: ic1, ic2 (under vp), ic3, ic4 (under cfo)
       expect(ics.length).toBe(4);
@@ -237,7 +237,7 @@ describe('computeLayout', () => {
 
     it('returns correct link count', () => {
       const result = computeLayout(mixedTree(), defaultOpts());
-      // PAL links: 1 (pal1 under root) + 1 (pal-cto under cto) = 2
+      // Advisor links: 1 (pal1 under root) + 1 (pal-cto under cto) = 2
       const palLinks = result.links.filter((l) => l.layer === 'pal');
       expect(palLinks.length).toBe(2);
       // Tree links exist (elbow paths + vertical connectors)
@@ -327,11 +327,11 @@ describe('computeLayout', () => {
       expect(ic2.categoryId).toBe('cat-design');
     });
 
-    it('passes categoryId from OrgNode to PAL LayoutNode', () => {
+    it('passes categoryId from OrgNode to Advisor LayoutNode', () => {
       const tree: OrgNode = {
         id: 'root', name: 'CEO', title: 'CEO',
         children: [
-          { id: 'pal1', name: 'PAL One', title: 'Advisor', categoryId: 'cat-advisor' },
+          { id: 'pal1', name: 'Advisor One', title: 'Advisor', categoryId: 'cat-advisor' },
           {
             id: 'mgr1', name: 'CTO', title: 'CTO',
             children: [

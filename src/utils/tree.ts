@@ -73,7 +73,7 @@ export function stripM1Children(
       icMap.set(n.id, n.children.map(cloneBase));
       return clone;
     }
-    // Non-M1 manager: separate PALs (leaf children) from manager children
+    // Non-M1 manager: separate Advisors (leaf children) from manager children
     const pals = n.children.filter(isLeaf);
     const managers = n.children.filter((c) => !isLeaf(c));
     if (pals.length > 0) {

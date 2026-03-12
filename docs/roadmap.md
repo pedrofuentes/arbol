@@ -21,8 +21,8 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Base card design — 110×22px, sharp corners, Calibri font, 8/7px text, green border
 - [x] Connecting lines with vertical elbow connectors
 - [x] IC (Individual Contributor) stacks — vertical layout below M1 managers, grey container, no connecting lines
-- [x] PAL (Personal Advisor) stacks — alternating left/right columns with side-entry connecting lines
-- [x] Consistent vertical spacing logic for PAL/non-PAL managers
+- [x] Advisor stacks — alternating left/right columns with side-entry connecting lines
+- [x] Consistent vertical spacing logic for Advisor/non-Advisor managers
 - [x] Single-child manager optimized gap (matches `bottomVerticalSpacing`)
 - [x] Boundary-based branch spacing with configurable exact gaps
 
@@ -108,11 +108,11 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] **569 tests across 27 test files** — all passing
 - [x] TDD approach from day one
 - [x] Unit tests: OrgStore, tree utilities, search, ID generation, version
-- [x] Integration tests: renderer output, IC/PAL stacks, spacing regression
+- [x] Integration tests: renderer output, IC/Advisor stacks, spacing regression
 - [x] Store tests: settings-store, mapping-store, theme-manager, theme-presets, category-store
 - [x] Editor tests: import-editor, tab-switcher, shortcuts
 
-### Phase 14 — Versioning Workflow
+### Phase 14— Versioning Workflow
 - [x] `CHANGELOG.md` with Keep-a-Changelog format
 - [x] Version management step in Agent Workflow (AGENTS.md step 4)
 - [x] Version display in footer (left side, before people count)
@@ -126,7 +126,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] `OrgStore.setNodeCategory()` and `bulkSetCategory()` for single/multi-node assignment
 - [x] Renderer applies per-node card fill color from assigned category
 - [x] PPTX export respects per-node category colors (card fill + legend slide)
-- [x] Layout engine propagates `categoryId` to IC and PAL layout nodes
+- [x] Layout engine propagates `categoryId` to IC and Advisor layout nodes
 - [x] Settings panel section for managing color categories (add/edit/remove)
 - [x] Context menu integration — "Set Color" submenu with category assignment
 - [x] Multi-select context menu — bulk category assignment
@@ -150,7 +150,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] **621 tests across 30 test files** — all passing
 - [x] TDD approach from day one
 - [x] Unit tests: OrgStore, tree utilities, search, ID generation, version, text normalization
-- [x] Integration tests: renderer output, IC/PAL stacks, spacing regression
+- [x] Integration tests: renderer output, IC/Advisor stacks, spacing regression
 - [x] Store tests: settings-store, mapping-store, theme-manager, theme-presets, category-store
 - [x] Editor tests: import-editor, tab-switcher, shortcuts, utilities-editor
 
@@ -193,7 +193,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 ---
 
 ## Known Issues
-- Fatima→Ethan vertical spacing required special-case logic for single-child non-PAL managers (fixed, has regression tests)
+- Fatima→Ethan vertical spacing required special-case logic for single-child non-Advisor managers (fixed, has regression tests)
 - Cross-parent boundary spacing required careful D3 separation override (fixed)
 - Imported settings can override defaults if not cleared from localStorage
 - HR system CSV exports with trailing metadata caused orphan reference errors (fixed in v1.1.0)

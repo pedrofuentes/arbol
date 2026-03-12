@@ -18,7 +18,7 @@ An interactive org chart editor for the browser.
 - Focus mode — view any subtree as its own org chart (exports only the focused sub-org)
 - PowerPoint export (.pptx) with editable shapes, connectors, per-node category colors, and legend
 - Category management in Settings panel (color pickers, labels, add/delete)
-- PAL (Personal Advisor) role support with special 2-column layout
+- Advisor role support with special 2-column layout
 - Smart M1 detection (compact layout for manager groups)
 - 20+ customizable renderer settings (dimensions, spacing, typography, colors)
 - Dark/light theme with presets

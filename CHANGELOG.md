@@ -80,7 +80,7 @@ Initial release. See [docs/roadmap.md](docs/roadmap.md) for the full feature bre
 - Shift+click multi-select with bulk Move and Remove
 - Focus mode — view any subtree as its own org chart
 - PowerPoint export (.pptx) with editable shapes and connectors
-- PAL (Personal Advisor) layout with alternating left/right columns
+- Advisor layout with alternating left/right columns
 - M1 detection with compact IC stack layout
 - 20+ configurable renderer settings (dimensions, spacing, typography, colors)
 - Dark/light theme with 8 color presets and 4 layout presets

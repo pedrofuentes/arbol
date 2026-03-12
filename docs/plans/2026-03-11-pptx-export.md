@@ -86,7 +86,7 @@ Create `tests/renderer/layout-engine.test.ts`:
 Test that `computeLayout()` returns the correct number of nodes, links, and types for:
 - Single node
 - M1 with ICs
-- Manager with PALs
+- Manager with Advisors
 - Mixed tree
 
 **Step 3: Implement `computeLayout()` in `layout-engine.ts`**
@@ -128,7 +128,7 @@ Test that:
 - `exportToPptx()` returns a Blob or calls `pptx.writeFile()`
 - Manager nodes become rectangles with name/title text
 - IC nodes become narrower rectangles
-- PAL nodes become rectangles with connecting lines
+- Advisor nodes become rectangles with connecting lines
 - IC containers become filled rectangles
 - Links become line shapes
 

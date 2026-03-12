@@ -36,7 +36,7 @@ npm run test    # 553 tests, all must pass
 6. **Commit** with conventional message format:
    ```
    feat: add node color customization
-   fix: correct PAL boundary spacing for odd counts
+   fix: correct Advisor boundary spacing for odd counts
    refactor: extract link drawing into reusable method
    test: add regression tests for single-child managers
    docs: update roadmap with new feature
@@ -64,7 +64,7 @@ Arbol is a browser-only tool with no backend. Settings and CSV mapping presets p
 Understanding these concepts is essential for working on the renderer:
 
 - **IC stacks** — Individual Contributors under M1 managers render vertically in a grey container with no connecting lines
-- **PAL stacks** — Personal Advisors render in alternating left/right columns with elbow connectors from the manager's sides
+- **Advisor stacks** — Advisors render in alternating left/right columns with elbow connectors from the manager's sides
 - **Boundary spacing** — Sibling subtree gaps are calculated from bounding boxes, not node centers
 - **All spacing is configurable** — Nothing is hardcoded; everything flows through `RendererOptions`
 

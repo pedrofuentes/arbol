@@ -36,8 +36,8 @@ src/
 ├── export/
 │   └── pptx-exporter.ts       # PowerPoint export — takes LayoutResult, writes .pptx file
 ├── renderer/
-│   ├── chart-renderer.ts      # Main D3 SVG renderer — draws cards, links, IC/PAL stacks
-│   ├── layout-engine.ts       # Computes x/y positions, bounding box, IC containers, PAL assignments
+│   ├── chart-renderer.ts      # Main D3 SVG renderer — draws cards, links, IC/Advisor stacks
+│   ├── layout-engine.ts       # Computes x/y positions, bounding box, IC containers, Advisor assignments
 │   └── zoom-manager.ts        # d3-zoom integration, fitToContent(), resetZoom(), transform persistence
 ├── store/
 │   ├── category-store.ts      # ColorCategory CRUD, defaults (Open Position, Offer Pending, Future Start), localStorage
@@ -91,7 +91,7 @@ These are **mandatory** for all changes:
 - **Manager** — has children who are also managers. Connected by tree lines.
 - **M1 (First-line manager)** — manager where ALL children are leaf nodes (ICs). Detected automatically via `isM1()`.
 - **IC (Individual Contributor)** — leaf node under an M1. Rendered as vertical stack in a grey container, no connecting lines.
-- **PAL (Personal Advisor)** — leaf node under a non-M1 manager. Rendered in alternating left/right columns with side-entry elbow connectors.
+- **Advisor** — leaf node under a non-M1 manager. Rendered in alternating left/right columns with side-entry elbow connectors.
 
 ### Data Format
 
@@ -135,7 +135,7 @@ All spacing is configurable via `RendererOptions`:
 - `branchSpacing` — exact horizontal gap between sibling subtree boundaries
 - `topVerticalSpacing` — manager bottom → horizontal connecting line
 - `bottomVerticalSpacing` — horizontal line → child top
-- `palTopGap`, `palBottomGap`, `palRowGap`, `palCenterGap` — PAL stack spacing
+- `palTopGap`, `palBottomGap`, `palRowGap`, `palCenterGap` — Advisor stack spacing
 - `icGap`, `icContainerPadding`, `icNodeWidth` — IC stack spacing and sizing
 - `nameFontSize`, `titleFontSize`, `textPaddingTop`, `textGap` — typography
 - `linkColor`, `linkWidth` — connector lines
@@ -249,8 +249,8 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `tests/store/mapping-store.test.ts` | CSV mapping preset CRUD in localStorage |
 | `tests/store/theme-manager.test.ts` | Dark/light toggle, class application, persistence |
 | `tests/store/theme-presets.test.ts` | Preset definitions, color tuple validation |
-| `tests/renderer/chart-renderer.test.ts` | SVG output, IC/PAL stacks, card rendering, spacing regression |
-| `tests/renderer/layout-engine.test.ts` | Position computation, bounding box, IC containers, PAL assignments |
+| `tests/renderer/chart-renderer.test.ts` | SVG output, IC/Advisor stacks, card rendering, spacing regression |
+| `tests/renderer/layout-engine.test.ts` | Position computation, bounding box, IC containers, Advisor assignments |
 | `tests/renderer/integration.test.ts` | End-to-end renderer + layout integration |
 | `tests/renderer/zoom-manager.test.ts` | Zoom/pan, fitToContent, resetZoom |
 | `tests/export/pptx-exporter.test.ts` | PowerPoint slide generation, shapes, positioning |
@@ -349,7 +349,7 @@ Before requesting merge approval, complete these updates as the **final commit**
 
 ## Common Pitfalls
 
-1. **PAL rendering is complex.** Single PALs go left-only. The boundary calculations must account for PAL width to prevent overlap with siblings. Always run spacing regression tests after touching PAL code.
+1. **Advisor rendering is complex.** Single Advisors go left-only. The boundary calculations must account for Advisor width to prevent overlap with siblings. Always run spacing regression tests after touching Advisor code.
 
 2. **D3 tree separation.** We override D3's default `separation()` to return 1 for all nodes. Our `enforceSpacing` handles gap logic — don't fight D3's layout.
 
