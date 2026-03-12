@@ -47,7 +47,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   // Title
   const heading = document.createElement('div');
-  heading.textContent = parentName ? `Add person under ${parentName}` : 'Add Person';
+  heading.textContent = parentName ? `Add under ${parentName}` : 'Add Person';
   heading.style.cssText = `
     font-size:14px;font-weight:600;
     color:var(--text-primary);
