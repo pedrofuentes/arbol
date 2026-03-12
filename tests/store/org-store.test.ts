@@ -790,6 +790,131 @@ describe('OrgStore', () => {
     });
   });
 
+  describe('setDottedLine', () => {
+    it('sets dottedLine to true on a node', () => {
+      const store = new OrgStore(makeRoot());
+      store.setDottedLine('b', true);
+      const bob = findNodeById(store.getTree(), 'b')!;
+      expect(bob.dottedLine).toBe(true);
+    });
+
+    it('sets dottedLine to false (removes the property)', () => {
+      const store = new OrgStore(makeRoot());
+      store.setDottedLine('b', true);
+      store.setDottedLine('b', false);
+      const bob = findNodeById(store.getTree(), 'b')!;
+      expect(bob.dottedLine).toBeUndefined();
+      expect('dottedLine' in bob).toBe(false);
+    });
+
+    it('throws if node is root', () => {
+      const store = new OrgStore(makeRoot());
+      expect(() => store.setDottedLine('root', true)).toThrow('Cannot set dotted line on root node');
+    });
+
+    it('throws if node not found', () => {
+      const store = new OrgStore(makeRoot());
+      expect(() => store.setDottedLine('nonexistent', true)).toThrow(
+        '"nonexistent" not found',
+      );
+    });
+
+    it('triggers change event', () => {
+      const store = new OrgStore(makeRoot());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.setDottedLine('b', true);
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('is undoable', () => {
+      const store = new OrgStore(makeRoot());
+      store.setDottedLine('b', true);
+      expect(store.getUndoStackSize()).toBe(1);
+      store.undo();
+      const bob = findNodeById(store.getTree(), 'b')!;
+      expect(bob.dottedLine).toBeUndefined();
+    });
+
+    it('is redoable', () => {
+      const store = new OrgStore(makeRoot());
+      store.setDottedLine('b', true);
+      store.undo();
+      store.redo();
+      const bob = findNodeById(store.getTree(), 'b')!;
+      expect(bob.dottedLine).toBe(true);
+    });
+
+    it('persists through toJSON/fromJSON round-trip', () => {
+      const store = new OrgStore(makeRoot());
+      store.setDottedLine('b', true);
+      const json = store.toJSON();
+      const store2 = new OrgStore(makeRoot());
+      store2.fromJSON(json);
+      const bob = findNodeById(store2.getTree(), 'b')!;
+      expect(bob.dottedLine).toBe(true);
+    });
+  });
+
+  describe('moveNode with dottedLine', () => {
+    const makeTree = (): OrgNode => ({
+      id: 'r',
+      name: 'Root',
+      title: 'CEO',
+      children: [
+        {
+          id: 'a',
+          name: 'A',
+          title: 'VP',
+          children: [
+            { id: 'a1', name: 'A1', title: 'Dir' },
+          ],
+        },
+        { id: 'b', name: 'B', title: 'VP' },
+      ],
+    });
+
+    it('moves node with dottedLine=true: node has dottedLine after move', () => {
+      const store = new OrgStore(makeTree());
+      store.moveNode('a1', 'b', true);
+      const a1 = findNodeById(store.getTree(), 'a1')!;
+      expect(a1.dottedLine).toBe(true);
+      const b = findNodeById(store.getTree(), 'b')!;
+      expect(b.children!.map((c) => c.id)).toContain('a1');
+    });
+
+    it('moves node with dottedLine=false: dottedLine cleared after move', () => {
+      const store = new OrgStore(makeTree());
+      store.setDottedLine('a1', true);
+      store.moveNode('a1', 'b', false);
+      const a1 = findNodeById(store.getTree(), 'a1')!;
+      expect(a1.dottedLine).toBeUndefined();
+      expect('dottedLine' in a1).toBe(false);
+    });
+
+    it('moves node without dottedLine param: existing dottedLine property is preserved', () => {
+      const store = new OrgStore(makeTree());
+      store.setDottedLine('a1', true);
+      store.moveNode('a1', 'b');
+      const a1 = findNodeById(store.getTree(), 'a1')!;
+      expect(a1.dottedLine).toBe(true);
+    });
+
+    it('single undo step covers both move and dottedLine change', () => {
+      const store = new OrgStore(makeTree());
+      const undoBefore = store.getUndoStackSize();
+      store.moveNode('a1', 'b', true);
+      expect(store.getUndoStackSize()).toBe(undoBefore + 1);
+      store.undo();
+      const a1 = findNodeById(store.getTree(), 'a1')!;
+      expect(a1.dottedLine).toBeUndefined();
+      const a = findNodeById(store.getTree(), 'a')!;
+      expect(a.children!.map((c) => c.id)).toContain('a1');
+      const b = findNodeById(store.getTree(), 'b')!;
+      expect(b.children).toBeUndefined();
+    });
+  });
+
   describe('validateTree with categoryId', () => {
     it('accepts nodes with valid categoryId', () => {
       const store = new OrgStore(makeRoot());
@@ -827,6 +952,33 @@ describe('OrgStore', () => {
         categoryId: 'x'.repeat(101),
       });
       expect(() => store.fromJSON(json)).toThrow('categoryId too long');
+    });
+  });
+
+  describe('validateTree with dottedLine', () => {
+    it('accepts nodes with dottedLine: true', () => {
+      const store = new OrgStore(makeRoot());
+      const json = JSON.stringify({
+        id: 'r',
+        name: 'Root',
+        title: 'CEO',
+        children: [{ id: 'a', name: 'A', title: 'VP', dottedLine: true }],
+      });
+      store.fromJSON(json);
+      expect(findNodeById(store.getTree(), 'a')!.dottedLine).toBe(true);
+    });
+
+    it('accepts nodes without dottedLine', () => {
+      const store = new OrgStore(makeRoot());
+      const json = JSON.stringify({ id: 'r', name: 'Root', title: 'CEO' });
+      store.fromJSON(json);
+      expect(store.getTree().dottedLine).toBeUndefined();
+    });
+
+    it('rejects nodes with non-boolean dottedLine', () => {
+      const store = new OrgStore(makeRoot());
+      const json = JSON.stringify({ id: 'r', name: 'Root', title: 'CEO', dottedLine: 'yes' });
+      expect(() => store.fromJSON(json)).toThrow('Invalid dottedLine');
     });
   });
 });

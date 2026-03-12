@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { showManagerPicker, ManagerPickerItem } from '../../src/ui/manager-picker';
+import { showManagerPicker, ManagerPickerItem, ManagerPickerResult } from '../../src/ui/manager-picker';
 
 const sampleManagers: ManagerPickerItem[] = [
   { id: 'm1', name: 'Alice Johnson', title: 'VP Engineering' },
@@ -86,7 +86,7 @@ describe('showManagerPicker', () => {
     (items[1] as HTMLElement).click();
 
     const result = await promise;
-    expect(result).toBe('m2');
+    expect(result).toEqual({ managerId: 'm2', dottedLine: false });
 
     // Dialog should be removed
     expect(document.querySelector('[role="dialog"]')).toBeNull();
@@ -184,5 +184,76 @@ describe('showManagerPicker', () => {
 
     const result = await promise;
     expect(result).toBeNull();
+  });
+
+  describe('dotted-line option', () => {
+    it('does not show dotted-line checkbox by default', () => {
+      showManagerPicker({ title: 'Pick', managers: sampleManagers });
+
+      const checkbox = document.querySelector('#dotted-line-checkbox');
+      expect(checkbox).toBeNull();
+    });
+
+    it('shows dotted-line checkbox when showDottedLineOption is true', () => {
+      showManagerPicker({
+        title: 'Pick',
+        managers: sampleManagers,
+        showDottedLineOption: true,
+      });
+
+      const checkbox = document.querySelector('#dotted-line-checkbox') as HTMLInputElement;
+      expect(checkbox).not.toBeNull();
+      expect(checkbox.type).toBe('checkbox');
+
+      const label = checkbox.closest('label');
+      expect(label).not.toBeNull();
+      expect(label!.textContent).toContain('Dotted line');
+    });
+
+    it('returns dottedLine: false when checkbox is unchecked', async () => {
+      const promise = showManagerPicker({
+        title: 'Pick',
+        managers: sampleManagers,
+        showDottedLineOption: true,
+      });
+
+      const items = document.querySelectorAll('[role="option"]');
+      (items[0] as HTMLElement).click();
+
+      const result = await promise;
+      expect(result).toEqual({ managerId: 'm1', dottedLine: false });
+    });
+
+    it('returns dottedLine: true when checkbox is checked', async () => {
+      const promise = showManagerPicker({
+        title: 'Pick',
+        managers: sampleManagers,
+        showDottedLineOption: true,
+      });
+
+      const checkbox = document.querySelector('#dotted-line-checkbox') as HTMLInputElement;
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event('change'));
+
+      const items = document.querySelectorAll('[role="option"]');
+      (items[1] as HTMLElement).click();
+
+      const result = await promise;
+      expect(result).toEqual({ managerId: 'm2', dottedLine: true });
+    });
+
+    it('returns null when cancelled with dotted-line option visible', async () => {
+      const promise = showManagerPicker({
+        title: 'Pick',
+        managers: sampleManagers,
+        showDottedLineOption: true,
+      });
+
+      const cancelBtn = document.querySelector('.btn-secondary') as HTMLElement;
+      cancelBtn.click();
+
+      const result = await promise;
+      expect(result).toBeNull();
+    });
   });
 });

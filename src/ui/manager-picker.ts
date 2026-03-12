@@ -6,18 +6,25 @@ export interface ManagerPickerItem {
   title: string;
 }
 
+export interface ManagerPickerResult {
+  managerId: string;
+  dottedLine: boolean;
+}
+
 export interface ManagerPickerOptions {
   title: string;
   managers: ManagerPickerItem[];
   excludeIds?: Set<string>;
+  showDottedLineOption?: boolean;
 }
 
-export function showManagerPicker(options: ManagerPickerOptions): Promise<string | null> {
+export function showManagerPicker(options: ManagerPickerOptions): Promise<ManagerPickerResult | null> {
   return new Promise((resolve) => {
     let resolved = false;
     let removeTrap: (() => void) | null = null;
+    let dottedLineChecked = false;
 
-    const dismiss = (result: string | null) => {
+    const dismiss = (result: ManagerPickerResult | null) => {
       if (resolved) return;
       resolved = true;
       removeTrap?.();
@@ -128,7 +135,7 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<string
         `;
         item.appendChild(titleTextEl);
 
-        item.addEventListener('click', () => dismiss(manager.id));
+        item.addEventListener('click', () => dismiss({ managerId: manager.id, dottedLine: dottedLineChecked }));
         listContainer.appendChild(item);
       }
     };
@@ -147,6 +154,30 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<string
     cancelBtn.textContent = 'Cancel';
     cancelBtn.addEventListener('click', () => dismiss(null));
     btnGroup.appendChild(cancelBtn);
+
+    if (options.showDottedLineOption) {
+      const checkboxGroup = document.createElement('label');
+      checkboxGroup.style.cssText = `
+        display:flex;align-items:center;gap:8px;
+        margin-top:12px;cursor:pointer;
+        font-size:14px;font-family:var(--font-sans);
+        color:var(--text-primary);
+      `;
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = 'dotted-line-checkbox';
+      checkbox.addEventListener('change', () => {
+        dottedLineChecked = checkbox.checked;
+      });
+      checkboxGroup.appendChild(checkbox);
+
+      const labelText = document.createElement('span');
+      labelText.textContent = 'Dotted line (reports elsewhere)';
+      checkboxGroup.appendChild(labelText);
+
+      dialog.appendChild(checkboxGroup);
+    }
 
     dialog.appendChild(btnGroup);
     overlay.appendChild(dialog);

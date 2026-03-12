@@ -283,6 +283,46 @@ describe('pptx-exporter', () => {
     });
   });
 
+  // --- dotted-line export ---
+  describe('dotted-line export', () => {
+    it('adds dashType to line shapes for dotted links', async () => {
+      const link: LayoutLink = {
+        path: 'M0,22 L0,50 L100,50 L100,80',
+        layer: 'tree',
+        dottedLine: true,
+      };
+      const layout = makeLayout({
+        nodes: [makeNode(), makeNode({ id: 'n2', x: 100, y: 80, type: 'manager' })],
+        links: [link],
+      });
+      await exportToPptx(layout);
+      const shapeCalls = mockAddShape.mock.calls;
+      const lineWithDash = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.line && opts.line.dashType === 'dash';
+      });
+      expect(lineWithDash).toBeDefined();
+    });
+
+    it('does not add dashType to line shapes for regular links', async () => {
+      const link: LayoutLink = {
+        path: 'M0,22 L0,50 L100,50 L100,80',
+        layer: 'tree',
+      };
+      const layout = makeLayout({
+        nodes: [makeNode(), makeNode({ id: 'n2', x: 100, y: 80, type: 'manager' })],
+        links: [link],
+      });
+      await exportToPptx(layout);
+      const shapeCalls = mockAddShape.mock.calls;
+      const lineWithDash = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.line && opts.line.dashType;
+      });
+      expect(lineWithDash).toBeUndefined();
+    });
+  });
+
   // --- per-node category colors ---
   describe('per-node category colors', () => {
     const categories: ColorCategory[] = [

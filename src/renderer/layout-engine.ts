@@ -19,6 +19,7 @@ export interface LayoutNode {
 export interface LayoutLink {
   path: string; // SVG path d attribute "M... L..."
   layer: 'tree' | 'pal';
+  dottedLine?: boolean;
 }
 
 export interface LayoutICContainer {
@@ -206,7 +207,8 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
       const horizontalY = sy + stubHeight;
       path = `M${sx},${sy} L${sx},${horizontalY} L${tx},${horizontalY} L${tx},${ty}`;
     }
-    links.push({ path, layer: 'tree' });
+    const isDottedLine = link.target.data.dottedLine === true;
+    links.push({ path, layer: 'tree', ...(isDottedLine && { dottedLine: true }) });
   }
 
   // Vertical connectors through Advisor area

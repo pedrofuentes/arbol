@@ -25,6 +25,7 @@ export function cloneTree(node: OrgNode): OrgNode {
 export function filterVisibleTree(node: OrgNode): OrgNode {
   const clone: OrgNode = { id: node.id, name: node.name, title: node.title };
   if (node.categoryId !== undefined) clone.categoryId = node.categoryId;
+  if (node.dottedLine !== undefined) clone.dottedLine = node.dottedLine;
   if (node.children && node.children.length > 0) {
     clone.children = node.children.map((child) => filterVisibleTree(child));
   }
@@ -68,6 +69,7 @@ export function stripM1Children(node: OrgNode): {
   function cloneBase(n: OrgNode): OrgNode {
     const c: OrgNode = { id: n.id, name: n.name, title: n.title };
     if (n.categoryId !== undefined) c.categoryId = n.categoryId;
+    if (n.dottedLine !== undefined) c.dottedLine = n.dottedLine;
     return c;
   }
 

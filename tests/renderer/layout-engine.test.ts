@@ -28,6 +28,7 @@ function defaultOpts(): ResolvedOptions {
     textGap: 1,
     linkColor: '#94a3b8',
     linkWidth: 1.5,
+    dottedLineDash: '6,4',
     cardFill: '#ffffff',
     cardStroke: '#22c55e',
     cardStrokeWidth: 1,
@@ -359,6 +360,118 @@ describe('computeLayout', () => {
       const result = computeLayout(m1WithICs(), defaultOpts());
       for (const node of result.nodes) {
         expect(node.categoryId).toBeUndefined();
+      }
+    });
+  });
+
+  describe('dotted-line links', () => {
+    function dottedLineTree(): OrgNode {
+      return {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          {
+            id: 'mgr1',
+            name: 'CTO',
+            title: 'CTO',
+            dottedLine: true,
+            children: [
+              { id: 'ic1', name: 'IC One', title: 'Engineer' },
+              { id: 'ic2', name: 'IC Two', title: 'Engineer' },
+            ],
+          },
+          {
+            id: 'mgr2',
+            name: 'CFO',
+            title: 'CFO',
+            children: [
+              { id: 'ic3', name: 'IC Three', title: 'Accountant' },
+              { id: 'ic4', name: 'IC Four', title: 'Accountant' },
+            ],
+          },
+        ],
+      };
+    }
+
+    it('tree link has dottedLine: true when child node has dottedLine flag', () => {
+      const result = computeLayout(dottedLineTree(), defaultOpts());
+      const treeLinks = result.links.filter((l) => l.layer === 'tree');
+      const dottedLinks = treeLinks.filter((l) => l.dottedLine === true);
+      expect(dottedLinks.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('tree link does NOT have dottedLine when child node has no flag', () => {
+      const result = computeLayout(dottedLineTree(), defaultOpts());
+      const treeLinks = result.links.filter((l) => l.layer === 'tree');
+      // Links to mgr2 (no dottedLine) should not have the property
+      const nonDottedLinks = treeLinks.filter((l) => !l.dottedLine);
+      expect(nonDottedLinks.length).toBeGreaterThanOrEqual(1);
+      for (const link of nonDottedLinks) {
+        expect(link.dottedLine).toBeUndefined();
+      }
+    });
+
+    it('pal (Advisor) links are never dotted', () => {
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          { id: 'pal1', name: 'Advisor', title: 'Advisor', dottedLine: true },
+          {
+            id: 'mgr1',
+            name: 'CTO',
+            title: 'CTO',
+            children: [{ id: 'ic1', name: 'IC', title: 'Eng' }],
+          },
+        ],
+      };
+      const result = computeLayout(tree, defaultOpts());
+      const palLinks = result.links.filter((l) => l.layer === 'pal');
+      expect(palLinks.length).toBeGreaterThanOrEqual(1);
+      for (const link of palLinks) {
+        expect(link.dottedLine).toBeUndefined();
+      }
+    });
+
+    it('vertical connector through Advisor area is not dotted', () => {
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          { id: 'pal1', name: 'Advisor', title: 'Advisor' },
+          {
+            id: 'mgr1',
+            name: 'CTO',
+            title: 'CTO',
+            dottedLine: true,
+            children: [{ id: 'ic1', name: 'IC', title: 'Eng' }],
+          },
+          {
+            id: 'mgr2',
+            name: 'CFO',
+            title: 'CFO',
+            children: [{ id: 'ic2', name: 'IC2', title: 'Eng' }],
+          },
+        ],
+      };
+      const result = computeLayout(tree, defaultOpts());
+      // Vertical connectors through Advisor area are tree-layer links
+      // that go from node bottom to node bottom + palOffset (straight vertical lines).
+      // These should NOT be dotted even if the node has dottedLine children.
+      const treeLinks = result.links.filter((l) => l.layer === 'tree');
+      // The vertical connector is the one from root's bottom through the pal area
+      // It's a simple M...L path (2 points only) with same X for both points
+      const verticalConnectors = treeLinks.filter((l) => {
+        const match = l.path.match(/^M([\d.\-e]+),([\d.\-e]+) L([\d.\-e]+),([\d.\-e]+)$/);
+        if (!match) return false;
+        return match[1] === match[3]; // same X = vertical line
+      });
+      expect(verticalConnectors.length).toBeGreaterThanOrEqual(1);
+      for (const link of verticalConnectors) {
+        expect(link.dottedLine).toBeUndefined();
       }
     });
   });

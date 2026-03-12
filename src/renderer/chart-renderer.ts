@@ -39,6 +39,7 @@ export interface RendererOptions {
   // Link style
   linkColor?: string;
   linkWidth?: number;
+  dottedLineDash?: string;
   // Card style
   cardFill?: string;
   cardStroke?: string;
@@ -81,6 +82,7 @@ export class ChartRenderer {
       textGap: 1,
       linkColor: '#94a3b8',
       linkWidth: 1.5,
+      dottedLineDash: '6,4',
       cardFill: '#ffffff',
       cardStroke: '#22c55e',
       cardStrokeWidth: 1,
@@ -116,18 +118,21 @@ export class ChartRenderer {
 
     this.g.selectAll('*').remove();
 
-    const { nodeHeight, linkColor, linkWidth, icContainerFill } = this.opts;
+    const { nodeHeight, linkColor, linkWidth, dottedLineDash, icContainerFill } = this.opts;
 
     // Layer 1: Tree links (elbow paths + vertical connectors through Advisor area)
     const linksGroup = this.g.append('g').attr('class', 'links');
     for (const link of layout.links.filter((l) => l.layer === 'tree')) {
-      linksGroup
+      const pathEl = linksGroup
         .append('path')
         .attr('class', 'link')
         .attr('d', link.path)
         .attr('fill', 'none')
         .attr('stroke', linkColor)
         .attr('stroke-width', linkWidth);
+      if (link.dottedLine) {
+        pathEl.attr('stroke-dasharray', dottedLineDash);
+      }
     }
 
     // Layer 2: IC stacks (behind manager nodes)

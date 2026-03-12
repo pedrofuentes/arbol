@@ -842,6 +842,60 @@ describe('ChartRenderer', () => {
     });
   });
 
+  describe('dotted-line rendering', () => {
+    function dottedLineTree(): OrgNode {
+      return {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          {
+            id: 'mgr1',
+            name: 'CTO',
+            title: 'CTO',
+            dottedLine: true,
+            children: [{ id: 'ic1', name: 'IC One', title: 'Eng' }],
+          },
+          {
+            id: 'mgr2',
+            name: 'CFO',
+            title: 'CFO',
+            children: [{ id: 'ic2', name: 'IC Two', title: 'Eng' }],
+          },
+        ],
+      };
+    }
+
+    it('applies stroke-dasharray to dotted-line links', () => {
+      renderer.render(dottedLineTree());
+      const links = container.querySelectorAll('.link');
+      const dashedLinks = Array.from(links).filter(
+        (l) => l.getAttribute('stroke-dasharray') !== null,
+      );
+      expect(dashedLinks.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('does not apply stroke-dasharray to regular links', () => {
+      renderer.render(dottedLineTree());
+      const links = container.querySelectorAll('.link');
+      const solidLinks = Array.from(links).filter(
+        (l) => l.getAttribute('stroke-dasharray') === null,
+      );
+      expect(solidLinks.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('uses custom dottedLineDash value from options', () => {
+      renderer.destroy();
+      renderer = createRenderer({ dottedLineDash: '10,5' });
+      renderer.render(dottedLineTree());
+      const links = container.querySelectorAll('.link');
+      const dashedLinks = Array.from(links).filter(
+        (l) => l.getAttribute('stroke-dasharray') === '10,5',
+      );
+      expect(dashedLinks.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
   describe('legend rendering', () => {
     const categories: ColorCategory[] = [
       { id: 'eng', label: 'Engineering', color: '#3b82f6' },

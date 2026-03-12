@@ -39,6 +39,7 @@ const DEFAULTS: PersistableSettings = {
   textGap: 1,
   linkColor: '#94a3b8',
   linkWidth: 1.5,
+  dottedLineDash: '6,4',
   cardFill: '#ffffff',
   cardStroke: '#22c55e',
   cardStrokeWidth: 1,

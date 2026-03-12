@@ -18,6 +18,7 @@ export interface PersistableSettings {
   textGap: number;
   linkColor: string;
   linkWidth: number;
+  dottedLineDash: string;
   cardFill: string;
   cardStroke: string;
   cardStrokeWidth: number;
@@ -65,7 +66,9 @@ const STRING_KEYS: ReadonlySet<string> = new Set<string>([
   'icContainerFill',
 ]);
 
-const ALL_KEYS = [...NUMERIC_KEYS, ...STRING_KEYS];
+const DASH_PATTERN_KEYS: ReadonlySet<string> = new Set<string>(['dottedLineDash']);
+
+const ALL_KEYS = [...NUMERIC_KEYS, ...STRING_KEYS, ...DASH_PATTERN_KEYS];
 
 function validateSettings(obj: Record<string, unknown>): Partial<PersistableSettings> {
   const result: Record<string, unknown> = {};
@@ -75,6 +78,16 @@ function validateSettings(obj: Record<string, unknown>): Partial<PersistableSett
     if (NUMERIC_KEYS.has(key)) {
       if (typeof val !== 'number' || !isFinite(val)) {
         throw new Error(`Invalid value for "${key}": expected a finite number`);
+      }
+      result[key] = val;
+    } else if (DASH_PATTERN_KEYS.has(key)) {
+      if (typeof val !== 'string') {
+        throw new Error(`Invalid value for "${key}": expected a string`);
+      }
+      if (!/^[\d]+([.,][\d]+)*$/.test(val.replace(/\s/g, ''))) {
+        throw new Error(
+          `Invalid dash pattern for "${key}": expected comma-separated numbers (e.g., "6,4")`,
+        );
       }
       result[key] = val;
     } else {

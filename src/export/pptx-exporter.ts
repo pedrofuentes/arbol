@@ -213,7 +213,11 @@ function addLinkLines(
       h,
       flipH,
       flipV,
-      line: { color: DEFAULT_LINK_COLOR, width: 1 },
+      line: {
+        color: DEFAULT_LINK_COLOR,
+        width: 1,
+        ...(link.dottedLine && { dashType: 'dash' as const }),
+      },
     });
   }
 }

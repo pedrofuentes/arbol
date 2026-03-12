@@ -155,7 +155,20 @@ export class OrgStore {
     return JSON.stringify(this.root, null, 2);
   }
 
-  moveNode(nodeId: string, newParentId: string): void {
+  setDottedLine(nodeId: string, isDotted: boolean): void {
+    if (this.root.id === nodeId) throw new Error('Cannot set dotted line on root node');
+    const node = findNodeById(this.root, nodeId);
+    if (!node) throw new Error(`Node "${nodeId}" not found`);
+    this.snapshot();
+    if (isDotted) {
+      node.dottedLine = true;
+    } else {
+      delete node.dottedLine;
+    }
+    this.emit();
+  }
+
+  moveNode(nodeId: string, newParentId: string, dottedLine?: boolean): void {
     if (this.root.id === nodeId) throw new Error('Cannot move root node');
     const node = findNodeById(this.root, nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
@@ -175,6 +188,13 @@ export class OrgStore {
     }
     if (!newParent.children) newParent.children = [];
     newParent.children.push(node);
+    if (dottedLine !== undefined) {
+      if (dottedLine) {
+        node.dottedLine = true;
+      } else {
+        delete node.dottedLine;
+      }
+    }
     this.emit();
   }
 
@@ -265,6 +285,10 @@ export class OrgStore {
         throw new Error(`Invalid categoryId on node "${obj.id}": expected a string`);
       if (obj.categoryId.length > 100)
         throw new Error(`categoryId too long (max 100 chars) on node "${obj.id}"`);
+    }
+    if (obj.dottedLine !== undefined) {
+      if (typeof obj.dottedLine !== 'boolean')
+        throw new Error(`Invalid dottedLine on node "${obj.id}": expected a boolean`);
     }
     if (obj.children !== undefined) {
       if (!Array.isArray(obj.children))
