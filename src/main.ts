@@ -13,6 +13,7 @@ import { CategoryStore } from './store/category-store';
 import { getMatchingNodeIds } from './utils/search';
 import { OrgNode } from './types';
 import { flattenTree, findNodeById, isLeaf, countLeaves, countManagersByLevel } from './utils/tree';
+import { SAMPLE_ORG } from './data/sample-org';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
 import { APP_VERSION } from './version';
@@ -343,6 +344,20 @@ function main(): void {
   importContainer.appendChild(jsonDetails);
 
   const jsonEditor = new JsonEditor(jsonContent, store);
+
+  // Load sample org button (after Edit JSON, at the bottom)
+  const sampleSeparator = document.createElement('hr');
+  sampleSeparator.style.cssText = 'border:none;border-top:1px solid var(--border-subtle);margin:14px 0;';
+  importContainer.appendChild(sampleSeparator);
+
+  const sampleBtn = document.createElement('button');
+  sampleBtn.className = 'btn btn-secondary';
+  sampleBtn.textContent = '🌳 Load Sample Org Chart';
+  sampleBtn.style.cssText = 'width:100%;padding:8px;font-size:12px;';
+  sampleBtn.addEventListener('click', () => {
+    store.fromJSON(JSON.stringify(SAMPLE_ORG));
+  });
+  importContainer.appendChild(sampleBtn);
 
   const settingsContainer = tabSwitcher.getContentContainer('settings')!;
   new SettingsEditor(settingsContainer, renderer, rerender, settingsStore, categoryStore);
