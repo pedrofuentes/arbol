@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] — UX Overhaul
+
+### Added
+- **Collapsible accordion sections** in Settings — fine-tuning groups collapsed by default, presets and categories expanded
+- **Per-group reset buttons** — reset individual setting groups to defaults
+- **Settings quick-filter** — search input at top of Settings to find specific settings
+- **Unified preset system** — theme cards + layout buttons in single section, save custom presets
+- **Category legend** — floating legend on chart area showing defined categories
+- **Zoom level indicator** — shown in footer right side
+- **Selection count** — shown in footer center when multi-selecting
+
+### Changed
+- **Sidebar tabs consolidated** from 5 (Add, Load, Edit, Settings, Utilities) to 3 (People, Import, Settings)
+- **People tab** — combines Add Person + Edit Person workflows
+- **Import tab** — combines file import, text normalization, and collapsible JSON editor
+- **Import flow simplified** — preset list always visible, removed Manage toggle
+- **Sample org button** moved to bottom of Import tab
+- **Footer center** restored GitHub links
+
+### Removed
+- Standalone Edit (JSON) tab — now a collapsible section in Import tab
+- Standalone Utilities tab — text normalization moved into Import tab
+- Mini card preview in Settings
+
 ## [1.2.0] — 2026-03-12
 
 ### Added

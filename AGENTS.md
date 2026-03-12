@@ -9,7 +9,7 @@
 ## Architecture
 
 ```
-Editor (Add / Load / Edit) → OrgStore (data + events) → Renderer (D3 + SVG)
+Editor (People / Import) → OrgStore (data + events) → Renderer (D3 + SVG)
                                     ↕                            ↑
                               SettingsStore  ← localStorage       Right-click / Inline edit / Multi-select
                               ThemeManager   ← dark/light toggle
@@ -32,8 +32,7 @@ src/
 │   ├── json-editor.ts         # Raw JSON tree editor with Apply/validate
 │   ├── import-editor.ts       # File import (JSON/CSV) + paste + column mapping + presets
 │   ├── settings-editor.ts     # Visual settings panel (sliders, color pickers, presets)
-│   ├── tab-switcher.ts        # Sidebar tab management (Add / Load / Edit / Settings / Utilities)
-│   └── utilities-editor.ts    # Utilities panel (text normalization for existing org chart)
+│   └── tab-switcher.ts        # Sidebar tab management (People / Import / Settings)
 ├── export/
 │   └── pptx-exporter.ts       # PowerPoint export — takes LayoutResult, writes .pptx file
 ├── renderer/
@@ -260,7 +259,7 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `tests/editor/json-editor.test.ts` | JSON validation, apply, error display |
 | `tests/editor/settings-editor.test.ts` | Category section rendering, color/label editing, add/delete categories |
 | `tests/editor/tab-switcher.test.ts` | Tab activation, content switching, aria-selected |
-| `tests/editor/utilities-editor.test.ts` | Text normalization UI, dropdown state, apply to org chart, undo |
+
 | `tests/ui/context-menu.test.ts` | Menu rendering, item actions, keyboard nav, dismiss, viewport clamping |
 | `tests/ui/focus-banner.test.ts` | Banner rendering, exit action, dismiss, singleton, theme styling |
 | `tests/ui/inline-editor.test.ts` | Inline editing, save/cancel, validation |

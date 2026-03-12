@@ -36,7 +36,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 ### Phase 4 — Editor Panels
 - [x] **Form editor** — parent dropdown, name/title fields, add/edit/delete people
 - [x] **JSON editor** — textarea with full tree, Apply button, error feedback
-- [x] **Tab switcher** — Add, Load, Edit, Settings, Utilities
+- [x] **Tab switcher** — People, Import, Settings
 
 ### Phase 5 — Pan/Zoom
 - [x] `d3-zoom` integration with `ZoomManager`
@@ -140,7 +140,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Text normalization dropdowns in import preview step (all import types: CSV, JSON, XLSX)
 - [x] Text normalization dropdowns in Column Mapper UI, saved as part of mapping presets
 - [x] Preset normalization values pre-populate import preview dropdowns
-- [x] **Utilities sidebar tab** — new 5th tab in sidebar
+- [x] **Text normalization** — integrated into Import tab (was standalone Utilities tab)
 - [x] `UtilitiesEditor` — normalize all names/titles in the current org chart with one click
 - [x] Apply button disabled when no normalization selected (none/none guard)
 - [x] Normalization is undoable via OrgStore undo stack
@@ -216,7 +216,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 ## Architecture
 
 ```
-Editor (Add / Load / Edit / Utilities) → OrgStore (data + events) → Renderer (D3 + SVG)
+Editor (People / Import) → OrgStore (data + events) → Renderer (D3 + SVG)
                                     ↕                            ↑
                               SettingsStore (localStorage)       Right-click / Inline edit / Multi-select
                               ThemeManager (dark/light + presets)
@@ -226,7 +226,7 @@ Editor (Add / Load / Edit / Utilities) → OrgStore (data + events) → Renderer
 
 ```
 src/
-├── editor/        # Data editing tabs (Add, Load, Edit, Settings, Utilities)
+├── editor/        # Sidebar tab editors (People, Import, Settings)
 ├── export/        # PowerPoint export
 ├── renderer/      # D3-based chart rendering, layout engine, zoom
 ├── store/         # State management (org data, settings, themes, mappings)
