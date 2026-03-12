@@ -1,6 +1,6 @@
 # Arbol — Project Roadmap
 
-> Last updated: 2026-03-11
+> Last updated: 2026-03-12
 
 ## Overview
 
@@ -99,11 +99,11 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] MIT LICENSE file
 
 ### Testing
-- [x] **468 tests across 25 test files** — all passing
+- [x] **553 tests across 27 test files** — all passing
 - [x] TDD approach from day one
 - [x] Unit tests: OrgStore, tree utilities, search, ID generation, version
 - [x] Integration tests: renderer output, IC/PAL stacks, spacing regression
-- [x] Store tests: settings-store, mapping-store, theme-manager, theme-presets
+- [x] Store tests: settings-store, mapping-store, theme-manager, theme-presets, category-store
 - [x] Editor tests: import-editor, tab-switcher, shortcuts
 
 ### Phase 14 — Versioning Workflow
@@ -113,6 +113,19 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Build-time version injection via Vite (`__APP_VERSION__` from `package.json`)
 - [x] `src/version.ts` — single source of truth for app version
 - [x] Versioning section in `docs/contributing.md`
+
+### Phase 15 — Per-Node Color Categories
+- [x] `ColorCategory` type (`id`, `label`, `color`) and `categoryId` on `OrgNode`
+- [x] `CategoryStore` — CRUD for categories with localStorage persistence and 4 default categories
+- [x] `OrgStore.setNodeCategory()` and `bulkSetCategory()` for single/multi-node assignment
+- [x] Renderer applies per-node card fill color from assigned category
+- [x] PPTX export respects per-node category colors (card fill + legend slide)
+- [x] Layout engine propagates `categoryId` to IC and PAL layout nodes
+- [x] Settings panel section for managing color categories (add/edit/remove)
+- [x] Context menu integration — "Set Color" submenu with category assignment
+- [x] Multi-select context menu — bulk category assignment
+- [x] Undo/redo support for category assignment operations
+- [x] JSON serialization preserves `categoryId` with validation
 
 ---
 
@@ -180,6 +193,7 @@ Editor (Add / Load / Edit) → OrgStore (data + events) → Renderer (D3 + SVG)
                               SettingsStore (localStorage)       Right-click / Inline edit / Multi-select
                               ThemeManager (dark/light + presets)
                               MappingStore (CSV column presets)
+                              CategoryStore (color categories)
 ```
 
 ```

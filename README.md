@@ -8,11 +8,15 @@ An interactive org chart editor for the browser.
 
 - Interactive hierarchical org chart visualization
 - Three editing tabs: Add (form), Load (JSON/CSV import, 3 formats auto-detected), Edit (JSON tree)
-- Right-click context menu on cards (Edit, Add Child, Focus on sub-org, Move, Remove)
+- Per-node color categories (Open Position, Offer Pending, Future Start + custom)
+- Color category legend on the chart (SVG overlay, included in PPTX export)
+- Right-click context menu on cards (Edit, Add Child, Set Category, Focus on sub-org, Move, Remove)
+- "Set Category" context menu option with submenu picker (single & multi-select)
 - Inline card editing — double-click to edit name/title directly on the chart
 - Shift+click multi-select with bulk Move and Remove operations
 - Focus mode — view any subtree as its own org chart (exports only the focused sub-org)
-- PowerPoint export (.pptx) with editable shapes and connectors
+- PowerPoint export (.pptx) with editable shapes, connectors, per-node category colors, and legend
+- Category management in Settings panel (color pickers, labels, add/delete)
 - PAL (Personal Advisor) role support with special 2-column layout
 - Smart M1 detection (compact layout for manager groups)
 - 20+ customizable renderer settings (dimensions, spacing, typography, colors)

@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Per-node color categories with customizable labels and colors
+- Default categories: Open Position (amber), Offer Pending (blue), Future Start (purple)
+- `CategoryStore` for managing category definitions with localStorage persistence
+- `categoryId` optional field on `OrgNode` for category assignment
+- `setNodeCategory()` and `bulkSetCategory()` methods on `OrgStore` with undo support
+- "Set Category" submenu in right-click context menu (single and multi-select)
+- Category management section in Settings panel (color pickers, labels, add/delete)
+- SVG legend overlay showing all defined categories below the chart
+- PPTX export includes per-node category colors and slide legend
+- Submenu support in context menu component
+- 87 new tests across 7 test files (553 total)
+
 ## [1.0.0] — 2026-03-11
 
 Initial release. See [docs/roadmap.md](docs/roadmap.md) for the full feature breakdown.
