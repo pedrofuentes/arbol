@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { LayoutResult, LayoutNode, LayoutLink, LayoutICContainer } from '../../src/renderer/layout-engine';
+import type { ColorCategory } from '../../src/types';
 
 // Mock pptxgenjs before importing exporter
 const mockWriteFile = vi.fn().mockResolvedValue(undefined);
@@ -268,6 +269,141 @@ describe('pptx-exporter', () => {
       // Just ensure it doesn't throw with custom dimensions
       await exportToPptx(layout, { slideWidth: 10, slideHeight: 5.625 });
       expect(mockWriteFile).toHaveBeenCalledOnce();
+    });
+  });
+
+  // --- per-node category colors ---
+  describe('per-node category colors', () => {
+    const categories: ColorCategory[] = [
+      { id: 'eng', label: 'Engineering', color: '#3B82F6' },
+      { id: 'sales', label: 'Sales', color: '#EF4444' },
+    ];
+
+    it('uses category color for nodes with matching categoryId', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ id: 'n1', categoryId: 'eng' })],
+      });
+      await exportToPptx(layout, { categories });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const cardRect = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.fill && opts.fill.color === '3B82F6' && opts.line;
+      });
+      expect(cardRect).toBeDefined();
+    });
+
+    it('uses default fill for nodes without categoryId', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ id: 'n1' })],
+      });
+      await exportToPptx(layout, { categories });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const cardRect = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line && opts.line.width === 1;
+      });
+      expect(cardRect).toBeDefined();
+    });
+
+    it('uses default fill when categoryId does not match any category', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ id: 'n1', categoryId: 'unknown' })],
+      });
+      await exportToPptx(layout, { categories });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const cardRect = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line && opts.line.width === 1;
+      });
+      expect(cardRect).toBeDefined();
+    });
+  });
+
+  // --- legend ---
+  describe('legend', () => {
+    const categories: ColorCategory[] = [
+      { id: 'eng', label: 'Engineering', color: '#3B82F6' },
+      { id: 'sales', label: 'Sales', color: '#EF4444' },
+    ];
+
+    it('adds legend shapes when categories are provided', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ categoryId: 'eng' })],
+      });
+      await exportToPptx(layout, { categories });
+
+      // Legend background rect (white fill with E2E8F0 border)
+      const shapeCalls = mockAddShape.mock.calls;
+      const legendBg = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.fill && opts.fill.color === 'FFFFFF'
+          && opts.line && opts.line.color === 'E2E8F0';
+      });
+      expect(legendBg).toBeDefined();
+
+      // Legend swatch rects
+      const swatchCalls = shapeCalls.filter((call: any) => {
+        const opts = call[1];
+        return opts && opts.fill && opts.line && opts.line.color === 'CBD5E1';
+      });
+      expect(swatchCalls.length).toBe(categories.length);
+
+      // Legend label texts
+      const textCalls = mockAddText.mock.calls;
+      const legendLabels = textCalls.filter((call: any) => {
+        return typeof call[0] === 'string';
+      });
+      expect(legendLabels.length).toBe(categories.length);
+    });
+
+    it('does not add legend when no categories', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode()],
+      });
+      await exportToPptx(layout);
+
+      // No legend background (white fill with E2E8F0 line) should exist
+      const shapeCalls = mockAddShape.mock.calls;
+      const legendBg = shapeCalls.find((call: any) => {
+        const opts = call[1];
+        return opts && opts.fill && opts.fill.color === 'FFFFFF'
+          && opts.line && opts.line.color === 'E2E8F0';
+      });
+      expect(legendBg).toBeUndefined();
+
+      // No string-based text calls (legend labels)
+      const textCalls = mockAddText.mock.calls;
+      const legendLabels = textCalls.filter((call: any) => typeof call[0] === 'string');
+      expect(legendLabels.length).toBe(0);
+    });
+
+    it('renders correct number of legend entries', async () => {
+      const threeCategories: ColorCategory[] = [
+        { id: 'a', label: 'Alpha', color: '#111111' },
+        { id: 'b', label: 'Beta', color: '#222222' },
+        { id: 'c', label: 'Gamma', color: '#333333' },
+      ];
+      const layout = makeLayout({
+        nodes: [makeNode({ categoryId: 'a' })],
+      });
+      await exportToPptx(layout, { categories: threeCategories });
+
+      // 3 swatch rects (CBD5E1 border)
+      const shapeCalls = mockAddShape.mock.calls;
+      const swatchCalls = shapeCalls.filter((call: any) => {
+        const opts = call[1];
+        return opts && opts.line && opts.line.color === 'CBD5E1';
+      });
+      expect(swatchCalls.length).toBe(3);
+
+      // 3 label texts (string args)
+      const textCalls = mockAddText.mock.calls;
+      const legendLabels = textCalls.filter((call: any) => typeof call[0] === 'string');
+      expect(legendLabels.length).toBe(3);
+      expect(legendLabels.map((c: any) => c[0])).toEqual(['Alpha', 'Beta', 'Gamma']);
     });
   });
 });

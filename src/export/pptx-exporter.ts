@@ -5,6 +5,7 @@ import type {
   LayoutLink,
   LayoutICContainer,
 } from '../renderer/layout-engine';
+import type { ColorCategory } from '../types';
 
 export const PX_TO_INCHES = 1 / 96;
 
@@ -31,6 +32,7 @@ export interface PptxExportOptions {
   slideWidth?: number;
   slideHeight?: number;
   padding?: number;
+  categories?: ColorCategory[];
 }
 
 export interface Point {
@@ -94,6 +96,7 @@ function addNodeShape(
   offsetY: number,
   scale: number,
   padding: number,
+  categories?: ColorCategory[],
 ): void {
   const topLeft = convertCoordinates(
     node.x - node.width / 2,
@@ -108,13 +111,22 @@ function addNodeShape(
   const nameFontSize = Math.max(4, Math.round(7 * scale));
   const titleFontSize = Math.max(3, nameFontSize - 1);
 
+  let fillColor = DEFAULT_CARD_FILL;
+  if (node.categoryId && categories) {
+    const cat = categories.find(c => c.id === node.categoryId);
+    if (cat) {
+      // Strip '#' prefix for pptxgenjs (it expects hex without #)
+      fillColor = cat.color.replace(/^#/, '');
+    }
+  }
+
   // Card rectangle with border
   slide.addShape('rect', {
     x: topLeft.x,
     y: topLeft.y,
     w,
     h,
-    fill: { color: DEFAULT_CARD_FILL },
+    fill: { color: fillColor },
     line: { color: DEFAULT_CARD_STROKE, width: 1 },
   });
 
@@ -233,9 +245,72 @@ export async function exportToPptx(
   }
 
   // Layer 3: Nodes (all types)
+  const categories = options?.categories;
   for (const node of layout.nodes) {
-    addNodeShape(slide, node, offsetX, offsetY, scale, padding);
+    addNodeShape(slide, node, offsetX, offsetY, scale, padding, categories);
+  }
+
+  // Layer 4: Legend
+  if (categories && categories.length > 0) {
+    addLegend(slide, categories, slideWidth, slideHeight, padding);
   }
 
   await pres.writeFile({ fileName });
+}
+
+function addLegend(
+  slide: pptxgen.Slide,
+  categories: ColorCategory[],
+  slideWidth: number,
+  slideHeight: number,
+  padding: number,
+): void {
+  const legendX = padding;
+  const swatchSize = 0.15;
+  const rowHeight = 0.22;
+  const textGap = 0.08;
+  const legendPadding = 0.08;
+  const fontSize = 7;
+  const textWidth = 1.2;
+
+  const totalHeight = legendPadding * 2 + categories.length * rowHeight;
+  const totalWidth = legendPadding * 2 + swatchSize + textGap + textWidth;
+  const legendY = slideHeight - padding - totalHeight;
+
+  // Legend background
+  slide.addShape('rect', {
+    x: legendX,
+    y: legendY,
+    w: totalWidth,
+    h: totalHeight,
+    fill: { color: 'FFFFFF' },
+    line: { color: 'E2E8F0', width: 0.5 },
+  });
+
+  categories.forEach((cat, i) => {
+    const rowY = legendY + legendPadding + i * rowHeight;
+    const rowX = legendX + legendPadding;
+
+    // Color swatch
+    slide.addShape('rect', {
+      x: rowX,
+      y: rowY + (rowHeight - swatchSize) / 2 - legendPadding / 2,
+      w: swatchSize,
+      h: swatchSize,
+      fill: { color: cat.color.replace(/^#/, '') },
+      line: { color: 'CBD5E1', width: 0.25 },
+    });
+
+    // Label text
+    slide.addText(cat.label, {
+      x: rowX + swatchSize + textGap,
+      y: rowY - legendPadding / 2,
+      w: textWidth,
+      h: rowHeight,
+      fontSize,
+      fontFace: DEFAULT_FONT_FAMILY,
+      color: '64748B',
+      valign: 'middle',
+    });
+  });
 }

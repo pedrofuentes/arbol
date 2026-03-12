@@ -2,7 +2,14 @@ export interface OrgNode {
   id: string;
   name: string;
   title: string;
+  categoryId?: string;
   children?: OrgNode[];
+}
+
+export interface ColorCategory {
+  id: string;
+  label: string;
+  color: string;
 }
 
 export interface ColumnMapping {

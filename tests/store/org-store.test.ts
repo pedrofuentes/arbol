@@ -654,4 +654,125 @@ describe('OrgStore', () => {
       expect(listener).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('setNodeCategory', () => {
+    it('sets categoryId on a node', () => {
+      const store = new OrgStore(makeRoot());
+      store.setNodeCategory('b', 'cat-engineering');
+      const bob = findNodeById(store.getTree(), 'b')!;
+      expect(bob.categoryId).toBe('cat-engineering');
+    });
+
+    it('clears categoryId when null is passed', () => {
+      const store = new OrgStore(makeRoot());
+      store.setNodeCategory('b', 'cat-engineering');
+      store.setNodeCategory('b', null);
+      const bob = findNodeById(store.getTree(), 'b')!;
+      expect(bob.categoryId).toBeUndefined();
+    });
+
+    it('throws for unknown node', () => {
+      const store = new OrgStore(makeRoot());
+      expect(() => store.setNodeCategory('nonexistent', 'cat-x')).toThrow('"nonexistent" not found');
+    });
+
+    it('creates undo snapshot', () => {
+      const store = new OrgStore(makeRoot());
+      store.setNodeCategory('b', 'cat-engineering');
+      expect(store.getUndoStackSize()).toBe(1);
+      store.undo();
+      const bob = findNodeById(store.getTree(), 'b')!;
+      expect(bob.categoryId).toBeUndefined();
+    });
+
+    it('emits change event', () => {
+      const store = new OrgStore(makeRoot());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.setNodeCategory('b', 'cat-engineering');
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('bulkSetCategory', () => {
+    it('sets categoryId on multiple nodes', () => {
+      const store = new OrgStore(makeRoot());
+      store.bulkSetCategory(['b', 'c'], 'cat-exec');
+      expect(findNodeById(store.getTree(), 'b')!.categoryId).toBe('cat-exec');
+      expect(findNodeById(store.getTree(), 'c')!.categoryId).toBe('cat-exec');
+    });
+
+    it('clears categoryId on multiple nodes', () => {
+      const store = new OrgStore(makeRoot());
+      store.bulkSetCategory(['b', 'c'], 'cat-exec');
+      store.bulkSetCategory(['b', 'c'], null);
+      expect(findNodeById(store.getTree(), 'b')!.categoryId).toBeUndefined();
+      expect(findNodeById(store.getTree(), 'c')!.categoryId).toBeUndefined();
+    });
+
+    it('skips non-existent nodes silently', () => {
+      const store = new OrgStore(makeRoot());
+      store.bulkSetCategory(['b', 'nonexistent'], 'cat-x');
+      expect(findNodeById(store.getTree(), 'b')!.categoryId).toBe('cat-x');
+    });
+
+    it('does nothing and no snapshot when all nodes are invalid', () => {
+      const store = new OrgStore(makeRoot());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.bulkSetCategory(['nonexistent', 'also-fake'], 'cat-x');
+      expect(listener).not.toHaveBeenCalled();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('creates single undo snapshot', () => {
+      const store = new OrgStore(makeRoot());
+      store.bulkSetCategory(['b', 'c'], 'cat-exec');
+      expect(store.getUndoStackSize()).toBe(1);
+      store.undo();
+      expect(findNodeById(store.getTree(), 'b')!.categoryId).toBeUndefined();
+      expect(findNodeById(store.getTree(), 'c')!.categoryId).toBeUndefined();
+    });
+
+    it('emits change event once', () => {
+      const store = new OrgStore(makeRoot());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.bulkSetCategory(['b', 'c'], 'cat-exec');
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('validateTree with categoryId', () => {
+    it('accepts nodes with valid categoryId', () => {
+      const store = new OrgStore(makeRoot());
+      const json = JSON.stringify({
+        id: 'r', name: 'Root', title: 'CEO', categoryId: 'cat-exec', children: [
+          { id: 'a', name: 'A', title: 'VP', categoryId: 'cat-eng' },
+        ],
+      });
+      store.fromJSON(json);
+      expect(findNodeById(store.getTree(), 'r')!.categoryId).toBe('cat-exec');
+      expect(findNodeById(store.getTree(), 'a')!.categoryId).toBe('cat-eng');
+    });
+
+    it('accepts nodes without categoryId', () => {
+      const store = new OrgStore(makeRoot());
+      const json = JSON.stringify({ id: 'r', name: 'Root', title: 'CEO' });
+      store.fromJSON(json);
+      expect(store.getTree().categoryId).toBeUndefined();
+    });
+
+    it('rejects non-string categoryId', () => {
+      const store = new OrgStore(makeRoot());
+      const json = JSON.stringify({ id: 'r', name: 'Root', title: 'CEO', categoryId: 42 });
+      expect(() => store.fromJSON(json)).toThrow('Invalid categoryId');
+    });
+
+    it('rejects categoryId over 100 chars', () => {
+      const store = new OrgStore(makeRoot());
+      const json = JSON.stringify({ id: 'r', name: 'Root', title: 'CEO', categoryId: 'x'.repeat(101) });
+      expect(() => store.fromJSON(json)).toThrow('categoryId too long');
+    });
+  });
 });
