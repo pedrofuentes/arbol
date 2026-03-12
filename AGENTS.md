@@ -9,21 +9,21 @@
 ## Architecture
 
 ```
-Editor (Form / JSON / CSV) → OrgStore (data + events) → Renderer (D3 + SVG)
-                                    ↕
-                              SettingsStore ← localStorage
+Editor (Add / Load / Edit) → OrgStore (data + events) → Renderer (D3 + SVG)
+                                    ↕                            ↑
+                              SettingsStore ← localStorage       Right-click / Inline edit / Multi-select
                               ThemeManager  ← dark/light toggle
                               MappingStore  ← CSV column presets
 ```
 
-**Data flow is unidirectional:** editors mutate `OrgStore`, which emits `"change"` events, and the renderer re-draws the SVG. Settings flow through `SettingsStore` → `ChartRenderer.updateOptions()`.
+**Data flow is unidirectional:** editors and on-canvas interactions (right-click context menu, inline editing, Shift+click multi-select) mutate `OrgStore`, which emits `"change"` events, and the renderer re-draws the SVG. Settings flow through `SettingsStore` → `ChartRenderer.updateOptions()`.
 
 ## Project Structure
 
 ```
 src/
 ├── editor/
-│   ├── form-editor.ts        # Add/edit/delete people via form UI
+│   ├── form-editor.ts        # Add people via form UI
 │   ├── json-editor.ts        # Raw JSON tree editor with Apply button
 │   ├── import-editor.ts      # File import (JSON/CSV) + paste + column mapping
 │   ├── settings-editor.ts    # Visual settings panel with sliders, presets
@@ -43,6 +43,10 @@ src/
 ├── ui/
 │   ├── column-mapper.ts       # UI for mapping CSV columns to OrgNode fields
 │   ├── confirm-dialog.ts      # Modal confirmation dialog
+│   ├── context-menu.ts        # Right-click context menu (Edit, Add Child, Move, Remove)
+│   ├── inline-editor.ts       # Inline card editing (name/title on double-click)
+│   ├── add-popover.ts         # Popover form for adding a child from context menu
+│   ├── manager-picker.ts      # Manager selection UI for Move operations
 │   ├── help-dialog.ts         # Help/about overlay
 │   └── preset-creator.ts     # UI for creating/naming presets
 ├── utils/
@@ -88,6 +92,17 @@ All spacing is configurable via `RendererOptions`:
 - `palTopGap`, `palBottomGap`, `palRowGap`, `palCenterGap` — PAL stack spacing
 - `icGap`, `icContainerPadding` — IC stack spacing
 
+### Interactions
+- **Click** — highlights the card (visual selection only; does not open sidebar editor).
+- **Double-click** — opens inline editor on the card for name/title.
+- **Right-click** — shows context menu with Edit, Add Child, Move to…, Remove.
+- **Shift+click** — toggles multi-select; bulk operations (Move, Remove) appear when ≥1 node is selected.
+
+### Store Bulk Methods
+- `bulkMoveNodes(ids, newParentId)` — moves multiple nodes under a new parent in one undo step.
+- `bulkRemoveNodes(ids)` — removes multiple nodes (re-parents their children) in one undo step.
+- `removeNodeWithReassign(id)` — removes a node and re-assigns its children to the removed node's parent.
+
 ### Data Format
 ```typescript
 interface OrgNode {
@@ -122,6 +137,10 @@ CSV imports support: `id,name,title,parent_id` or `name,title,manager_name` (aut
 | `renderer/chart-renderer.test.ts` | SVG output, IC/PAL stacks, spacing regression |
 | `export/pptx-exporter.test.ts` | PowerPoint export shapes |
 | `editor/*.test.ts` | Import, tab switching, shortcuts |
+| `ui/context-menu.test.ts` | Context menu show/hide, actions, positioning |
+| `ui/inline-editor.test.ts` | Inline card editing, save/cancel, validation |
+| `ui/add-popover.test.ts` | Add-child popover form, parent pre-selection |
+| `ui/manager-picker.test.ts` | Manager picker search, selection, move targets |
 
 ## Development
 
