@@ -32,7 +32,8 @@ src/
 │   ├── json-editor.ts         # Raw JSON tree editor with Apply/validate
 │   ├── import-editor.ts       # File import (JSON/CSV) + paste + column mapping + presets
 │   ├── settings-editor.ts     # Visual settings panel (sliders, color pickers, presets)
-│   └── tab-switcher.ts        # Sidebar tab management (Add / Load / Edit / Settings)
+│   ├── tab-switcher.ts        # Sidebar tab management (Add / Load / Edit / Settings / Utilities)
+│   └── utilities-editor.ts    # Utilities panel (text normalization for existing org chart)
 ├── export/
 │   └── pptx-exporter.ts       # PowerPoint export — takes LayoutResult, writes .pptx file
 ├── renderer/
@@ -61,8 +62,9 @@ src/
 │   ├── search.ts              # Case-insensitive substring search on name/title, returns matching IDs
 │   ├── csv-parser.ts          # CSV parsing (RFC 4180 multi-line quotes, escapes) + tree building from flat CSV, duplicate/cycle/limit validation
 │   ├── shortcuts.ts           # Keyboard shortcut manager (register combos, prevent defaults)
+│   ├── text-normalize.ts      # Text normalization (titleCase, uppercase, lowercase) for names/titles
 │   └── id.ts                  # UUID generation via crypto.randomUUID()
-├── types.ts                   # Interfaces: OrgNode, ColumnMapping, MappingPreset
+├── types.ts                   # Interfaces: OrgNode, ColumnMapping, MappingPreset, TextNormalization
 ├── version.ts                 # App version (injected from package.json at build time)
 ├── main.ts                    # App entry point — wires stores, renderer, editors, menus, shortcuts
 └── style.css                  # Global styles, CSS custom properties, dark/light themes
@@ -227,7 +229,7 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **569 tests across 27 files** — all must pass before committing
+- **621 tests across 30 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
@@ -241,6 +243,7 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `tests/utils/id.test.ts` | UUID generation format |
 | `tests/utils/csv-parser.test.ts` | CSV parsing (quotes, escapes, multi-line), tree building, duplicate detection, node limit, cycle path, trailing metadata |
 | `tests/utils/shortcuts.test.ts` | Shortcut registration, key combos, prevent defaults |
+| `tests/utils/text-normalize.test.ts` | normalizeText (titleCase, uppercase, lowercase, none), normalizeTreeText (recursive, immutable) |
 | `tests/store/category-store.test.ts` | ColorCategory CRUD, defaults, localStorage persistence, validation, events |
 | `tests/store/org-store.test.ts` | Node CRUD, events, undo/redo, serialization, validation, bulk ops |
 | `tests/store/settings-store.test.ts` | Settings save/load from localStorage |
@@ -257,6 +260,7 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `tests/editor/json-editor.test.ts` | JSON validation, apply, error display |
 | `tests/editor/settings-editor.test.ts` | Category section rendering, color/label editing, add/delete categories |
 | `tests/editor/tab-switcher.test.ts` | Tab activation, content switching, aria-selected |
+| `tests/editor/utilities-editor.test.ts` | Text normalization UI, dropdown state, apply to org chart, undo |
 | `tests/ui/context-menu.test.ts` | Menu rendering, item actions, keyboard nav, dismiss, viewport clamping |
 | `tests/ui/focus-banner.test.ts` | Banner rendering, exit action, dismiss, singleton, theme styling |
 | `tests/ui/inline-editor.test.ts` | Inline editing, save/cancel, validation |

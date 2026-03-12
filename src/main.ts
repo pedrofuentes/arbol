@@ -5,6 +5,7 @@ import { SettingsEditor } from './editor/settings-editor';
 import { FormEditor } from './editor/form-editor';
 import { JsonEditor } from './editor/json-editor';
 import { ImportEditor } from './editor/import-editor';
+import { UtilitiesEditor } from './editor/utilities-editor';
 import { exportToPptx } from './export/pptx-exporter';
 import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
@@ -229,6 +230,7 @@ function main(): void {
     { id: 'import', label: 'Load' },
     { id: 'json', label: 'Edit' },
     { id: 'settings', label: 'Settings' },
+    { id: 'utilities', label: 'Utilities' },
   ]);
 
   const formContainer = tabSwitcher.getContentContainer('form')!;
@@ -242,6 +244,9 @@ function main(): void {
 
   const settingsContainer = tabSwitcher.getContentContainer('settings')!;
   new SettingsEditor(settingsContainer, renderer, rerender, settingsStore, categoryStore);
+
+  const utilitiesContainer = tabSwitcher.getContentContainer('utilities')!;
+  new UtilitiesEditor(utilitiesContainer, store);
 
   // Multi-select state
   const multiSelectedIds = new Set<string>();
