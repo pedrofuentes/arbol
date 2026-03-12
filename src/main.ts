@@ -253,13 +253,14 @@ function main(): void {
           },
         },
         {
-          label: `Add person under ${node.name}`,
+          label: 'Add',
           icon: '➕',
           action: () => {
             const rect = renderer.getNodeScreenRect(nodeId);
             if (!rect) return;
             showAddPopover({
               anchor: rect,
+              parentName: node.name,
               onAdd: (name, title) => {
                 store.addChild(nodeId, { name, title });
               },

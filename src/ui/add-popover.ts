@@ -1,5 +1,6 @@
 export interface AddPopoverOptions {
   anchor: DOMRect;
+  parentName?: string;
   onAdd: (name: string, title: string) => void;
   onCancel: () => void;
 }
@@ -21,7 +22,7 @@ export function dismissAddPopover(): void {
 export function showAddPopover(options: AddPopoverOptions): void {
   dismissAddPopover();
 
-  const { anchor, onAdd, onCancel } = options;
+  const { anchor, parentName, onAdd, onCancel } = options;
 
   const container = document.createElement('div');
   container.setAttribute('role', 'dialog');
@@ -46,7 +47,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   // Title
   const heading = document.createElement('div');
-  heading.textContent = 'Add Person';
+  heading.textContent = parentName ? `Add person under ${parentName}` : 'Add Person';
   heading.style.cssText = `
     font-size:14px;font-weight:600;
     color:var(--text-primary);
