@@ -78,12 +78,39 @@ const SETTING_GROUPS: SettingGroup[] = [
   },
 ];
 
+const DEFAULT_SETTINGS: Record<string, number | string> = {
+  nodeWidth: 110, nodeHeight: 22, horizontalSpacing: 30, branchSpacing: 10,
+  topVerticalSpacing: 5, bottomVerticalSpacing: 12,
+  icNodeWidth: 99, icGap: 4, icContainerPadding: 6,
+  palTopGap: 7, palBottomGap: 7, palRowGap: 4, palCenterGap: 50,
+  nameFontSize: 8, titleFontSize: 7, textPaddingTop: 4, textGap: 1,
+  linkColor: '#94a3b8', linkWidth: 1.5,
+  cardFill: '#ffffff', cardStroke: '#22c55e', cardStrokeWidth: 1, icContainerFill: '#e5e7eb',
+};
+
+function sectionIdFromTitle(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+}
+
+const ALL_SECTION_IDS = [
+  'presets',
+  'categories',
+  'layout-presets',
+  ...SETTING_GROUPS.map((g) => sectionIdFromTitle(g.title)),
+  'settings-io',
+];
+
 export class SettingsEditor {
   private container: HTMLElement;
   private renderer: ChartRenderer;
   private rerenderCallback: () => void;
   private settingsStore: SettingsStore | null;
   private categoryStore: CategoryStore | null;
+
+  private static ACCORDION_STORAGE_KEY = 'arbol-accordion-state';
+  private static DEFAULT_EXPANDED = new Set(['presets', 'categories', 'layout-presets']);
+
+  private accordionState: Map<string, boolean> = new Map();
 
   constructor(
     container: HTMLElement,
@@ -97,7 +124,106 @@ export class SettingsEditor {
     this.rerenderCallback = rerenderCallback;
     this.settingsStore = settingsStore ?? null;
     this.categoryStore = categoryStore ?? null;
+    this.loadAccordionState();
     this.build();
+  }
+
+  private loadAccordionState(): void {
+    try {
+      const raw = localStorage.getItem(SettingsEditor.ACCORDION_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (typeof parsed === 'object') {
+          for (const [key, value] of Object.entries(parsed)) {
+            if (typeof value === 'boolean') {
+              this.accordionState.set(key, value);
+            }
+          }
+        }
+      }
+    } catch { /* ignore */ }
+  }
+
+  private saveAccordionState(): void {
+    const obj: Record<string, boolean> = {};
+    for (const [key, value] of this.accordionState) {
+      obj[key] = value;
+    }
+    localStorage.setItem(SettingsEditor.ACCORDION_STORAGE_KEY, JSON.stringify(obj));
+  }
+
+  private isExpanded(sectionId: string): boolean {
+    if (this.accordionState.has(sectionId)) {
+      return this.accordionState.get(sectionId)!;
+    }
+    return SettingsEditor.DEFAULT_EXPANDED.has(sectionId);
+  }
+
+  private toggleSection(sectionId: string): void {
+    const current = this.isExpanded(sectionId);
+    this.accordionState.set(sectionId, !current);
+    this.saveAccordionState();
+  }
+
+  private createAccordionSection(
+    id: string,
+    title: string,
+    content: HTMLElement | (() => HTMLElement),
+    options?: { resetCallback?: () => void },
+  ): HTMLElement {
+    const section = document.createElement('div');
+    section.className = 'accordion-section';
+
+    const header = document.createElement('button');
+    header.className = 'accordion-header';
+    header.setAttribute('aria-expanded', String(this.isExpanded(id)));
+    header.setAttribute('aria-controls', `accordion-${id}`);
+
+    const chevron = document.createElement('span');
+    chevron.className = 'accordion-chevron';
+    chevron.textContent = '▶';
+    header.appendChild(chevron);
+
+    const titleEl = document.createElement('span');
+    titleEl.className = 'accordion-title';
+    titleEl.textContent = title;
+    header.appendChild(titleEl);
+
+    if (options?.resetCallback) {
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'accordion-reset';
+      resetBtn.textContent = '↺';
+      resetBtn.setAttribute('aria-label', `Reset ${title} to defaults`);
+      resetBtn.setAttribute('data-tooltip', 'Reset to defaults');
+      resetBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        options.resetCallback!();
+      });
+      header.appendChild(resetBtn);
+    }
+
+    const contentWrapper = document.createElement('div');
+    contentWrapper.className = 'accordion-content';
+    contentWrapper.id = `accordion-${id}`;
+    contentWrapper.setAttribute('data-expanded', String(this.isExpanded(id)));
+
+    const inner = document.createElement('div');
+    inner.className = 'accordion-inner';
+
+    const contentEl = typeof content === 'function' ? content() : content;
+    inner.appendChild(contentEl);
+    contentWrapper.appendChild(inner);
+
+    header.addEventListener('click', () => {
+      this.toggleSection(id);
+      const expanded = this.isExpanded(id);
+      header.setAttribute('aria-expanded', String(expanded));
+      contentWrapper.setAttribute('data-expanded', String(expanded));
+    });
+
+    section.appendChild(header);
+    section.appendChild(contentWrapper);
+    return section;
   }
 
   private build(): void {
@@ -105,15 +231,26 @@ export class SettingsEditor {
 
     const opts = this.renderer.getOptions();
 
-    // Theme Presets section
-    const presetHeader = document.createElement('h4');
-    presetHeader.textContent = 'Theme Presets';
-    presetHeader.style.cssText = 'margin:0 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
-    this.container.appendChild(presetHeader);
+    // Expand All / Collapse All toggle
+    const actionsRow = document.createElement('div');
+    actionsRow.className = 'accordion-actions';
 
+    const toggleAllBtn = document.createElement('button');
+    toggleAllBtn.textContent = 'Expand all';
+    toggleAllBtn.addEventListener('click', () => {
+      const allExpanded = ALL_SECTION_IDS.every((id) => this.isExpanded(id));
+      for (const id of ALL_SECTION_IDS) {
+        this.accordionState.set(id, !allExpanded);
+      }
+      this.saveAccordionState();
+      this.build();
+    });
+    actionsRow.appendChild(toggleAllBtn);
+    this.container.appendChild(actionsRow);
+
+    // Theme Presets section
     const presetGrid = document.createElement('div');
     presetGrid.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:16px;';
-    this.container.appendChild(presetGrid);
 
     for (const preset of CHART_THEME_PRESETS) {
       const card = document.createElement('button');
@@ -125,7 +262,6 @@ export class SettingsEditor {
         transition:all 120ms ease;font-family:var(--font-sans);
       `;
 
-      // Color swatch
       const swatch = document.createElement('div');
       swatch.style.cssText = `
         width:20px;height:20px;border-radius:3px;flex-shrink:0;
@@ -134,7 +270,6 @@ export class SettingsEditor {
       `;
       card.appendChild(swatch);
 
-      // Name
       const name = document.createElement('span');
       name.textContent = preset.name;
       name.style.cssText = 'font-size:11px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
@@ -152,50 +287,70 @@ export class SettingsEditor {
       card.addEventListener('click', () => {
         this.renderer.updateOptions(preset.colors as Partial<RendererOptions>);
         this.rerenderCallback();
-        this.build(); // Rebuild to update slider/color values
+        this.build();
       });
 
       presetGrid.appendChild(card);
     }
 
+    this.container.appendChild(
+      this.createAccordionSection('presets', 'Theme Presets', presetGrid),
+    );
+
     // Node Categories section
     if (this.categoryStore) {
-      this.container.appendChild(this.buildCategoriesSection());
+      this.container.appendChild(
+        this.createAccordionSection('categories', 'Node Categories', () =>
+          this.buildCategoriesContent(),
+        ),
+      );
     }
 
     // Layout Presets section
-    this.container.appendChild(this.buildLayoutPresets());
+    this.container.appendChild(
+      this.createAccordionSection('layout-presets', 'Layout Presets', () =>
+        this.buildLayoutPresetsContent(),
+      ),
+    );
 
+    // Setting groups
     for (const group of SETTING_GROUPS) {
-      const header = document.createElement('h4');
-      header.textContent = group.title;
-      header.style.cssText =
-        'margin:16px 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
-      this.container.appendChild(header);
-
+      const groupId = sectionIdFromTitle(group.title);
+      const controlsContainer = document.createElement('div');
       for (const setting of group.settings) {
         const value = opts[setting.key] as number | string;
-        this.container.appendChild(this.createControl(setting, value));
+        controlsContainer.appendChild(this.createControl(setting, value));
       }
+
+      const resetCallback = () => {
+        const updates: Partial<RendererOptions> = {};
+        for (const setting of group.settings) {
+          const defaultVal = DEFAULT_SETTINGS[setting.key];
+          if (defaultVal !== undefined) {
+            (updates as Record<string, unknown>)[setting.key] = defaultVal;
+          }
+        }
+        this.renderer.updateOptions(updates);
+        this.rerenderCallback();
+        this.build();
+      };
+
+      this.container.appendChild(
+        this.createAccordionSection(groupId, group.title, controlsContainer, { resetCallback }),
+      );
     }
 
     // Settings Import/Export section
-    const ioHeader = document.createElement('h4');
-    ioHeader.textContent = 'Settings';
-    ioHeader.style.cssText = 'margin:16px 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
-    this.container.appendChild(ioHeader);
-
     const ioBtnGroup = document.createElement('div');
     ioBtnGroup.className = 'btn-group';
-    this.container.appendChild(ioBtnGroup);
 
     const exportSettingsBtn = document.createElement('button');
     exportSettingsBtn.className = 'btn btn-secondary';
     exportSettingsBtn.textContent = '💾 Export';
     exportSettingsBtn.addEventListener('click', () => {
       if (this.settingsStore) {
-        const opts = this.renderer.getOptions();
-        this.settingsStore.saveImmediate(opts as Partial<PersistableSettings>);
+        const currentOpts = this.renderer.getOptions();
+        this.settingsStore.saveImmediate(currentOpts as Partial<PersistableSettings>);
         this.settingsStore.exportToFile('my-chart-theme');
       }
     });
@@ -223,7 +378,6 @@ export class SettingsEditor {
             const settings = this.settingsStore!.importFromFile(reader.result as string);
             this.renderer.updateOptions(settings as unknown as Partial<RendererOptions>);
 
-            // Add as custom preset
             const presetName = raw.name || file.name.replace(/\.json$/i, '');
             const presetId = 'custom-' + presetName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             addCustomPreset({
@@ -253,16 +407,14 @@ export class SettingsEditor {
       document.body.removeChild(input);
     });
     ioBtnGroup.appendChild(importSettingsBtn);
+
+    this.container.appendChild(
+      this.createAccordionSection('settings-io', 'Settings', ioBtnGroup),
+    );
   }
 
-  private buildCategoriesSection(): HTMLElement {
+  private buildCategoriesContent(): HTMLElement {
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'margin-bottom:16px;';
-
-    const header = document.createElement('h4');
-    header.textContent = 'Node Categories';
-    header.style.cssText = 'margin:0 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
-    wrapper.appendChild(header);
 
     const categories = this.categoryStore!.getAll();
 
@@ -333,7 +485,7 @@ export class SettingsEditor {
     return wrapper;
   }
 
-  private buildLayoutPresets(): HTMLElement {
+  private buildLayoutPresetsContent(): HTMLElement {
     const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<RendererOptions> }[] = [
       {
         name: 'Compact',
@@ -381,15 +533,6 @@ export class SettingsEditor {
       },
     ];
 
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'margin-bottom:16px;';
-
-    const heading = document.createElement('h4');
-    heading.textContent = 'Layout Presets';
-    heading.style.cssText =
-      'margin:0 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
-    wrapper.appendChild(heading);
-
     const grid = document.createElement('div');
     grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;';
 
@@ -430,8 +573,7 @@ export class SettingsEditor {
       grid.appendChild(btn);
     }
 
-    wrapper.appendChild(grid);
-    return wrapper;
+    return grid;
   }
 
   private createControl(

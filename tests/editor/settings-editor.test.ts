@@ -50,6 +50,13 @@ function createMockRenderer(): ChartRenderer {
   } as unknown as ChartRenderer;
 }
 
+/** Helper: get accordion section titles */
+function getAccordionTitles(container: HTMLElement): string[] {
+  return Array.from(container.querySelectorAll('.accordion-title')).map(
+    (el) => el.textContent ?? '',
+  );
+}
+
 describe('SettingsEditor', () => {
   let container: HTMLElement;
   let renderer: ChartRenderer;
@@ -68,27 +75,110 @@ describe('SettingsEditor', () => {
     container.remove();
   });
 
-  it('builds settings panel with groups', () => {
+  it('builds settings panel with accordion sections', () => {
     new SettingsEditor(container, renderer, rerenderCb);
-    const headers = container.querySelectorAll('h4');
-    expect(headers.length).toBeGreaterThan(0);
-    const texts = Array.from(headers).map((h) => h.textContent);
-    expect(texts).toContain('Theme Presets');
-    expect(texts).toContain('Layout Presets');
+    const titles = getAccordionTitles(container);
+    expect(titles.length).toBeGreaterThan(0);
+    expect(titles).toContain('Theme Presets');
+    expect(titles).toContain('Layout Presets');
+  });
+
+  it('renders expand-all / collapse-all button', () => {
+    new SettingsEditor(container, renderer, rerenderCb);
+    const actionsRow = container.querySelector('.accordion-actions');
+    expect(actionsRow).not.toBeNull();
+    const btn = actionsRow!.querySelector('button');
+    expect(btn).not.toBeNull();
+    expect(btn!.textContent).toBe('Expand all');
+  });
+
+  it('wraps each setting group in an accordion section', () => {
+    new SettingsEditor(container, renderer, rerenderCb);
+    const sections = container.querySelectorAll('.accordion-section');
+    // presets + layout-presets + 7 groups + settings-io = 10 (no categories without store)
+    expect(sections.length).toBe(10);
+  });
+
+  it('setting group accordions have reset buttons', () => {
+    new SettingsEditor(container, renderer, rerenderCb);
+    const resetBtns = container.querySelectorAll('.accordion-reset');
+    // 7 setting groups have reset buttons
+    expect(resetBtns.length).toBe(7);
+  });
+
+  it('reset button calls updateOptions with defaults and rerenders', () => {
+    new SettingsEditor(container, renderer, rerenderCb);
+    const resetBtn = container.querySelector<HTMLButtonElement>('.accordion-reset');
+    expect(resetBtn).not.toBeNull();
+    resetBtn!.click();
+    expect((renderer.updateOptions as ReturnType<typeof vi.fn>)).toHaveBeenCalled();
+    expect(rerenderCb).toHaveBeenCalled();
+  });
+
+  it('accordion header toggles expanded state', () => {
+    new SettingsEditor(container, renderer, rerenderCb);
+    // Card Dimensions is collapsed by default (not in DEFAULT_EXPANDED)
+    const headers = container.querySelectorAll<HTMLButtonElement>('.accordion-header');
+    const cardDimHeader = Array.from(headers).find(
+      (h) => h.querySelector('.accordion-title')?.textContent === 'Card Dimensions',
+    )!;
+    expect(cardDimHeader.getAttribute('aria-expanded')).toBe('false');
+
+    cardDimHeader.click();
+    expect(cardDimHeader.getAttribute('aria-expanded')).toBe('true');
+
+    cardDimHeader.click();
+    expect(cardDimHeader.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('default-expanded sections start expanded', () => {
+    new SettingsEditor(container, renderer, rerenderCb);
+    const presetsContent = container.querySelector('#accordion-presets');
+    expect(presetsContent).not.toBeNull();
+    expect(presetsContent!.getAttribute('data-expanded')).toBe('true');
+  });
+
+  it('persists accordion state to localStorage', () => {
+    new SettingsEditor(container, renderer, rerenderCb);
+    const headers = container.querySelectorAll<HTMLButtonElement>('.accordion-header');
+    const presetsHeader = Array.from(headers).find(
+      (h) => h.querySelector('.accordion-title')?.textContent === 'Theme Presets',
+    )!;
+    // Collapse the presets section (starts expanded)
+    presetsHeader.click();
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(
+      'arbol-accordion-state',
+      expect.any(String),
+    );
+    const saved = JSON.parse(
+      localStorageMock.setItem.mock.calls.at(-1)![1] as string,
+    );
+    expect(saved.presets).toBe(false);
+  });
+
+  it('loads accordion state from localStorage', () => {
+    localStorageMock.setItem('arbol-accordion-state', JSON.stringify({ presets: false, 'card-dimensions': true }));
+    new SettingsEditor(container, renderer, rerenderCb);
+
+    const presetsContent = container.querySelector('#accordion-presets');
+    expect(presetsContent!.getAttribute('data-expanded')).toBe('false');
+
+    const cardDimContent = container.querySelector('#accordion-card-dimensions');
+    expect(cardDimContent!.getAttribute('data-expanded')).toBe('true');
   });
 
   describe('Node Categories section', () => {
     it('renders categories section when categoryStore is provided', () => {
       const catStore = new CategoryStore();
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
-      const headers = Array.from(container.querySelectorAll('h4')).map((h) => h.textContent);
-      expect(headers).toContain('Node Categories');
+      const titles = getAccordionTitles(container);
+      expect(titles).toContain('Node Categories');
     });
 
     it('does not render categories section when categoryStore is null', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const headers = Array.from(container.querySelectorAll('h4')).map((h) => h.textContent);
-      expect(headers).not.toContain('Node Categories');
+      const titles = getAccordionTitles(container);
+      expect(titles).not.toContain('Node Categories');
     });
 
     it('renders a row for each category', () => {
@@ -199,10 +289,10 @@ describe('SettingsEditor', () => {
     it('places categories section between Theme Presets and Layout Presets', () => {
       const catStore = new CategoryStore();
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
-      const headers = Array.from(container.querySelectorAll('h4')).map((h) => h.textContent);
-      const themeIdx = headers.indexOf('Theme Presets');
-      const catIdx = headers.indexOf('Node Categories');
-      const layoutIdx = headers.indexOf('Layout Presets');
+      const titles = getAccordionTitles(container);
+      const themeIdx = titles.indexOf('Theme Presets');
+      const catIdx = titles.indexOf('Node Categories');
+      const layoutIdx = titles.indexOf('Layout Presets');
       expect(themeIdx).toBeLessThan(catIdx);
       expect(catIdx).toBeLessThan(layoutIdx);
     });
