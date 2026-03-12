@@ -355,9 +355,6 @@ export class SettingsEditor {
     filterWrapper.appendChild(clearBtn);
     this.container.appendChild(filterWrapper);
 
-    // Mini card preview
-    this.container.appendChild(this.buildPreviewCard());
-
     // Expand All / Collapse All toggle
     const actionsRow = document.createElement('div');
     actionsRow.className = 'accordion-actions';
@@ -892,66 +889,6 @@ export class SettingsEditor {
       wrapper.appendChild(input);
     }
 
-    return wrapper;
-  }
-
-  private buildPreviewCard(): HTMLElement {
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'display:flex;justify-content:center;padding:12px 0 4px;';
-
-    const opts = this.renderer.getOptions();
-
-    const maxWidth = 160;
-    const scale = Math.min(1, maxWidth / opts.nodeWidth);
-    const w = opts.nodeWidth * scale;
-    const h = opts.nodeHeight * scale;
-
-    const svgNS = 'http://www.w3.org/2000/svg';
-    const svg = document.createElementNS(svgNS, 'svg');
-    svg.setAttribute('width', String(Math.ceil(w + 4)));
-    svg.setAttribute('height', String(Math.ceil(h + 4)));
-    svg.setAttribute('viewBox', `0 0 ${w + 4} ${h + 4}`);
-    svg.setAttribute('aria-label', 'Card preview');
-    svg.style.cssText = 'border-radius:var(--radius-sm);';
-
-    const rect = document.createElementNS(svgNS, 'rect');
-    rect.setAttribute('x', '2');
-    rect.setAttribute('y', '2');
-    rect.setAttribute('width', String(w));
-    rect.setAttribute('height', String(h));
-    rect.setAttribute('rx', '3');
-    rect.setAttribute('fill', opts.cardFill);
-    rect.setAttribute('stroke', opts.cardStroke);
-    rect.setAttribute('stroke-width', String(opts.cardStrokeWidth));
-    svg.appendChild(rect);
-
-    const nameSize = (opts.nameFontSize ?? 8) * scale;
-    const titleSize = (opts.titleFontSize ?? 7) * scale;
-    const paddingTop = (opts.textPaddingTop ?? 4) * scale;
-    const gap = (opts.textGap ?? 1) * scale;
-
-    const nameText = document.createElementNS(svgNS, 'text');
-    nameText.setAttribute('x', String(w / 2 + 2));
-    nameText.setAttribute('y', String(2 + paddingTop + nameSize));
-    nameText.setAttribute('text-anchor', 'middle');
-    nameText.setAttribute('font-size', String(nameSize));
-    nameText.setAttribute('font-weight', '600');
-    nameText.setAttribute('font-family', 'var(--font-sans, sans-serif)');
-    nameText.setAttribute('fill', 'var(--text-primary, #333)');
-    nameText.textContent = 'Jane Doe';
-    svg.appendChild(nameText);
-
-    const titleText = document.createElementNS(svgNS, 'text');
-    titleText.setAttribute('x', String(w / 2 + 2));
-    titleText.setAttribute('y', String(2 + paddingTop + nameSize + gap + titleSize));
-    titleText.setAttribute('text-anchor', 'middle');
-    titleText.setAttribute('font-size', String(titleSize));
-    titleText.setAttribute('font-family', 'var(--font-sans, sans-serif)');
-    titleText.setAttribute('fill', 'var(--text-secondary, #666)');
-    titleText.textContent = 'CEO';
-    svg.appendChild(titleText);
-
-    wrapper.appendChild(svg);
     return wrapper;
   }
 

@@ -298,23 +298,6 @@ describe('SettingsEditor', () => {
     });
   });
 
-  describe('mini card preview', () => {
-    it('renders an SVG preview card', () => {
-      new SettingsEditor(container, renderer, rerenderCb);
-      const svg = container.querySelector('svg[aria-label="Card preview"]');
-      expect(svg).not.toBeNull();
-    });
-
-    it('shows sample name and title text', () => {
-      new SettingsEditor(container, renderer, rerenderCb);
-      const svg = container.querySelector('svg[aria-label="Card preview"]')!;
-      const texts = svg.querySelectorAll('text');
-      expect(texts.length).toBe(2);
-      expect(texts[0].textContent).toBe('Jane Doe');
-      expect(texts[1].textContent).toBe('CEO');
-    });
-  });
-
   describe('Unified Presets section', () => {
     it('renders a single Presets accordion section', () => {
       new SettingsEditor(container, renderer, rerenderCb);
