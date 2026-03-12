@@ -224,19 +224,11 @@ function main(): void {
         multiSelectedIds.add(nodeId);
       }
       renderer.setMultiSelectedNodes(multiSelectedIds.size > 0 ? multiSelectedIds : null);
-      // Clear single selection when multi-selecting
-      formEditor.selectNode(null);
-      renderer.setSelectedNode(null);
     } else {
-      // Regular click: clear multi-selection, select single
+      // Regular click: clear multi-selection, highlight card only (no sidebar form)
       clearMultiSelection();
-      formEditor.selectNode(nodeId);
       renderer.setSelectedNode(nodeId);
     }
-  });
-
-  formEditor.setSelectionChangeHandler((nodeId: string | null) => {
-    renderer.setSelectedNode(nodeId);
   });
 
   // Dismiss all floating UI on chart zoom/pan
