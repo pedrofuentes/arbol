@@ -241,18 +241,18 @@ function main(): void {
     { id: 'settings', label: 'Settings' },
   ]);
 
-  // Sidebar collapse — floating chevron at edge
+  // Sidebar collapse toggle
   const mainEl = document.getElementById('main')!;
   const SIDEBAR_COLLAPSED_KEY = 'arbol-sidebar-collapsed';
 
   let sidebarCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
 
-  const collapseChevron = document.createElement('button');
-  collapseChevron.className = 'sidebar-collapse-chevron';
-  collapseChevron.setAttribute('aria-label', 'Toggle sidebar');
-  collapseChevron.setAttribute('data-tooltip', 'Toggle sidebar (Ctrl+B)');
-  collapseChevron.textContent = '◀';
-  sidebar.appendChild(collapseChevron);
+  const sidebarToggle = document.createElement('button');
+  sidebarToggle.className = 'sidebar-toggle';
+  sidebarToggle.setAttribute('aria-label', 'Toggle sidebar');
+  sidebarToggle.setAttribute('data-tooltip', 'Toggle sidebar (Ctrl+B)');
+  sidebarToggle.textContent = '«';
+  sidebar.insertBefore(sidebarToggle, sidebar.firstChild);
 
   const iconStrip = document.createElement('div');
   iconStrip.className = 'sidebar-icon-strip';
@@ -279,23 +279,23 @@ function main(): void {
     iconStrip.appendChild(btn);
   }
 
-  sidebar.insertBefore(iconStrip, sidebar.firstChild);
+  sidebar.insertBefore(iconStrip, sidebar.children[1]);
 
   const toggleSidebar = () => {
     sidebarCollapsed = !sidebarCollapsed;
     mainEl.classList.toggle('sidebar-collapsed', sidebarCollapsed);
-    collapseChevron.textContent = sidebarCollapsed ? '▶' : '◀';
+    sidebarToggle.textContent = sidebarCollapsed ? '»' : '«';
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(sidebarCollapsed));
     setTimeout(() => {
       renderer.getZoomManager()?.fitToContent();
     }, 250);
   };
 
-  collapseChevron.addEventListener('click', toggleSidebar);
+  sidebarToggle.addEventListener('click', toggleSidebar);
 
   if (sidebarCollapsed) {
     mainEl.classList.add('sidebar-collapsed');
-    collapseChevron.textContent = '▶';
+    sidebarToggle.textContent = '»';
   }
 
   const peopleContainer = tabSwitcher.getContentContainer('people')!;
