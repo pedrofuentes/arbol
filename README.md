@@ -2,7 +2,7 @@
 
 An interactive org chart editor for the browser.
 
-**[Live Demo →](https://arbol.pedrofuent.es)**
+**[Try Arbol →](https://arbol.pedrofuent.es)**
 
 ## Features
 
