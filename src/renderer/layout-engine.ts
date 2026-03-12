@@ -13,6 +13,7 @@ export interface LayoutNode {
   height: number;
   type: 'manager' | 'ic' | 'pal';
   collapsible?: boolean;
+  categoryId?: string;
 }
 
 export interface LayoutLink {
@@ -242,6 +243,7 @@ export function computeLayout(
           width: icNodeWidth,
           height: nodeHeight,
           type: 'ic',
+          categoryId: ic.categoryId,
         });
       });
     }
@@ -277,6 +279,7 @@ export function computeLayout(
           width: nodeWidth,
           height: nodeHeight,
           type: 'pal',
+          categoryId: pal.categoryId,
         });
       });
     }
@@ -297,6 +300,7 @@ export function computeLayout(
       height: nodeHeight,
       type: 'manager',
       collapsible: hasTreeChildren || hasICs,
+      categoryId: treeNode.data.categoryId,
     });
   }
 

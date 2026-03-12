@@ -32,6 +32,7 @@ function defaultOpts(): ResolvedOptions {
     cardStroke: '#22c55e',
     cardStrokeWidth: 1,
     icContainerFill: '#e5e7eb',
+    categories: [],
   };
 }
 
@@ -288,6 +289,68 @@ describe('computeLayout', () => {
       const result = computeLayout(singleNode(), defaultOpts());
       const mgr = nodesByType(result, 'manager')[0];
       expect(mgr.collapsible).toBe(false);
+    });
+  });
+
+  describe('categoryId propagation', () => {
+    it('passes categoryId from OrgNode to manager LayoutNode', () => {
+      const tree: OrgNode = {
+        id: 'root', name: 'CEO', title: 'CEO', categoryId: 'cat-exec',
+        children: [
+          { id: 'mgr1', name: 'CTO', title: 'CTO', categoryId: 'cat-tech',
+            children: [
+              { id: 'ic1', name: 'IC', title: 'Eng' },
+            ],
+          },
+        ],
+      };
+      const result = computeLayout(tree, defaultOpts());
+      const root = result.nodes.find((n) => n.id === 'root')!;
+      const mgr = result.nodes.find((n) => n.id === 'mgr1')!;
+      expect(root.categoryId).toBe('cat-exec');
+      expect(mgr.categoryId).toBe('cat-tech');
+    });
+
+    it('passes categoryId from OrgNode to IC LayoutNode', () => {
+      const tree: OrgNode = {
+        id: 'root', name: 'Manager', title: 'M1',
+        children: [
+          { id: 'ic1', name: 'IC One', title: 'Eng', categoryId: 'cat-eng' },
+          { id: 'ic2', name: 'IC Two', title: 'Eng', categoryId: 'cat-design' },
+        ],
+      };
+      const result = computeLayout(tree, defaultOpts());
+      const ics = nodesByType(result, 'ic');
+      const ic1 = ics.find((n) => n.id === 'ic1')!;
+      const ic2 = ics.find((n) => n.id === 'ic2')!;
+      expect(ic1.categoryId).toBe('cat-eng');
+      expect(ic2.categoryId).toBe('cat-design');
+    });
+
+    it('passes categoryId from OrgNode to PAL LayoutNode', () => {
+      const tree: OrgNode = {
+        id: 'root', name: 'CEO', title: 'CEO',
+        children: [
+          { id: 'pal1', name: 'PAL One', title: 'Advisor', categoryId: 'cat-advisor' },
+          {
+            id: 'mgr1', name: 'CTO', title: 'CTO',
+            children: [
+              { id: 'ic1', name: 'IC', title: 'Eng' },
+            ],
+          },
+        ],
+      };
+      const result = computeLayout(tree, defaultOpts());
+      const pals = nodesByType(result, 'pal');
+      expect(pals.length).toBe(1);
+      expect(pals[0].categoryId).toBe('cat-advisor');
+    });
+
+    it('leaves categoryId undefined when not set on OrgNode', () => {
+      const result = computeLayout(m1WithICs(), defaultOpts());
+      for (const node of result.nodes) {
+        expect(node.categoryId).toBeUndefined();
+      }
     });
   });
 

@@ -26,6 +26,7 @@ export function filterVisibleTree(
   node: OrgNode,
 ): OrgNode {
   const clone: OrgNode = { id: node.id, name: node.name, title: node.title };
+  if (node.categoryId !== undefined) clone.categoryId = node.categoryId;
   if (node.children && node.children.length > 0) {
     clone.children = node.children.map((child) =>
       filterVisibleTree(child),
@@ -57,20 +58,26 @@ export function stripM1Children(
   const icMap = new Map<string, OrgNode[]>();
   const palMap = new Map<string, OrgNode[]>();
 
+  function cloneBase(n: OrgNode): OrgNode {
+    const c: OrgNode = { id: n.id, name: n.name, title: n.title };
+    if (n.categoryId !== undefined) c.categoryId = n.categoryId;
+    return c;
+  }
+
   function walk(n: OrgNode): OrgNode {
-    const clone: OrgNode = { id: n.id, name: n.name, title: n.title };
+    const clone = cloneBase(n);
     if (!n.children || n.children.length === 0) {
       return clone;
     }
     if (isM1(n)) {
-      icMap.set(n.id, n.children.map((c) => ({ id: c.id, name: c.name, title: c.title })));
+      icMap.set(n.id, n.children.map(cloneBase));
       return clone;
     }
     // Non-M1 manager: separate PALs (leaf children) from manager children
     const pals = n.children.filter(isLeaf);
     const managers = n.children.filter((c) => !isLeaf(c));
     if (pals.length > 0) {
-      palMap.set(n.id, pals.map((c) => ({ id: c.id, name: c.name, title: c.title })));
+      palMap.set(n.id, pals.map(cloneBase));
     }
     if (managers.length > 0) {
       clone.children = managers.map(walk);

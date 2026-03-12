@@ -1,6 +1,7 @@
 import { ChartRenderer, RendererOptions } from '../renderer/chart-renderer';
 import { CHART_THEME_PRESETS, addCustomPreset } from '../store/theme-presets';
 import { SettingsStore, type PersistableSettings } from '../store/settings-store';
+import { CategoryStore } from '../store/category-store';
 
 interface SettingDef {
   key: keyof RendererOptions;
@@ -82,17 +83,20 @@ export class SettingsEditor {
   private renderer: ChartRenderer;
   private rerenderCallback: () => void;
   private settingsStore: SettingsStore | null;
+  private categoryStore: CategoryStore | null;
 
   constructor(
     container: HTMLElement,
     renderer: ChartRenderer,
     rerenderCallback: () => void,
     settingsStore?: SettingsStore,
+    categoryStore?: CategoryStore,
   ) {
     this.container = container;
     this.renderer = renderer;
     this.rerenderCallback = rerenderCallback;
     this.settingsStore = settingsStore ?? null;
+    this.categoryStore = categoryStore ?? null;
     this.build();
   }
 
@@ -152,6 +156,11 @@ export class SettingsEditor {
       });
 
       presetGrid.appendChild(card);
+    }
+
+    // Node Categories section
+    if (this.categoryStore) {
+      this.container.appendChild(this.buildCategoriesSection());
     }
 
     // Layout Presets section
@@ -244,6 +253,84 @@ export class SettingsEditor {
       document.body.removeChild(input);
     });
     ioBtnGroup.appendChild(importSettingsBtn);
+  }
+
+  private buildCategoriesSection(): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'margin-bottom:16px;';
+
+    const header = document.createElement('h4');
+    header.textContent = 'Node Categories';
+    header.style.cssText = 'margin:0 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
+    wrapper.appendChild(header);
+
+    const categories = this.categoryStore!.getAll();
+
+    for (const cat of categories) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;';
+
+      const colorInput = document.createElement('input');
+      colorInput.type = 'color';
+      colorInput.value = cat.color;
+      colorInput.style.cssText = 'width:28px;height:22px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
+      colorInput.setAttribute('aria-label', `Color for ${cat.label}`);
+      colorInput.addEventListener('input', () => {
+        this.categoryStore!.update(cat.id, { color: colorInput.value });
+        this.rerenderCallback();
+      });
+      row.appendChild(colorInput);
+
+      const labelInput = document.createElement('input');
+      labelInput.type = 'text';
+      labelInput.value = cat.label;
+      labelInput.style.cssText = 'flex:1;padding:3px 6px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font-size:11px;font-family:var(--font-sans);min-width:0;';
+      labelInput.setAttribute('aria-label', 'Category label');
+      labelInput.addEventListener('change', () => {
+        const newLabel = labelInput.value.trim();
+        if (newLabel) {
+          this.categoryStore!.update(cat.id, { label: newLabel });
+          this.rerenderCallback();
+        } else {
+          labelInput.value = cat.label;
+        }
+      });
+      row.appendChild(labelInput);
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = '×';
+      deleteBtn.style.cssText = 'width:22px;height:22px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;';
+      deleteBtn.setAttribute('aria-label', `Remove ${cat.label}`);
+      deleteBtn.addEventListener('mouseenter', () => {
+        deleteBtn.style.color = 'var(--danger)';
+        deleteBtn.style.borderColor = 'var(--danger)';
+      });
+      deleteBtn.addEventListener('mouseleave', () => {
+        deleteBtn.style.color = 'var(--text-tertiary)';
+        deleteBtn.style.borderColor = 'var(--border-default)';
+      });
+      deleteBtn.addEventListener('click', () => {
+        this.categoryStore!.remove(cat.id);
+        this.rerenderCallback();
+        this.build();
+      });
+      row.appendChild(deleteBtn);
+
+      wrapper.appendChild(row);
+    }
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn btn-secondary';
+    addBtn.textContent = '+ Add Category';
+    addBtn.style.cssText = 'font-size:11px;padding:4px 8px;width:100%;';
+    addBtn.addEventListener('click', () => {
+      this.categoryStore!.add('New Category', '#94a3b8');
+      this.rerenderCallback();
+      this.build();
+    });
+    wrapper.appendChild(addBtn);
+
+    return wrapper;
   }
 
   private buildLayoutPresets(): HTMLElement {

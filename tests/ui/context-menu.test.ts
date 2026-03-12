@@ -266,4 +266,111 @@ describe('ContextMenu', () => {
       expect(menu!.getAttribute('style')).toContain('contextMenuIn');
     });
   });
+
+  describe('submenu support', () => {
+    it('renders arrow indicator for items with submenu', () => {
+      const items: ContextMenuItem[] = [
+        { label: 'Category', submenu: [
+          { label: 'Engineering', action: vi.fn() },
+        ]},
+      ];
+      showContextMenu({ x: 100, y: 100, items });
+      const btn = getMenuItems()[0];
+      expect(btn.textContent).toContain('▸');
+    });
+
+    it('shows submenu on hover', () => {
+      const items: ContextMenuItem[] = [
+        { label: 'Category', submenu: [
+          { label: 'Engineering', action: vi.fn() },
+          { label: 'Design', action: vi.fn() },
+        ]},
+      ];
+      showContextMenu({ x: 100, y: 100, items });
+      const btn = getMenuItems()[0];
+      btn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+
+      const menus = document.querySelectorAll('[role="menu"]');
+      expect(menus).toHaveLength(2);
+
+      const submenuItems = menus[1].querySelectorAll('[role="menuitem"]');
+      expect(submenuItems).toHaveLength(2);
+      expect(submenuItems[0].textContent).toBe('Engineering');
+      expect(submenuItems[1].textContent).toBe('Design');
+    });
+
+    it('clicking submenu item dismisses entire menu and calls action', () => {
+      const action = vi.fn();
+      const items: ContextMenuItem[] = [
+        { label: 'Category', submenu: [
+          { label: 'Engineering', action },
+        ]},
+      ];
+      showContextMenu({ x: 100, y: 100, items });
+      const btn = getMenuItems()[0];
+      btn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+
+      const allItems = getMenuItems();
+      const submenuItem = allItems[allItems.length - 1];
+      submenuItem.click();
+
+      expect(action).toHaveBeenCalledOnce();
+      expect(document.querySelector('[role="menu"]')).toBeNull();
+    });
+
+    it('renders submenu items with icons', () => {
+      const items: ContextMenuItem[] = [
+        { label: 'Category', submenu: [
+          { label: 'Engineering', icon: '🔧', action: vi.fn() },
+        ]},
+      ];
+      showContextMenu({ x: 100, y: 100, items });
+      const btn = getMenuItems()[0];
+      btn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+
+      const menus = document.querySelectorAll('[role="menu"]');
+      const submenuBtn = menus[1].querySelector('[role="menuitem"]')!;
+      const spans = submenuBtn.querySelectorAll('span');
+      expect(spans).toHaveLength(2);
+      expect(spans[0].textContent).toBe('🔧');
+      expect(spans[1].textContent).toBe('Engineering');
+    });
+
+    it('hides submenu when mouse leaves', () => {
+      vi.useFakeTimers();
+      try {
+        const items: ContextMenuItem[] = [
+          { label: 'Category', submenu: [
+            { label: 'Engineering', action: vi.fn() },
+          ]},
+        ];
+        showContextMenu({ x: 100, y: 100, items });
+        const btn = getMenuItems()[0];
+        btn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+
+        expect(document.querySelectorAll('[role="menu"]')).toHaveLength(2);
+
+        btn.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+        vi.advanceTimersByTime(150);
+
+        const menus = document.querySelectorAll('[role="menu"]');
+        expect(menus).toHaveLength(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('does not call parent action for submenu items', () => {
+      const parentAction = vi.fn();
+      const items: ContextMenuItem[] = [
+        { label: 'Category', action: parentAction, submenu: [
+          { label: 'Engineering', action: vi.fn() },
+        ]},
+      ];
+      showContextMenu({ x: 100, y: 100, items });
+      const btn = getMenuItems()[0];
+      btn.click();
+      expect(parentAction).not.toHaveBeenCalled();
+    });
+  });
 });

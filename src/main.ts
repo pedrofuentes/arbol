@@ -8,13 +8,14 @@ import { ImportEditor } from './editor/import-editor';
 import { exportToPptx } from './export/pptx-exporter';
 import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
+import { CategoryStore } from './store/category-store';
 import { getMatchingNodeIds } from './utils/search';
 import { OrgNode } from './types';
 import { flattenTree, findNodeById, isLeaf, countLeaves, countManagersByLevel } from './utils/tree';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
 import { APP_VERSION } from './version';
-import { showContextMenu, dismissContextMenu } from './ui/context-menu';
+import { showContextMenu, dismissContextMenu, ContextMenuItem } from './ui/context-menu';
 import { showInlineEditor, dismissInlineEditor } from './ui/inline-editor';
 import { showAddPopover, dismissAddPopover } from './ui/add-popover';
 import { showManagerPicker } from './ui/manager-picker';
@@ -74,9 +75,13 @@ function main(): void {
   };
   const savedSettings = settingsStore.load(defaultSettings);
 
+  // Category store
+  const categoryStore = new CategoryStore();
+
   const renderer = new ChartRenderer({
     container: chartArea,
     ...savedSettings,
+    categories: categoryStore.getAll(),
   });
 
   let onSettingsSaved: (() => void) | null = null;
@@ -107,6 +112,8 @@ function main(): void {
       ? findNodeById(fullTree, focusedNodeId) ?? fullTree
       : fullTree;
 
+    // Refresh categories so renderer picks up any changes
+    renderer.updateOptions({ categories: categoryStore.getAll() });
     renderer.render(treeToRender);
     const opts = renderer.getOptions();
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
@@ -234,7 +241,7 @@ function main(): void {
   new ImportEditor(importContainer, store);
 
   const settingsContainer = tabSwitcher.getContentContainer('settings')!;
-  new SettingsEditor(settingsContainer, renderer, rerender, settingsStore);
+  new SettingsEditor(settingsContainer, renderer, rerender, settingsStore, categoryStore);
 
   // Multi-select state
   const multiSelectedIds = new Set<string>();
@@ -249,6 +256,10 @@ function main(): void {
     formEditor.refresh();
     jsonEditor.refresh();
     clearMultiSelection();
+  });
+
+  categoryStore.onChange(() => {
+    rerender();
   });
 
   renderer.setNodeClickHandler((nodeId: string, event: MouseEvent) => {
@@ -335,6 +346,26 @@ function main(): void {
           },
         },
         {
+          label: 'Set Category',
+          icon: '🏷️',
+          submenu: [
+            {
+              label: 'None (default)',
+              icon: node.categoryId ? ' ' : '✓',
+              action: () => {
+                store.setNodeCategory(nodeId, null);
+              },
+            },
+            ...categoryStore.getAll().map((cat): ContextMenuItem => ({
+              label: cat.label,
+              icon: node.categoryId === cat.id ? '✓' : ' ',
+              action: () => {
+                store.setNodeCategory(nodeId, cat.id);
+              },
+            })),
+          ],
+        },
+        {
           label: 'Move',
           icon: '↗️',
           disabled: isRoot,
@@ -400,6 +431,24 @@ function main(): void {
       x: event.clientX,
       y: event.clientY,
       items: [
+        {
+          label: `Set Category (${count} people)`,
+          icon: '🏷️',
+          submenu: [
+            {
+              label: 'None (default)',
+              action: () => {
+                store.bulkSetCategory(selectedArray, null);
+              },
+            },
+            ...categoryStore.getAll().map((cat): ContextMenuItem => ({
+              label: cat.label,
+              action: () => {
+                store.bulkSetCategory(selectedArray, cat.id);
+              },
+            })),
+          ],
+        },
         {
           label: `Move all (${count} people)`,
           icon: '↗️',
@@ -602,7 +651,7 @@ function main(): void {
   exportBtn.addEventListener('click', async () => {
     const layout = renderer.getLastLayout();
     if (layout) {
-      await exportToPptx(layout);
+      await exportToPptx(layout, { categories: categoryStore.getAll() });
     }
   });
 
@@ -655,7 +704,7 @@ function main(): void {
     key: 'e', ctrl: true,
     handler: async () => {
       const layout = renderer.getLastLayout();
-      if (layout) await exportToPptx(layout);
+      if (layout) await exportToPptx(layout, { categories: categoryStore.getAll() });
     },
     description: 'Export PPTX',
   });

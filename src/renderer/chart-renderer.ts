@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { OrgNode } from '../types';
+import { OrgNode, ColorCategory } from '../types';
 import { computeLayout, LayoutResult } from './layout-engine';
 import { ZoomManager } from './zoom-manager';
 
@@ -35,6 +35,7 @@ export interface RendererOptions {
   cardStroke?: string;
   cardStrokeWidth?: number;
   icContainerFill?: string;
+  categories?: ColorCategory[];
 }
 
 export interface ResolvedOptions extends Required<RendererOptions> {}
@@ -75,6 +76,7 @@ export class ChartRenderer {
       cardStroke: '#22c55e',
       cardStrokeWidth: 1,
       icContainerFill: '#e5e7eb',
+      categories: [] as ColorCategory[],
       ...options,
     };
     this.svg = d3
@@ -136,7 +138,7 @@ export class ChartRenderer {
         .attr('data-id', node.id)
         .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
 
-      const datum = { data: { id: node.id, name: node.name, title: node.title } };
+      const datum = { data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId } };
       const sel = d3.select(g.node()!).datum(datum);
       this.renderCardContent(sel as any, node.width, nodeHeight, () => node.id);
     }
@@ -158,7 +160,7 @@ export class ChartRenderer {
         .attr('data-id', node.id)
         .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
 
-      const datum = { data: { id: node.id, name: node.name, title: node.title } };
+      const datum = { data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId } };
       const sel = d3.select(g.node()!).datum(datum);
       this.renderCardContent(sel as any, node.width, nodeHeight, () => node.id);
     }
@@ -173,7 +175,7 @@ export class ChartRenderer {
         .attr('data-id', node.id)
         .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
 
-      const datum = { data: { id: node.id, name: node.name, title: node.title } };
+      const datum = { data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId } };
       const sel = d3.select(g.node()!).datum(datum);
       this.renderCardContent(sel as any, node.width, nodeHeight, (d: any) => d.data.id);
     }
@@ -186,6 +188,7 @@ export class ChartRenderer {
     }
 
     this.applyHighlighting();
+    this.renderLegend(layout);
   }
 
   getLastLayout(): LayoutResult | null {
@@ -234,7 +237,14 @@ export class ChartRenderer {
     selection.append('rect')
       .attr('width', width)
       .attr('height', height)
-      .attr('fill', cardFill)
+      .attr('fill', (d: any) => {
+        const catId = d.data?.categoryId;
+        if (catId && self.opts.categories.length > 0) {
+          const cat = self.opts.categories.find((c: ColorCategory) => c.id === catId);
+          if (cat) return cat.color;
+        }
+        return cardFill;
+      })
       .attr('stroke', cardStroke)
       .attr('stroke-width', cardStrokeWidth)
       .on('click', function (_event, d) {
@@ -271,6 +281,74 @@ export class ChartRenderer {
       .attr('fill', '#64748b')
       .attr('pointer-events', 'none')
       .text((d: any) => d.data?.title ?? d.title);
+  }
+
+  private renderLegend(layout: LayoutResult): void {
+    const categories = this.opts.categories;
+    if (!categories || categories.length === 0) return;
+
+    const { boundingBox } = layout;
+    const legendPadding = 8;
+    const swatchSize = 8;
+    const textGap = 4;
+    const rowHeight = 14;
+    const fontSize = 8;
+
+    // Position at bottom-left of the bounding box
+    const legendX = boundingBox.minX;
+    const legendY = boundingBox.minY + boundingBox.height + 20;
+
+    const legendGroup = this.g.append('g')
+      .attr('class', 'legend');
+
+    // Background rectangle (drawn after we know dimensions)
+    const bgRect = legendGroup.append('rect')
+      .attr('class', 'legend-bg');
+
+    let maxTextWidth = 0;
+
+    categories.forEach((cat, i) => {
+      const rowG = legendGroup.append('g')
+        .attr('transform', `translate(${legendX + legendPadding}, ${legendY + legendPadding + i * rowHeight})`);
+
+      rowG.append('rect')
+        .attr('width', swatchSize)
+        .attr('height', swatchSize)
+        .attr('fill', cat.color)
+        .attr('stroke', '#cbd5e1')
+        .attr('stroke-width', 0.5)
+        .attr('rx', 1);
+
+      const text = rowG.append('text')
+        .attr('x', swatchSize + textGap)
+        .attr('y', swatchSize / 2)
+        .attr('dominant-baseline', 'central')
+        .attr('font-size', `${fontSize}px`)
+        .attr('font-family', 'Calibri, sans-serif')
+        .attr('fill', 'var(--text-secondary, #64748b)')
+        .text(cat.label);
+
+      // Measure text width after render
+      const textNode = text.node();
+      const bbox = textNode && typeof textNode.getBBox === 'function' ? textNode.getBBox() : null;
+      if (bbox) {
+        maxTextWidth = Math.max(maxTextWidth, bbox.width);
+      }
+    });
+
+    // Size the background
+    const bgWidth = legendPadding * 2 + swatchSize + textGap + maxTextWidth;
+    const bgHeight = legendPadding * 2 + categories.length * rowHeight - (rowHeight - swatchSize);
+
+    bgRect
+      .attr('x', legendX)
+      .attr('y', legendY)
+      .attr('width', bgWidth)
+      .attr('height', bgHeight)
+      .attr('fill', 'var(--bg-surface, #ffffff)')
+      .attr('stroke', 'var(--border-default, #e2e8f0)')
+      .attr('stroke-width', 0.5)
+      .attr('rx', 3);
   }
 
   setSelectedNode(nodeId: string | null): void {

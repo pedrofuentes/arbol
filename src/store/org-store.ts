@@ -122,6 +122,34 @@ export class OrgStore {
     this.emit();
   }
 
+  setNodeCategory(nodeId: string, categoryId: string | null): void {
+    const node = findNodeById(this.root, nodeId);
+    if (!node) throw new Error(`Node "${nodeId}" not found`);
+    this.snapshot();
+    if (categoryId === null) {
+      delete node.categoryId;
+    } else {
+      node.categoryId = categoryId;
+    }
+    this.emit();
+  }
+
+  bulkSetCategory(nodeIds: string[], categoryId: string | null): void {
+    const validNodes = nodeIds
+      .map((id) => findNodeById(this.root, id))
+      .filter((n): n is OrgNode => n !== null);
+    if (validNodes.length === 0) return;
+    this.snapshot();
+    for (const node of validNodes) {
+      if (categoryId === null) {
+        delete node.categoryId;
+      } else {
+        node.categoryId = categoryId;
+      }
+    }
+    this.emit();
+  }
+
   toJSON(): string {
     return JSON.stringify(this.root, null, 2);
   }
@@ -229,6 +257,10 @@ export class OrgStore {
     if (typeof obj.title !== 'string') throw new Error('Each node must have a string title');
     if (obj.name.length > 500) throw new Error(`Name too long (max 500 chars) on node "${obj.id}"`);
     if (obj.title.length > 500) throw new Error(`Title too long (max 500 chars) on node "${obj.id}"`);
+    if (obj.categoryId !== undefined) {
+      if (typeof obj.categoryId !== 'string') throw new Error(`Invalid categoryId on node "${obj.id}": expected a string`);
+      if (obj.categoryId.length > 100) throw new Error(`categoryId too long (max 100 chars) on node "${obj.id}"`);
+    }
     if (obj.children !== undefined) {
       if (!Array.isArray(obj.children)) throw new Error(`Invalid children on node "${obj.id}": expected an array`);
       for (const child of obj.children) {

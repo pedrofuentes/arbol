@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ChartRenderer } from '../../src/renderer/chart-renderer';
-import { OrgNode } from '../../src/types';
+import { OrgNode, ColorCategory } from '../../src/types';
 
 // --- Test fixtures ---
 
@@ -742,6 +742,119 @@ describe('ChartRenderer', () => {
       expect(handler.mock.calls[0].length).toBe(2);
       expect(handler.mock.calls[0][0]).toBe('root');
       expect(handler.mock.calls[0][1]).toBeInstanceOf(MouseEvent);
+    });
+  });
+
+  describe('per-node category colors', () => {
+    const categories: ColorCategory[] = [
+      { id: 'eng', label: 'Engineering', color: '#3b82f6' },
+      { id: 'sales', label: 'Sales', color: '#ef4444' },
+    ];
+
+    it('renders card with category color when categoryId is set', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories });
+      const tree: OrgNode = { id: 'root', name: 'Alice', title: 'CEO', categoryId: 'eng' };
+      renderer.render(tree);
+      const rect = container.querySelector('.node[data-id="root"] rect')!;
+      expect(rect.getAttribute('fill')).toBe('#3b82f6');
+    });
+
+    it('renders card with default cardFill when categoryId is not set', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories });
+      const tree: OrgNode = { id: 'root', name: 'Alice', title: 'CEO' };
+      renderer.render(tree);
+      const rect = container.querySelector('.node[data-id="root"] rect')!;
+      expect(rect.getAttribute('fill')).toBe('#ffffff');
+    });
+
+    it('renders card with default cardFill when categoryId does not match any category', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories });
+      const tree: OrgNode = { id: 'root', name: 'Alice', title: 'CEO', categoryId: 'unknown' };
+      renderer.render(tree);
+      const rect = container.querySelector('.node[data-id="root"] rect')!;
+      expect(rect.getAttribute('fill')).toBe('#ffffff');
+    });
+
+    it('handles multiple nodes with different categories', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories });
+      const tree: OrgNode = {
+        id: 'root', name: 'CEO', title: 'CEO', categoryId: 'eng',
+        children: [
+          {
+            id: 'mgr', name: 'Manager', title: 'M1', categoryId: 'sales',
+            children: [
+              { id: 'ic1', name: 'IC', title: 'Eng', categoryId: 'eng' },
+            ],
+          },
+        ],
+      };
+      renderer.render(tree);
+      const rootRect = container.querySelector('.node[data-id="root"] rect')!;
+      expect(rootRect.getAttribute('fill')).toBe('#3b82f6');
+      const mgrRect = container.querySelector('.node[data-id="mgr"] rect, .ic-node[data-id="mgr"] rect, .pal-node[data-id="mgr"] rect')!;
+      expect(mgrRect.getAttribute('fill')).toBe('#ef4444');
+      const icRect = container.querySelector('.ic-node[data-id="ic1"] rect')!;
+      expect(icRect.getAttribute('fill')).toBe('#3b82f6');
+    });
+  });
+
+  describe('legend rendering', () => {
+    const categories: ColorCategory[] = [
+      { id: 'eng', label: 'Engineering', color: '#3b82f6' },
+      { id: 'sales', label: 'Sales', color: '#ef4444' },
+      { id: 'ops', label: 'Operations', color: '#22c55e' },
+    ];
+
+    it('renders legend when categories are provided', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories });
+      renderer.render(singleNode());
+      const legend = container.querySelector('.legend');
+      expect(legend).not.toBeNull();
+    });
+
+    it('does not render legend when categories array is empty', () => {
+      renderer.render(singleNode());
+      const legend = container.querySelector('.legend');
+      expect(legend).toBeNull();
+    });
+
+    it('renders correct number of legend entries', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories });
+      renderer.render(singleNode());
+      const legend = container.querySelector('.legend')!;
+      // Each entry is a <g> child (excluding the bg rect which is a direct child)
+      const entryGroups = legend.querySelectorAll('g');
+      expect(entryGroups.length).toBe(categories.length);
+    });
+
+    it('renders category labels in legend', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories });
+      renderer.render(singleNode());
+      const legend = container.querySelector('.legend')!;
+      const texts = Array.from(legend.querySelectorAll('text')).map((t) => t.textContent);
+      expect(texts).toContain('Engineering');
+      expect(texts).toContain('Sales');
+      expect(texts).toContain('Operations');
+    });
+
+    it('renders category color swatches in legend', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories });
+      renderer.render(singleNode());
+      const legend = container.querySelector('.legend')!;
+      // Each entry group has a rect swatch; skip the first rect which is the bg
+      const swatches = Array.from(legend.querySelectorAll('g rect'));
+      const fills = swatches.map((r) => r.getAttribute('fill'));
+      expect(fills).toContain('#3b82f6');
+      expect(fills).toContain('#ef4444');
+      expect(fills).toContain('#22c55e');
     });
   });
 });
