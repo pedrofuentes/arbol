@@ -501,13 +501,25 @@ function main(): void {
   // Footer: Center area (GitHub link)
   const footerCenter = document.createElement('div');
   footerCenter.className = 'footer-center';
-  footerCenter.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);';
+  footerCenter.style.cssText = 'position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--font-sans);';
   const githubLink = document.createElement('a');
   githubLink.href = 'https://github.com/pedrofuentes/arbol';
   githubLink.target = '_blank';
   githubLink.rel = 'noopener noreferrer';
-  githubLink.textContent = '✦ Built with Arbol — Star on GitHub';
+  githubLink.textContent = '✦ Built with Arbol';
   footerCenter.appendChild(githubLink);
+
+  const separator = document.createElement('span');
+  separator.style.color = 'var(--text-tertiary)';
+  separator.textContent = '·';
+  footerCenter.appendChild(separator);
+
+  const issuesLink = document.createElement('a');
+  issuesLink.href = 'https://github.com/pedrofuentes/arbol/issues';
+  issuesLink.target = '_blank';
+  issuesLink.rel = 'noopener noreferrer';
+  issuesLink.textContent = 'Report bugs & request features';
+  footerCenter.appendChild(issuesLink);
   footer.appendChild(footerCenter);
 
   // Footer: Buttons (right side)
