@@ -280,7 +280,11 @@ export class SettingsStore {
       version: SettingsStore.CURRENT_VERSION,
       settings: merged,
     };
-    localStorage.setItem(SettingsStore.STORAGE_KEY, JSON.stringify(envelope));
+    try {
+      localStorage.setItem(SettingsStore.STORAGE_KEY, JSON.stringify(envelope));
+    } catch (e) {
+      console.error('Failed to save settings to localStorage:', e);
+    }
   }
 
   private loadRaw(): Partial<PersistableSettings> | null {

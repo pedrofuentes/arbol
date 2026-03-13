@@ -360,7 +360,11 @@ export class ChartStore {
 
   private emit(): void {
     for (const listener of this.listeners) {
-      listener();
+      try {
+        listener();
+      } catch (e) {
+        console.error('ChartStore listener error:', e);
+      }
     }
   }
 

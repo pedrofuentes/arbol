@@ -36,13 +36,21 @@ export class MappingStore {
     } else {
       presets.push(preset);
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(presets));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(presets));
+    } catch (e) {
+      console.error('Failed to save mapping presets to localStorage:', e);
+    }
   }
 
   deletePreset(name: string): void {
     const presets = this.getPresets();
     const filtered = presets.filter((p) => p.name !== name);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    } catch (e) {
+      console.error('Failed to save mapping presets to localStorage:', e);
+    }
   }
 
   getPreset(name: string): MappingPreset | undefined {

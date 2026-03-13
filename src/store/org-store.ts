@@ -29,16 +29,30 @@ export class OrgStore {
 
   undo(): boolean {
     if (this.undoStack.length === 0) return false;
-    this.redoStack.push(JSON.stringify(this.root));
-    this.root = JSON.parse(this.undoStack.pop()!);
+    const snapshot = this.undoStack.pop()!;
+    try {
+      const parsed = JSON.parse(snapshot);
+      this.redoStack.push(JSON.stringify(this.root));
+      this.root = parsed;
+    } catch (e) {
+      console.error('Failed to parse undo snapshot, skipping:', e);
+      return this.undo();
+    }
     this.emit();
     return true;
   }
 
   redo(): boolean {
     if (this.redoStack.length === 0) return false;
-    this.undoStack.push(JSON.stringify(this.root));
-    this.root = JSON.parse(this.redoStack.pop()!);
+    const snapshot = this.redoStack.pop()!;
+    try {
+      const parsed = JSON.parse(snapshot);
+      this.undoStack.push(JSON.stringify(this.root));
+      this.root = parsed;
+    } catch (e) {
+      console.error('Failed to parse redo snapshot, skipping:', e);
+      return this.redo();
+    }
     this.emit();
     return true;
   }
@@ -325,7 +339,11 @@ export class OrgStore {
 
   private emit(): void {
     for (const listener of this.listeners) {
-      listener();
+      try {
+        listener();
+      } catch (e) {
+        console.error('OrgStore listener error:', e);
+      }
     }
   }
 }

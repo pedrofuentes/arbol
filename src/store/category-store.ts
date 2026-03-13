@@ -160,12 +160,20 @@ export class CategoryStore {
   }
 
   private saveToStorage(categories: ColorCategory[]): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
+    } catch (e) {
+      console.error('Failed to save categories to localStorage:', e);
+    }
   }
 
   private emit(): void {
     for (const listener of this.listeners) {
-      listener();
+      try {
+        listener();
+      } catch (e) {
+        console.error('CategoryStore listener error:', e);
+      }
     }
   }
 }

@@ -1,0 +1,109 @@
+# Error Path Testing Analysis Summary
+
+## 1. IndexedDB Failures
+Status: MINIMAL TESTING
+
+Database Error Handling:
+- ChartDB.ts has proper error handling with transaction.onerror callbacks
+- Error messages: "Failed to open database", "Failed to delete chart", "Failed to get versions", etc.
+
+Current Tests:
+✓ Basic database lifecycle (open, close, reopen) - chart-db.test.ts:51-67
+✓ Charts CRUD operations - chart-db.test.ts:70-131
+✓ Cascade deletes - chart-db.test.ts:134-167
+✓ Versions CRUD - chart-db.test.ts:169-236
+
+MISSING ERROR TESTS:
+❌ Transaction failures (onerror cases not tested)
+❌ Database quota exceeded scenarios
+❌ IDBDatabase closed state operations
+❌ Network/connection failures
+❌ Duplicate key violations (name uniqueness constraint)
+
+## 2. CSV Parsing Errors
+Status: EXCELLENT COVERAGE
+
+Current Tests (csv-parser.test.ts):
+✓ Unrecognizable columns - line 200
+✓ Fewer than 2 data rows - line 206
+✓ Orphan parent references - line 212
+✓ Multiple roots - line 223
+✓ Column mapping errors - line 304
+✓ Duplicate IDs (case-insensitive) - line 337+
+✓ Duplicate names - line 337+ (in later tests)
+✓ Circular references with path details - line 447+
+✓ AUTO-CREATES missing root (placeholder) - line 413+
+✓ MAX_NODES limit (10,000) - tested
+
+MISSING TESTS:
+❌ Invalid CSV syntax (unclosed quotes recovery)
+❌ Non-UTF8 encoding handling
+❌ Missing columns in mapped CSV (partially tested)
+❌ Very large node names/titles (edge case validation)
+
+## 3. Validation Errors
+Status: GOOD COVERAGE
+
+OrgStore Tests (org-store.test.ts):
+✓ addChild - parent not found - line 52
+✓ removeNode - cannot remove root - line 68
+✓ removeNode - node not found - line 73
+✓ updateNode - node not found - line 109
+✓ fromJSON - invalid structure - line 136
+✓ fromJSON - invalid syntax - line 141
+✓ moveNode - cannot move root - line 366
+✓ moveNode - circular dependency - line 371
+✓ moveNode - target parent not found - line 378
+✓ removeNodeWithReassign - multiple validation checks - line 500+
+
+ChartStore Tests (chart-store.test.ts):
+✓ createChart - empty name - line 162
+✓ createChart - duplicate name - line 167
+✓ renameChart - duplicate name - line 203
+✓ saveVersion - empty name - line 463
+✓ saveVersion - no active chart - line 468
+✓ switchChart - non-existent chart - line 328
+✓ duplicateChart - not found - line 239
+
+MISSING TESTS:
+❌ Node name/title length validation (>500 chars)
+❌ CategoryId length validation (>100 chars)
+❌ Invalid color format validation (in category operations)
+❌ Non-boolean dottedLine field (partially mentioned)
+❌ Validation error messages quality assessment
+
+## 4. Import Errors
+Status: GOOD COVERAGE
+
+ImportEditor Tests (import-editor.test.ts):
+✓ Invalid JSON/CSV shows error - line 94-99
+✓ Empty paste shows error - line 102-107
+✓ Non-standard CSV with mapping - line 310-323
+✓ Bundle version validation - line 604-609
+✓ Bundle missing chart name - line 612-617
+✓ Bundle missing working tree - line 620-625
+✓ Bundle version missing name/tree - line 628-636
+
+MISSING TESTS:
+❌ Network errors (if dynamic imports exist)
+❌ File reading errors (drop zone failures)
+❌ JSON parse errors (SyntaxError handling)
+❌ CSV file encoding issues
+❌ Import quota exceeded scenarios
+
+## 5. General Error Handling
+Status: CRITICAL GAPS
+
+Current Testing:
+✓ Error messages in try-catch (multiple locations)
+✓ Promise rejection testing (rejects.toThrow)
+✓ Import dialog error display
+✓ CSV parser detailed error messages
+
+NO ERROR BOUNDARY TESTS:
+❌ No ErrorBoundary component tests found
+❌ No React error boundary tests
+❌ No global error handler tests
+❌ No unhandled promise rejection tests
+❌ No fallback UI tests
+

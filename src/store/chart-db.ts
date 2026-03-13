@@ -192,7 +192,15 @@ export class ChartDB {
 
       tx.oncomplete = () => resolve();
       tx.onerror = () => {
-        reject(new Error(`Failed to put into ${storeName}: ${tx.error?.message}`));
+        if (tx.error?.name === 'QuotaExceededError') {
+          reject(
+            new Error(
+              'Storage quota exceeded. Please delete old charts or versions to free up space.',
+            ),
+          );
+        } else {
+          reject(new Error(`Failed to put into ${storeName}: ${tx.error?.message}`));
+        }
       };
     });
   }
