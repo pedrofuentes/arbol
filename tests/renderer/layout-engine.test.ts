@@ -48,6 +48,7 @@ function defaultOpts(): ResolvedOptions {
     textPaddingHorizontal: 8,
     fontFamily: 'Calibri',
     cardBorderRadius: 0,
+    icContainerBorderRadius: 0,
     categories: [],
   };
 }

@@ -178,6 +178,14 @@ const SETTING_GROUPS: SettingGroup[] = [
         step: 1,
       },
       { key: 'icContainerFill', label: 'IC Container Fill', type: 'color' },
+      {
+        key: 'icContainerBorderRadius',
+        label: 'IC Container Border Radius',
+        type: 'range',
+        min: 0,
+        max: 15,
+        step: 1,
+      },
     ],
   },
   {
@@ -266,6 +274,7 @@ const DEFAULT_SETTINGS: Record<string, number | string | boolean> = {
   cardStrokeWidth: 1,
   cardBorderRadius: 0,
   icContainerFill: '#e5e7eb',
+  icContainerBorderRadius: 0,
   showHeadcount: false,
   headcountBadgeColor: '#9ca3af',
   headcountBadgeTextColor: '#1e293b',

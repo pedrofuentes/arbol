@@ -50,6 +50,7 @@ const DEFAULTS: PersistableSettings = {
   cardStrokeWidth: 1,
   cardBorderRadius: 0,
   icContainerFill: '#e5e7eb',
+  icContainerBorderRadius: 0,
   showHeadcount: false,
   headcountBadgeColor: '#9ca3af',
   headcountBadgeTextColor: '#1e293b',

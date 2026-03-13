@@ -31,6 +31,7 @@ export interface PersistableSettings {
   cardStrokeWidth: number;
   cardBorderRadius: number;
   icContainerFill: string;
+  icContainerBorderRadius: number;
   showHeadcount: boolean;
   headcountBadgeColor: string;
   headcountBadgeTextColor: string;
@@ -73,6 +74,7 @@ const NUMERIC_KEYS: ReadonlySet<string> = new Set<string>([
   'textGap',
   'textPaddingHorizontal',
   'cardBorderRadius',
+  'icContainerBorderRadius',
   'linkWidth',
   'cardStrokeWidth',
   'headcountBadgeFontSize',

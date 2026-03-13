@@ -1212,6 +1212,24 @@ describe('ChartRenderer', () => {
     });
   });
 
+  describe('IC container border radius', () => {
+    it('defaults to no border radius on IC containers', () => {
+      renderer.render(m1WithICs());
+      const icContainerRect = container.querySelector('.ic-container')!;
+      expect(icContainerRect.getAttribute('rx')).toBe('0');
+      expect(icContainerRect.getAttribute('ry')).toBe('0');
+    });
+
+    it('applies border radius to IC container', () => {
+      renderer.destroy();
+      renderer = createRenderer({ icContainerBorderRadius: 6 });
+      renderer.render(m1WithICs());
+      const icContainerRect = container.querySelector('.ic-container')!;
+      expect(icContainerRect.getAttribute('rx')).toBe('6');
+      expect(icContainerRect.getAttribute('ry')).toBe('6');
+    });
+  });
+
   describe('font family', () => {
     it('defaults to Calibri font family', () => {
       renderer.render(singleNode());

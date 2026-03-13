@@ -9,6 +9,7 @@ export interface ChartThemePreset {
     linkColor: string;
     linkWidth: number;
     icContainerFill: string;
+    icContainerBorderRadius?: number;
     nameColor: string;
     titleColor: string;
     textAlign?: 'left' | 'center' | 'right';
@@ -29,6 +30,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       linkColor: '#94a3b8',
       linkWidth: 1.5,
       icContainerFill: '#e5e7eb',
+      icContainerBorderRadius: 0,
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
@@ -47,6 +49,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       linkColor: '#64748b',
       linkWidth: 1.5,
       icContainerFill: '#dbeafe',
+      icContainerBorderRadius: 0,
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
@@ -65,6 +68,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       linkColor: '#4ade80',
       linkWidth: 1.5,
       icContainerFill: '#dcfce7',
+      icContainerBorderRadius: 0,
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
@@ -83,6 +87,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       linkColor: '#f59e0b',
       linkWidth: 1.5,
       icContainerFill: '#fef3c7',
+      icContainerBorderRadius: 0,
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
@@ -101,6 +106,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       linkColor: '#6b7280',
       linkWidth: 1.5,
       icContainerFill: '#e5e7eb',
+      icContainerBorderRadius: 0,
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
@@ -119,6 +125,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       linkColor: '#475569',
       linkWidth: 1.5,
       icContainerFill: '#0f172a',
+      icContainerBorderRadius: 0,
       nameColor: '#e2e8f0',
       titleColor: '#cbd5e1',
       textAlign: 'center',
@@ -137,6 +144,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       linkColor: '#d946ef',
       linkWidth: 1.5,
       icContainerFill: '#fce7f3',
+      icContainerBorderRadius: 0,
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
@@ -155,6 +163,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       linkColor: '#000000',
       linkWidth: 2,
       icContainerFill: '#f3f4f6',
+      icContainerBorderRadius: 0,
       nameColor: '#000000',
       titleColor: '#374151',
       textAlign: 'center',
@@ -173,6 +182,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       linkColor: '#5eead4',
       linkWidth: 1.5,
       icContainerFill: '#ccfbf1',
+      icContainerBorderRadius: 6,
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'left',

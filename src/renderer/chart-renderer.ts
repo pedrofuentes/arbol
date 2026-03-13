@@ -50,6 +50,7 @@ export interface RendererOptions {
   cardStrokeWidth?: number;
   cardBorderRadius?: number;
   icContainerFill?: string;
+  icContainerBorderRadius?: number;
   // Text alignment
   textAlign?: 'left' | 'center' | 'right';
   textPaddingHorizontal?: number;
@@ -109,6 +110,7 @@ export class ChartRenderer {
       cardStrokeWidth: 1,
       cardBorderRadius: 0,
       icContainerFill: '#e5e7eb',
+      icContainerBorderRadius: 0,
       textAlign: 'center' as const,
       textPaddingHorizontal: 8,
       showHeadcount: false,
@@ -177,6 +179,8 @@ export class ChartRenderer {
         .attr('y', container.y)
         .attr('width', container.width)
         .attr('height', container.height)
+        .attr('rx', this.opts.icContainerBorderRadius)
+        .attr('ry', this.opts.icContainerBorderRadius)
         .attr('fill', icContainerFill);
     }
 
