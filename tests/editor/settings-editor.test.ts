@@ -61,6 +61,7 @@ const DEFAULT_OPTS: ResolvedOptions = {
   headcountBadgeRadius: 4,
   headcountBadgePadding: 8,
   headcountBadgeHeight: 22,
+  legendRows: 0,
   categories: [],
 } as ResolvedOptions;
 
@@ -117,15 +118,15 @@ describe('SettingsEditor', () => {
   it('wraps each setting group in an accordion section', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const sections = container.querySelectorAll('.accordion-section');
-    // presets + 8 groups + settings-io = 10 (no categories without store)
-    expect(sections.length).toBe(10);
+    // presets + 9 groups + settings-io = 11 (no categories without store)
+    expect(sections.length).toBe(11);
   });
 
   it('setting group accordions have reset buttons', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const resetBtns = container.querySelectorAll('.accordion-reset');
-    // 8 setting groups have reset buttons
-    expect(resetBtns.length).toBe(8);
+    // 9 setting groups have reset buttons
+    expect(resetBtns.length).toBe(9);
   });
 
   it('reset button calls updateOptions with defaults and rerenders', () => {
@@ -723,6 +724,33 @@ describe('SettingsEditor', () => {
       expect(rangeInputs.length).toBe(4);
       // 2 color inputs: badge color, badge text color
       expect(colorInputs.length).toBe(2);
+    });
+  });
+
+  describe('export settings', () => {
+    it('renders Categories Legend accordion section with Legend Rows control', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const exportSection = Array.from(container.querySelectorAll('.accordion-section')).find(
+        (s) => s.querySelector('.accordion-title')?.textContent === 'Categories Legend',
+      )!;
+      expect(exportSection).toBeDefined();
+      const rangeInput = exportSection.querySelector<HTMLInputElement>('input[type="range"]');
+      expect(rangeInput).not.toBeNull();
+      expect(rangeInput!.min).toBe('0');
+      expect(rangeInput!.max).toBe('20');
+    });
+
+    it('changing Legend Rows slider updates renderer', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const exportSection = Array.from(container.querySelectorAll('.accordion-section')).find(
+        (s) => s.querySelector('.accordion-title')?.textContent === 'Categories Legend',
+      )!;
+      const rangeInput = exportSection.querySelector<HTMLInputElement>('input[type="range"]')!;
+      rangeInput.value = '3';
+      rangeInput.dispatchEvent(new Event('input'));
+      expect(renderer.updateOptions as ReturnType<typeof vi.fn>).toHaveBeenCalledWith(
+        expect.objectContaining({ legendRows: 3 }),
+      );
     });
   });
 });

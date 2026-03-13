@@ -85,6 +85,7 @@ function main(): void {
     headcountBadgeRadius: 4,
     headcountBadgePadding: 8,
     headcountBadgeHeight: 22,
+    legendRows: 0,
   };
   const savedSettings = settingsStore.load(defaultSettings);
 
@@ -148,7 +149,7 @@ function main(): void {
     // Update category legend on the chart
     const categories = categoryStore.getAll();
     if (categories.length > 0) {
-      showCategoryLegend({ categories, container: chartArea });
+      showCategoryLegend({ categories, container: chartArea, legendRows: renderer.getOptions().legendRows });
     } else {
       dismissCategoryLegend();
     }
@@ -843,6 +844,7 @@ function main(): void {
       headcountBadgeRadius: rendererOpts.headcountBadgeRadius,
       headcountBadgePadding: rendererOpts.headcountBadgePadding,
       headcountBadgeHeight: rendererOpts.headcountBadgeHeight,
+      legendRows: rendererOpts.legendRows,
     });
   };
 

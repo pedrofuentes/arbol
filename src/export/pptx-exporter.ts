@@ -51,6 +51,7 @@ export interface PptxExportOptions {
   headcountBadgeRadius?: number;
   headcountBadgePadding?: number;
   headcountBadgeHeight?: number;
+  legendRows?: number;
 }
 
 export interface Point {
@@ -406,7 +407,7 @@ export async function exportToPptx(
 
   // Layer 4: Legend
   if (categories && categories.length > 0) {
-    addLegend(slide, categories, slideWidth, slideHeight, padding);
+    addLegend(slide, categories, slideWidth, slideHeight, padding, options?.legendRows);
   }
 
   await pres.writeFile({ fileName });
@@ -418,6 +419,7 @@ function addLegend(
   slideWidth: number,
   slideHeight: number,
   padding: number,
+  legendRows?: number,
 ): void {
   const legendX = padding;
   const swatchSize = 0.15;
@@ -425,10 +427,16 @@ function addLegend(
   const textGap = 0.08;
   const legendPadding = 0.08;
   const fontSize = 7;
-  const textWidth = 1.2;
+  const textWidth = 0.9;
+  const columnGap = 0.06;
 
-  const totalHeight = legendPadding * 2 + categories.length * rowHeight;
-  const totalWidth = legendPadding * 2 + swatchSize + textGap + textWidth;
+  const count = categories.length;
+  const rows = legendRows && legendRows > 0 ? Math.min(legendRows, count) : count;
+  const cols = Math.ceil(count / rows);
+
+  const colWidth = swatchSize + textGap + textWidth;
+  const totalWidth = legendPadding * 2 + cols * colWidth + (cols - 1) * columnGap;
+  const totalHeight = legendPadding * 2 + rows * rowHeight;
   const legendY = slideHeight - padding - totalHeight;
 
   // Legend background
@@ -442,23 +450,26 @@ function addLegend(
   });
 
   categories.forEach((cat, i) => {
-    const rowY = legendY + legendPadding + i * rowHeight;
-    const rowX = legendX + legendPadding;
+    // Row-major: fill left-to-right, then next row
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+    const rowY = legendY + legendPadding + row * rowHeight;
+    const rowX = legendX + legendPadding + col * (colWidth + columnGap);
 
-    // Color swatch
+    // Color swatch — vertically centered in row
     slide.addShape('rect', {
       x: rowX,
-      y: rowY + (rowHeight - swatchSize) / 2 - legendPadding / 2,
+      y: rowY + (rowHeight - swatchSize) / 2,
       w: swatchSize,
       h: swatchSize,
       fill: { color: cat.color.replace(/^#/, '') },
       line: { color: 'CBD5E1', width: 0.25 },
     });
 
-    // Label text
+    // Label text — valign:middle centers within rowHeight
     slide.addText(cat.label, {
       x: rowX + swatchSize + textGap,
-      y: rowY - legendPadding / 2,
+      y: rowY,
       w: textWidth,
       h: rowHeight,
       fontSize,

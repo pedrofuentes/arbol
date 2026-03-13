@@ -156,4 +156,50 @@ describe('CategoryLegend', () => {
       expect(style).toContain('left');
     });
   });
+
+  describe('legendRows layout', () => {
+    const fourCategories: ColorCategory[] = [
+      { id: 'a', label: 'Alpha', color: '#111111' },
+      { id: 'b', label: 'Beta', color: '#222222' },
+      { id: 'c', label: 'Gamma', color: '#333333' },
+      { id: 'd', label: 'Delta', color: '#444444' },
+    ];
+
+    it('uses column layout by default (no legendRows)', () => {
+      showCategoryLegend({ categories: fourCategories, container });
+      const legend = getLegend()!;
+      const itemsContainer = legend.querySelector('[data-testid="category-legend-items"]') as HTMLElement;
+      expect(itemsContainer.style.cssText).toContain('flex-direction: column');
+    });
+
+    it('uses grid layout when legendRows is set', () => {
+      showCategoryLegend({ categories: fourCategories, container, legendRows: 2 });
+      const legend = getLegend()!;
+      const itemsContainer = legend.querySelector('[data-testid="category-legend-items"]') as HTMLElement;
+      expect(itemsContainer.style.cssText).toContain('grid');
+      expect(itemsContainer.style.cssText).toContain('grid-template-columns');
+    });
+
+    it('calculates correct number of grid columns', () => {
+      showCategoryLegend({ categories: fourCategories, container, legendRows: 2 });
+      const legend = getLegend()!;
+      const itemsContainer = legend.querySelector('[data-testid="category-legend-items"]') as HTMLElement;
+      // 4 categories / 2 rows = 2 columns
+      expect(itemsContainer.style.cssText).toContain('repeat(2, auto)');
+    });
+
+    it('removes max-width constraint for multi-column layout', () => {
+      showCategoryLegend({ categories: fourCategories, container, legendRows: 2 });
+      const legend = getLegend()!;
+      const style = legend.getAttribute('style') ?? '';
+      expect(style).toContain('max-width:none');
+    });
+
+    it('keeps max-width for single-column layout', () => {
+      showCategoryLegend({ categories: fourCategories, container, legendRows: 0 });
+      const legend = getLegend()!;
+      const style = legend.getAttribute('style') ?? '';
+      expect(style).toContain('max-width:200px');
+    });
+  });
 });

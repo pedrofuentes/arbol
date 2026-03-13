@@ -3,6 +3,7 @@ import type { ColorCategory } from '../types';
 export interface CategoryLegendOptions {
   categories: ColorCategory[];
   container: HTMLElement;
+  legendRows?: number;
 }
 
 let activeLegend: HTMLDivElement | null = null;
@@ -18,6 +19,11 @@ export function showCategoryLegend(options: CategoryLegendOptions): void {
   dismissCategoryLegend();
 
   if (options.categories.length === 0) return;
+
+  const count = options.categories.length;
+  const legendRows = options.legendRows ?? 0;
+  const rows = legendRows > 0 ? Math.min(legendRows, count) : count;
+  const cols = Math.ceil(count / rows);
 
   const legend = document.createElement('div');
   legend.setAttribute('data-testid', 'category-legend');
@@ -42,7 +48,7 @@ export function showCategoryLegend(options: CategoryLegendOptions): void {
       'font-size:11px',
       'color:var(--text-secondary)',
       'pointer-events:auto',
-      'max-width:200px',
+      legendRows > 0 && cols > 1 ? 'max-width:none' : 'max-width:200px',
       'opacity:0.9',
       'transition:opacity var(--transition-fast, 100ms ease)',
     ].join(';'),
@@ -86,7 +92,12 @@ export function showCategoryLegend(options: CategoryLegendOptions): void {
 
   // Items container
   const itemsContainer = document.createElement('div');
-  itemsContainer.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-top:6px;';
+  itemsContainer.setAttribute('data-testid', 'category-legend-items');
+  if (legendRows > 0 && cols > 1) {
+    itemsContainer.style.cssText = `display:grid;grid-template-columns:repeat(${cols}, auto);gap:4px 12px;margin-top:6px;`;
+  } else {
+    itemsContainer.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-top:6px;';
+  }
 
   for (const cat of options.categories) {
     const item = document.createElement('div');

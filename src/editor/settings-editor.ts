@@ -181,6 +181,19 @@ const SETTING_GROUPS: SettingGroup[] = [
       { key: 'headcountBadgeTextColor', label: 'Badge Text Color', type: 'color' },
     ],
   },
+  {
+    title: 'Categories Legend',
+    settings: [
+      {
+        key: 'legendRows',
+        label: 'Legend Rows (0 = auto)',
+        type: 'range',
+        min: 0,
+        max: 20,
+        step: 1,
+      },
+    ],
+  },
 ];
 
 const DEFAULT_SETTINGS: Record<string, number | string | boolean> = {
@@ -217,6 +230,7 @@ const DEFAULT_SETTINGS: Record<string, number | string | boolean> = {
   headcountBadgeRadius: 4,
   headcountBadgePadding: 8,
   headcountBadgeHeight: 22,
+  legendRows: 0,
 };
 
 export const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<RendererOptions> }[] = [

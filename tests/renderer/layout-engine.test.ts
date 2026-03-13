@@ -43,6 +43,7 @@ function defaultOpts(): ResolvedOptions {
     headcountBadgeRadius: 4,
     headcountBadgePadding: 8,
     headcountBadgeHeight: 22,
+    legendRows: 0,
     categories: [],
   };
 }

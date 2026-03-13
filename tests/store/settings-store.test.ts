@@ -53,6 +53,7 @@ const DEFAULTS: PersistableSettings = {
   headcountBadgeRadius: 4,
   headcountBadgePadding: 8,
   headcountBadgeHeight: 22,
+  legendRows: 0,
 };
 
 describe('SettingsStore', () => {
@@ -278,6 +279,23 @@ describe('SettingsStore', () => {
       expect(result).toEqual(DEFAULTS);
       expect(store.hasSaved()).toBe(true);
       expect(store.load(DEFAULTS)).toEqual(DEFAULTS);
+    });
+  });
+
+  describe('legendRows', () => {
+    it('persists and loads legendRows', () => {
+      store.saveImmediate({ legendRows: 3 });
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.legendRows).toBe(3);
+    });
+
+    it('defaults legendRows to 0 when not in saved data', () => {
+      // Simulate old settings without legendRows
+      const oldSettings = { version: 1, settings: { nodeWidth: 180 } };
+      localStorageMock.setItem('arbol-settings', JSON.stringify(oldSettings));
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.legendRows).toBe(0);
+      expect(loaded.nodeWidth).toBe(180);
     });
   });
 });

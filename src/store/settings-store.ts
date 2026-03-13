@@ -34,6 +34,7 @@ export interface PersistableSettings {
   headcountBadgeRadius: number;
   headcountBadgePadding: number;
   headcountBadgeHeight: number;
+  legendRows: number;
 }
 
 export interface SettingsExport {
@@ -72,6 +73,7 @@ const NUMERIC_KEYS: ReadonlySet<string> = new Set<string>([
   'headcountBadgeRadius',
   'headcountBadgePadding',
   'headcountBadgeHeight',
+  'legendRows',
 ]);
 
 const STRING_KEYS: ReadonlySet<string> = new Set<string>([

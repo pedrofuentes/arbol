@@ -473,6 +473,140 @@ describe('pptx-exporter', () => {
       expect(legendLabels.length).toBe(3);
       expect(legendLabels.map((c: any) => c[0])).toEqual(['Alpha', 'Beta', 'Gamma']);
     });
+
+    it('default (no legendRows) produces single-column layout', async () => {
+      const fourCategories: ColorCategory[] = [
+        { id: 'a', label: 'A', color: '#111111' },
+        { id: 'b', label: 'B', color: '#222222' },
+        { id: 'c', label: 'C', color: '#333333' },
+        { id: 'd', label: 'D', color: '#444444' },
+      ];
+      const layout = makeLayout({ nodes: [makeNode({ categoryId: 'a' })] });
+      await exportToPptx(layout, { categories: fourCategories });
+
+      // All 4 swatches should have the same x position (single column)
+      const shapeCalls = mockAddShape.mock.calls;
+      const swatchCalls = shapeCalls.filter((call: any) => {
+        const opts = call[1];
+        return opts && opts.line && opts.line.color === 'CBD5E1';
+      });
+      expect(swatchCalls.length).toBe(4);
+      const xPositions = new Set(swatchCalls.map((c: any) => c[1].x));
+      expect(xPositions.size).toBe(1);
+    });
+
+    it('legendRows: 1 with 4 categories produces 4 columns', async () => {
+      const fourCategories: ColorCategory[] = [
+        { id: 'a', label: 'A', color: '#111111' },
+        { id: 'b', label: 'B', color: '#222222' },
+        { id: 'c', label: 'C', color: '#333333' },
+        { id: 'd', label: 'D', color: '#444444' },
+      ];
+      const layout = makeLayout({ nodes: [makeNode({ categoryId: 'a' })] });
+      await exportToPptx(layout, { categories: fourCategories, legendRows: 1 });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const swatchCalls = shapeCalls.filter((call: any) => {
+        const opts = call[1];
+        return opts && opts.line && opts.line.color === 'CBD5E1';
+      });
+      expect(swatchCalls.length).toBe(4);
+      // 4 different x positions (4 columns), all same y (1 row)
+      const xPositions = new Set(swatchCalls.map((c: any) => c[1].x));
+      const yPositions = new Set(swatchCalls.map((c: any) => c[1].y));
+      expect(xPositions.size).toBe(4);
+      expect(yPositions.size).toBe(1);
+    });
+
+    it('legendRows: 2 with 4 categories produces 2 columns × 2 rows', async () => {
+      const fourCategories: ColorCategory[] = [
+        { id: 'a', label: 'A', color: '#111111' },
+        { id: 'b', label: 'B', color: '#222222' },
+        { id: 'c', label: 'C', color: '#333333' },
+        { id: 'd', label: 'D', color: '#444444' },
+      ];
+      const layout = makeLayout({ nodes: [makeNode({ categoryId: 'a' })] });
+      await exportToPptx(layout, { categories: fourCategories, legendRows: 2 });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const swatchCalls = shapeCalls.filter((call: any) => {
+        const opts = call[1];
+        return opts && opts.line && opts.line.color === 'CBD5E1';
+      });
+      expect(swatchCalls.length).toBe(4);
+      const xPositions = new Set(swatchCalls.map((c: any) => c[1].x));
+      const yPositions = new Set(swatchCalls.map((c: any) => c[1].y));
+      expect(xPositions.size).toBe(2);
+      expect(yPositions.size).toBe(2);
+    });
+
+    it('legendRows: 2 with 5 categories produces 3 columns × 2 rows', async () => {
+      const fiveCategories: ColorCategory[] = [
+        { id: 'a', label: 'A', color: '#111111' },
+        { id: 'b', label: 'B', color: '#222222' },
+        { id: 'c', label: 'C', color: '#333333' },
+        { id: 'd', label: 'D', color: '#444444' },
+        { id: 'e', label: 'E', color: '#555555' },
+      ];
+      const layout = makeLayout({ nodes: [makeNode({ categoryId: 'a' })] });
+      await exportToPptx(layout, { categories: fiveCategories, legendRows: 2 });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const swatchCalls = shapeCalls.filter((call: any) => {
+        const opts = call[1];
+        return opts && opts.line && opts.line.color === 'CBD5E1';
+      });
+      expect(swatchCalls.length).toBe(5);
+      const xPositions = new Set(swatchCalls.map((c: any) => c[1].x));
+      const yPositions = new Set(swatchCalls.map((c: any) => c[1].y));
+      // 3 columns (ceil(5/2)=3), 2 rows
+      expect(xPositions.size).toBe(3);
+      expect(yPositions.size).toBe(2);
+    });
+
+    it('legendRows larger than category count clamps to category count', async () => {
+      const twoCategories: ColorCategory[] = [
+        { id: 'a', label: 'A', color: '#111111' },
+        { id: 'b', label: 'B', color: '#222222' },
+      ];
+      const layout = makeLayout({ nodes: [makeNode({ categoryId: 'a' })] });
+      await exportToPptx(layout, { categories: twoCategories, legendRows: 10 });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const swatchCalls = shapeCalls.filter((call: any) => {
+        const opts = call[1];
+        return opts && opts.line && opts.line.color === 'CBD5E1';
+      });
+      expect(swatchCalls.length).toBe(2);
+      // Should clamp to 2 rows (same as count), so single column
+      const xPositions = new Set(swatchCalls.map((c: any) => c[1].x));
+      expect(xPositions.size).toBe(1);
+    });
+
+    it('legendRows row-major order: categories fill left-to-right then next row', async () => {
+      const fourCategories: ColorCategory[] = [
+        { id: 'a', label: 'Cat1', color: '#111111' },
+        { id: 'b', label: 'Cat2', color: '#222222' },
+        { id: 'c', label: 'Cat3', color: '#333333' },
+        { id: 'd', label: 'Cat4', color: '#444444' },
+      ];
+      const layout = makeLayout({ nodes: [makeNode({ categoryId: 'a' })] });
+      await exportToPptx(layout, { categories: fourCategories, legendRows: 2 });
+
+      // Check text label order: Cat1, Cat2 in row 0; Cat3, Cat4 in row 1
+      const textCalls = mockAddText.mock.calls;
+      const legendLabels = textCalls.filter((call: any) => typeof call[0] === 'string');
+      expect(legendLabels.map((c: any) => c[0])).toEqual(['Cat1', 'Cat2', 'Cat3', 'Cat4']);
+
+      // Cat1 and Cat2 same y, Cat3 and Cat4 same y, different from row 0
+      const y0 = legendLabels[0][1].y;
+      const y1 = legendLabels[1][1].y;
+      const y2 = legendLabels[2][1].y;
+      const y3 = legendLabels[3][1].y;
+      expect(y0).toBe(y1);
+      expect(y2).toBe(y3);
+      expect(y0).not.toBe(y2);
+    });
   });
 
   // --- headcount badge ---

@@ -57,6 +57,7 @@ export interface RendererOptions {
   headcountBadgePadding?: number;
   headcountBadgeHeight?: number;
   categories?: ColorCategory[];
+  legendRows?: number;
 }
 
 export type ResolvedOptions = Required<RendererOptions>;
@@ -109,6 +110,7 @@ export class ChartRenderer {
       headcountBadgePadding: 8,
       headcountBadgeHeight: 22,
       categories: [] as ColorCategory[],
+      legendRows: 0,
       ...options,
     };
     this.svg = d3
@@ -445,6 +447,12 @@ export class ChartRenderer {
     const swatchRx = Math.round(Math.max(1, legendFs * 0.15));
     const bgRx = Math.round(Math.max(2, legendFs * 0.35));
     const legendGap = Math.round(legendFs * 2.2);
+    const columnGap = Math.round(legendFs * 1.5);
+
+    const count = categories.length;
+    const legendRows = this.opts.legendRows ?? 0;
+    const rows = legendRows > 0 ? Math.min(legendRows, count) : count;
+    const cols = Math.ceil(count / rows);
 
     const legendX = boundingBox.minX;
     const legendY = boundingBox.minY + boundingBox.height + legendGap;
@@ -454,15 +462,18 @@ export class ChartRenderer {
     // Background rectangle (drawn after we know dimensions)
     const bgRect = legendGroup.append('rect').attr('class', 'legend-bg');
 
-    let maxTextWidth = 0;
+    const maxTextWidths: number[] = new Array(cols).fill(0);
 
     categories.forEach((cat, i) => {
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+
+      // Use temporary x; final x computed after measuring all text
       const rowG = legendGroup
         .append('g')
-        .attr(
-          'transform',
-          `translate(${legendX + legendPadding}, ${legendY + legendPadding + i * rowHeight})`,
-        );
+        .attr('class', `legend-item`)
+        .attr('data-row', row)
+        .attr('data-col', col);
 
       rowG
         .append('rect')
@@ -483,17 +494,39 @@ export class ChartRenderer {
         .attr('fill', 'var(--text-secondary, #64748b)')
         .text(cat.label);
 
-      // Measure text width after render
       const textNode = text.node();
       const bbox = textNode && typeof textNode.getBBox === 'function' ? textNode.getBBox() : null;
       if (bbox) {
-        maxTextWidth = Math.max(maxTextWidth, bbox.width);
+        maxTextWidths[col] = Math.max(maxTextWidths[col], bbox.width);
       }
     });
 
+    // Compute column x offsets based on measured text widths
+    const colOffsets: number[] = [0];
+    for (let c = 1; c < cols; c++) {
+      colOffsets[c] =
+        colOffsets[c - 1] + swatchSize + textGap + maxTextWidths[c - 1] + columnGap;
+    }
+
+    // Position all items now that we know column widths
+    legendGroup.selectAll<SVGGElement, unknown>('.legend-item').each(function () {
+      const el = d3.select(this);
+      const row = parseInt(el.attr('data-row'), 10);
+      const col = parseInt(el.attr('data-col'), 10);
+      const x = legendX + legendPadding + colOffsets[col];
+      const y = legendY + legendPadding + row * rowHeight;
+      el.attr('transform', `translate(${x}, ${y})`);
+    });
+
     // Size the background
-    const bgWidth = legendPadding * 2 + swatchSize + textGap + maxTextWidth;
-    const bgHeight = legendPadding * 2 + categories.length * rowHeight - (rowHeight - swatchSize);
+    const lastCol = cols - 1;
+    const bgWidth =
+      legendPadding * 2 +
+      colOffsets[lastCol] +
+      swatchSize +
+      textGap +
+      maxTextWidths[lastCol];
+    const bgHeight = legendPadding * 2 + rows * rowHeight - (rowHeight - swatchSize);
 
     bgRect
       .attr('x', legendX)
