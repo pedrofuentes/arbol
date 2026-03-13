@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] — 2026-03-13
+
+### Security
+- **Replaced xlsx with exceljs** — `xlsx` 0.18.5 had high-severity prototype pollution (CVE-2023-30533) and ReDoS vulnerabilities with no fix on npm; replaced with actively-maintained `exceljs`
+
+### Changed
+- Bumped `vitest` and `@vitest/coverage-v8` from 4.0.18 to 4.1.0
+
 ## [1.7.0] — 2026-03-13
 
 ### Added
