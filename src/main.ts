@@ -34,6 +34,7 @@ import { SideBySideRenderer } from './renderer/side-by-side-renderer';
 import { FocusModeController } from './controllers/focus-mode';
 import { SelectionManager } from './controllers/selection-manager';
 import { SearchController } from './controllers/search-controller';
+import { announce } from './ui/announcer';
 import type { ComparisonState, VersionRecord } from './types';
 
 async function main(): Promise<void> {
@@ -302,6 +303,7 @@ async function main(): Promise<void> {
 
   // Initialize focus mode controller now that rerender is defined
   focusMode = new FocusModeController(store, renderer, rerender);
+  focusMode.onExit(() => announce('Showing full org'));
 
   // Theme toggle
   const themeManager = new ThemeManager();
@@ -317,6 +319,7 @@ async function main(): Promise<void> {
   });
   themeManager.onChange((theme: Theme) => {
     themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    announce(`Switched to ${theme} theme`);
   });
   headerRight.appendChild(themeBtn);
 
@@ -338,7 +341,7 @@ async function main(): Promise<void> {
   undoBtn.textContent = '↩';
   undoBtn.disabled = true;
   undoBtn.addEventListener('click', () => {
-    store.undo();
+    if (store.undo()) announce('Undo');
   });
   headerRight.insertBefore(undoBtn, themeBtn);
 
@@ -349,7 +352,7 @@ async function main(): Promise<void> {
   redoBtn.textContent = '↪';
   redoBtn.disabled = true;
   redoBtn.addEventListener('click', () => {
-    store.redo();
+    if (store.redo()) announce('Redo');
   });
   headerRight.insertBefore(redoBtn, themeBtn);
 
@@ -384,6 +387,7 @@ async function main(): Promise<void> {
       const name = prompt('Version name:');
       if (name?.trim()) {
         chartStore.saveVersion(name.trim(), store.getTree());
+        announce('Chart saved');
       }
     },
   });
@@ -404,7 +408,9 @@ async function main(): Promise<void> {
   searchInput.placeholder = 'Search people... (Ctrl+F)';
   headerCenter.appendChild(searchInput);
 
-  const search = new SearchController(searchInput, store, renderer);
+  const search = new SearchController(searchInput, store, renderer, 200, (count) => {
+    announce(count > 0 ? `${count} results found` : 'No results found');
+  });
 
   // Sidebar tabs
   const tabSwitcher = new TabSwitcher(sidebar, [
@@ -544,6 +550,7 @@ async function main(): Promise<void> {
       renderer.getZoomManager()?.fitToContent();
       formEditor.refresh();
       jsonEditor.refresh();
+      announce(`Switched to ${chart.name}`);
     },
     onVersionRestore: (tree) => {
       dismissVersionViewer();
@@ -618,10 +625,13 @@ async function main(): Promise<void> {
       selection.toggle(nodeId);
       syncSelectionToRenderer();
       updateSelectionIndicator();
+      announce(`${selection.count} people selected`);
     } else {
       // Regular click: clear multi-selection, highlight card only (no sidebar form)
       clearMultiSelection();
       renderer.setSelectedNode(nodeId);
+      const node = findNodeById(store.getTree(), nodeId);
+      if (node) announce(`Selected ${node.name}, ${node.title}`);
     }
   });
 
@@ -687,6 +697,7 @@ async function main(): Promise<void> {
           disabled: nodeIsLeaf || focusMode.focusedId === nodeId,
           action: () => {
             focusMode.enter(nodeId);
+            announce(`Focused on ${node.name} org`);
           },
         },
         {
@@ -739,7 +750,9 @@ async function main(): Promise<void> {
                 showDottedLineOption: true,
               });
               if (result) {
+                const targetNode = findNodeById(tree, result.managerId);
                 store.moveNode(nodeId, result.managerId, result.dottedLine);
+                announce(`${node.name} moved to ${targetNode?.name ?? 'new manager'}`);
               }
             } catch (e) {
               console.error('Operation failed:', e);
@@ -760,7 +773,10 @@ async function main(): Promise<void> {
                   confirmLabel: 'Remove',
                   danger: true,
                 });
-                if (confirmed) store.removeNode(nodeId);
+                if (confirmed) {
+                  store.removeNode(nodeId);
+                  announce(`${node.name} removed`);
+                }
               } else {
                 const allNodes = flattenTree(tree);
                 const descendants = flattenTree(node);
@@ -775,6 +791,7 @@ async function main(): Promise<void> {
                 });
                 if (result) {
                   store.removeNodeWithReassign(nodeId, result.managerId);
+                  announce(`${node.name} removed`);
                 }
               }
             } catch (e) {
@@ -839,6 +856,8 @@ async function main(): Promise<void> {
               });
               if (result) {
                 store.bulkMoveNodes(selectedArray, result.managerId);
+                const targetNode = findNodeById(store.getTree(), result.managerId);
+                announce(`${count} people moved to ${targetNode?.name ?? 'new manager'}`);
               }
             } catch (e) {
               console.error('Operation failed:', e);
@@ -884,6 +903,7 @@ async function main(): Promise<void> {
                       store.removeNode(id);
                     }
                   }
+                  announce(`${count} people removed`);
                 }
               } else {
                 // All leaves — simple confirm and bulk remove
@@ -895,6 +915,7 @@ async function main(): Promise<void> {
                 });
                 if (confirmed) {
                   store.bulkRemoveNodes(selectedArray);
+                  announce(`${count} people removed`);
                 }
               }
             } catch (e) {
@@ -1157,7 +1178,7 @@ async function main(): Promise<void> {
   shortcuts.register({
     key: 'z',
     ctrl: true,
-    handler: () => store.undo(),
+    handler: () => { if (store.undo()) announce('Undo'); },
     description: 'Undo',
   });
 
@@ -1165,14 +1186,14 @@ async function main(): Promise<void> {
     key: 'z',
     ctrl: true,
     shift: true,
-    handler: () => store.redo(),
+    handler: () => { if (store.redo()) announce('Redo'); },
     description: 'Redo',
   });
 
   shortcuts.register({
     key: 'y',
     ctrl: true,
-    handler: () => store.redo(),
+    handler: () => { if (store.redo()) announce('Redo'); },
     description: 'Redo (alt)',
   });
 
@@ -1223,6 +1244,12 @@ async function main(): Promise<void> {
       renderer.setSelectedNode(null);
     },
     description: 'Deselect / Clear search',
+  });
+
+  window.addEventListener('beforeunload', (e) => {
+    if (chartStore.isDirty(store.getTree())) {
+      e.preventDefault();
+    }
   });
 
   rerender();

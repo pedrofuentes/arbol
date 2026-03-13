@@ -6,6 +6,7 @@ import { showFocusBanner, dismissFocusBanner } from '../ui/focus-banner';
 
 export class FocusModeController {
   private focusedNodeId: string | null = null;
+  private exitCallback: (() => void) | null = null;
 
   constructor(
     private store: OrgStore,
@@ -21,6 +22,11 @@ export class FocusModeController {
     return this.focusedNodeId !== null;
   }
 
+  /** Register a callback invoked after exiting focus mode. */
+  onExit(cb: () => void): void {
+    this.exitCallback = cb;
+  }
+
   enter(nodeId: string): void {
     this.focusedNodeId = nodeId;
     this.onRender();
@@ -32,6 +38,7 @@ export class FocusModeController {
     dismissFocusBanner();
     this.onRender();
     this.renderer.getZoomManager()?.fitToContent();
+    this.exitCallback?.();
   }
 
   /** Silently clear focus without re-rendering (for use when switching charts, imports, etc.) */

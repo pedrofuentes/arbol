@@ -4,13 +4,16 @@ import { getMatchingNodeIds } from '../utils/search';
 
 export class SearchController {
   private searchTimeout: ReturnType<typeof setTimeout> | null = null;
+  private onResults: ((count: number) => void) | null;
 
   constructor(
     private input: HTMLInputElement,
     private store: OrgStore,
     private renderer: ChartRenderer,
     private debounceMs: number = 200,
+    onResults?: (count: number) => void,
   ) {
+    this.onResults = onResults ?? null;
     this.setup();
   }
 
@@ -27,6 +30,7 @@ export class SearchController {
       } else {
         const matchIds = getMatchingNodeIds(this.store.getTree(), query);
         this.renderer.setHighlightedNodes(matchIds.size > 0 ? matchIds : null);
+        this.onResults?.(matchIds.size);
       }
     }, this.debounceMs);
   };
