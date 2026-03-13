@@ -629,12 +629,12 @@ describe('pptx-exporter', () => {
       expect(opts.h).toBeCloseTo(22 * PX_TO_INCHES);
     });
 
-    it('scales down when chart exceeds max slide dimension', async () => {
+    it('keeps full scale for wide charts (no scale-down)', async () => {
       const wideNode = makeNode({ x: 0, y: 0, width: 6000, height: 22 });
       const layout = makeLayout({ nodes: [wideNode] });
       await exportToPptx(layout);
 
-      // Chart width = 6000px = 62.5 inches > 56" max → should scale down
+      // Chart width = 6000px → slide expands to fit at scale=1
       const shapeCalls = mockAddShape.mock.calls;
       const cardRect = shapeCalls.find((call: any) => {
         const opts = call[1];
@@ -642,7 +642,7 @@ describe('pptx-exporter', () => {
       });
       expect(cardRect).toBeDefined();
       const opts = cardRect![1] as any;
-      expect(opts.w).toBeLessThan(6000 * PX_TO_INCHES);
+      expect(opts.w).toBeCloseTo(6000 * PX_TO_INCHES, 1);
     });
 
     it('uses fit-to-slide when slideWidth/slideHeight explicitly provided', async () => {
