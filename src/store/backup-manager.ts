@@ -1,6 +1,7 @@
 import type { ChartRecord, VersionRecord } from '../types';
 import type { ChartDB } from './chart-db';
 import { APP_VERSION } from '../version';
+import { timestampedFilename } from '../utils/filename';
 
 // ── Backup format ────────────────────────────────────────────────────────────
 
@@ -65,14 +66,6 @@ function safeJsonParse(raw: string | null): unknown | null {
   }
 }
 
-function dateSuffix(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
 // ── Public API ───────────────────────────────────────────────────────────────
 
 export async function createBackup(db: ChartDB): Promise<ArbolBackup> {
@@ -106,7 +99,7 @@ export function downloadBackup(backup: ArbolBackup): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `arbol-backup-${dateSuffix()}.json`;
+  a.download = timestampedFilename('arbol-backup.json');
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

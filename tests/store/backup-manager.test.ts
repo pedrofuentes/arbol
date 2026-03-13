@@ -418,7 +418,7 @@ describe('BackupManager', () => {
       const appendSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => {
         if (node instanceof HTMLAnchorElement) {
           // Capture anchor properties before click
-          expect(node.download).toMatch(/^arbol-backup-\d{4}-\d{2}-\d{2}\.json$/);
+          expect(node.download).toMatch(/^\d{12}-arbol-backup\.json$/);
           expect(node.href).toBe('blob:test');
         }
         return node;

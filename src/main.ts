@@ -15,6 +15,7 @@ import { flattenTree, findNodeById, isLeaf, countLeaves, countManagersByLevel } 
 import { SAMPLE_ORG } from './data/sample-org';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
+import { timestampedFilename } from './utils/filename';
 import { APP_VERSION } from './version';
 import { showContextMenu, dismissContextMenu, ContextMenuItem } from './ui/context-menu';
 import { showInlineEditor, dismissInlineEditor } from './ui/inline-editor';
@@ -937,7 +938,7 @@ async function main(): Promise<void> {
     const chartName = activeChart?.name ?? 'org-chart';
     const safeChartName = chartName.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').toLowerCase();
     await exportToPptx(layout, {
-      fileName: `${safeChartName}.pptx`,
+      fileName: timestampedFilename(`${safeChartName}.pptx`),
       categories: categoryStore.getAll(),
       nameFontSize: rendererOpts.nameFontSize,
       titleFontSize: rendererOpts.titleFontSize,
