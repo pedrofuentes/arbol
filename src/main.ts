@@ -341,7 +341,7 @@ async function main(): Promise<void> {
   importContainer.appendChild(sampleBtn);
 
   const settingsContainer = tabSwitcher.getContentContainer('settings')!;
-  new SettingsEditor(settingsContainer, renderer, rerender, settingsStore, categoryStore);
+  new SettingsEditor(settingsContainer, renderer, rerender, settingsStore, categoryStore, chartDB);
 
   // Charts tab
   const chartsContainer = tabSwitcher.getContentContainer('charts')!;

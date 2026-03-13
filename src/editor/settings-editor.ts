@@ -4,6 +4,16 @@ import { SettingsStore, type PersistableSettings } from '../store/settings-store
 import { CategoryStore } from '../store/category-store';
 import { generateId } from '../utils/id';
 import { showConfirmDialog } from '../ui/confirm-dialog';
+import type { ChartDB } from '../store/chart-db';
+import {
+  createBackup,
+  downloadBackup,
+  readBackupFile,
+  restoreFullReplace,
+  restoreMerge,
+  getBackupSummary,
+} from '../store/backup-manager';
+import { showRestoreStrategyDialog } from '../ui/restore-dialog';
 
 const ARBOL_STORAGE_KEYS = [
   'arbol-org-data',
@@ -350,6 +360,7 @@ const ALL_SECTION_IDS = [
   'categories',
   ...SETTING_GROUPS.map((g) => sectionIdFromTitle(g.title)),
   'settings-io',
+  'backup-restore',
 ];
 
 export class SettingsEditor {
@@ -358,6 +369,7 @@ export class SettingsEditor {
   private rerenderCallback: () => void;
   private settingsStore: SettingsStore | null;
   private categoryStore: CategoryStore | null;
+  private chartDB: ChartDB | null;
 
   private static ACCORDION_STORAGE_KEY = 'arbol-accordion-state';
   private static DEFAULT_EXPANDED = new Set(['presets', 'categories']);
@@ -372,12 +384,14 @@ export class SettingsEditor {
     rerenderCallback: () => void,
     settingsStore?: SettingsStore,
     categoryStore?: CategoryStore,
+    chartDB?: ChartDB,
   ) {
     this.container = container;
     this.renderer = renderer;
     this.rerenderCallback = rerenderCallback;
     this.settingsStore = settingsStore ?? null;
     this.categoryStore = categoryStore ?? null;
+    this.chartDB = chartDB ?? null;
     this.loadAccordionState();
     this.build();
   }
@@ -678,6 +692,98 @@ export class SettingsEditor {
 
     this.container.appendChild(this.createAccordionSection('settings-io', 'Settings', ioBtnGroup));
 
+    // Backup & Restore section
+    if (this.chartDB) {
+      const backupBtnGroup = document.createElement('div');
+      backupBtnGroup.className = 'btn-group';
+
+      const backupBtn = document.createElement('button');
+      backupBtn.className = 'btn btn-secondary';
+      backupBtn.textContent = '💾 Create Backup';
+      backupBtn.addEventListener('click', async () => {
+        try {
+          const backup = await createBackup(this.chartDB!);
+          downloadBackup(backup);
+        } catch (e) {
+          alert(`Backup failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      });
+      backupBtnGroup.appendChild(backupBtn);
+
+      const restoreBtn = document.createElement('button');
+      restoreBtn.className = 'btn btn-secondary';
+      restoreBtn.textContent = '📂 Restore';
+      restoreBtn.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.style.display = 'none';
+        input.addEventListener('change', async () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          try {
+            const backup = await readBackupFile(file);
+            const summary = getBackupSummary(backup);
+            const date = new Date(summary.createdAt).toLocaleString();
+
+            const strategy = await showRestoreStrategyDialog({
+              chartCount: summary.chartCount,
+              versionCount: summary.versionCount,
+              backupDate: date,
+              appVersion: summary.appVersion,
+            });
+
+            if (strategy === 'cancel') return;
+
+            if (strategy === 'replace') {
+              // Auto-backup before destructive replace
+              try {
+                const autoBackup = await createBackup(this.chartDB!);
+                downloadBackup(autoBackup);
+              } catch {
+                // If auto-backup fails, still let the user proceed
+              }
+
+              const confirmed = await showConfirmDialog({
+                title: 'Replace All Data',
+                message:
+                  'This will permanently replace all existing charts, versions, and settings ' +
+                  'with the backup data. A backup of your current data has been downloaded.\n\n' +
+                  'Continue?',
+                confirmLabel: 'Replace everything',
+                danger: true,
+              });
+              if (!confirmed) return;
+
+              await restoreFullReplace(this.chartDB!, backup);
+              window.location.reload();
+            } else {
+              const result = await restoreMerge(this.chartDB!, backup);
+              await showConfirmDialog({
+                title: 'Merge Complete',
+                message:
+                  `Added ${result.chartsAdded} chart(s) and ${result.versionsAdded} version(s). ` +
+                  `Skipped ${result.chartsSkipped} chart(s) that already existed.\n\n` +
+                  'The page will reload to apply changes.',
+                confirmLabel: 'OK',
+              });
+              window.location.reload();
+            }
+          } catch (e) {
+            alert(`Restore failed: ${e instanceof Error ? e.message : String(e)}`);
+          }
+        });
+        document.body.appendChild(input);
+        input.click();
+        document.body.removeChild(input);
+      });
+      backupBtnGroup.appendChild(restoreBtn);
+
+      this.container.appendChild(
+        this.createAccordionSection('backup-restore', 'Backup & Restore', backupBtnGroup),
+      );
+    }
+
     // Clear All Data button
     const clearDataBtn = document.createElement('button');
     clearDataBtn.textContent = '🗑 Clear All Data';
@@ -700,6 +806,16 @@ export class SettingsEditor {
       clearDataBtn.style.borderColor = 'var(--border-default)';
     });
     clearDataBtn.addEventListener('click', async () => {
+      // Auto-backup before destructive clear
+      if (this.chartDB) {
+        try {
+          const autoBackup = await createBackup(this.chartDB);
+          downloadBackup(autoBackup);
+        } catch {
+          // If auto-backup fails, still allow the user to proceed
+        }
+      }
+
       const confirmed = await showConfirmDialog({
         title: 'Clear All Data',
         message:
