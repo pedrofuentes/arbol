@@ -60,6 +60,28 @@ describe('ContextMenu', () => {
       expect(spans[1].textContent).toBe('Edit');
     });
 
+    it('renders swatch circle when swatch color is provided', () => {
+      const items: ContextMenuItem[] = [{ label: 'Engineering', swatch: '#3b82f6', action: vi.fn() }];
+      showContextMenu({ x: 100, y: 100, items });
+      const btn = getMenuItems()[0];
+      const swatchEl = btn.querySelector('span[aria-hidden="true"]');
+      expect(swatchEl).not.toBeNull();
+      const spans = btn.querySelectorAll('span');
+      expect(spans).toHaveLength(2);
+      expect(spans[1].textContent).toBe('Engineering');
+    });
+
+    it('renders both icon and swatch when both provided', () => {
+      const items: ContextMenuItem[] = [{ label: 'Test', icon: '✓', swatch: '#ff0000', action: vi.fn() }];
+      showContextMenu({ x: 100, y: 100, items });
+      const btn = getMenuItems()[0];
+      const spans = btn.querySelectorAll('span');
+      expect(spans).toHaveLength(3);
+      expect(spans[0].textContent).toBe('✓');
+      expect(spans[1].getAttribute('aria-hidden')).toBe('true');
+      expect(spans[2].textContent).toBe('Test');
+    });
+
     it('uses position:fixed on the menu element', () => {
       showContextMenu({ x: 100, y: 100, items: makeItems() });
       const menu = getMenu();

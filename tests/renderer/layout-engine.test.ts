@@ -34,6 +34,8 @@ function defaultOpts(): ResolvedOptions {
     cardStroke: '#22c55e',
     cardStrokeWidth: 1,
     icContainerFill: '#e5e7eb',
+    nameColor: '#1e293b',
+    titleColor: '#64748b',
     showHeadcount: false,
     headcountBadgeColor: '#9ca3af',
     headcountBadgeTextColor: '#1e293b',

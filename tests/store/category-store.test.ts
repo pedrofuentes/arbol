@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CategoryStore } from '../../src/store/category-store';
+import { contrastingTextColor, contrastingTitleColor } from '../../src/utils/contrast';
 
 const STORAGE_KEY = 'arbol-categories';
 
@@ -26,9 +27,27 @@ vi.mock('../../src/utils/id', () => ({
 }));
 
 const DEFAULT_CATEGORIES = [
-  { id: 'open-position', label: 'Open Position', color: '#fbbf24' },
-  { id: 'offer-pending', label: 'Offer Pending', color: '#60a5fa' },
-  { id: 'future-start', label: 'Future Start', color: '#a78bfa' },
+  {
+    id: 'open-position',
+    label: 'Open Position',
+    color: '#fbbf24',
+    nameColor: contrastingTextColor('#fbbf24'),
+    titleColor: contrastingTitleColor('#fbbf24'),
+  },
+  {
+    id: 'offer-pending',
+    label: 'Offer Pending',
+    color: '#60a5fa',
+    nameColor: contrastingTextColor('#60a5fa'),
+    titleColor: contrastingTitleColor('#60a5fa'),
+  },
+  {
+    id: 'future-start',
+    label: 'Future Start',
+    color: '#a78bfa',
+    nameColor: contrastingTextColor('#a78bfa'),
+    titleColor: contrastingTitleColor('#a78bfa'),
+  },
 ];
 
 describe('CategoryStore', () => {
@@ -50,7 +69,11 @@ describe('CategoryStore', () => {
       const custom = [{ id: 'custom-1', label: 'Custom', color: '#ff0000' }];
       localStorageMock.setItem(STORAGE_KEY, JSON.stringify(custom));
 
-      expect(store.getAll()).toEqual(custom);
+      const result = store.getAll();
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('custom-1');
+      expect(result[0].nameColor).toBe(contrastingTextColor('#ff0000'));
+      expect(result[0].titleColor).toBe(contrastingTitleColor('#ff0000'));
     });
 
     it('returns defaults when localStorage has invalid JSON', () => {
@@ -72,16 +95,22 @@ describe('CategoryStore', () => {
         id: 'open-position',
         label: 'Open Position',
         color: '#fbbf24',
+        nameColor: contrastingTextColor('#fbbf24'),
+        titleColor: contrastingTitleColor('#fbbf24'),
       });
       expect(categories[1]).toEqual({
         id: 'offer-pending',
         label: 'Offer Pending',
         color: '#60a5fa',
+        nameColor: contrastingTextColor('#60a5fa'),
+        titleColor: contrastingTitleColor('#60a5fa'),
       });
       expect(categories[2]).toEqual({
         id: 'future-start',
         label: 'Future Start',
         color: '#a78bfa',
+        nameColor: contrastingTextColor('#a78bfa'),
+        titleColor: contrastingTitleColor('#a78bfa'),
       });
     });
 
@@ -110,7 +139,13 @@ describe('CategoryStore', () => {
     it('creates a new category with generated id', () => {
       const category = store.add('New Hire', '#00ff00');
 
-      expect(category).toEqual({ id: 'test-uuid-1234', label: 'New Hire', color: '#00ff00' });
+      expect(category).toEqual({
+        id: 'test-uuid-1234',
+        label: 'New Hire',
+        color: '#00ff00',
+        nameColor: contrastingTextColor('#00ff00'),
+        titleColor: contrastingTitleColor('#00ff00'),
+      });
     });
 
     it('saves to localStorage', () => {
@@ -288,6 +323,92 @@ describe('CategoryStore', () => {
 
       expect(listener1).toHaveBeenCalledTimes(1);
       expect(listener2).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('text color auto-contrast', () => {
+    it('add() auto-computes nameColor and titleColor from background', () => {
+      const cat = store.add('Dark BG', '#1e293b');
+      expect(cat.nameColor).toBe(contrastingTextColor('#1e293b'));
+      expect(cat.titleColor).toBe(contrastingTitleColor('#1e293b'));
+    });
+
+    it('add() gives light text for dark backgrounds', () => {
+      const cat = store.add('Dark', '#000000');
+      expect(cat.nameColor).toBe('#ffffff');
+      expect(cat.titleColor).toBe('#cbd5e1');
+    });
+
+    it('add() gives dark text for light backgrounds', () => {
+      const cat = store.add('Light', '#ffffff');
+      expect(cat.nameColor).toBe('#1e293b');
+      expect(cat.titleColor).toBe('#64748b');
+    });
+
+    it('update color recomputes text colors', () => {
+      store.update('open-position', { color: '#000000' });
+      const updated = store.getById('open-position')!;
+      expect(updated.nameColor).toBe('#ffffff');
+      expect(updated.titleColor).toBe('#cbd5e1');
+    });
+
+    it('update nameColor only does not recompute from background', () => {
+      store.update('open-position', { nameColor: '#abcdef' });
+      const updated = store.getById('open-position')!;
+      expect(updated.nameColor).toBe('#abcdef');
+    });
+
+    it('update titleColor only does not recompute from background', () => {
+      store.update('open-position', { titleColor: '#fedcba' });
+      const updated = store.getById('open-position')!;
+      expect(updated.titleColor).toBe('#fedcba');
+    });
+
+    it('update color + nameColor: color recomputes first, then nameColor overrides', () => {
+      store.update('open-position', { color: '#000000', nameColor: '#abcdef' });
+      const updated = store.getById('open-position')!;
+      expect(updated.nameColor).toBe('#abcdef');
+      expect(updated.titleColor).toBe('#cbd5e1');
+    });
+
+    it('throws on invalid nameColor format', () => {
+      expect(() => store.update('open-position', { nameColor: 'bad' })).toThrow(
+        'Invalid color format',
+      );
+    });
+
+    it('throws on invalid titleColor format', () => {
+      expect(() => store.update('open-position', { titleColor: 'bad' })).toThrow(
+        'Invalid color format',
+      );
+    });
+
+    it('migrates old categories without text colors on getAll()', () => {
+      const legacy = [{ id: 'legacy', label: 'Legacy', color: '#ff0000' }];
+      localStorageMock.setItem(STORAGE_KEY, JSON.stringify(legacy));
+
+      const result = store.getAll();
+      expect(result[0].nameColor).toBe(contrastingTextColor('#ff0000'));
+      expect(result[0].titleColor).toBe(contrastingTitleColor('#ff0000'));
+    });
+
+    it('preserves existing text colors from storage', () => {
+      const stored = [
+        { id: 'custom', label: 'Custom', color: '#ff0000', nameColor: '#111111', titleColor: '#222222' },
+      ];
+      localStorageMock.setItem(STORAGE_KEY, JSON.stringify(stored));
+
+      const result = store.getAll();
+      expect(result[0].nameColor).toBe('#111111');
+      expect(result[0].titleColor).toBe('#222222');
+    });
+
+    it('default categories all have text colors', () => {
+      const categories = store.getAll();
+      for (const cat of categories) {
+        expect(cat.nameColor).toBeDefined();
+        expect(cat.titleColor).toBeDefined();
+      }
     });
   });
 });

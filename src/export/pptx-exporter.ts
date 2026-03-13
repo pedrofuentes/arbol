@@ -42,6 +42,8 @@ export interface PptxExportOptions {
   icContainerFill?: string;
   linkColor?: string;
   linkWidth?: number;
+  nameColor?: string;
+  titleColor?: string;
   showHeadcount?: boolean;
   headcountBadgeColor?: string;
   headcountBadgeTextColor?: string;
@@ -65,6 +67,8 @@ interface ResolvedStyles {
   icContainerFill: string;
   linkColor: string;
   linkWidth: number;
+  nameColor: string;
+  titleColor: string;
   showHeadcount: boolean;
   headcountBadgeColor: string;
   headcountBadgeTextColor: string;
@@ -88,6 +92,8 @@ export function resolveStyles(options?: PptxExportOptions): ResolvedStyles {
     icContainerFill: stripHash(options?.icContainerFill ?? '#E5E7EB'),
     linkColor: stripHash(options?.linkColor ?? '#94A3B8'),
     linkWidth: (options?.linkWidth ?? 1.5) * PX_TO_PT,
+    nameColor: stripHash(options?.nameColor ?? '#1E293B'),
+    titleColor: stripHash(options?.titleColor ?? '#64748B'),
     showHeadcount: options?.showHeadcount ?? false,
     headcountBadgeColor: stripHash(options?.headcountBadgeColor ?? '#9CA3AF'),
     headcountBadgeTextColor: stripHash(options?.headcountBadgeTextColor ?? '#1E293B'),
@@ -175,10 +181,14 @@ function addNodeShape(
   const titleFontSize = Math.max(3, Math.round(styles.titleFontPt * scale));
 
   let fillColor = styles.cardFill;
+  let nodeNameColor = styles.nameColor;
+  let nodeTitleColor = styles.titleColor;
   if (node.categoryId && categories) {
     const cat = categories.find((c) => c.id === node.categoryId);
     if (cat) {
       fillColor = stripHash(cat.color);
+      if (cat.nameColor) nodeNameColor = stripHash(cat.nameColor);
+      if (cat.titleColor) nodeTitleColor = stripHash(cat.titleColor);
     }
   }
 
@@ -194,7 +204,7 @@ function addNodeShape(
   slide.addText(
     [
       { text: node.name, options: { bold: true, breakLine: true, fontSize: nameFontSize } },
-      { text: node.title, options: { fontSize: titleFontSize, color: '64748B' } },
+      { text: node.title, options: { fontSize: titleFontSize, color: nodeTitleColor } },
     ],
     {
       x: topLeft.x,
@@ -204,7 +214,7 @@ function addNodeShape(
       align: 'center',
       valign: 'middle',
       fontFace: DEFAULT_FONT_FAMILY,
-      color: '1E293B',
+      color: nodeNameColor,
       margin: 0,
     },
   );

@@ -109,6 +109,8 @@ describe('addCustomPreset', () => {
       linkColor: '#445566',
       linkWidth: 1,
       icContainerFill: '#778899',
+      nameColor: '#1e293b',
+      titleColor: '#64748b',
     },
   };
 
