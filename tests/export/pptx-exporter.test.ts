@@ -475,6 +475,92 @@ describe('pptx-exporter', () => {
     });
   });
 
+  // --- headcount badge ---
+  describe('headcount badge', () => {
+    it('renders badge shape and text when showHeadcount is true', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', descendantCount: 12 })],
+      });
+      await exportToPptx(layout, { showHeadcount: true });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      expect(roundRect).toBeDefined();
+      expect(roundRect![1].fill.color).toBe('9CA3AF');
+
+      const textCalls = mockAddText.mock.calls;
+      const badgeText = textCalls.find((call: any) => call[0] === '12');
+      expect(badgeText).toBeDefined();
+      expect(badgeText![1].bold).toBe(true);
+      expect(badgeText![1].color).toBe('1E293B');
+    });
+
+    it('does not render badge when showHeadcount is false', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', descendantCount: 12 })],
+      });
+      await exportToPptx(layout);
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      expect(roundRect).toBeUndefined();
+    });
+
+    it('does not render badge for IC nodes', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'ic', descendantCount: 5 })],
+      });
+      await exportToPptx(layout, { showHeadcount: true });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      expect(roundRect).toBeUndefined();
+    });
+
+    it('does not render badge when descendantCount is 0', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', descendantCount: 0 })],
+      });
+      await exportToPptx(layout, { showHeadcount: true });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      expect(roundRect).toBeUndefined();
+    });
+
+    it('does not render badge when descendantCount is undefined', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager' })],
+      });
+      await exportToPptx(layout, { showHeadcount: true });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      expect(roundRect).toBeUndefined();
+    });
+
+    it('uses custom badge colors', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', descendantCount: 5 })],
+      });
+      await exportToPptx(layout, {
+        showHeadcount: true,
+        headcountBadgeColor: '#FF0000',
+        headcountBadgeTextColor: '#00FF00',
+      });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      expect(roundRect).toBeDefined();
+      expect(roundRect![1].fill.color).toBe('FF0000');
+
+      const textCalls = mockAddText.mock.calls;
+      const badgeText = textCalls.find((call: any) => call[0] === '5');
+      expect(badgeText).toBeDefined();
+      expect(badgeText![1].color).toBe('00FF00');
+    });
+  });
+
   // --- resolveStyles ---
   describe('resolveStyles', () => {
     it('converts px font sizes to pt using PX_TO_PT', () => {

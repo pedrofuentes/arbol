@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import { OrgNode, ColorCategory } from '../types';
-import { computeLayout, LayoutResult } from './layout-engine';
+import { computeLayout, LayoutResult, LayoutNode } from './layout-engine';
 import { ZoomManager } from './zoom-manager';
 
 interface CardDatum {
@@ -46,6 +46,14 @@ export interface RendererOptions {
   cardStroke?: string;
   cardStrokeWidth?: number;
   icContainerFill?: string;
+  // Headcount badge
+  showHeadcount?: boolean;
+  headcountBadgeColor?: string;
+  headcountBadgeTextColor?: string;
+  headcountBadgeFontSize?: number;
+  headcountBadgeRadius?: number;
+  headcountBadgePadding?: number;
+  headcountBadgeHeight?: number;
   categories?: ColorCategory[];
 }
 
@@ -89,6 +97,13 @@ export class ChartRenderer {
       cardStroke: '#22c55e',
       cardStrokeWidth: 1,
       icContainerFill: '#e5e7eb',
+      showHeadcount: false,
+      headcountBadgeColor: '#9ca3af',
+      headcountBadgeTextColor: '#1e293b',
+      headcountBadgeFontSize: 9,
+      headcountBadgeRadius: 8,
+      headcountBadgePadding: 6,
+      headcountBadgeHeight: 18,
       categories: [] as ColorCategory[],
       ...options,
     };
@@ -221,6 +236,10 @@ export class ChartRenderer {
         nodeHeight,
         (d) => d.data.id,
       );
+
+      if (this.opts.showHeadcount && node.descendantCount && node.descendantCount > 0) {
+        this.renderHeadcountBadge(g, node);
+      }
     }
 
     if (this.hasRendered) {
@@ -335,6 +354,55 @@ export class ChartRenderer {
       .attr('fill', '#64748b')
       .attr('pointer-events', 'none')
       .text((d: CardDatum) => d.data.title);
+  }
+
+  private renderHeadcountBadge(
+    parentGroup: d3.Selection<SVGGElement, unknown, null, undefined>,
+    node: LayoutNode,
+  ): void {
+    const {
+      headcountBadgeColor,
+      headcountBadgeTextColor,
+      headcountBadgeFontSize,
+      headcountBadgeRadius,
+      headcountBadgePadding,
+      headcountBadgeHeight,
+      nodeHeight,
+    } = this.opts;
+
+    const text = String(node.descendantCount);
+    const estimatedTextWidth = text.length * headcountBadgeFontSize * 0.65;
+    const badgeWidth = estimatedTextWidth + headcountBadgePadding * 2;
+
+    // Position: right edge of card, vertically centered on the card border
+    const badgeX = node.width - badgeWidth / 2;
+    const badgeY = nodeHeight / 2 - headcountBadgeHeight / 2;
+
+    const badgeGroup = parentGroup.append('g').attr('class', 'headcount-badge');
+
+    badgeGroup
+      .append('rect')
+      .attr('x', badgeX)
+      .attr('y', badgeY)
+      .attr('width', badgeWidth)
+      .attr('height', headcountBadgeHeight)
+      .attr('rx', headcountBadgeRadius)
+      .attr('ry', headcountBadgeRadius)
+      .attr('fill', headcountBadgeColor)
+      .attr('pointer-events', 'none');
+
+    badgeGroup
+      .append('text')
+      .attr('x', badgeX + badgeWidth / 2)
+      .attr('y', badgeY + headcountBadgeHeight / 2)
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('font-family', 'Calibri, sans-serif')
+      .attr('font-size', `${headcountBadgeFontSize}px`)
+      .attr('font-weight', 'bold')
+      .attr('fill', headcountBadgeTextColor)
+      .attr('pointer-events', 'none')
+      .text(text);
   }
 
   private renderLegend(layout: LayoutResult): void {

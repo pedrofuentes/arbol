@@ -52,6 +52,13 @@ const DEFAULT_OPTS: ResolvedOptions = {
   cardStroke: '#cccccc',
   cardFill: '#ffffff',
   icContainerFill: '#f0f0f0',
+  showHeadcount: false,
+  headcountBadgeColor: '#9ca3af',
+  headcountBadgeTextColor: '#1e293b',
+  headcountBadgeFontSize: 9,
+  headcountBadgeRadius: 8,
+  headcountBadgePadding: 6,
+  headcountBadgeHeight: 18,
   categories: [],
 } as ResolvedOptions;
 
@@ -108,15 +115,15 @@ describe('SettingsEditor', () => {
   it('wraps each setting group in an accordion section', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const sections = container.querySelectorAll('.accordion-section');
-    // presets + 7 groups + settings-io = 9 (no categories without store)
-    expect(sections.length).toBe(9);
+    // presets + 8 groups + settings-io = 10 (no categories without store)
+    expect(sections.length).toBe(10);
   });
 
   it('setting group accordions have reset buttons', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const resetBtns = container.querySelectorAll('.accordion-reset');
-    // 7 setting groups have reset buttons
-    expect(resetBtns.length).toBe(7);
+    // 8 setting groups have reset buttons
+    expect(resetBtns.length).toBe(8);
   });
 
   it('reset button calls updateOptions with defaults and rerenders', () => {
@@ -628,6 +635,46 @@ describe('SettingsEditor', () => {
       for (const section of nonMatching) {
         expect(section.style.pointerEvents).toBe('none');
       }
+    });
+  });
+
+  describe('headcount badge settings', () => {
+    it('renders checkbox for showHeadcount', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const badgeSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
+        s.querySelector('.accordion-title')?.textContent === 'Headcount Badge',
+      )!;
+      expect(badgeSection).toBeDefined();
+      const checkbox = badgeSection.querySelector<HTMLInputElement>('input[type="checkbox"]');
+      expect(checkbox).not.toBeNull();
+      expect(checkbox!.checked).toBe(false);
+    });
+
+    it('toggling checkbox updates renderer', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const badgeSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
+        s.querySelector('.accordion-title')?.textContent === 'Headcount Badge',
+      )!;
+      const checkbox = badgeSection.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event('change'));
+      expect(renderer.updateOptions as ReturnType<typeof vi.fn>).toHaveBeenCalledWith(
+        expect.objectContaining({ showHeadcount: true }),
+      );
+      expect(rerenderCb).toHaveBeenCalled();
+    });
+
+    it('renders badge styling controls', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const badgeSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
+        s.querySelector('.accordion-title')?.textContent === 'Headcount Badge',
+      )!;
+      const rangeInputs = badgeSection.querySelectorAll('input[type="range"]');
+      const colorInputs = badgeSection.querySelectorAll('input[type="color"]');
+      // 4 range inputs: font size, height, radius, padding
+      expect(rangeInputs.length).toBe(4);
+      // 2 color inputs: badge color, badge text color
+      expect(colorInputs.length).toBe(2);
     });
   });
 });

@@ -34,6 +34,13 @@ function defaultOpts(): ResolvedOptions {
     cardStroke: '#22c55e',
     cardStrokeWidth: 1,
     icContainerFill: '#e5e7eb',
+    showHeadcount: false,
+    headcountBadgeColor: '#9ca3af',
+    headcountBadgeTextColor: '#1e293b',
+    headcountBadgeFontSize: 9,
+    headcountBadgeRadius: 8,
+    headcountBadgePadding: 6,
+    headcountBadgeHeight: 18,
     categories: [],
   };
 }
@@ -474,6 +481,60 @@ describe('computeLayout', () => {
       for (const link of verticalConnectors) {
         expect(link.dottedLine).toBeUndefined();
       }
+    });
+  });
+
+  describe('descendantCount', () => {
+    it('single node has descendantCount 0', () => {
+      const result = computeLayout(singleNode(), defaultOpts());
+      const managers = nodesByType(result, 'manager');
+      expect(managers).toHaveLength(1);
+      expect(managers[0].descendantCount).toBe(0);
+    });
+
+    it('M1 manager counts all ICs as descendants', () => {
+      const result = computeLayout(m1WithICs(), defaultOpts());
+      const root = nodesByType(result, 'manager').find((n) => n.id === 'root')!;
+      expect(root.descendantCount).toBe(3);
+    });
+
+    it('IC nodes do not have descendantCount set', () => {
+      const result = computeLayout(m1WithICs(), defaultOpts());
+      const ics = nodesByType(result, 'ic');
+      for (const ic of ics) {
+        expect(ic.descendantCount).toBeUndefined();
+      }
+    });
+
+    it('advisor nodes do not have descendantCount set', () => {
+      const result = computeLayout(managerWithPALsAndM1(), defaultOpts());
+      const pals = nodesByType(result, 'pal');
+      expect(pals.length).toBeGreaterThan(0);
+      for (const pal of pals) {
+        expect(pal.descendantCount).toBeUndefined();
+      }
+    });
+
+    it('multi-level tree has correct counts per manager', () => {
+      const result = computeLayout(mixedTree(), defaultOpts());
+      const managers = nodesByType(result, 'manager');
+
+      const root = managers.find((n) => n.id === 'root')!;
+      // root → pal1, cto, cfo; cto → pal-cto, vp; vp → ic1, ic2; cfo → ic3, ic4
+      // total descendants of root = 9
+      expect(root.descendantCount).toBe(9);
+
+      const cto = managers.find((n) => n.id === 'cto')!;
+      // cto → pal-cto, vp; vp → ic1, ic2 = 4 descendants
+      expect(cto.descendantCount).toBe(4);
+
+      const vp = managers.find((n) => n.id === 'vp')!;
+      // vp → ic1, ic2 = 2 descendants
+      expect(vp.descendantCount).toBe(2);
+
+      const cfo = managers.find((n) => n.id === 'cfo')!;
+      // cfo → ic3, ic4 = 2 descendants
+      expect(cfo.descendantCount).toBe(2);
     });
   });
 

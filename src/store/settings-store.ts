@@ -23,6 +23,13 @@ export interface PersistableSettings {
   cardStroke: string;
   cardStrokeWidth: number;
   icContainerFill: string;
+  showHeadcount: boolean;
+  headcountBadgeColor: string;
+  headcountBadgeTextColor: string;
+  headcountBadgeFontSize: number;
+  headcountBadgeRadius: number;
+  headcountBadgePadding: number;
+  headcountBadgeHeight: number;
 }
 
 export interface SettingsExport {
@@ -57,6 +64,10 @@ const NUMERIC_KEYS: ReadonlySet<string> = new Set<string>([
   'textGap',
   'linkWidth',
   'cardStrokeWidth',
+  'headcountBadgeFontSize',
+  'headcountBadgeRadius',
+  'headcountBadgePadding',
+  'headcountBadgeHeight',
 ]);
 
 const STRING_KEYS: ReadonlySet<string> = new Set<string>([
@@ -64,18 +75,27 @@ const STRING_KEYS: ReadonlySet<string> = new Set<string>([
   'cardFill',
   'cardStroke',
   'icContainerFill',
+  'headcountBadgeColor',
+  'headcountBadgeTextColor',
 ]);
 
 const DASH_PATTERN_KEYS: ReadonlySet<string> = new Set<string>(['dottedLineDash']);
 
-const ALL_KEYS = [...NUMERIC_KEYS, ...STRING_KEYS, ...DASH_PATTERN_KEYS];
+const BOOLEAN_KEYS: ReadonlySet<string> = new Set<string>(['showHeadcount']);
+
+const ALL_KEYS = [...NUMERIC_KEYS, ...STRING_KEYS, ...DASH_PATTERN_KEYS, ...BOOLEAN_KEYS];
 
 function validateSettings(obj: Record<string, unknown>): Partial<PersistableSettings> {
   const result: Record<string, unknown> = {};
   for (const key of ALL_KEYS) {
     if (!(key in obj)) continue;
     const val = obj[key];
-    if (NUMERIC_KEYS.has(key)) {
+    if (BOOLEAN_KEYS.has(key)) {
+      if (typeof val !== 'boolean') {
+        throw new Error(`Invalid value for "${key}": expected a boolean`);
+      }
+      result[key] = val;
+    } else if (NUMERIC_KEYS.has(key)) {
       if (typeof val !== 'number' || !isFinite(val)) {
         throw new Error(`Invalid value for "${key}": expected a finite number`);
       }

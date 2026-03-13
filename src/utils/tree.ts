@@ -101,6 +101,11 @@ export function countLeaves(root: OrgNode): number {
   return flattenTree(root).filter(isLeaf).length;
 }
 
+/** Counts all descendants of a node (children, grandchildren, etc.). Returns 0 for leaf nodes. */
+export function countDescendants(node: OrgNode): number {
+  return flattenTree(node).length - 1;
+}
+
 /** Computes the manager level of a node (bottom-up): M1 = only ICs, M2 = has M1s, etc. Returns 0 for leaves. */
 export function managerLevel(node: OrgNode): number {
   if (isLeaf(node)) return 0;

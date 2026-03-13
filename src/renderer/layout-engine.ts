@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import { OrgNode } from '../types';
-import { filterVisibleTree, stripM1Children } from '../utils/tree';
+import { filterVisibleTree, stripM1Children, countDescendants, findNodeById } from '../utils/tree';
 import type { ResolvedOptions } from './chart-renderer';
 
 export interface LayoutNode {
@@ -14,6 +14,7 @@ export interface LayoutNode {
   type: 'manager' | 'ic' | 'pal';
   collapsible?: boolean;
   categoryId?: string;
+  descendantCount?: number;
 }
 
 export interface LayoutLink {
@@ -296,6 +297,9 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
     const hasTreeChildren = !!(treeNode.data.children && treeNode.data.children.length > 0);
     const hasICs = icMap.has(treeNode.data.id);
 
+    const originalNode = findNodeById(root, treeNode.data.id);
+    const descCount = originalNode ? countDescendants(originalNode) : 0;
+
     nodes.push({
       id: treeNode.data.id,
       name: treeNode.data.name,
@@ -307,6 +311,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
       type: 'manager',
       collapsible: hasTreeChildren || hasICs,
       categoryId: treeNode.data.categoryId,
+      descendantCount: descCount,
     });
   }
 

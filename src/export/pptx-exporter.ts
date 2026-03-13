@@ -44,6 +44,13 @@ export interface PptxExportOptions {
   icContainerFill?: string;
   linkColor?: string;
   linkWidth?: number;
+  showHeadcount?: boolean;
+  headcountBadgeColor?: string;
+  headcountBadgeTextColor?: string;
+  headcountBadgeFontSize?: number;
+  headcountBadgeRadius?: number;
+  headcountBadgePadding?: number;
+  headcountBadgeHeight?: number;
 }
 
 export interface Point {
@@ -60,6 +67,13 @@ interface ResolvedStyles {
   icContainerFill: string;
   linkColor: string;
   linkWidth: number;
+  showHeadcount: boolean;
+  headcountBadgeColor: string;
+  headcountBadgeTextColor: string;
+  headcountBadgeFontSize: number;
+  headcountBadgeHeight: number;
+  headcountBadgePadding: number;
+  headcountBadgeRadius: number;
 }
 
 function stripHash(color: string): string {
@@ -76,6 +90,13 @@ export function resolveStyles(options?: PptxExportOptions): ResolvedStyles {
     icContainerFill: stripHash(options?.icContainerFill ?? '#E5E7EB'),
     linkColor: stripHash(options?.linkColor ?? '#94A3B8'),
     linkWidth: (options?.linkWidth ?? 1.5) * PX_TO_PT,
+    showHeadcount: options?.showHeadcount ?? false,
+    headcountBadgeColor: stripHash(options?.headcountBadgeColor ?? '#9CA3AF'),
+    headcountBadgeTextColor: stripHash(options?.headcountBadgeTextColor ?? '#1E293B'),
+    headcountBadgeFontSize: Math.max(3, Math.round((options?.headcountBadgeFontSize ?? 9) * PX_TO_PT)),
+    headcountBadgeHeight: options?.headcountBadgeHeight ?? 18,
+    headcountBadgePadding: options?.headcountBadgePadding ?? 6,
+    headcountBadgeRadius: options?.headcountBadgeRadius ?? 8,
   };
 }
 
@@ -189,6 +210,46 @@ function addNodeShape(
       margin: 0,
     },
   );
+
+  // Headcount badge
+  if (
+    styles.showHeadcount &&
+    node.descendantCount != null &&
+    node.descendantCount > 0 &&
+    node.type === 'manager'
+  ) {
+    const badgeText = String(node.descendantCount);
+    const badgeFontSize = Math.max(3, Math.round(styles.headcountBadgeFontSize * scale));
+    const badgeH = node.height * 0.5 * scale * PX_TO_INCHES;
+    const estimatedTextWidth = badgeText.length * styles.headcountBadgeFontSize * 0.65;
+    const badgePxWidth = estimatedTextWidth + styles.headcountBadgePadding * 2;
+    const badgeW = badgePxWidth * scale * PX_TO_INCHES;
+
+    const badgeX = topLeft.x + w - badgeW / 2;
+    const badgeY = topLeft.y + h / 2 - badgeH / 2;
+
+    slide.addShape('roundRect', {
+      x: badgeX,
+      y: badgeY,
+      w: badgeW,
+      h: badgeH,
+      fill: { color: styles.headcountBadgeColor },
+      rectRadius: styles.headcountBadgeRadius * scale * PX_TO_INCHES,
+    });
+
+    slide.addText(badgeText, {
+      x: badgeX,
+      y: badgeY,
+      w: badgeW,
+      h: badgeH,
+      align: 'center',
+      valign: 'middle',
+      fontFace: DEFAULT_FONT_FAMILY,
+      fontSize: badgeFontSize,
+      bold: true,
+      color: styles.headcountBadgeTextColor,
+    });
+  }
 }
 
 function addICContainer(
