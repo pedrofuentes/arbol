@@ -540,6 +540,71 @@ describe('ChartStore', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // wouldReplaceCategories
+  // ---------------------------------------------------------------------------
+
+  describe('wouldReplaceCategories', () => {
+    function makeBundle(overrides?: Partial<ChartBundle>): ChartBundle {
+      return {
+        format: 'arbol-chart',
+        version: 1,
+        chart: {
+          name: 'Bundle Chart',
+          workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+          categories: [{ id: 'cat-1', label: 'Open', color: '#ff0000' }],
+        },
+        versions: [],
+        ...overrides,
+      };
+    }
+
+    it('returns false when no active chart', async () => {
+      const freshStore = new ChartStore(db);
+      const result = await freshStore.wouldReplaceCategories(makeBundle());
+      expect(result).toBe(false);
+    });
+
+    it('returns false when active chart has no categories', async () => {
+      await store.initialize();
+      // Default chart has empty categories
+      const result = await store.wouldReplaceCategories(makeBundle());
+      expect(result).toBe(false);
+    });
+
+    it('returns true when bundle has no categories but chart does', async () => {
+      await store.createChartFromTree('Categorized', makeTree(), makeCategories());
+      const bundle = makeBundle({
+        chart: { name: 'No Cats', workingTree: { id: 'r', name: 'Root', title: 'CEO' }, categories: [] },
+      });
+      const result = await store.wouldReplaceCategories(bundle);
+      expect(result).toBe(true);
+    });
+
+    it('returns false when categories are identical', async () => {
+      const cats = makeCategories();
+      await store.createChartFromTree('Same', makeTree(), cats);
+      const bundle = makeBundle({
+        chart: { name: 'Same', workingTree: { id: 'r', name: 'Root', title: 'CEO' }, categories: cats },
+      });
+      const result = await store.wouldReplaceCategories(bundle);
+      expect(result).toBe(false);
+    });
+
+    it('returns true when categories differ', async () => {
+      await store.createChartFromTree('Chart', makeTree(), makeCategories());
+      const bundle = makeBundle({
+        chart: {
+          name: 'Different',
+          workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+          categories: [{ id: 'cat-99', label: 'New Hire', color: '#00ff00' }],
+        },
+      });
+      const result = await store.wouldReplaceCategories(bundle);
+      expect(result).toBe(true);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Bundle import
   // ---------------------------------------------------------------------------
 

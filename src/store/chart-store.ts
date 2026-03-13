@@ -344,6 +344,18 @@ export class ChartStore extends EventEmitter {
   }
 
   // ---------------------------------------------------------------------------
+  // Category comparison
+  // ---------------------------------------------------------------------------
+
+  async wouldReplaceCategories(bundle: ChartBundle): Promise<boolean> {
+    if (!this.activeChartId) return false;
+    const chart = await this.db.getChart(this.activeChartId);
+    if (!chart || chart.categories.length === 0) return false;
+    if (bundle.chart.categories.length === 0) return true;
+    return JSON.stringify(chart.categories) !== JSON.stringify(bundle.chart.categories);
+  }
+
+  // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
 

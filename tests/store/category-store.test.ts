@@ -1,26 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest';
 import { CategoryStore } from '../../src/store/category-store';
 import { contrastingTextColor, contrastingTitleColor } from '../../src/utils/contrast';
 
 const STORAGE_KEY = 'arbol-categories';
 
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: vi.fn(() => {
-      store = {};
-    }),
-  };
-})();
-
-Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
+let setItemSpy: ReturnType<typeof vi.spyOn>;
 
 vi.mock('../../src/utils/id', () => ({
   generateId: vi.fn(() => 'test-uuid-1234'),
@@ -50,11 +34,19 @@ const DEFAULT_CATEGORIES = [
   },
 ];
 
+beforeAll(() => {
+  setItemSpy = vi.spyOn(localStorage, 'setItem');
+});
+
+afterAll(() => {
+  setItemSpy.mockRestore();
+});
+
 describe('CategoryStore', () => {
   let store: CategoryStore;
 
   beforeEach(() => {
-    localStorageMock.clear();
+    localStorage.clear();
     vi.clearAllMocks();
     store = new CategoryStore();
   });
@@ -67,7 +59,7 @@ describe('CategoryStore', () => {
 
     it('returns stored categories when localStorage has data', () => {
       const custom = [{ id: 'custom-1', label: 'Custom', color: '#ff0000' }];
-      localStorageMock.setItem(STORAGE_KEY, JSON.stringify(custom));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(custom));
 
       const result = store.getAll();
       expect(result).toHaveLength(1);
@@ -77,13 +69,13 @@ describe('CategoryStore', () => {
     });
 
     it('returns defaults when localStorage has invalid JSON', () => {
-      localStorageMock.setItem(STORAGE_KEY, '{{not valid json');
+      localStorage.setItem(STORAGE_KEY, '{{not valid json');
 
       expect(store.getAll()).toEqual(DEFAULT_CATEGORIES);
     });
 
     it('returns defaults when localStorage has non-array data', () => {
-      localStorageMock.setItem(STORAGE_KEY, JSON.stringify({ not: 'array' }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ not: 'array' }));
 
       expect(store.getAll()).toEqual(DEFAULT_CATEGORIES);
     });
@@ -117,7 +109,7 @@ describe('CategoryStore', () => {
     it('does not auto-save defaults to localStorage', () => {
       store.getAll();
 
-      expect(localStorageMock.setItem).not.toHaveBeenCalled();
+      expect(setItemSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -151,7 +143,7 @@ describe('CategoryStore', () => {
     it('saves to localStorage', () => {
       store.add('New Hire', '#00ff00');
 
-      const stored = JSON.parse(localStorageMock.setItem.mock.calls[0][1]);
+      const stored = JSON.parse(setItemSpy.mock.calls[0][1] as string);
       expect(stored).toHaveLength(4); // 3 defaults + 1 new
       expect(stored[3].label).toBe('New Hire');
     });
@@ -239,8 +231,8 @@ describe('CategoryStore', () => {
     it('saves to localStorage', () => {
       store.update('open-position', { label: 'Vacant' });
 
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(STORAGE_KEY, expect.any(String));
-      const stored = JSON.parse(localStorageMock.setItem.mock.calls[0][1]);
+      expect(setItemSpy).toHaveBeenCalledWith(STORAGE_KEY, expect.any(String));
+      const stored = JSON.parse(setItemSpy.mock.calls[0][1] as string);
       const updated = stored.find((c: { id: string }) => c.id === 'open-position');
       expect(updated.label).toBe('Vacant');
     });
@@ -271,7 +263,7 @@ describe('CategoryStore', () => {
     it('saves to localStorage', () => {
       store.remove('open-position');
 
-      expect(localStorageMock.setItem).toHaveBeenCalled();
+      expect(setItemSpy).toHaveBeenCalled();
     });
   });
 
@@ -385,7 +377,7 @@ describe('CategoryStore', () => {
 
     it('migrates old categories without text colors on getAll()', () => {
       const legacy = [{ id: 'legacy', label: 'Legacy', color: '#ff0000' }];
-      localStorageMock.setItem(STORAGE_KEY, JSON.stringify(legacy));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(legacy));
 
       const result = store.getAll();
       expect(result[0].nameColor).toBe(contrastingTextColor('#ff0000'));
@@ -396,7 +388,7 @@ describe('CategoryStore', () => {
       const stored = [
         { id: 'custom', label: 'Custom', color: '#ff0000', nameColor: '#111111', titleColor: '#222222' },
       ];
-      localStorageMock.setItem(STORAGE_KEY, JSON.stringify(stored));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
 
       const result = store.getAll();
       expect(result[0].nameColor).toBe('#111111');

@@ -235,6 +235,36 @@ describe('ChartDB', () => {
     });
   });
 
+  describe('error paths', () => {
+    it('getAllCharts throws "Database not open" after close', () => {
+      db.close();
+      expect(() => db.getAllCharts()).toThrow('Database not open');
+    });
+
+    it('putChart throws "Database not open" after close', () => {
+      db.close();
+      expect(() => db.putChart(makeChart())).toThrow('Database not open');
+    });
+
+    it('putVersionsBatch resolves immediately for empty array', async () => {
+      await expect(db.putVersionsBatch([])).resolves.toBeUndefined();
+    });
+
+    it('putVersionsBatch with multiple items writes them all', async () => {
+      const versions = [
+        makeVersion({ id: 'v-a', chartId: 'chart-1', name: 'Version A' }),
+        makeVersion({ id: 'v-b', chartId: 'chart-1', name: 'Version B' }),
+        makeVersion({ id: 'v-c', chartId: 'chart-1', name: 'Version C' }),
+      ];
+      await db.putVersionsBatch(versions);
+
+      const stored = await db.getVersionsByChart('chart-1');
+      expect(stored).toHaveLength(3);
+      const ids = stored.map((v) => v.id).sort();
+      expect(ids).toEqual(['v-a', 'v-b', 'v-c']);
+    });
+  });
+
   describe('Chart name uniqueness', () => {
     it('isChartNameTaken returns false when name is not taken', async () => {
       const result = await db.isChartNameTaken('Unused Name');

@@ -1,24 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SettingsStore, PersistableSettings } from '../../src/store/settings-store';
 
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: vi.fn(() => {
-      store = {};
-    }),
-  };
-})();
-
-Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
-
 const DEFAULTS: PersistableSettings = {
   nodeWidth: 160,
   nodeHeight: 34,
@@ -65,7 +47,7 @@ describe('SettingsStore', () => {
   let store: SettingsStore;
 
   beforeEach(() => {
-    localStorageMock.clear();
+    localStorage.clear();
     vi.clearAllMocks();
     store = new SettingsStore();
   });
@@ -108,7 +90,7 @@ describe('SettingsStore', () => {
     });
 
     it('returns defaults when localStorage contains invalid JSON', () => {
-      localStorageMock.setItem('arbol-settings', 'not-json');
+      localStorage.setItem('arbol-settings', 'not-json');
       const loaded = store.load(DEFAULTS);
       expect(loaded).toEqual(DEFAULTS);
     });
@@ -297,7 +279,7 @@ describe('SettingsStore', () => {
     it('defaults legendRows to 0 when not in saved data', () => {
       // Simulate old settings without legendRows
       const oldSettings = { version: 1, settings: { nodeWidth: 180 } };
-      localStorageMock.setItem('arbol-settings', JSON.stringify(oldSettings));
+      localStorage.setItem('arbol-settings', JSON.stringify(oldSettings));
       const loaded = store.load(DEFAULTS);
       expect(loaded.legendRows).toBe(0);
       expect(loaded.nodeWidth).toBe(180);
@@ -333,7 +315,7 @@ describe('SettingsStore', () => {
 
     it('defaults textAlign to center when not in saved data', () => {
       const oldSettings = { version: 1, settings: { nodeWidth: 180 } };
-      localStorageMock.setItem('arbol-settings', JSON.stringify(oldSettings));
+      localStorage.setItem('arbol-settings', JSON.stringify(oldSettings));
       const loaded = store.load(DEFAULTS);
       expect(loaded.textAlign).toBe('center');
     });
@@ -356,7 +338,7 @@ describe('SettingsStore', () => {
 
     it('defaults to 0 when not in saved data', () => {
       const oldSettings = { version: 1, settings: { nodeWidth: 180 } };
-      localStorageMock.setItem('arbol-settings', JSON.stringify(oldSettings));
+      localStorage.setItem('arbol-settings', JSON.stringify(oldSettings));
       const loaded = store.load(DEFAULTS);
       expect(loaded.cardBorderRadius).toBe(0);
     });
@@ -385,7 +367,7 @@ describe('SettingsStore', () => {
 
     it('defaults to Calibri when not in saved data', () => {
       const oldSettings = { version: 1, settings: { nodeWidth: 180 } };
-      localStorageMock.setItem('arbol-settings', JSON.stringify(oldSettings));
+      localStorage.setItem('arbol-settings', JSON.stringify(oldSettings));
       const loaded = store.load(DEFAULTS);
       expect(loaded.fontFamily).toBe('Calibri');
     });

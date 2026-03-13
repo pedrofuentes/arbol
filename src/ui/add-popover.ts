@@ -1,3 +1,5 @@
+import { createDismissible } from './dismissible';
+
 export interface AddPopoverOptions {
   anchor: DOMRect;
   parentName?: string;
@@ -5,22 +7,14 @@ export interface AddPopoverOptions {
   onCancel: () => void;
 }
 
-let activePopover: HTMLDivElement | null = null;
-let activeCleanup: (() => void) | null = null;
+const dismissible = createDismissible();
 
 export function dismissAddPopover(): void {
-  if (activePopover && document.body.contains(activePopover)) {
-    document.body.removeChild(activePopover);
-  }
-  if (activeCleanup) {
-    activeCleanup();
-    activeCleanup = null;
-  }
-  activePopover = null;
+  dismissible.dismiss();
 }
 
 export function showAddPopover(options: AddPopoverOptions): void {
-  dismissAddPopover();
+  dismissible.dismiss();
 
   const { anchor, parentName, onAdd, onCancel } = options;
 
@@ -175,12 +169,6 @@ export function showAddPopover(options: AddPopoverOptions): void {
     document.addEventListener('mousedown', outsideHandler);
   }, 0);
 
-  // Cleanup function for event listeners
-  activeCleanup = () => {
-    document.removeEventListener('keydown', escHandler);
-    document.removeEventListener('mousedown', outsideHandler);
-  };
-
   // Inject animation keyframes if not already present
   if (!document.getElementById('popover-fade-style')) {
     const style = document.createElement('style');
@@ -194,8 +182,14 @@ export function showAddPopover(options: AddPopoverOptions): void {
     document.head.appendChild(style);
   }
 
-  activePopover = container;
   document.body.appendChild(container);
+  dismissible.activate(container);
+
+  // Register cleanup AFTER activate so dismiss() inside activate doesn't clear them
+  dismissible.onDismiss(() => {
+    document.removeEventListener('keydown', escHandler);
+    document.removeEventListener('mousedown', outsideHandler);
+  });
 
   // Viewport-aware positioning: below anchor by default, above if no room
   const popoverHeight = container.offsetHeight;

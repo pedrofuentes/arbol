@@ -1,20 +1,23 @@
+import { createDismissible } from './dismissible';
+
 export interface FocusBannerOptions {
   name: string;
   container: HTMLElement;
   onExit: () => void;
 }
 
-let activeBanner: HTMLDivElement | null = null;
+const dismissible = createDismissible();
 
 export function dismissFocusBanner(): void {
-  if (activeBanner && activeBanner.parentElement) {
-    activeBanner.parentElement.removeChild(activeBanner);
-  }
-  activeBanner = null;
+  dismissible.dismiss();
+}
+
+export function isFocusBannerActive(): boolean {
+  return dismissible.isActive();
 }
 
 export function showFocusBanner(options: FocusBannerOptions): void {
-  dismissFocusBanner();
+  dismissible.dismiss();
 
   const banner = document.createElement('div');
   banner.setAttribute('role', 'status');
@@ -87,6 +90,6 @@ export function showFocusBanner(options: FocusBannerOptions): void {
   });
   banner.appendChild(exitBtn);
 
+  dismissible.activate(banner);
   options.container.appendChild(banner);
-  activeBanner = banner;
 }
