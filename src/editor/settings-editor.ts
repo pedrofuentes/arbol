@@ -4,6 +4,7 @@ import { SettingsStore, type PersistableSettings } from '../store/settings-store
 import { CategoryStore } from '../store/category-store';
 import { generateId } from '../utils/id';
 import { showConfirmDialog } from '../ui/confirm-dialog';
+import { showToast } from '../ui/toast';
 import type { ChartDB } from '../store/chart-db';
 import {
   createBackup,
@@ -695,7 +696,7 @@ export class SettingsEditor {
         const file = input.files?.[0];
         if (!file || !this.settingsStore) return;
         if (file.size > 1 * 1024 * 1024) {
-          alert('Settings file too large (max 1MB).');
+          showToast('Settings file too large (max 1MB).', 'error');
           return;
         }
         const reader = new FileReader();
@@ -726,7 +727,7 @@ export class SettingsEditor {
             this.rerenderCallback();
             this.build();
           } catch (e) {
-            alert(`Import failed: ${e instanceof Error ? e.message : String(e)}`);
+            showToast(`Import failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
           }
         };
         reader.readAsText(file);
@@ -752,7 +753,7 @@ export class SettingsEditor {
           const backup = await createBackup(this.chartDB!);
           downloadBackup(backup);
         } catch (e) {
-          alert(`Backup failed: ${e instanceof Error ? e.message : String(e)}`);
+          showToast(`Backup failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
         }
       });
       backupBtnGroup.appendChild(backupBtn);
@@ -817,7 +818,7 @@ export class SettingsEditor {
               window.location.reload();
             }
           } catch (e) {
-            alert(`Restore failed: ${e instanceof Error ? e.message : String(e)}`);
+            showToast(`Restore failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
           }
         });
         document.body.appendChild(input);
@@ -1107,7 +1108,7 @@ export class SettingsEditor {
       card.appendChild(name);
 
       if (preset.isCustom) {
-        const deleteBtn = document.createElement('span');
+        const deleteBtn = document.createElement('button');
         deleteBtn.className = 'preset-delete';
         deleteBtn.textContent = '×';
         deleteBtn.setAttribute('aria-label', `Delete preset ${preset.name}`);
@@ -1115,6 +1116,7 @@ export class SettingsEditor {
           position:absolute;top:2px;right:4px;font-size:13px;line-height:1;
           color:var(--text-tertiary);cursor:pointer;opacity:0;
           transition:opacity 120ms ease;padding:0 2px;
+          border:none;background:none;font-family:inherit;
         `;
         deleteBtn.addEventListener('click', (e) => {
           e.stopPropagation();

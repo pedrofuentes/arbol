@@ -128,7 +128,7 @@ describe('InlineEditor', () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it('empty name triggers onCancel instead of onSave', () => {
+  it('empty name shows error message instead of saving', () => {
     const onSave = vi.fn();
     const onCancel = vi.fn();
     showInlineEditor(defaultOptions({ onSave, onCancel }));
@@ -137,11 +137,14 @@ describe('InlineEditor', () => {
     nameInput.value = '';
     nameInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
-    expect(onCancel).toHaveBeenCalled();
     expect(onSave).not.toHaveBeenCalled();
+    expect(onCancel).not.toHaveBeenCalled();
+    const errorMsg = document.querySelector('.error-msg');
+    expect(errorMsg).not.toBeNull();
+    expect(errorMsg!.textContent).toBe('Name is required');
   });
 
-  it('whitespace-only name triggers onCancel instead of onSave', () => {
+  it('whitespace-only name shows error message instead of saving', () => {
     const onSave = vi.fn();
     const onCancel = vi.fn();
     showInlineEditor(defaultOptions({ onSave, onCancel }));
@@ -150,8 +153,11 @@ describe('InlineEditor', () => {
     nameInput.value = '   ';
     nameInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
-    expect(onCancel).toHaveBeenCalled();
     expect(onSave).not.toHaveBeenCalled();
+    expect(onCancel).not.toHaveBeenCalled();
+    const errorMsg = document.querySelector('.error-msg');
+    expect(errorMsg).not.toBeNull();
+    expect(errorMsg!.textContent).toBe('Name is required');
   });
 
   it('dismissInlineEditor removes the editor from DOM', () => {

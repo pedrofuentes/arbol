@@ -21,6 +21,8 @@ import { showInlineEditor, dismissInlineEditor } from './ui/inline-editor';
 import { showAddPopover, dismissAddPopover } from './ui/add-popover';
 import { showManagerPicker } from './ui/manager-picker';
 import { showConfirmDialog } from './ui/confirm-dialog';
+import { showToast } from './ui/toast';
+import { showInputDialog } from './ui/input-dialog';
 import { showCategoryLegend, dismissCategoryLegend } from './ui/category-legend';
 import { ChartDB } from './store/chart-db';
 import { ChartStore } from './store/chart-store';
@@ -383,8 +385,13 @@ async function main(): Promise<void> {
       const id = chartStore.getActiveChartId();
       if (id) await chartStore.renameChart(id, newName);
     },
-    onSaveVersion: () => {
-      const name = prompt('Version name:');
+    onSaveVersion: async () => {
+      const name = await showInputDialog({
+        title: 'Save Version',
+        label: 'Version name',
+        placeholder: 'e.g. Q1 2024 Plan',
+        maxLength: 100,
+      });
       if (name?.trim()) {
         chartStore.saveVersion(name.trim(), store.getTree());
         announce('Chart saved');
@@ -755,7 +762,7 @@ async function main(): Promise<void> {
                 announce(`${node.name} moved to ${targetNode?.name ?? 'new manager'}`);
               }
             } catch (e) {
-              console.error('Operation failed:', e);
+              showToast(e instanceof Error ? e.message : 'Operation failed', 'error');
             }
           },
         },
@@ -769,7 +776,7 @@ async function main(): Promise<void> {
               if (nodeIsLeaf) {
                 const confirmed = await showConfirmDialog({
                   title: 'Remove Person',
-                  message: `Remove "${node.name}"? This cannot be undone (but you can use Ctrl+Z to undo).`,
+                  message: `Remove "${node.name}"? You can undo this with Ctrl+Z.`,
                   confirmLabel: 'Remove',
                   danger: true,
                 });
@@ -795,7 +802,7 @@ async function main(): Promise<void> {
                 }
               }
             } catch (e) {
-              console.error('Operation failed:', e);
+              showToast(e instanceof Error ? e.message : 'Operation failed', 'error');
             }
           },
         },
@@ -860,7 +867,7 @@ async function main(): Promise<void> {
                 announce(`${count} people moved to ${targetNode?.name ?? 'new manager'}`);
               }
             } catch (e) {
-              console.error('Operation failed:', e);
+              showToast(e instanceof Error ? e.message : 'Operation failed', 'error');
             }
           },
         },
@@ -919,7 +926,7 @@ async function main(): Promise<void> {
                 }
               }
             } catch (e) {
-              console.error('Operation failed:', e);
+              showToast(e instanceof Error ? e.message : 'Operation failed', 'error');
             }
           },
         },

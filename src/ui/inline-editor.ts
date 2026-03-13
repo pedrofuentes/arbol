@@ -1,3 +1,5 @@
+import { trapFocus } from './dialog-utils';
+
 export interface InlineEditorOptions {
   rect: DOMRect;
   name: string;
@@ -8,6 +10,7 @@ export interface InlineEditorOptions {
 
 let activeEditor: HTMLDivElement | null = null;
 let activeCleanup: (() => void) | null = null;
+let previouslyFocused: Element | null = null;
 
 export function dismissInlineEditor(): void {
   if (activeEditor && document.body.contains(activeEditor)) {
@@ -18,15 +21,23 @@ export function dismissInlineEditor(): void {
     activeCleanup = null;
   }
   activeEditor = null;
+  if (previouslyFocused && previouslyFocused instanceof HTMLElement) {
+    previouslyFocused.focus();
+  }
+  previouslyFocused = null;
 }
 
 export function showInlineEditor(options: InlineEditorOptions): void {
   // Only one editor at a time
   dismissInlineEditor();
 
+  previouslyFocused = document.activeElement;
+
   const { rect, name, title, onSave, onCancel } = options;
 
   const container = document.createElement('div');
+  container.setAttribute('role', 'dialog');
+  container.setAttribute('aria-label', 'Edit person');
   container.style.position = 'fixed';
   container.style.left = `${rect.left}px`;
   container.style.top = `${rect.top}px`;
@@ -94,17 +105,29 @@ export function showInlineEditor(options: InlineEditorOptions): void {
   container.appendChild(titleInput);
   container.appendChild(buttonRow);
 
+  const errorMsg = document.createElement('div');
+  errorMsg.className = 'error-msg';
+  errorMsg.setAttribute('role', 'alert');
+  errorMsg.style.marginTop = 'var(--space-1)';
+  errorMsg.style.minHeight = '0';
+  container.appendChild(errorMsg);
+
+  nameInput.addEventListener('input', () => {
+    errorMsg.textContent = '';
+  });
+
   let dismissed = false;
 
   const save = () => {
     if (dismissed) return;
-    dismissed = true;
     const trimmedName = nameInput.value.trim();
     if (!trimmedName) {
-      onCancel();
-    } else {
-      onSave(trimmedName, titleInput.value.trim());
+      errorMsg.textContent = 'Name is required';
+      nameInput.focus();
+      return;
     }
+    dismissed = true;
+    onSave(trimmedName, titleInput.value.trim());
     dismissInlineEditor();
   };
 
@@ -140,7 +163,10 @@ export function showInlineEditor(options: InlineEditorOptions): void {
     document.addEventListener('mousedown', onClickOutside);
   });
 
+  const removeTrap = trapFocus(container);
+
   const cleanup = () => {
+    removeTrap();
     nameInput.removeEventListener('keydown', onKeyDown);
     titleInput.removeEventListener('keydown', onKeyDown);
     saveBtn.removeEventListener('click', save);

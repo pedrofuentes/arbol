@@ -1,3 +1,5 @@
+import { showToast } from './toast';
+
 export interface ChartNameHeaderOptions {
   container: HTMLElement;
   initialName: string;
@@ -36,9 +38,21 @@ export class ChartNameHeader {
     this.nameSpan.textContent = this.currentName;
     this.applyNameStyles();
 
+    this.nameSpan.setAttribute('role', 'button');
+    this.nameSpan.setAttribute('tabindex', '0');
+
     const onNameClick = () => this.enterEditMode();
     this.nameSpan.addEventListener('click', onNameClick);
     this.cleanupFns.push(() => this.nameSpan.removeEventListener('click', onNameClick));
+
+    const onNameKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.enterEditMode();
+      }
+    };
+    this.nameSpan.addEventListener('keydown', onNameKeyDown);
+    this.cleanupFns.push(() => this.nameSpan.removeEventListener('keydown', onNameKeyDown));
 
     const onNameMouseEnter = () => {
       if (!this.editing) this.nameSpan.style.textDecoration = 'underline';
@@ -166,6 +180,9 @@ export class ChartNameHeader {
             this.nameSpan.textContent = previousName;
           });
           return;
+        }
+        if (!newName) {
+          showToast('Chart name cannot be empty', 'error');
         }
       }
 

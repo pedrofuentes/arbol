@@ -173,8 +173,6 @@ describe('ImportEditor', () => {
     });
 
     it('calls onImportAsNewChart when user chooses "New chart"', async () => {
-      const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('My New Chart');
-
       getCallbackTextarea().value = VALID_JSON;
       getCallbackParseBtn().click();
       getCallbackApplyBtn().click();
@@ -185,12 +183,17 @@ describe('ImportEditor', () => {
       confirmBtn.click();
 
       await new Promise((r) => setTimeout(r, 0));
-      expect(promptSpy).toHaveBeenCalledWith('New chart name:');
+      const inputDialog = document.querySelector('[role="dialog"]');
+      expect(inputDialog).not.toBeNull();
+      const input = inputDialog!.querySelector('input') as HTMLInputElement;
+      input.value = 'My New Chart';
+      const okBtn = inputDialog!.querySelector('.btn-primary') as HTMLButtonElement;
+      okBtn.click();
+
+      await new Promise((r) => setTimeout(r, 0));
       expect(onImportAsNewChart).toHaveBeenCalledTimes(1);
       expect(onImportAsNewChart.mock.calls[0][1]).toBe('My New Chart');
       expect(onImportAsNewChart.mock.calls[0][0].id).toBe('ceo');
-
-      promptSpy.mockRestore();
     });
 
     it('replaces current chart when user chooses "Replace current"', async () => {
@@ -208,9 +211,7 @@ describe('ImportEditor', () => {
       expect(callbackStore.getTree().id).toBe('ceo');
     });
 
-    it('does nothing when user cancels the prompt', async () => {
-      const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null);
-
+    it('does nothing when user cancels the input dialog', async () => {
       getCallbackTextarea().value = VALID_JSON;
       getCallbackParseBtn().click();
       getCallbackApplyBtn().click();
@@ -221,10 +222,13 @@ describe('ImportEditor', () => {
       confirmBtn.click();
 
       await new Promise((r) => setTimeout(r, 0));
+      const inputDialog = document.querySelector('[role="dialog"]');
+      const cancelBtn = inputDialog!.querySelector('.btn-secondary') as HTMLButtonElement;
+      cancelBtn.click();
+
+      await new Promise((r) => setTimeout(r, 0));
       expect(onImportAsNewChart).not.toHaveBeenCalled();
       expect(callbackStore.getTree().id).toBe('r');
-
-      promptSpy.mockRestore();
     });
   });
 });

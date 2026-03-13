@@ -8,6 +8,7 @@ import type { OrgNode, ColumnMapping, TextNormalization, ChartBundle, ChartRecor
 import type { ChartStore } from '../store/chart-store';
 import { timestampedFilename } from '../utils/filename';
 import { showConfirmDialog } from '../ui/confirm-dialog';
+import { showInputDialog } from '../ui/input-dialog';
 
 let formIdCounter = 0;
 function uniqueId(prefix: string): string {
@@ -373,7 +374,16 @@ export class ImportEditor {
     dropHint.style.cssText = 'font-family:var(--font-sans);';
     dropZone.appendChild(dropHint);
 
+    dropZone.setAttribute('role', 'button');
+    dropZone.setAttribute('tabindex', '0');
+    dropZone.setAttribute('aria-label', 'Upload org chart file');
     dropZone.addEventListener('click', () => this.fileInput.click());
+    dropZone.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.fileInput.click();
+      }
+    });
 
     dropZone.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -842,7 +852,12 @@ export class ImportEditor {
         });
 
         if (importAsNew) {
-          const name = prompt('New chart name:');
+          const name = await showInputDialog({
+            title: 'New Chart',
+            label: 'Chart name',
+            placeholder: 'e.g. Engineering Org',
+            maxLength: 100,
+          });
           if (!name?.trim()) return;
           await this.onImportAsNewChart(tree, name.trim());
         } else {

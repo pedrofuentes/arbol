@@ -192,6 +192,10 @@ describe('ChartNameHeader', () => {
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
       expect(onRename).not.toHaveBeenCalled();
       expect(getNameDisplay(container).textContent).toBe('Keep This');
+      // Should show toast for empty name
+      const toast = document.querySelector('.toast-error');
+      expect(toast).not.toBeNull();
+      expect(toast!.textContent).toBe('Chart name cannot be empty');
     });
 
     it('reverts to previous name when input is whitespace only', () => {
@@ -203,6 +207,10 @@ describe('ChartNameHeader', () => {
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
       expect(onRename).not.toHaveBeenCalled();
       expect(getNameDisplay(container).textContent).toBe('Keep This');
+      // Should show toast for empty name
+      const toast = document.querySelector('.toast-error');
+      expect(toast).not.toBeNull();
+      expect(toast!.textContent).toBe('Chart name cannot be empty');
     });
 
     it('does not call onRename when name is unchanged', () => {

@@ -83,6 +83,10 @@ describe('AddPopover', () => {
     expect(onAdd).not.toHaveBeenCalled();
     // Name input should show error border
     expect(nameInput.style.borderColor).toBe('var(--danger, #e53e3e)');
+    // Should show error message
+    const errorMsg = popover.querySelector('.error-msg');
+    expect(errorMsg).not.toBeNull();
+    expect(errorMsg!.textContent).toBe('Name is required');
   });
 
   it('clicking Cancel calls onCancel', () => {

@@ -1,4 +1,5 @@
 import { createDismissible } from './dismissible';
+import { trapFocus } from './dialog-utils';
 
 let formIdCounter = 0;
 function uniqueId(prefix: string): string {
@@ -13,6 +14,7 @@ export interface AddPopoverOptions {
 }
 
 const dismissible = createDismissible();
+let previouslyFocused: Element | null = null;
 
 export function dismissAddPopover(): void {
   dismissible.dismiss();
@@ -21,10 +23,13 @@ export function dismissAddPopover(): void {
 export function showAddPopover(options: AddPopoverOptions): void {
   dismissible.dismiss();
 
+  previouslyFocused = document.activeElement;
+
   const { anchor, parentName, onAdd, onCancel } = options;
 
   const container = document.createElement('div');
   container.setAttribute('role', 'dialog');
+  container.setAttribute('aria-modal', 'true');
   container.setAttribute('aria-label', 'Add Person');
   container.style.cssText = `
     position:fixed;
@@ -86,6 +91,14 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   nameGroup.appendChild(nameLabel);
   nameGroup.appendChild(nameInput);
+
+  const nameError = document.createElement('div');
+  nameError.className = 'error-msg';
+  nameError.setAttribute('role', 'alert');
+  nameError.style.marginTop = 'var(--space-1)';
+  nameError.style.minHeight = '0';
+  nameGroup.appendChild(nameError);
+
   container.appendChild(nameGroup);
 
   // Title field
@@ -134,6 +147,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
     const title = titleInput.value.trim();
     if (!name) {
       nameInput.style.borderColor = 'var(--danger, #e53e3e)';
+      nameError.textContent = 'Name is required';
       return;
     }
     onAdd(name, title);
@@ -143,6 +157,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
   // Clear validation on input
   nameInput.addEventListener('input', () => {
     nameInput.style.borderColor = 'var(--border-default)';
+    nameError.textContent = '';
   });
 
   addBtn.addEventListener('click', trySubmit);
@@ -196,10 +211,17 @@ export function showAddPopover(options: AddPopoverOptions): void {
   document.body.appendChild(container);
   dismissible.activate(container);
 
+  const removeTrap = trapFocus(container);
+
   // Register cleanup AFTER activate so dismiss() inside activate doesn't clear them
   dismissible.onDismiss(() => {
+    removeTrap();
     document.removeEventListener('keydown', escHandler);
     document.removeEventListener('mousedown', outsideHandler);
+    if (previouslyFocused && previouslyFocused instanceof HTMLElement) {
+      previouslyFocused.focus();
+    }
+    previouslyFocused = null;
   });
 
   // Viewport-aware positioning: below anchor by default, above if no room
