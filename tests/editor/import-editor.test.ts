@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { ImportEditor } from '../../src/editor/import-editor';
 import { OrgStore } from '../../src/store/org-store';
+import type { OrgNode } from '../../src/types';
 
 const ROOT = { id: 'r', name: 'Root', title: 'CEO' };
 
@@ -125,6 +126,105 @@ describe('ImportEditor', () => {
     getApplyBtn().click();
 
     expect(getTextarea().value).toBe('');
+  });
+
+  describe('onImportAsNewChart callback', () => {
+    let callbackContainer: HTMLDivElement;
+    let callbackStore: OrgStore;
+    let callbackEditor: ImportEditor;
+    let onImportAsNewChart: Mock<(tree: OrgNode, name: string) => Promise<void>>;
+
+    const getCallbackTextarea = () =>
+      callbackContainer.querySelector('textarea') as HTMLTextAreaElement;
+    const getCallbackParseBtn = () =>
+      callbackContainer.querySelector('button.btn-primary') as HTMLButtonElement;
+    const getCallbackApplyBtn = () =>
+      callbackContainer.querySelector('[data-action="apply"]') as HTMLButtonElement;
+
+    beforeEach(() => {
+      callbackContainer = document.createElement('div');
+      document.body.appendChild(callbackContainer);
+      callbackStore = new OrgStore(ROOT);
+      onImportAsNewChart = vi.fn().mockResolvedValue(undefined);
+      callbackEditor = new ImportEditor(callbackContainer, callbackStore, onImportAsNewChart);
+    });
+
+    afterEach(() => {
+      callbackEditor.destroy();
+      document.body.removeChild(callbackContainer);
+    });
+
+    it('shows confirm dialog when callback is provided and Apply is clicked', async () => {
+      getCallbackTextarea().value = VALID_JSON;
+      getCallbackParseBtn().click();
+      getCallbackApplyBtn().click();
+
+      await new Promise((r) => setTimeout(r, 0));
+      const dialog = document.querySelector('[role="alertdialog"]');
+      expect(dialog).not.toBeNull();
+      expect(dialog!.textContent).toContain('Import Destination');
+      expect(dialog!.textContent).toContain('New chart');
+      expect(dialog!.textContent).toContain('Replace current');
+
+      // Clean up dialog
+      const cancelBtn = dialog!.querySelector('.btn-secondary') as HTMLButtonElement;
+      cancelBtn?.click();
+    });
+
+    it('calls onImportAsNewChart when user chooses "New chart"', async () => {
+      const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('My New Chart');
+
+      getCallbackTextarea().value = VALID_JSON;
+      getCallbackParseBtn().click();
+      getCallbackApplyBtn().click();
+
+      await new Promise((r) => setTimeout(r, 0));
+      const dialog = document.querySelector('[role="alertdialog"]');
+      const confirmBtn = dialog!.querySelector('.btn-primary') as HTMLButtonElement;
+      confirmBtn.click();
+
+      await new Promise((r) => setTimeout(r, 0));
+      expect(promptSpy).toHaveBeenCalledWith('New chart name:');
+      expect(onImportAsNewChart).toHaveBeenCalledTimes(1);
+      expect(onImportAsNewChart.mock.calls[0][1]).toBe('My New Chart');
+      expect(onImportAsNewChart.mock.calls[0][0].id).toBe('ceo');
+
+      promptSpy.mockRestore();
+    });
+
+    it('replaces current chart when user chooses "Replace current"', async () => {
+      getCallbackTextarea().value = VALID_JSON;
+      getCallbackParseBtn().click();
+      getCallbackApplyBtn().click();
+
+      await new Promise((r) => setTimeout(r, 0));
+      const dialog = document.querySelector('[role="alertdialog"]');
+      const cancelBtn = dialog!.querySelector('.btn-secondary') as HTMLButtonElement;
+      cancelBtn.click();
+
+      await new Promise((r) => setTimeout(r, 0));
+      expect(onImportAsNewChart).not.toHaveBeenCalled();
+      expect(callbackStore.getTree().id).toBe('ceo');
+    });
+
+    it('does nothing when user cancels the prompt', async () => {
+      const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null);
+
+      getCallbackTextarea().value = VALID_JSON;
+      getCallbackParseBtn().click();
+      getCallbackApplyBtn().click();
+
+      await new Promise((r) => setTimeout(r, 0));
+      const dialog = document.querySelector('[role="alertdialog"]');
+      const confirmBtn = dialog!.querySelector('.btn-primary') as HTMLButtonElement;
+      confirmBtn.click();
+
+      await new Promise((r) => setTimeout(r, 0));
+      expect(onImportAsNewChart).not.toHaveBeenCalled();
+      expect(callbackStore.getTree().id).toBe('r');
+
+      promptSpy.mockRestore();
+    });
   });
 });
 
