@@ -134,7 +134,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         key: 'fontFamily',
         label: 'Font Family',
         type: 'select',
-        options: ['Calibri', 'Arial', 'Verdana', 'Georgia', 'Tahoma', 'Trebuchet MS', 'Segoe UI'],
+        options: ['Calibri', 'Arial', 'Verdana', 'Georgia', 'Tahoma', 'Trebuchet MS', 'Segoe UI', 'Microsoft Sans Serif'],
       },
       {
         key: 'textPaddingHorizontal',

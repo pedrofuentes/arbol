@@ -99,7 +99,7 @@ const BOOLEAN_KEYS: ReadonlySet<string> = new Set<string>(['showHeadcount']);
 
 const ENUM_KEYS: ReadonlyMap<string, readonly string[]> = new Map([
   ['textAlign', ['left', 'center', 'right']],
-  ['fontFamily', ['Calibri', 'Arial', 'Verdana', 'Georgia', 'Tahoma', 'Trebuchet MS', 'Segoe UI']],
+  ['fontFamily', ['Calibri', 'Arial', 'Verdana', 'Georgia', 'Tahoma', 'Trebuchet MS', 'Segoe UI', 'Microsoft Sans Serif']],
 ]);
 
 const ALL_KEYS = [

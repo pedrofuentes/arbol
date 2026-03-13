@@ -177,7 +177,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       titleColor: '#64748b',
       textAlign: 'left',
       cardBorderRadius: 6,
-      fontFamily: 'Segoe UI',
+      fontFamily: 'Microsoft Sans Serif',
     },
   },
 ];

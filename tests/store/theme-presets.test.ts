@@ -108,7 +108,7 @@ describe('getPresetById', () => {
     expect(teal!.colors.cardStroke).toBe('#14b8a6');
     expect(teal!.colors.textAlign).toBe('left');
     expect(teal!.colors.cardBorderRadius).toBe(6);
-    expect(teal!.colors.fontFamily).toBe('Segoe UI');
+    expect(teal!.colors.fontFamily).toBe('Microsoft Sans Serif');
   });
 
   it('returns undefined for nonexistent id', () => {
