@@ -84,13 +84,12 @@ describe('ChartNameHeader', () => {
       expect(btn.title).toBe('Save version');
     });
 
-    it('applies correct styles to the save button', () => {
+    it('applies icon-btn class to the save button', () => {
       new ChartNameHeader(defaultOptions({ container }));
       const btn = getSaveBtn(container);
-      expect(btn.style.backgroundColor).toBe('transparent');
-      expect(btn.style.borderStyle).toBe('none');
-      expect(btn.style.cursor).toBe('pointer');
-      expect(btn.style.opacity).toBe('0.7');
+      expect(btn.className).toBe('icon-btn');
+      expect(btn.getAttribute('aria-label')).toBe('Save version');
+      expect(btn.getAttribute('data-tooltip')).toBe('Save version');
     });
   });
 

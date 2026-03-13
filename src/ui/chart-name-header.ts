@@ -67,23 +67,9 @@ export class ChartNameHeader {
     this.saveBtn.setAttribute('data-testid', 'save-version-btn');
     this.saveBtn.textContent = '💾';
     this.saveBtn.title = 'Save version';
-    this.saveBtn.style.cssText = [
-      'font-size:14px',
-      'background-color:transparent',
-      'border:none',
-      'cursor:pointer',
-      'padding:2px 4px',
-      'opacity:0.7',
-    ].join(';');
-
-    const onSaveBtnEnter = () => { this.saveBtn.style.opacity = '1'; };
-    const onSaveBtnLeave = () => { this.saveBtn.style.opacity = '0.7'; };
-    this.saveBtn.addEventListener('mouseenter', onSaveBtnEnter);
-    this.saveBtn.addEventListener('mouseleave', onSaveBtnLeave);
-    this.cleanupFns.push(() => {
-      this.saveBtn.removeEventListener('mouseenter', onSaveBtnEnter);
-      this.saveBtn.removeEventListener('mouseleave', onSaveBtnLeave);
-    });
+    this.saveBtn.className = 'icon-btn';
+    this.saveBtn.setAttribute('aria-label', 'Save version');
+    this.saveBtn.setAttribute('data-tooltip', 'Save version');
 
     const onSaveClick = () => this.onSaveVersion();
     this.saveBtn.addEventListener('click', onSaveClick);
@@ -142,14 +128,15 @@ export class ChartNameHeader {
     input.style.cssText = [
       'font-size:13px',
       'font-weight:600',
-      'color:var(--text-secondary)',
-      'border:none',
-      'background:transparent',
+      'color:var(--text-primary)',
+      'border:1px solid var(--accent)',
+      'background:var(--bg-base)',
+      'border-radius:var(--radius-md)',
+      'padding:2px 8px',
       'outline:none',
-      'padding:0',
-      'margin:0',
-      'font-family:inherit',
-      `width:${Math.max(this.nameSpan.offsetWidth, 40)}px`,
+      'box-shadow:0 0 0 2px var(--accent-muted)',
+      'font-family:var(--font-sans)',
+      `width:${Math.max(this.nameSpan.offsetWidth + 20, 60)}px`,
     ].join(';');
 
     // Auto-resize as user types

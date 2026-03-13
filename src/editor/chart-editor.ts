@@ -17,13 +17,7 @@ const HEADING_STYLE =
   'margin:0 0 8px;font-size:11px;text-transform:uppercase;' +
   'color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);font-weight:700;';
 
-const INLINE_BTN_STYLE =
-  'font-size:11px;padding:2px 8px;border:1px solid var(--border-default);' +
-  'background:transparent;color:var(--text-secondary);border-radius:var(--radius-sm);cursor:pointer;';
-
-const DANGER_BTN_STYLE =
-  'font-size:11px;padding:2px 8px;border:1px solid var(--color-danger);' +
-  'background:transparent;color:var(--color-danger);border-radius:var(--radius-sm);cursor:pointer;';
+const INLINE_BTN_EXTRA = 'font-size:10px;padding:3px 8px;';
 
 const ITEM_STYLE =
   'padding:8px 10px;border-bottom:1px solid var(--border-subtle);';
@@ -118,7 +112,7 @@ export class ChartEditor {
   private createErrorArea(): HTMLDivElement {
     const el = document.createElement('div');
     el.style.cssText =
-      'font-size:12px;color:var(--color-danger);min-height:0;margin-bottom:4px;font-family:var(--font-sans);';
+      'font-size:12px;color:var(--danger);min-height:0;margin-bottom:4px;font-family:var(--font-sans);';
     return el;
   }
 
@@ -134,16 +128,21 @@ export class ChartEditor {
 
   private buildChartInputRow(): HTMLDivElement {
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:6px;margin-bottom:4px;';
+    row.style.cssText = 'display:flex;gap:6px;margin-bottom:4px;align-items:flex-end;';
+
+    const inputGroup = document.createElement('div');
+    inputGroup.className = 'form-group';
+    inputGroup.style.cssText = 'flex:1;min-width:0;margin-bottom:0;';
 
     this.chartNameInput = document.createElement('input');
     this.chartNameInput.type = 'text';
-    this.chartNameInput.className = 'input';
     this.chartNameInput.placeholder = 'New chart name';
-    this.chartNameInput.style.cssText = 'flex:1;min-width:0;';
     this.chartNameInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this.handleCreateChart();
     });
+
+    inputGroup.appendChild(this.chartNameInput);
+    row.appendChild(inputGroup);
 
     const addBtn = document.createElement('button');
     addBtn.className = 'btn btn-primary';
@@ -151,7 +150,6 @@ export class ChartEditor {
     addBtn.style.cssText = 'padding:4px 10px;flex-shrink:0;';
     addBtn.addEventListener('click', () => this.handleCreateChart());
 
-    row.appendChild(this.chartNameInput);
     row.appendChild(addBtn);
     return row;
   }
@@ -160,16 +158,21 @@ export class ChartEditor {
 
   private buildVersionInputRow(): HTMLDivElement {
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:6px;margin-bottom:4px;';
+    row.style.cssText = 'display:flex;gap:6px;margin-bottom:4px;align-items:flex-end;';
+
+    const inputGroup = document.createElement('div');
+    inputGroup.className = 'form-group';
+    inputGroup.style.cssText = 'flex:1;min-width:0;margin-bottom:0;';
 
     this.versionNameInput = document.createElement('input');
     this.versionNameInput.type = 'text';
-    this.versionNameInput.className = 'input';
     this.versionNameInput.placeholder = 'Version name';
-    this.versionNameInput.style.cssText = 'flex:1;min-width:0;';
     this.versionNameInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this.handleSaveVersion();
     });
+
+    inputGroup.appendChild(this.versionNameInput);
+    row.appendChild(inputGroup);
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'btn btn-primary';
@@ -177,7 +180,6 @@ export class ChartEditor {
     saveBtn.style.cssText = 'flex-shrink:0;';
     saveBtn.addEventListener('click', () => this.handleSaveVersion());
 
-    row.appendChild(this.versionNameInput);
     row.appendChild(saveBtn);
     return row;
   }
@@ -260,14 +262,14 @@ export class ChartEditor {
     const actions = document.createElement('div');
     actions.style.cssText = 'display:flex;gap:6px;margin-top:4px;';
 
-    const renameBtn = this.createInlineButton('Rename', INLINE_BTN_STYLE);
+    const renameBtn = this.createInlineButton('Rename');
     renameBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.handleRenameChart(chart, item);
     });
     actions.appendChild(renameBtn);
 
-    const deleteBtn = this.createInlineButton('Delete', DANGER_BTN_STYLE);
+    const deleteBtn = this.createInlineButton('Delete', true);
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.handleDeleteChart(chart);
@@ -322,15 +324,15 @@ export class ChartEditor {
     const actions = document.createElement('div');
     actions.style.cssText = 'display:flex;gap:6px;margin-top:4px;';
 
-    const viewBtn = this.createInlineButton('View', INLINE_BTN_STYLE);
+    const viewBtn = this.createInlineButton('View');
     viewBtn.addEventListener('click', () => this.onVersionView(version));
     actions.appendChild(viewBtn);
 
-    const restoreBtn = this.createInlineButton('Restore', INLINE_BTN_STYLE);
+    const restoreBtn = this.createInlineButton('Restore');
     restoreBtn.addEventListener('click', () => this.handleRestoreVersion(version.id));
     actions.appendChild(restoreBtn);
 
-    const deleteBtn = this.createInlineButton('Delete', DANGER_BTN_STYLE);
+    const deleteBtn = this.createInlineButton('Delete', true);
     deleteBtn.addEventListener('click', () => this.handleDeleteVersion(version));
     actions.appendChild(deleteBtn);
 
@@ -340,10 +342,11 @@ export class ChartEditor {
 
   // ── Inline button helper ───────────────────────────────
 
-  private createInlineButton(label: string, style: string): HTMLButtonElement {
+  private createInlineButton(label: string, danger = false): HTMLButtonElement {
     const btn = document.createElement('button');
+    btn.className = danger ? 'btn btn-danger' : 'btn btn-secondary';
     btn.textContent = label;
-    btn.style.cssText = style;
+    btn.style.cssText = INLINE_BTN_EXTRA;
     return btn;
   }
 
@@ -389,9 +392,12 @@ export class ChartEditor {
 
     const input = document.createElement('input');
     input.type = 'text';
-    input.className = 'input';
     input.value = chart.name;
-    input.style.cssText = 'font-size:13px;width:100%;margin-top:4px;';
+    input.style.cssText =
+      'font-size:var(--text-sm);width:100%;margin-top:4px;padding:5px var(--space-3);' +
+      'font-family:var(--font-sans);border:1px solid var(--accent);' +
+      'border-radius:var(--radius-md);background:var(--bg-base);color:var(--text-primary);' +
+      'box-shadow:0 0 0 2px var(--accent-muted);outline:none;';
 
     const commitRename = async (): Promise<void> => {
       const newName = input.value.trim();
