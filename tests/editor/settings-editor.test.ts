@@ -935,8 +935,8 @@ describe('SettingsEditor', () => {
       )!;
       expect(cardSection).toBeDefined();
       const rangeInputs = cardSection.querySelectorAll('input[type="range"]');
-      // cardStrokeWidth + cardBorderRadius + icContainerBorderRadius = 3 range inputs
-      expect(rangeInputs.length).toBe(3);
+      // cardStrokeWidth + cardBorderRadius = 2 range inputs
+      expect(rangeInputs.length).toBe(2);
     });
   });
 });

@@ -182,7 +182,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       linkColor: '#5eead4',
       linkWidth: 1.5,
       icContainerFill: '#ccfbf1',
-      icContainerBorderRadius: 6,
+      icContainerBorderRadius: 8,
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'left',

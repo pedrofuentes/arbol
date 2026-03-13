@@ -109,6 +109,7 @@ describe('getPresetById', () => {
     expect(teal!.colors.textAlign).toBe('left');
     expect(teal!.colors.cardBorderRadius).toBe(6);
     expect(teal!.colors.fontFamily).toBe('Microsoft Sans Serif');
+    expect(teal!.colors.icContainerBorderRadius).toBe(8);
   });
 
   it('returns undefined for nonexistent id', () => {

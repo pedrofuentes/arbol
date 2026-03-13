@@ -99,6 +99,15 @@ const SETTING_GROUPS: SettingGroup[] = [
         max: 20,
         step: 1,
       },
+      { key: 'icContainerFill', label: 'IC Container Fill', type: 'color' },
+      {
+        key: 'icContainerBorderRadius',
+        label: 'IC Container Border Radius',
+        type: 'range',
+        min: 0,
+        max: 15,
+        step: 1,
+      },
     ],
   },
   {
@@ -172,15 +181,6 @@ const SETTING_GROUPS: SettingGroup[] = [
       {
         key: 'cardBorderRadius',
         label: 'Card Border Radius',
-        type: 'range',
-        min: 0,
-        max: 15,
-        step: 1,
-      },
-      { key: 'icContainerFill', label: 'IC Container Fill', type: 'color' },
-      {
-        key: 'icContainerBorderRadius',
-        label: 'IC Container Border Radius',
         type: 'range',
         min: 0,
         max: 15,
