@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] — 2026-03-13
+
+### Added
+- **Version comparison** — compare any two chart versions (or a version vs the working tree) to see what changed; click "Compare" on any version in the sidebar, then pick a target
+- **Merged diff view** — single chart with color-coded corner badges: Added (green), Removed (red), Moved (purple), Modified (amber); removed nodes shown as ghost cards at their old position
+- **Side-by-side diff view** — dual-pane rendering with old tree on the left and new tree on the right, both annotated with diff badges; toggle between merged and side-by-side via the comparison banner
+- **Diff legend** — color legend below the chart showing which statuses are present and their counts
+- **Dim unchanged toggle** — "Dim: On/Off" button in the comparison banner lets you toggle muting of unchanged nodes; when on, unchanged cards fade to gray so changes stand out
+
+### Fixed
+- **Inconsistent diff dimming** — unchanged cards now use uniform fill color overrides instead of group opacity, preventing visual inconsistency between manager cards (dark background) and IC cards (gray container background)
+
 ## [2.4.0] — 2026-03-13
 
 ### Added

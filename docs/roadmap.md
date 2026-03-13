@@ -8,6 +8,22 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
+## 🚀 v2.5.0 — Version Comparison
+
+### Phase 19 — Version Comparison
+- [x] Tree diff algorithm — detects added, removed, moved, and modified nodes by ID matching
+- [x] Merged diff view — single chart with corner badges (Added/Removed/Moved/Modified) and removed ghost nodes
+- [x] Side-by-side diff view — dual-pane rendering with labels, toggleable from banner
+- [x] Comparison banner — shows diff stats (+N −N ↗N ~N), view toggle, dim toggle, exit
+- [x] Version picker modal — select comparison target (version or working tree)
+- [x] "Compare" button on each version row in the sidebar
+- [x] Diff legend below chart with status colors and counts
+- [x] Dim unchanged toggle — on/off button to mute or show unchanged nodes at full weight
+- [x] Escape key exits comparison mode
+- [x] Full test coverage: 1230 tests across 49 files
+
+---
+
 ## 🚀 v2.2.0 — Card Styling & Ocean Teal
 
 ### Phase 18 — Card Styling Options
