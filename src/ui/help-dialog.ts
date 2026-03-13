@@ -37,6 +37,36 @@ const HELP_SECTIONS = [
         { tag: 'strong', text: 'Settings' },
         ' — Adjust card sizes, spacing, colors, and typography. Choose a preset theme or fine-tune individual values. Use the filter to find specific settings.',
       ],
+      [
+        { tag: 'strong', text: 'Charts' },
+        ' \u2014 Manage multiple org charts and version snapshots. Create, switch, rename, or delete charts. Save and restore named versions.',
+      ],
+    ],
+  },
+  {
+    title: 'Charts & Versions',
+    items: [
+      [
+        'Arbol supports ',
+        { tag: 'strong', text: 'multiple org charts' },
+        '. Create, rename, and switch between charts using the ',
+        { tag: 'strong', text: 'Charts' },
+        ' sidebar tab.',
+      ],
+      [
+        'The active chart name appears in the header next to the logo. Click it to rename.',
+      ],
+      [
+        { tag: 'strong', text: 'Save a version' },
+        ' \u2014 Take a named snapshot of the current chart. Use the \ud83d\udcbe button in the header or the Charts tab.',
+      ],
+      [
+        { tag: 'strong', text: 'View a version' },
+        ' \u2014 Opens a read-only preview. Click Restore to make it the working chart, or Close to return.',
+      ],
+      [
+        'If you have unsaved changes when switching charts or restoring a version, you\u2019ll be warned first.',
+      ],
     ],
   },
   {
@@ -100,7 +130,7 @@ const HELP_SECTIONS = [
     title: 'Your Data',
     items: [
       [
-        'Arbol runs entirely in your browser. Your org chart, settings, and preferences are stored in your browser\u2019s local storage and ',
+        'Arbol runs entirely in your browser. Your org charts, versions, and preferences are stored in your browser\u2019s storage (IndexedDB and localStorage) and ',
         { tag: 'strong', text: 'never leave your device' },
         '.',
       ],
@@ -127,7 +157,7 @@ const HELP_SECTIONS = [
       [{ tag: 'kbd', text: 'Ctrl+Shift+Z' }, ' or ', { tag: 'kbd', text: 'Ctrl+Y' }, ' — Redo'],
       [{ tag: 'kbd', text: 'Ctrl+F' }, ' — Focus search bar'],
       [{ tag: 'kbd', text: 'Ctrl+E' }, ' — Export to PowerPoint'],
-      [{ tag: 'kbd', text: 'Escape' }, ' — Clear search or deselect'],
+      [{ tag: 'kbd', text: 'Escape' }, ' — Dismiss version viewer, clear search, exit focus mode, or deselect'],
     ],
   },
   {
@@ -284,7 +314,7 @@ export function showHelpDialog(): void {
         const confirmed = await showConfirmDialog({
           title: 'Clear All Data',
           message:
-            'This will permanently delete your entire org chart, all settings, themes, and preferences. ' +
+            'This will permanently delete all your org charts, versions, settings, themes, and preferences. ' +
             'This cannot be undone.\n\nAre you sure?',
           confirmLabel: 'Delete everything',
           danger: true,
@@ -293,6 +323,7 @@ export function showHelpDialog(): void {
           for (const key of ARBOL_STORAGE_KEYS) {
             localStorage.removeItem(key);
           }
+          indexedDB.deleteDatabase('arbol-db');
           window.location.reload();
         }
       });

@@ -4,30 +4,33 @@
 
 ## Project Summary
 
-**Arbol** is an interactive org chart editor that runs entirely in the browser. It uses TypeScript, D3.js (for tree layout and SVG rendering), Vite (bundler), and pptxgenjs (PowerPoint export). There is no backend — all state lives in the browser (memory + localStorage).
+**Arbol** is an interactive org chart editor that runs entirely in the browser. It uses TypeScript, D3.js (for tree layout and SVG rendering), Vite (bundler), and pptxgenjs (PowerPoint export). There is no backend — all state lives in the browser (memory + IndexedDB + localStorage).
 
 ## Architecture
 
 ```
-Editor (People / Import) → OrgStore (data + events) → Renderer (D3 + SVG)
-                                    ↕                            ↑
-                              SettingsStore  ← localStorage       Right-click / Inline edit / Multi-select
-                              ThemeManager   ← dark/light toggle
-                              MappingStore   ← CSV column presets
-                              CategoryStore  ← localStorage (color categories)
+Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 + SVG)
+                                           ↕                            ↑
+                                     SettingsStore  ← localStorage       Right-click / Inline edit / Multi-select
+                                     ThemeManager   ← dark/light toggle
+                                     MappingStore   ← CSV column presets
+                                     CategoryStore  ← per-chart (via ChartStore)
+                                     ChartStore     ← IndexedDB (charts + versions)
+                                     ChartDB        ← IndexedDB wrapper
 ```
 
 **Data flow is unidirectional:** editors and on-canvas interactions (right-click context menu, inline editing, Shift+click multi-select) mutate `OrgStore`, which emits `"change"` events, and the renderer re-draws the SVG. Settings flow through `SettingsStore` → `ChartRenderer.updateOptions()`.
 
 ## Project Structure
 
-34 TypeScript source files in `src/`, organized by concern:
+39 TypeScript source files in `src/`, organized by concern:
 
 ```
 src/
 ├── data/
 │   └── sample-org.ts          # Sample org data (52 employees, used as default)
 ├── editor/
+│   ├── chart-editor.ts        # Charts sidebar tab UI (chart list, version list, CRUD)
 │   ├── form-editor.ts         # Add/edit people via form UI (parent dropdown, name/title inputs)
 │   ├── json-editor.ts         # Raw JSON tree editor with Apply/validate
 │   ├── import-editor.ts       # File import (JSON/CSV) + paste + column mapping + presets
@@ -41,12 +44,15 @@ src/
 │   └── zoom-manager.ts        # d3-zoom integration, fitToContent(), resetZoom(), transform persistence
 ├── store/
 │   ├── category-store.ts      # ColorCategory CRUD, defaults (Open Position, Offer Pending, Future Start), localStorage
+│   ├── chart-db.ts            # IndexedDB wrapper for charts and versions CRUD
+│   ├── chart-store.ts         # High-level chart management, dirty tracking, version snapshots, events
 │   ├── org-store.ts           # OrgNode CRUD, undo/redo (50-entry stack), event emitter, validation
 │   ├── settings-store.ts      # Persist/load renderer settings from localStorage
 │   ├── theme-manager.ts       # Dark/light toggle — applies class to <html>, persists to localStorage
 │   ├── theme-presets.ts       # Color + layout preset definitions (Emerald, Corporate Blue, etc.)
 │   └── mapping-store.ts       # CSV column mapping preset storage (localStorage)
 ├── ui/
+│   ├── chart-name-header.ts   # Header component: editable chart name, dirty indicator, save version button
 │   ├── column-mapper.ts       # Interactive UI for mapping CSV columns to OrgNode fields
 │   ├── confirm-dialog.ts      # Modal confirmation dialog (title, message, danger flag)
 │   ├── context-menu.ts        # Right-click context menu with keyboard nav (↑↓ Enter Esc)
@@ -55,7 +61,8 @@ src/
 │   ├── manager-picker.ts      # Modal for selecting target node (Move/Reassign operations)
 │   ├── focus-banner.ts        # Focus mode banner — "Viewing [Name]'s org" + "Show full org" exit
 │   ├── help-dialog.ts         # Help/about overlay (sections on interactions, shortcuts, imports)
-│   └── preset-creator.ts      # Modal form for creating/naming CSV column mapping presets
+│   ├── preset-creator.ts      # Modal form for creating/naming CSV column mapping presets
+│   └── version-viewer.ts      # Read-only version preview overlay with Restore/Close banner
 ├── utils/
 │   ├── tree.ts                # Tree traversal: findNodeById, findParent, flattenTree, cloneTree, isLeaf, isM1, stripM1Children, countLeaves, managerLevel, countManagersByLevel
 │   ├── search.ts              # Case-insensitive substring search on name/title, returns matching IDs
@@ -64,7 +71,7 @@ src/
 │   ├── text-normalize.ts      # Text normalization (titleCase, uppercase, lowercase) for names/titles
 │   ├── contrast.ts            # WCAG 2.1 luminance, auto-contrast text color helpers
 │   └── id.ts                  # UUID generation via crypto.randomUUID()
-├── types.ts                   # Interfaces: OrgNode, ColumnMapping, MappingPreset, TextNormalization
+├── types.ts                   # Interfaces: OrgNode, ColumnMapping, MappingPreset, TextNormalization, ChartRecord, VersionRecord
 ├── version.ts                 # App version (injected from package.json at build time)
 ├── main.ts                    # App entry point — wires stores, renderer, editors, menus, shortcuts
 └── style.css                  # Global styles, CSS custom properties, dark/light themes
@@ -126,6 +133,23 @@ interface ColorCategory {
   nameColor?: string;  // Text color for name (auto-computed from background for contrast)
   titleColor?: string; // Text color for title (auto-computed, slightly muted)
 }
+
+interface ChartRecord {
+  id: string;          // UUID
+  name: string;        // User-given chart name
+  createdAt: string;   // ISO timestamp
+  updatedAt: string;   // ISO timestamp — last working tree change
+  workingTree: OrgNode; // Current live org tree
+  categories: ColorCategory[]; // Per-chart categories
+}
+
+interface VersionRecord {
+  id: string;          // UUID
+  chartId: string;     // FK → ChartRecord.id
+  name: string;        // User-given version name
+  createdAt: string;   // ISO timestamp
+  tree: OrgNode;       // Frozen snapshot of the tree
+}
 ```
 
 CSV imports support: `id,name,title,parent_id` or `name,title,manager_name` (auto-detected). Custom column names supported via column mapper UI. HR system exports with trailing metadata (e.g., "Applied filters:" blocks) are handled automatically. Max 10,000 nodes per import.
@@ -172,11 +196,43 @@ All public methods on `OrgStore` (defined in `src/store/org-store.ts`):
 
 All mutating methodscall `snapshot()` (saves undo state) then `emit()` (notifies listeners).
 
+### Charts & Versions
+
+Charts are independent org trees, each with their own color categories. Versions are named point-in-time snapshots of a chart's tree.
+
+- **Storage:** Chart and version data is stored in IndexedDB (`arbol-db`), not localStorage. Settings, theme, and CSV mapping presets remain global in localStorage.
+- **Auto-migration:** On first load, if no charts exist in IndexedDB but localStorage contains a legacy tree, ChartStore automatically migrates it into a new chart.
+- **Dirty tracking:** ChartStore tracks whether the working tree has unsaved changes since the last version snapshot. The header shows a dirty indicator (●) when changes exist.
+- **Version snapshots:** Users can save named snapshots at any time. Versions are immutable — restoring a version replaces the chart's working tree (and creates an undo point).
+- **Per-chart categories:** Each chart stores its own `ColorCategory[]`. Switching charts loads that chart's categories into `CategoryStore`.
+
+### ChartStore API
+
+All public methods on `ChartStore` (defined in `src/store/chart-store.ts`):
+
+| Method | Signature | Purpose |
+|--------|-----------|---------|
+| `init()` | `(): Promise<void>` | Opens IndexedDB, runs migration if needed, loads last-used chart |
+| `getCharts()` | `(): ChartRecord[]` | Returns all charts (sorted by updatedAt descending) |
+| `getActiveChart()` | `(): ChartRecord \| null` | Returns the currently active chart |
+| `createChart()` | `(name, tree?, categories?): Promise<ChartRecord>` | Creates a new chart and switches to it |
+| `switchChart()` | `(chartId): Promise<void>` | Saves current chart, loads target chart into OrgStore + CategoryStore |
+| `deleteChart()` | `(chartId): Promise<void>` | Deletes chart and all its versions; switches to another chart if active |
+| `renameChart()` | `(chartId, name): Promise<void>` | Updates chart name |
+| `saveWorkingTree()` | `(): Promise<void>` | Persists current OrgStore tree + categories to the active chart in IndexedDB |
+| `isDirty()` | `(): boolean` | Whether working tree differs from last saved/versioned state |
+| `createVersion()` | `(name): Promise<VersionRecord>` | Snapshots active chart's tree as a named version; clears dirty flag |
+| `getVersions()` | `(chartId): Promise<VersionRecord[]>` | Returns all versions for a chart (sorted by createdAt descending) |
+| `deleteVersion()` | `(versionId): Promise<void>` | Deletes a single version |
+| `restoreVersion()` | `(versionId): Promise<void>` | Replaces active chart's working tree with the version's tree |
+| `onChange()` | `(listener): () => void` | Register change listener; returns unsubscribe fn |
+
 ### Interactions
 
 | Input | Target | Behavior |
 |-------|--------|----------|
 | **Click** | Card | Highlights card (visual only); clears multi-selection |
+| **Click** | Chart name in header | Opens inline editor for chart name |
 | **Double-click** | Card | Opens inline editor for name/title directly on the card |
 | **Right-click** | Card | Shows context menu (see below) |
 | **Shift+click** | Card | Toggles multi-select; root excluded |
@@ -226,17 +282,17 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `Ctrl+Y` | Redo (alternative) |
 | `Ctrl+E` | Export to PPTX |
 | `Ctrl+F` | Focus search input |
-| `Escape` | Priority chain: (1) clear search if focused → (2) exit focus mode → (3) clear multi-selection → (4) deselect node |
+| `Escape` | Priority chain: (1) dismiss version viewer → (2) clear search if focused → (3) exit focus mode → (4) clear multi-selection → (5) deselect node |
 
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **857 tests across 36 files** — all must pass before committing
+- **968 tests across 39 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
 
-### Test Files (all 27)
+### Test Files (all 30)
 
 | File | Scope |
 |------|-------|
@@ -248,6 +304,8 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `tests/utils/text-normalize.test.ts` | normalizeText (titleCase, uppercase, lowercase, none), normalizeTreeText (recursive, immutable) |
 | `tests/utils/contrast.test.ts` | parseHex, relativeLuminance, contrastingTextColor, contrastingTitleColor |
 | `tests/store/category-store.test.ts` | ColorCategory CRUD, defaults, localStorage persistence, validation, events, text color auto-contrast |
+| `tests/store/chart-db.test.ts` | IndexedDB wrapper CRUD, cascade delete, name uniqueness |
+| `tests/store/chart-store.test.ts` | Chart CRUD, migration, dirty tracking, versions, events |
 | `tests/store/org-store.test.ts` | Node CRUD, events, undo/redo, serialization, validation, bulk ops |
 | `tests/store/settings-store.test.ts` | Settings save/load from localStorage |
 | `tests/store/mapping-store.test.ts` | CSV mapping preset CRUD in localStorage |
@@ -265,6 +323,7 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `tests/editor/tab-switcher.test.ts` | Tab activation, content switching, aria-selected |
 
 | `tests/ui/context-menu.test.ts` | Menu rendering, item actions, keyboard nav, dismiss, viewport clamping |
+| `tests/ui/chart-name-header.test.ts` | Header rendering, edit mode, dirty indicator |
 | `tests/ui/focus-banner.test.ts` | Banner rendering, exit action, dismiss, singleton, theme styling |
 | `tests/ui/inline-editor.test.ts` | Inline editing, save/cancel, validation |
 | `tests/ui/add-popover.test.ts` | Add-child popover, parent pre-selection, form validation |
@@ -366,3 +425,5 @@ Before requesting merge approval, complete these updates as the **final commit**
 6. **Focus mode is rendering-only.** The `OrgStore` always holds the full tree. Focus mode filters at render time by passing a subtree to `renderer.render()`. Never modify the store to implement focus — only change what is passed to the renderer.
 
 7. **Context menu styling.** Uses `setAttribute('style', ...)` (not `style.cssText`) for CSS variables to work in jsdom tests. Follow this pattern for new UI components.
+
+8. **IndexedDB in tests.** Tests use `fake-indexeddb` to simulate IndexedDB. ChartStore is async — always `await init()` before interacting. When testing migration, seed localStorage before calling `init()`.
