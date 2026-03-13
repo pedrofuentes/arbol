@@ -221,8 +221,10 @@ function addNodeShape(
     const badgeText = String(node.descendantCount);
     const badgeFontSize = Math.max(3, Math.round(styles.headcountBadgeFontSize * scale));
     const badgeH = node.height * 0.5 * scale * PX_TO_INCHES;
-    const estimatedTextWidth = badgeText.length * styles.headcountBadgeFontSize * 0.65;
-    const badgePxWidth = estimatedTextWidth + styles.headcountBadgePadding * 2;
+    const charWidth = styles.headcountBadgeFontSize * 0.7;
+    const estimatedTextWidth = badgeText.length * charWidth;
+    const minBadgeWidth = styles.headcountBadgeHeight;
+    const badgePxWidth = Math.max(minBadgeWidth, estimatedTextWidth + styles.headcountBadgePadding * 2);
     const badgeW = badgePxWidth * scale * PX_TO_INCHES;
 
     const badgeX = topLeft.x + w - badgeW / 2;

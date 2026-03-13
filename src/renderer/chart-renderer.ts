@@ -371,8 +371,10 @@ export class ChartRenderer {
     } = this.opts;
 
     const text = String(node.descendantCount);
-    const estimatedTextWidth = text.length * headcountBadgeFontSize * 0.65;
-    const badgeWidth = estimatedTextWidth + headcountBadgePadding * 2;
+    const charWidth = headcountBadgeFontSize * 0.7;
+    const estimatedTextWidth = text.length * charWidth;
+    const minBadgeWidth = headcountBadgeHeight;
+    const badgeWidth = Math.max(minBadgeWidth, estimatedTextWidth + headcountBadgePadding * 2);
 
     // Position: right edge of card, vertically centered on the card border
     const badgeX = node.width - badgeWidth / 2;
