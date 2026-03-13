@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] — 2026-03-13
+
+### Added
+- **Privacy messaging** — README and in-app Help dialog now clearly state all data stays in your browser (no server, no tracking, no accounts)
+- **Clear All Data** — button in both the Help dialog and Settings panel to delete all local data with a danger confirmation
+
 ## [1.6.0] — 2026-03-13
 
 ### Added
