@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-03-13
+
+### Added
+- **Backup & Restore** — new "Backup & Restore" section in the Settings tab to export and import all app data as a single `.arbol-backup.json` file
+- Backup bundles all charts, version snapshots, settings, theme, CSV mapping presets, and custom theme presets
+- Two restore strategies: **Replace All** (wipe current data and restore from backup) or **Merge** (add new charts, keep existing ones)
+- Auto-backup safety net: a backup file is automatically downloaded before destructive actions (Clear All Data, Full Replace restore)
+- Restore strategy picker dialog with backup summary (chart count, version count, date, app version)
+
 ## [2.0.0] — 2026-03-13
 
 ### Added
