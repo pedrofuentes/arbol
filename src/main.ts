@@ -7,7 +7,7 @@ import { JsonEditor } from './editor/json-editor';
 import { ImportEditor } from './editor/import-editor';
 import { UtilitiesEditor } from './editor/utilities-editor';
 import { exportToPptx } from './export/pptx-exporter';
-import { ThemeManager } from './store/theme-manager';
+import { ThemeManager, Theme } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { CategoryStore } from './store/category-store';
 import { flattenTree, findNodeById, findParent, isLeaf, isM1, countLeaves, countManagersByLevel } from './utils/tree';
@@ -315,7 +315,7 @@ async function main(): Promise<void> {
   themeBtn.addEventListener('click', () => {
     themeManager.toggle();
   });
-  themeManager.onChange((theme) => {
+  themeManager.onChange((theme: Theme) => {
     themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
   });
   headerRight.appendChild(themeBtn);

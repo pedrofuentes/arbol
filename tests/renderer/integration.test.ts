@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { OrgStore } from '../../src/store/org-store';
 import { ChartRenderer } from '../../src/renderer/chart-renderer';
-import { OrgNode } from '../../src/types';
+import { OrgNode, ColorCategory } from '../../src/types';
+import { findNodeById } from '../../src/utils/tree';
 
 function makeRoot(): OrgNode {
   return {
@@ -87,5 +88,114 @@ describe('Renderer-Store Integration', () => {
     const text = getNodeText('new-root');
     expect(text).toContain('Zara');
     expect(getNodeText('x')).toContain('Xavier');
+  });
+
+  describe('category assignment → card color', () => {
+    const testCategory: ColorCategory = {
+      id: 'cat-red',
+      label: 'Urgent',
+      color: '#ef4444',
+      nameColor: '#ffffff',
+      titleColor: '#fecaca',
+    };
+
+    it('node with category renders with category fill color', () => {
+      store.setNodeCategory('b', 'cat-red');
+
+      // Re-render with categories provided
+      renderer.updateOptions({ categories: [testCategory] });
+      renderer.render(store.getTree());
+
+      const rect = container.querySelector('.node[data-id="b"] rect');
+      expect(rect).not.toBeNull();
+      expect(rect!.getAttribute('fill')).toBe('#ef4444');
+    });
+
+    it('node without category renders with default fill', () => {
+      renderer.updateOptions({ categories: [testCategory] });
+      renderer.render(store.getTree());
+
+      const catRect = container.querySelector('.node[data-id="b"] rect');
+      const defaultRect = container.querySelector('.node[data-id="c"] rect');
+      // Both have no category, should use default fill
+      expect(catRect!.getAttribute('fill')).toBe(defaultRect!.getAttribute('fill'));
+    });
+
+    it('removing category restores default fill', () => {
+      store.setNodeCategory('b', 'cat-red');
+      renderer.updateOptions({ categories: [testCategory] });
+      renderer.render(store.getTree());
+
+      const coloredFill = container.querySelector('.node[data-id="b"] rect')!.getAttribute('fill');
+      expect(coloredFill).toBe('#ef4444');
+
+      store.setNodeCategory('b', null);
+      renderer.render(store.getTree());
+
+      const restoredFill = container.querySelector('.node[data-id="b"] rect')!.getAttribute('fill');
+      expect(restoredFill).not.toBe('#ef4444');
+    });
+  });
+
+  describe('focus mode → subtree rendering', () => {
+    function makeDeepTree(): OrgNode {
+      return {
+        id: 'root',
+        name: 'Alice',
+        title: 'CEO',
+        children: [
+          {
+            id: 'eng',
+            name: 'Bob',
+            title: 'VP Eng',
+            children: [
+              { id: 'ic1', name: 'Carol', title: 'Engineer' },
+              { id: 'ic2', name: 'Dan', title: 'Engineer' },
+            ],
+          },
+          { id: 'sales', name: 'Eve', title: 'VP Sales' },
+        ],
+      };
+    }
+
+    it('rendering a subtree shows only those nodes', () => {
+      const deepTree = makeDeepTree();
+      const deepStore = new OrgStore(deepTree);
+      renderer.render(deepStore.getTree());
+
+      // Full tree: root, eng, ic1, ic2, sales = 5 nodes total
+      // (ic1 and ic2 may render as .ic-node under an M1)
+      const fullNodeCount = container.querySelectorAll('.node, .ic-node').length;
+
+      // Simulate focus: render only the 'eng' subtree
+      const subtree = findNodeById(deepStore.getTree(), 'eng')!;
+      renderer.render(subtree);
+
+      const focusedNodeCount = container.querySelectorAll('.node, .ic-node').length;
+      expect(focusedNodeCount).toBeLessThan(fullNodeCount);
+
+      // 'sales' should not be rendered
+      expect(container.querySelector('[data-id="sales"]')).toBeNull();
+      // 'root' should not be rendered
+      expect(container.querySelector('[data-id="root"]')).toBeNull();
+      // 'eng' should be rendered (it's the root of the subtree)
+      expect(container.querySelector('[data-id="eng"]')).not.toBeNull();
+    });
+
+    it('re-rendering full tree after subtree restores all nodes', () => {
+      const deepTree = makeDeepTree();
+      const deepStore = new OrgStore(deepTree);
+
+      // Render subtree first
+      const subtree = findNodeById(deepStore.getTree(), 'eng')!;
+      renderer.render(subtree);
+      expect(container.querySelector('[data-id="sales"]')).toBeNull();
+
+      // Render full tree
+      renderer.render(deepStore.getTree());
+      expect(container.querySelector('[data-id="sales"]')).not.toBeNull();
+      expect(container.querySelector('[data-id="root"]')).not.toBeNull();
+      expect(container.querySelector('[data-id="eng"]')).not.toBeNull();
+    });
   });
 });
