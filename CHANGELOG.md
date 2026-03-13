@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] — 2026-03-13
+
+### Refactored
+- **CSS utility classes** — extracted 24 utility classes (flex, gap, text, spacing, grid) replacing 28 inline styles
+- **localStorage abstraction** — `IStorage` interface with `browserStorage` default; all 8 store files accept injectable storage
+- **Generic EventEmitter** — `EventEmitter<T>` with typed payloads; ThemeManager now uses `EventEmitter<Theme>`
+- **main.ts decomposition** — extracted `FocusModeController`, `SelectionManager`, `SearchController` (−167 lines)
+- **D3 data joins** — all 4 render layers converted to `.data().join()` pattern for future incremental updates
+
+### Tests
+- Added 54 new controller tests (focus-mode 16, selection-manager 15, search-controller 11, integration +6)
+- Total: 1,352 tests across 55 files
+
 ## [2.6.0] — 2026-03-13
 
 ### Fixed
