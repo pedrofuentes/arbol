@@ -1342,10 +1342,10 @@ describe('ChartRenderer', () => {
       renderer.setDiffMap(diffMap);
       renderer.render(diffTree());
 
-      const rootNode = container.querySelector('[data-id="root"]') as SVGGElement;
-      expect(rootNode.style.opacity).toBe('0.35');
-      const bNode = container.querySelector('[data-id="b"]') as SVGGElement;
-      expect(bNode.style.opacity).toBe('0.35');
+      const rootRect = container.querySelector('[data-id="root"] rect') as SVGRectElement;
+      expect(rootRect.getAttribute('fill')).toContain('#d1d5db');
+      const bRect = container.querySelector('[data-id="b"] rect') as SVGRectElement;
+      expect(bRect.getAttribute('fill')).toContain('#d1d5db');
     });
 
     it('does not dim changed nodes', () => {
@@ -1356,11 +1356,11 @@ describe('ChartRenderer', () => {
       renderer.setDiffMap(diffMap);
       renderer.render(diffTree());
 
-      const aNode = container.querySelector('[data-id="a"]') as SVGGElement;
-      const bNode = container.querySelector('[data-id="b"]') as SVGGElement;
-      // Changed nodes should NOT have opacity 0.35
-      expect(aNode.style.opacity).not.toBe('0.35');
-      expect(bNode.style.opacity).not.toBe('0.35');
+      const aRect = container.querySelector('[data-id="a"] rect') as SVGRectElement;
+      const bRect = container.querySelector('[data-id="b"] rect') as SVGRectElement;
+      // Changed nodes should NOT have dimmed fill
+      expect(aRect.getAttribute('fill')).not.toContain('#d1d5db');
+      expect(bRect.getAttribute('fill')).not.toContain('#d1d5db');
     });
 
     it('renders diff legend with correct items', () => {

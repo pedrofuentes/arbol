@@ -41,6 +41,12 @@ function nodeOpacity(container: HTMLElement, nodeId: string): string | null {
   return (el as SVGElement).style.opacity || null;
 }
 
+function nodeRectFill(container: HTMLElement, nodeId: string): string | null {
+  const el = container.querySelector(`[data-id="${nodeId}"] rect`);
+  if (!el) return null;
+  return el.getAttribute('fill');
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -220,9 +226,9 @@ describe('comparison integration', () => {
       renderer.setDiffMap(diff);
       renderer.render(newTree);
 
-      // root and alice are unchanged → dimmed to 0.35
-      expect(nodeOpacity(container, 'root')).toBe('0.35');
-      expect(nodeOpacity(container, 'alice')).toBe('0.35');
+      // root and alice are unchanged → dimmed via fill color override
+      expect(nodeRectFill(container, 'root')).toContain('#d1d5db');
+      expect(nodeRectFill(container, 'alice')).toContain('#d1d5db');
 
       renderer.destroy();
     });
@@ -242,9 +248,8 @@ describe('comparison integration', () => {
       renderer.setDiffMap(diff);
       renderer.render(newTree);
 
-      // bob is added → full opacity (no inline opacity set)
-      const bobOpacity = nodeOpacity(container, 'bob');
-      expect(bobOpacity === null || bobOpacity === '' || bobOpacity === '1').toBe(true);
+      // bob is added → retains original fill (not dimmed)
+      expect(nodeRectFill(container, 'bob')).not.toContain('#d1d5db');
 
       renderer.destroy();
     });

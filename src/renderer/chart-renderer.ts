@@ -567,6 +567,12 @@ export class ChartRenderer {
     if (!this.diffMap) return;
     const diffMap = this.diffMap;
 
+    // Use color overrides instead of group opacity to avoid background
+    // bleed-through (IC containers, dark backgrounds produce inconsistent dimming).
+    const dimFill = 'var(--diff-dim-fill, #d1d5db)';
+    const dimStroke = 'var(--diff-dim-stroke, #d1d5db)';
+    const dimText = 'var(--diff-dim-text, #9ca3af)';
+
     this.g.selectAll<SVGGElement, unknown>('.node, .ic-node, .pal-node').each(function () {
       const el = d3.select(this);
       const nodeId = el.attr('data-id');
@@ -574,11 +580,16 @@ export class ChartRenderer {
 
       const entry = diffMap.get(nodeId);
       if (!entry || entry.status === 'unchanged') {
-        el.style('opacity', '0.35');
+        el.select('rect').attr('fill', dimFill).attr('stroke', dimStroke);
+        el.selectAll('.node-name, .node-title').attr('fill', dimText);
+        el.selectAll('.headcount-badge').style('opacity', '0.3');
       } else if (entry.status === 'removed') {
         el.style('opacity', '0.55');
       }
     });
+
+    // Mute IC containers in diff mode
+    this.g.selectAll('.ic-container').attr('fill', dimFill);
 
     // Dim links globally in diff mode
     this.g.selectAll('.links, .pal-stacks .link').style('opacity', '0.4');
