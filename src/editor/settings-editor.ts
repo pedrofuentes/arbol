@@ -3,6 +3,17 @@ import { CHART_THEME_PRESETS, ChartThemePreset, addCustomPreset } from '../store
 import { SettingsStore, type PersistableSettings } from '../store/settings-store';
 import { CategoryStore } from '../store/category-store';
 import { generateId } from '../utils/id';
+import { showConfirmDialog } from '../ui/confirm-dialog';
+
+const ARBOL_STORAGE_KEYS = [
+  'arbol-org-data',
+  'arbol-settings',
+  'arbol-categories',
+  'arbol-csv-mappings',
+  'arbol-accordion-state',
+  'arbol-custom-presets',
+  'arbol-theme',
+];
 
 interface SettingDef {
   key: keyof RendererOptions;
@@ -646,6 +657,45 @@ export class SettingsEditor {
     ioBtnGroup.appendChild(importSettingsBtn);
 
     this.container.appendChild(this.createAccordionSection('settings-io', 'Settings', ioBtnGroup));
+
+    // Clear All Data button
+    const clearDataBtn = document.createElement('button');
+    clearDataBtn.textContent = '🗑 Clear All Data';
+    clearDataBtn.setAttribute('aria-label', 'Clear all local data');
+    clearDataBtn.style.cssText = `
+      width:100%;margin-top:12px;padding:8px 14px;font-size:12px;
+      font-family:var(--font-sans);cursor:pointer;
+      background:transparent;color:var(--text-tertiary);
+      border:1px solid var(--border-default);border-radius:var(--radius-md);
+      transition:background var(--transition-fast),color var(--transition-fast),border-color var(--transition-fast);
+    `;
+    clearDataBtn.addEventListener('mouseenter', () => {
+      clearDataBtn.style.background = 'var(--bg-danger, #fef2f2)';
+      clearDataBtn.style.color = 'var(--text-danger, #dc2626)';
+      clearDataBtn.style.borderColor = 'var(--text-danger, #dc2626)';
+    });
+    clearDataBtn.addEventListener('mouseleave', () => {
+      clearDataBtn.style.background = 'transparent';
+      clearDataBtn.style.color = 'var(--text-tertiary)';
+      clearDataBtn.style.borderColor = 'var(--border-default)';
+    });
+    clearDataBtn.addEventListener('click', async () => {
+      const confirmed = await showConfirmDialog({
+        title: 'Clear All Data',
+        message:
+          'This will permanently delete your entire org chart, all settings, themes, and preferences. ' +
+          'This cannot be undone.\n\nAre you sure?',
+        confirmLabel: 'Delete everything',
+        danger: true,
+      });
+      if (confirmed) {
+        for (const key of ARBOL_STORAGE_KEYS) {
+          localStorage.removeItem(key);
+        }
+        window.location.reload();
+      }
+    });
+    this.container.appendChild(clearDataBtn);
 
     // Filter handler — wired after all sections are built
     let filterTimeout: ReturnType<typeof setTimeout> | null = null;
