@@ -43,6 +43,8 @@ export class ChartEditor {
 
   private unsubscribe: (() => void) | null = null;
   private errorTimers: ReturnType<typeof setTimeout>[] = [];
+  private refreshInProgress = false;
+  private refreshQueued = false;
 
   constructor(options: ChartEditorOptions) {
     this.container = options.container;
@@ -59,7 +61,20 @@ export class ChartEditor {
   }
 
   async refresh(): Promise<void> {
-    await Promise.all([this.renderChartList(), this.renderVersionList()]);
+    if (this.refreshInProgress) {
+      this.refreshQueued = true;
+      return;
+    }
+    this.refreshInProgress = true;
+    try {
+      await Promise.all([this.renderChartList(), this.renderVersionList()]);
+    } finally {
+      this.refreshInProgress = false;
+      if (this.refreshQueued) {
+        this.refreshQueued = false;
+        await this.refresh();
+      }
+    }
   }
 
   destroy(): void {
