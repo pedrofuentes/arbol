@@ -753,4 +753,111 @@ describe('SettingsEditor', () => {
       );
     });
   });
+
+  describe('backup & restore section', () => {
+    function createMockChartDB() {
+      return {
+        open: vi.fn(),
+        close: vi.fn(),
+        getAllCharts: vi.fn(async () => []),
+        getChart: vi.fn(),
+        putChart: vi.fn(),
+        deleteChart: vi.fn(),
+        getVersionsByChart: vi.fn(async () => []),
+        putVersion: vi.fn(),
+        deleteVersion: vi.fn(),
+        deleteVersionsByChart: vi.fn(),
+        isChartNameTaken: vi.fn(),
+      };
+    }
+
+    it('renders Backup & Restore accordion section when chartDB is provided', () => {
+      const db = createMockChartDB();
+      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
+      const titles = getAccordionTitles(container);
+      expect(titles).toContain('Backup & Restore');
+    });
+
+    it('does not render Backup & Restore section when chartDB is not provided', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const titles = getAccordionTitles(container);
+      expect(titles).not.toContain('Backup & Restore');
+    });
+
+    it('section count increases by 1 when chartDB is provided', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const sectionsWithout = container.querySelectorAll('.accordion-section').length;
+
+      container.remove();
+      container = document.createElement('div');
+      document.body.appendChild(container);
+
+      const db = createMockChartDB();
+      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
+      const sectionsWith = container.querySelectorAll('.accordion-section').length;
+
+      expect(sectionsWith).toBe(sectionsWithout + 1);
+    });
+
+    it('Backup & Restore section appears before Clear All Data button', () => {
+      const db = createMockChartDB();
+      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
+
+      const sections = Array.from(container.querySelectorAll('.accordion-section'));
+      const backupSection = sections.find(
+        (s) => s.querySelector('.accordion-title')?.textContent === 'Backup & Restore',
+      );
+      expect(backupSection).toBeDefined();
+
+      const clearBtn = container.querySelector('button[aria-label="Clear all local data"]');
+      expect(clearBtn).not.toBeNull();
+
+      // Both are direct children of container — verify DOM order via compareDocumentPosition
+      const position = backupSection!.compareDocumentPosition(clearBtn!);
+      // eslint-disable-next-line no-bitwise
+      expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('Create Backup button exists', () => {
+      const db = createMockChartDB();
+      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
+
+      const backupSection = Array.from(container.querySelectorAll('.accordion-section')).find(
+        (s) => s.querySelector('.accordion-title')?.textContent === 'Backup & Restore',
+      )!;
+      const btns = backupSection.querySelectorAll('button');
+      const createBtn = Array.from(btns).find((b) => b.textContent?.includes('Create Backup'));
+      expect(createBtn).toBeDefined();
+    });
+
+    it('Restore button exists', () => {
+      const db = createMockChartDB();
+      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
+
+      const backupSection = Array.from(container.querySelectorAll('.accordion-section')).find(
+        (s) => s.querySelector('.accordion-title')?.textContent === 'Backup & Restore',
+      )!;
+      const btns = backupSection.querySelectorAll('button');
+      const restoreBtn = Array.from(btns).find((b) => b.textContent?.includes('Restore'));
+      expect(restoreBtn).toBeDefined();
+    });
+
+    it('accordion state for backup-restore section persists', () => {
+      const db = createMockChartDB();
+      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
+
+      const headers = container.querySelectorAll<HTMLButtonElement>('.accordion-header');
+      const backupHeader = Array.from(headers).find(
+        (h) => h.querySelector('.accordion-title')?.textContent === 'Backup & Restore',
+      )!;
+
+      // Click to toggle
+      backupHeader.click();
+
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'arbol-accordion-state',
+        expect.any(String),
+      );
+    });
+  });
 });
