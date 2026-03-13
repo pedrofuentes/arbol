@@ -250,6 +250,7 @@ function addNodeShape(
       fontSize: badgeFontSize,
       bold: true,
       color: styles.headcountBadgeTextColor,
+      wrap: false,
     });
   }
 }
