@@ -176,110 +176,166 @@ export class ChartRenderer {
 
     // Layer 1: Tree links (elbow paths + vertical connectors through Advisor area)
     const linksGroup = this.g.append('g').attr('class', 'links');
-    for (const link of layout.links.filter((l) => l.layer === 'tree')) {
-      const pathEl = linksGroup
-        .append('path')
-        .attr('class', 'link')
-        .attr('d', link.path)
-        .attr('fill', 'none')
-        .attr('stroke', linkColor)
-        .attr('stroke-width', linkWidth);
-      if (link.dottedLine) {
-        pathEl.attr('stroke-dasharray', dottedLineDash);
-      }
-    }
+    const treeLinks = layout.links.filter((l) => l.layer === 'tree');
+    linksGroup
+      .selectAll<SVGPathElement, (typeof treeLinks)[number]>('path.link')
+      .data(treeLinks)
+      .join(
+        (enter) =>
+          enter
+            .append('path')
+            .attr('class', 'link')
+            .attr('d', (d) => d.path)
+            .attr('fill', 'none')
+            .attr('stroke', linkColor)
+            .attr('stroke-width', linkWidth)
+            .attr('stroke-dasharray', (d) => (d.dottedLine ? dottedLineDash : null)),
+        (update) => update,
+        (exit) => exit.remove(),
+      );
 
     // Layer 2: IC stacks (behind manager nodes)
     const icGroup = this.g.append('g').attr('class', 'ic-stacks');
-    for (const container of layout.icContainers) {
-      icGroup
-        .append('rect')
-        .attr('class', 'ic-container')
-        .attr('x', container.x)
-        .attr('y', container.y)
-        .attr('width', container.width)
-        .attr('height', container.height)
-        .attr('rx', this.opts.icContainerBorderRadius)
-        .attr('ry', this.opts.icContainerBorderRadius)
-        .attr('fill', icContainerFill);
-    }
-
-    for (const node of layout.nodes.filter((n) => n.type === 'ic')) {
-      const g = icGroup
-        .append('g')
-        .attr('class', 'node ic-node')
-        .attr('data-id', node.id)
-        .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
-
-      const datum = {
-        data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId },
-      };
-      const sel = select(g.node()!).datum(datum);
-      this.renderCardContent(
-        sel as Selection<SVGGElement, CardDatum, null, undefined>,
-        node.width,
-        nodeHeight,
-        () => node.id,
+    icGroup
+      .selectAll<SVGRectElement, (typeof layout.icContainers)[number]>('rect.ic-container')
+      .data(layout.icContainers)
+      .join(
+        (enter) =>
+          enter
+            .append('rect')
+            .attr('class', 'ic-container')
+            .attr('x', (d) => d.x)
+            .attr('y', (d) => d.y)
+            .attr('width', (d) => d.width)
+            .attr('height', (d) => d.height)
+            .attr('rx', this.opts.icContainerBorderRadius)
+            .attr('ry', this.opts.icContainerBorderRadius)
+            .attr('fill', icContainerFill),
+        (update) => update,
+        (exit) => exit.remove(),
       );
-    }
+
+    const icNodes = layout.nodes.filter((n) => n.type === 'ic');
+    icGroup
+      .selectAll<SVGGElement, LayoutNode>('g.ic-node')
+      .data(icNodes, (d: LayoutNode) => d.id)
+      .join(
+        (enter) => {
+          const g = enter
+            .append('g')
+            .attr('class', 'node ic-node')
+            .attr('data-id', (d) => d.id)
+            .attr('transform', (d) => `translate(${d.x - d.width / 2},${d.y})`);
+          // eslint-disable-next-line @typescript-eslint/no-this-alias
+          const self = this;
+          g.each(function (d) {
+            const datum = {
+              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId },
+            };
+            const sel = select(this).datum(datum);
+            self.renderCardContent(
+              sel as Selection<SVGGElement, CardDatum, null, undefined>,
+              d.width,
+              nodeHeight,
+              () => d.id,
+            );
+          });
+          return g;
+        },
+        (update) => update,
+        (exit) => exit.remove(),
+      );
 
     // Layer 3: Advisor stacks (on top of tree links)
     const palGroup = this.g.append('g').attr('class', 'pal-stacks');
-    for (const link of layout.links.filter((l) => l.layer === 'pal')) {
-      palGroup
-        .append('path')
-        .attr('class', 'link')
-        .attr('d', link.path)
-        .attr('fill', 'none')
-        .attr('stroke', linkColor)
-        .attr('stroke-width', linkWidth);
-    }
-
-    for (const node of layout.nodes.filter((n) => n.type === 'pal')) {
-      const g = palGroup
-        .append('g')
-        .attr('class', 'node pal-node')
-        .attr('data-id', node.id)
-        .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
-
-      const datum = {
-        data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId },
-      };
-      const sel = select(g.node()!).datum(datum);
-      this.renderCardContent(
-        sel as Selection<SVGGElement, CardDatum, null, undefined>,
-        node.width,
-        nodeHeight,
-        () => node.id,
+    const palLinks = layout.links.filter((l) => l.layer === 'pal');
+    palGroup
+      .selectAll<SVGPathElement, (typeof palLinks)[number]>('path.link')
+      .data(palLinks)
+      .join(
+        (enter) =>
+          enter
+            .append('path')
+            .attr('class', 'link')
+            .attr('d', (d) => d.path)
+            .attr('fill', 'none')
+            .attr('stroke', linkColor)
+            .attr('stroke-width', linkWidth),
+        (update) => update,
+        (exit) => exit.remove(),
       );
-    }
+
+    const palNodes = layout.nodes.filter((n) => n.type === 'pal');
+    palGroup
+      .selectAll<SVGGElement, LayoutNode>('g.pal-node')
+      .data(palNodes, (d: LayoutNode) => d.id)
+      .join(
+        (enter) => {
+          const g = enter
+            .append('g')
+            .attr('class', 'node pal-node')
+            .attr('data-id', (d) => d.id)
+            .attr('transform', (d) => `translate(${d.x - d.width / 2},${d.y})`);
+          // eslint-disable-next-line @typescript-eslint/no-this-alias
+          const self = this;
+          g.each(function (d) {
+            const datum = {
+              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId },
+            };
+            const sel = select(this).datum(datum);
+            self.renderCardContent(
+              sel as Selection<SVGGElement, CardDatum, null, undefined>,
+              d.width,
+              nodeHeight,
+              () => d.id,
+            );
+          });
+          return g;
+        },
+        (update) => update,
+        (exit) => exit.remove(),
+      );
 
     // Layer 4: Manager nodes (topmost)
     const nodesGroup = this.g.append('g').attr('class', 'nodes');
     const managerNodes = layout.nodes.filter((n) => n.type === 'manager');
 
-    for (const node of managerNodes) {
-      const g = nodesGroup
-        .append('g')
-        .attr('class', 'node')
-        .attr('data-id', node.id)
-        .attr('transform', `translate(${node.x - node.width / 2},${node.y})`);
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    nodesGroup
+      .selectAll<SVGGElement, LayoutNode>('g.node')
+      .data(managerNodes, (d: LayoutNode) => d.id)
+      .join(
+        (enter) => {
+          const g = enter
+            .append('g')
+            .attr('class', 'node')
+            .attr('data-id', (d) => d.id)
+            .attr('transform', (d) => `translate(${d.x - d.width / 2},${d.y})`);
+          g.each(function (d) {
+            const datum = {
+              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId },
+            };
+            const sel = select(this).datum(datum);
+            self.renderCardContent(
+              sel as Selection<SVGGElement, CardDatum, null, undefined>,
+              d.width,
+              nodeHeight,
+              (dd) => dd.data.id,
+            );
 
-      const datum = {
-        data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId },
-      };
-      const sel = select(g.node()!).datum(datum);
-      this.renderCardContent(
-        sel as Selection<SVGGElement, CardDatum, null, undefined>,
-        node.width,
-        nodeHeight,
-        (d) => d.data.id,
+            if (self.opts.showHeadcount && d.descendantCount && d.descendantCount > 0) {
+              self.renderHeadcountBadge(
+                select(this) as Selection<SVGGElement, unknown, null, undefined>,
+                d,
+              );
+            }
+          });
+          return g;
+        },
+        (update) => update,
+        (exit) => exit.remove(),
       );
-
-      if (this.opts.showHeadcount && node.descendantCount && node.descendantCount > 0) {
-        this.renderHeadcountBadge(g, node);
-      }
-    }
 
     // Diff badges: render on all node types when diffMap is active
     if (this.diffMap) {
