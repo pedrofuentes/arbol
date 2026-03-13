@@ -270,7 +270,7 @@ export class ChartEditor {
     // Date row
     const dateEl = document.createElement('div');
     dateEl.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:2px;font-family:var(--font-sans);';
-    dateEl.textContent = 'Updated: ' + new Date(chart.updatedAt).toLocaleDateString();
+    dateEl.textContent = 'Updated: ' + new Date(chart.updatedAt).toLocaleString();
     item.appendChild(dateEl);
 
     // Action buttons
