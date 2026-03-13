@@ -115,9 +115,11 @@ async function main(): Promise<void> {
   // Comparison mode: show diff between two trees
   let comparisonState: ComparisonState | null = null;
   let sideBySideRenderer: SideBySideRenderer | null = null;
+  let dimUnchanged = true;
 
   const exitComparisonMode = () => {
     comparisonState = null;
+    dimUnchanged = true;
     renderer.setDiffMap(null);
     dismissComparisonBanner();
     if (sideBySideRenderer) {
@@ -168,6 +170,18 @@ async function main(): Promise<void> {
     sideBySideRenderer.render(state.oldTree, state.newTree, state.diff);
   };
 
+  const handleToggleDim = (enabled: boolean) => {
+    dimUnchanged = enabled;
+    renderer.setDimUnchanged(enabled);
+    if (!comparisonState) return;
+
+    if (comparisonState.viewMode === 'merged') {
+      showMergedView(comparisonState);
+    } else {
+      showSideBySideView(comparisonState);
+    }
+  };
+
   const toggleComparisonView = () => {
     if (!comparisonState) return;
 
@@ -189,7 +203,9 @@ async function main(): Promise<void> {
       newLabel: comparisonState.newLabel,
       stats,
       viewMode: newMode,
+      dimUnchanged,
       onToggleView: toggleComparisonView,
+      onToggleDimUnchanged: handleToggleDim,
       onExit: exitComparisonMode,
     });
   };
@@ -247,7 +263,9 @@ async function main(): Promise<void> {
       newLabel,
       stats,
       viewMode: 'merged',
+      dimUnchanged,
       onToggleView: toggleComparisonView,
+      onToggleDimUnchanged: handleToggleDim,
       onExit: exitComparisonMode,
     });
   };

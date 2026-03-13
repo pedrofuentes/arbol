@@ -82,6 +82,7 @@ export class ChartRenderer {
   private hasRendered = false;
   private highlightedNodes: Set<string> | null = null;
   private diffMap: Map<string, DiffEntry> | null = null;
+  private dimUnchanged = true;
 
   constructor(options: RendererOptions) {
     this.opts = {
@@ -153,6 +154,10 @@ export class ChartRenderer {
 
   getDiffMap(): Map<string, DiffEntry> | null {
     return this.diffMap;
+  }
+
+  setDimUnchanged(enabled: boolean): void {
+    this.dimUnchanged = enabled;
   }
 
   render(root: OrgNode): void {
@@ -572,6 +577,7 @@ export class ChartRenderer {
     const dimFill = 'var(--diff-dim-fill, #d1d5db)';
     const dimStroke = 'var(--diff-dim-stroke, #d1d5db)';
     const dimText = 'var(--diff-dim-text, #9ca3af)';
+    const shouldDimUnchanged = this.dimUnchanged;
 
     this.g.selectAll<SVGGElement, unknown>('.node, .ic-node, .pal-node').each(function () {
       const el = d3.select(this);
@@ -579,17 +585,19 @@ export class ChartRenderer {
       if (!nodeId) return;
 
       const entry = diffMap.get(nodeId);
-      if (!entry || entry.status === 'unchanged') {
+      if (shouldDimUnchanged && (!entry || entry.status === 'unchanged')) {
         el.select('rect').attr('fill', dimFill).attr('stroke', dimStroke);
         el.selectAll('.node-name, .node-title').attr('fill', dimText);
         el.selectAll('.headcount-badge').style('opacity', '0.3');
-      } else if (entry.status === 'removed') {
+      } else if (entry?.status === 'removed') {
         el.style('opacity', '0.55');
       }
     });
 
-    // Mute IC containers in diff mode
-    this.g.selectAll('.ic-container').attr('fill', dimFill);
+    // Mute IC containers when dimming is enabled
+    if (shouldDimUnchanged) {
+      this.g.selectAll('.ic-container').attr('fill', dimFill);
+    }
 
     // Dim links globally in diff mode
     this.g.selectAll('.links, .pal-stacks .link').style('opacity', '0.4');

@@ -4,7 +4,9 @@ export interface ComparisonBannerOptions {
   newLabel: string;
   stats: { added: number; removed: number; moved: number; modified: number };
   viewMode: 'merged' | 'side-by-side';
+  dimUnchanged: boolean;
   onToggleView: () => void;
+  onToggleDimUnchanged: (enabled: boolean) => void;
   onExit: () => void;
 }
 
@@ -116,6 +118,20 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   const sep2 = document.createElement('span');
   sep2.style.cssText = 'width:1px;height:14px;background:var(--border-default);';
   banner.appendChild(sep2);
+
+  // Dim unchanged toggle
+  const dimBtn = document.createElement('button');
+  dimBtn.setAttribute('data-testid', 'comparison-banner-dim-toggle');
+  dimBtn.className = 'btn btn-secondary';
+  dimBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
+  let dimState = options.dimUnchanged;
+  dimBtn.textContent = dimState ? 'Dim: On' : 'Dim: Off';
+  dimBtn.addEventListener('click', () => {
+    dimState = !dimState;
+    dimBtn.textContent = dimState ? 'Dim: On' : 'Dim: Off';
+    options.onToggleDimUnchanged(dimState);
+  });
+  banner.appendChild(dimBtn);
 
   // Toggle button
   const toggleBtn = document.createElement('button');

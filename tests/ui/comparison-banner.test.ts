@@ -37,7 +37,9 @@ function defaultOptions(overrides: Partial<ComparisonBannerOptions> = {}): Compa
     newLabel: 'Working tree',
     stats: { added: 3, removed: 2, moved: 1, modified: 1 },
     viewMode: 'merged',
+    dimUnchanged: true,
     onToggleView: vi.fn(),
+    onToggleDimUnchanged: vi.fn(),
     onExit: vi.fn(),
     ...overrides,
   };
@@ -237,6 +239,38 @@ describe('ComparisonBanner', () => {
       const banners = container.querySelectorAll('[data-testid="comparison-banner"]');
       expect(banners).toHaveLength(1);
       expect(getLabel()!.textContent).toContain('Second');
+    });
+  });
+
+  describe('dim unchanged toggle', () => {
+    it('renders dim toggle button', () => {
+      showComparisonBanner(defaultOptions());
+      const btn = document.querySelector('[data-testid="comparison-banner-dim-toggle"]');
+      expect(btn).not.toBeNull();
+    });
+
+    it('shows "Dim: On" when dimUnchanged is true', () => {
+      showComparisonBanner(defaultOptions({ dimUnchanged: true }));
+      const btn = document.querySelector('[data-testid="comparison-banner-dim-toggle"]')!;
+      expect(btn.textContent).toBe('Dim: On');
+    });
+
+    it('shows "Dim: Off" when dimUnchanged is false', () => {
+      showComparisonBanner(defaultOptions({ dimUnchanged: false }));
+      const btn = document.querySelector('[data-testid="comparison-banner-dim-toggle"]')!;
+      expect(btn.textContent).toBe('Dim: Off');
+    });
+
+    it('toggles text and calls callback on click', () => {
+      const onToggle = vi.fn();
+      showComparisonBanner(defaultOptions({ dimUnchanged: true, onToggleDimUnchanged: onToggle }));
+      const btn = document.querySelector('[data-testid="comparison-banner-dim-toggle"]') as HTMLButtonElement;
+      btn.click();
+      expect(onToggle).toHaveBeenCalledWith(false);
+      expect(btn.textContent).toBe('Dim: Off');
+      btn.click();
+      expect(onToggle).toHaveBeenCalledWith(true);
+      expect(btn.textContent).toBe('Dim: On');
     });
   });
 });
