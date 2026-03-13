@@ -17,6 +17,7 @@ export interface ContextMenuOptions {
 let activeMenu: HTMLDivElement | null = null;
 let cleanupFns: (() => void)[] = [];
 let activeSubmenus: HTMLDivElement[] = [];
+let previouslyFocused: Element | null = null;
 
 export function dismissContextMenu(): void {
   for (const sub of activeSubmenus) {
@@ -29,10 +30,16 @@ export function dismissContextMenu(): void {
   activeMenu = null;
   for (const fn of cleanupFns) fn();
   cleanupFns = [];
+  if (previouslyFocused && previouslyFocused instanceof HTMLElement) {
+    previouslyFocused.focus();
+  }
+  previouslyFocused = null;
 }
 
 export function showContextMenu(options: ContextMenuOptions): void {
   dismissContextMenu();
+
+  previouslyFocused = document.activeElement;
 
   const menu = document.createElement('div');
   menu.setAttribute('role', 'menu');
@@ -58,6 +65,13 @@ export function showContextMenu(options: ContextMenuOptions): void {
     }
   `;
   menu.appendChild(style);
+
+  interface SubmenuInfo {
+    show: () => void;
+    hide: () => void;
+    getSubmenuEl: () => HTMLDivElement | null;
+  }
+  const submenuMap = new Map<HTMLButtonElement, SubmenuInfo>();
 
   const buttons: HTMLButtonElement[] = [];
 
@@ -118,6 +132,9 @@ export function showContextMenu(options: ContextMenuOptions): void {
     });
 
     if (item.submenu) {
+      btn.setAttribute('aria-haspopup', 'menu');
+      btn.setAttribute('aria-expanded', 'false');
+
       const arrowSpan = document.createElement('span');
       arrowSpan.textContent = '▸';
       arrowSpan.style.cssText =
@@ -213,6 +230,8 @@ export function showContextMenu(options: ContextMenuOptions): void {
 
         submenuEl.addEventListener('mouseenter', cancelHide);
         submenuEl.addEventListener('mouseleave', scheduleHide);
+
+        btn.setAttribute('aria-expanded', 'true');
       };
 
       const hideSubmenu = () => {
@@ -222,7 +241,10 @@ export function showContextMenu(options: ContextMenuOptions): void {
           if (document.body.contains(submenuEl)) document.body.removeChild(submenuEl);
           submenuEl = null;
         }
+        btn.setAttribute('aria-expanded', 'false');
       };
+
+      submenuMap.set(btn, { show: showSubmenu, hide: hideSubmenu, getSubmenuEl: () => submenuEl });
 
       btn.addEventListener('mouseenter', () => {
         cancelHide();
@@ -269,19 +291,67 @@ export function showContextMenu(options: ContextMenuOptions): void {
 
   // Keyboard navigation
   const keyHandler = (e: KeyboardEvent) => {
+    const focused = document.activeElement as HTMLButtonElement;
+
+    // Check if focus is inside a submenu
+    for (const [parentBtn, info] of submenuMap) {
+      const subEl = info.getSubmenuEl();
+      if (!subEl || !subEl.contains(focused)) continue;
+
+      const subBtns = Array.from(subEl.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
+      const subIdx = subBtns.indexOf(focused);
+      if (subIdx === -1) continue;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        subBtns[(subIdx + 1) % subBtns.length].focus();
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        subBtns[(subIdx - 1 + subBtns.length) % subBtns.length].focus();
+        return;
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'Escape') {
+        e.preventDefault();
+        info.hide();
+        parentBtn.focus();
+        return;
+      }
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        focused.click();
+        return;
+      }
+      return;
+    }
+
     if (e.key === 'Escape') {
       e.preventDefault();
       dismissContextMenu();
       return;
     }
 
+    // ArrowRight on a main menu button with submenu → open it
+    if (e.key === 'ArrowRight') {
+      const info = submenuMap.get(focused);
+      if (info) {
+        e.preventDefault();
+        info.show();
+        const subEl = info.getSubmenuEl();
+        if (subEl) {
+          const firstSub = subEl.querySelector<HTMLButtonElement>('[role="menuitem"]');
+          if (firstSub) firstSub.focus();
+        }
+      }
+      return;
+    }
+
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      const focused = document.activeElement as HTMLElement;
-      const idx = buttons.indexOf(focused as HTMLButtonElement);
+      const idx = buttons.indexOf(focused);
       const dir = e.key === 'ArrowDown' ? 1 : -1;
       let next = idx;
-      // Cycle through buttons to find next enabled one
       for (let i = 0; i < buttons.length; i++) {
         next = (next + dir + buttons.length) % buttons.length;
         if (!buttons[next].disabled) break;
@@ -291,7 +361,6 @@ export function showContextMenu(options: ContextMenuOptions): void {
     }
 
     if (e.key === 'Enter') {
-      const focused = document.activeElement as HTMLButtonElement;
       if (buttons.includes(focused) && !focused.disabled) {
         e.preventDefault();
         focused.click();

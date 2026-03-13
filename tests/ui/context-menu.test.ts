@@ -386,4 +386,168 @@ describe('ContextMenu', () => {
       expect(parentAction).not.toHaveBeenCalled();
     });
   });
+
+  describe('submenu keyboard navigation', () => {
+    function makeSubmenuItems(): ContextMenuItem[] {
+      return [
+        {
+          label: 'Category',
+          submenu: [
+            { label: 'Engineering', action: vi.fn() },
+            { label: 'Design', action: vi.fn() },
+            { label: 'Sales', action: vi.fn() },
+          ],
+        },
+        { label: 'Edit', action: vi.fn() },
+        { label: 'Delete', danger: true, action: vi.fn() },
+      ];
+    }
+
+    function getSubMenuItems(): HTMLButtonElement[] {
+      const menus = document.querySelectorAll('[role="menu"]');
+      if (menus.length < 2) return [];
+      return Array.from(menus[1].querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
+    }
+
+    it('parent item with submenu has aria-haspopup="menu"', () => {
+      showContextMenu({ x: 100, y: 100, items: makeSubmenuItems() });
+      const items = getMenuItems();
+      expect(items[0].getAttribute('aria-haspopup')).toBe('menu');
+    });
+
+    it('parent item has aria-expanded="false" initially', () => {
+      showContextMenu({ x: 100, y: 100, items: makeSubmenuItems() });
+      const items = getMenuItems();
+      expect(items[0].getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('ArrowRight opens submenu and focuses first sub-item', () => {
+      showContextMenu({ x: 100, y: 100, items: makeSubmenuItems() });
+      const items = getMenuItems();
+      items[0].focus();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+
+      const subItems = getSubMenuItems();
+      expect(subItems.length).toBeGreaterThan(0);
+      expect(document.activeElement).toBe(subItems[0]);
+    });
+
+    it('aria-expanded becomes "true" when submenu opens', () => {
+      showContextMenu({ x: 100, y: 100, items: makeSubmenuItems() });
+      const items = getMenuItems();
+      items[0].focus();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+
+      expect(items[0].getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('ArrowDown/ArrowUp navigates within submenu', () => {
+      showContextMenu({ x: 100, y: 100, items: makeSubmenuItems() });
+      const items = getMenuItems();
+      items[0].focus();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+
+      const subItems = getSubMenuItems();
+      expect(document.activeElement).toBe(subItems[0]);
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      expect(document.activeElement).toBe(subItems[1]);
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      expect(document.activeElement).toBe(subItems[2]);
+
+      // Wrap around
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      expect(document.activeElement).toBe(subItems[0]);
+
+      // ArrowUp
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+      expect(document.activeElement).toBe(subItems[2]);
+    });
+
+    it('Enter on sub-item activates it and dismisses menu', () => {
+      const items = makeSubmenuItems();
+      showContextMenu({ x: 100, y: 100, items });
+      const btns = getMenuItems();
+      btns[0].focus();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+
+      const subItems = getSubMenuItems();
+      subItems[0].focus();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(items[0].submenu![0].action).toHaveBeenCalledOnce();
+      expect(document.querySelector('[role="menu"]')).toBeNull();
+    });
+
+    it('Space on sub-item activates it', () => {
+      const items = makeSubmenuItems();
+      showContextMenu({ x: 100, y: 100, items });
+      const btns = getMenuItems();
+      btns[0].focus();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+
+      const subItems = getSubMenuItems();
+      subItems[1].focus();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+
+      expect(items[0].submenu![1].action).toHaveBeenCalledOnce();
+    });
+
+    it('ArrowLeft closes submenu and refocuses parent', () => {
+      showContextMenu({ x: 100, y: 100, items: makeSubmenuItems() });
+      const items = getMenuItems();
+      items[0].focus();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+
+      expect(getSubMenuItems().length).toBeGreaterThan(0);
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+
+      expect(getSubMenuItems()).toHaveLength(0);
+      expect(document.activeElement).toBe(items[0]);
+    });
+
+    it('Escape in submenu closes submenu and refocuses parent, NOT entire menu', () => {
+      showContextMenu({ x: 100, y: 100, items: makeSubmenuItems() });
+      const items = getMenuItems();
+      items[0].focus();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+
+      expect(getSubMenuItems().length).toBeGreaterThan(0);
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+      // Submenu is gone
+      expect(getSubMenuItems()).toHaveLength(0);
+      // Main menu still exists
+      expect(getMenu()).not.toBeNull();
+      // Parent is refocused
+      expect(document.activeElement).toBe(items[0]);
+    });
+
+    it('ArrowRight on non-submenu item does nothing', () => {
+      showContextMenu({ x: 100, y: 100, items: makeSubmenuItems() });
+      const items = getMenuItems();
+      items[1].focus(); // "Edit" — no submenu
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+
+      // No submenu opened
+      const menus = document.querySelectorAll('[role="menu"]');
+      expect(menus).toHaveLength(1);
+      // Focus unchanged
+      expect(document.activeElement).toBe(items[1]);
+    });
+
+    it('aria-expanded resets to "false" when submenu closes', () => {
+      showContextMenu({ x: 100, y: 100, items: makeSubmenuItems() });
+      const items = getMenuItems();
+      items[0].focus();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      expect(items[0].getAttribute('aria-expanded')).toBe('true');
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+      expect(items[0].getAttribute('aria-expanded')).toBe('false');
+    });
+  });
 });
