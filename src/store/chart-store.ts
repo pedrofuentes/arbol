@@ -1,4 +1,4 @@
-import type { OrgNode, ColorCategory, ChartRecord, VersionRecord } from '../types';
+import type { OrgNode, ColorCategory, ChartRecord, VersionRecord, ChartBundle } from '../types';
 import { ChartDB } from './chart-db';
 import { generateId } from '../utils/id';
 
@@ -277,6 +277,74 @@ export class ChartStore {
   async deleteVersion(id: string): Promise<void> {
     await this.db.deleteVersion(id);
     this.emit();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Bundle import
+  // ---------------------------------------------------------------------------
+
+  async importChartAsNew(bundle: ChartBundle): Promise<ChartRecord> {
+    let name = bundle.chart.name;
+    if (await this.db.isChartNameTaken(name)) {
+      name = `${bundle.chart.name} (imported)`;
+      let suffix = 2;
+      while (await this.db.isChartNameTaken(name)) {
+        name = `${bundle.chart.name} (imported ${suffix++})`;
+      }
+    }
+
+    const now = new Date().toISOString();
+    const chart: ChartRecord = {
+      id: generateId(),
+      name,
+      createdAt: now,
+      updatedAt: now,
+      workingTree: bundle.chart.workingTree,
+      categories: bundle.chart.categories,
+    };
+    await this.db.putChart(chart);
+
+    for (const v of bundle.versions) {
+      const version: VersionRecord = {
+        id: generateId(),
+        chartId: chart.id,
+        name: v.name,
+        createdAt: v.createdAt,
+        tree: v.tree,
+      };
+      await this.db.putVersion(version);
+    }
+
+    this.activeChartId = chart.id;
+    this.lastSavedTree = JSON.stringify(chart.workingTree);
+    this.emit();
+    return chart;
+  }
+
+  async importChartReplaceCurrent(bundle: ChartBundle): Promise<ChartRecord> {
+    if (!this.activeChartId) throw new Error('No active chart');
+    const chart = await this.db.getChart(this.activeChartId);
+    if (!chart) throw new Error(`Chart not found: ${this.activeChartId}`);
+
+    chart.workingTree = bundle.chart.workingTree;
+    chart.categories = bundle.chart.categories;
+    chart.updatedAt = new Date().toISOString();
+    await this.db.putChart(chart);
+
+    for (const v of bundle.versions) {
+      const version: VersionRecord = {
+        id: generateId(),
+        chartId: chart.id,
+        name: v.name,
+        createdAt: v.createdAt,
+        tree: v.tree,
+      };
+      await this.db.putVersion(version);
+    }
+
+    this.lastSavedTree = JSON.stringify(chart.workingTree);
+    this.emit();
+    return chart;
   }
 
   // ---------------------------------------------------------------------------

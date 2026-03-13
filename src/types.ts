@@ -49,3 +49,20 @@ export interface VersionRecord {
   createdAt: string;
   tree: OrgNode;
 }
+
+export interface ChartBundleVersion {
+  name: string;
+  createdAt: string;
+  tree: OrgNode;
+}
+
+export interface ChartBundle {
+  format: 'arbol-chart';
+  version: 1;
+  chart: {
+    name: string;
+    workingTree: OrgNode;
+    categories: ColorCategory[];
+  };
+  versions: ChartBundleVersion[];
+}

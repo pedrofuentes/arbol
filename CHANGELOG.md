@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] — 2026-03-13
+
+### Added
+- **Chart bundle export** — new "Export" button on each chart in the sidebar opens a dialog to select which versions to include, then downloads a `.arbol.json` bundle containing the chart's working tree, categories, and selected version snapshots
+- **Chart bundle import** — the Import tab auto-detects `.arbol.json` bundle files; users choose to create a new chart or replace the current one; imported versions are added alongside any existing versions
+
 ## [2.3.0] — 2026-03-13
 
 ### Added

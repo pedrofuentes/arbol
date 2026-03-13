@@ -4,7 +4,8 @@ import { parseCsvToTree, extractHeaders } from '../utils/csv-parser';
 import { normalizeTreeText } from '../utils/text-normalize';
 import { ColumnMapper } from '../ui/column-mapper';
 import { PresetCreator } from '../ui/preset-creator';
-import type { OrgNode, ColumnMapping, TextNormalization } from '../types';
+import type { OrgNode, ColumnMapping, TextNormalization, ChartBundle, ChartRecord } from '../types';
+import type { ChartStore } from '../store/chart-store';
 import { timestampedFilename } from '../utils/filename';
 import { showConfirmDialog } from '../ui/confirm-dialog';
 
@@ -34,18 +35,25 @@ export class ImportEditor {
   private slotMapper: ColumnMapper | null = null;
   private pendingCsvText: string | null = null;
   private pendingImport: ParsedImport | null = null;
+  private pendingBundle: ChartBundle | null = null;
   private nameNormSelect: HTMLSelectElement | null = null;
   private titleNormSelect: HTMLSelectElement | null = null;
   private onImportAsNewChart: ((tree: OrgNode, name: string) => Promise<void>) | null;
+  private chartStore: ChartStore | null;
+  private onBundleImported: ((chart: ChartRecord) => void) | null;
 
   constructor(
     container: HTMLElement,
     store: OrgStore,
     onImportAsNewChart?: (tree: OrgNode, name: string) => Promise<void>,
+    chartStore?: ChartStore,
+    onBundleImported?: (chart: ChartRecord) => void,
   ) {
     this.container = container;
     this.store = store;
     this.onImportAsNewChart = onImportAsNewChart ?? null;
+    this.chartStore = chartStore ?? null;
+    this.onBundleImported = onBundleImported ?? null;
     this.mappingStore = new MappingStore();
     this.build();
   }
@@ -352,7 +360,7 @@ export class ImportEditor {
     dropZone.appendChild(dropLabel);
 
     const dropHint = document.createElement('div');
-    dropHint.textContent = 'Supports .json, .csv, and .xlsx files';
+    dropHint.textContent = 'Supports .json, .csv, .xlsx, and .arbol.json files';
     dropHint.style.cssText =
       'color:var(--text-tertiary);font-size:10px;margin-top:4px;font-family:var(--font-sans);';
     dropZone.appendChild(dropHint);
@@ -602,6 +610,23 @@ export class ImportEditor {
     const ext =
       source.lastIndexOf('.') >= 0 ? source.slice(source.lastIndexOf('.')).toLowerCase() : '';
 
+    // Detect chart bundle format
+    if (ext === '.json' || ext === '') {
+      const trimmed = text.trimStart();
+      if (trimmed.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed && parsed.format === 'arbol-chart') {
+            return this.parseChartBundle(parsed, source);
+          }
+        } catch (e) {
+          // If parseChartBundle threw a validation error, propagate it
+          if (e instanceof Error && e.message.includes('chart bundle')) throw e;
+          /* otherwise not a bundle, continue */
+        }
+      }
+    }
+
     if (ext === '.csv') return this.parseCsv(text, source);
     if (ext === '.json') return this.parseJson(text, source);
 
@@ -662,6 +687,43 @@ export class ImportEditor {
     }
     const nodeCount = this.countNodes(parsed);
     return { tree: parsed, nodeCount, format: 'JSON', source };
+  }
+
+  private parseChartBundle(parsed: unknown, source: string): ParsedImport {
+    const bundle = parsed as ChartBundle;
+
+    if (bundle.version !== 1) {
+      throw new Error(`Unsupported chart bundle version: ${bundle.version}`);
+    }
+    if (!bundle.chart?.name || !bundle.chart?.workingTree) {
+      throw new Error('Invalid chart bundle: missing chart name or working tree');
+    }
+    const root = bundle.chart.workingTree;
+    if (!root.id || !root.name || !root.title) {
+      throw new Error('Invalid chart bundle: working tree root must have id, name, and title');
+    }
+    if (bundle.versions && !Array.isArray(bundle.versions)) {
+      throw new Error('Invalid chart bundle: versions must be an array');
+    }
+    for (const v of bundle.versions ?? []) {
+      if (!v.name || !v.tree) {
+        throw new Error('Invalid chart bundle: each version must have name and tree');
+      }
+    }
+
+    this.pendingBundle = bundle;
+
+    const nodeCount = this.countNodes(root);
+    const versionCount = bundle.versions?.length ?? 0;
+    return {
+      tree: root,
+      nodeCount,
+      format: 'JSON',
+      source,
+      warning: versionCount > 0
+        ? `Chart bundle "${bundle.chart.name}" with ${versionCount} version${versionCount === 1 ? '' : 's'}`
+        : `Chart bundle "${bundle.chart.name}" with no versions`,
+    };
   }
 
   private countNodes(node: OrgNode): number {
@@ -733,6 +795,29 @@ export class ImportEditor {
   private async applyImport(): Promise<void> {
     if (!this.pendingImport) return;
     try {
+      // Chart bundle flow
+      if (this.pendingBundle && this.chartStore) {
+        const importAsNew = await showConfirmDialog({
+          title: 'Import Chart Bundle',
+          message: `Import "${this.pendingBundle.chart.name}" with ${this.pendingBundle.versions.length} version(s). Create a new chart or replace the current one?`,
+          confirmLabel: 'New chart',
+          cancelLabel: 'Replace current',
+          danger: false,
+        });
+
+        if (importAsNew) {
+          const chart = await this.chartStore.importChartAsNew(this.pendingBundle);
+          if (this.onBundleImported) this.onBundleImported(chart);
+        } else {
+          const chart = await this.chartStore.importChartReplaceCurrent(this.pendingBundle);
+          if (this.onBundleImported) this.onBundleImported(chart);
+        }
+
+        this.pasteArea.value = '';
+        this.clearStatus();
+        return;
+      }
+
       const nameMode = (this.nameNormSelect?.value ?? 'none') as TextNormalization;
       const titleMode = (this.titleNormSelect?.value ?? 'none') as TextNormalization;
       let tree = this.pendingImport.tree;
@@ -829,6 +914,7 @@ export class ImportEditor {
 
   private clearStatus(): void {
     this.pendingImport = null;
+    this.pendingBundle = null;
     this.nameNormSelect = null;
     this.titleNormSelect = null;
     this.statusArea.style.display = 'none';

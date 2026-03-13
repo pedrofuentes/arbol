@@ -1,6 +1,8 @@
 import type { ChartRecord, VersionRecord, OrgNode, ColorCategory } from '../types';
 import type { ChartStore } from '../store/chart-store';
 import { showConfirmDialog } from '../ui/confirm-dialog';
+import { showExportDialog } from '../ui/export-dialog';
+import { buildChartBundle, downloadChartBundle } from '../export/chart-exporter';
 
 export interface ChartEditorOptions {
   container: HTMLElement;
@@ -291,6 +293,13 @@ export class ChartEditor {
     });
     actions.appendChild(duplicateBtn);
 
+    const exportBtn = this.createInlineButton('Export');
+    exportBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.handleExportChart(chart);
+    });
+    actions.appendChild(exportBtn);
+
     const deleteBtn = this.createInlineButton('Delete', true);
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -416,6 +425,24 @@ export class ChartEditor {
       const copy = await this.chartStore.duplicateChart(chart.id);
       this.onChartSwitch(copy);
       await this.refresh();
+    } catch (err) {
+      this.showError(this.chartErrorEl, (err as Error).message);
+    }
+  }
+
+  private async handleExportChart(chart: ChartRecord): Promise<void> {
+    try {
+      const versions = await this.chartStore.getVersions(chart.id);
+      showExportDialog({
+        chartName: chart.name,
+        versions,
+        onExport: (selectedVersionIds) => {
+          const selectedVersions = versions.filter((v) => selectedVersionIds.includes(v.id));
+          const bundle = buildChartBundle(chart, selectedVersions);
+          downloadChartBundle(bundle, chart.name);
+        },
+        onCancel: () => {},
+      });
     } catch (err) {
       this.showError(this.chartErrorEl, (err as Error).message);
     }

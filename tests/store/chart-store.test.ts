@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ChartDB } from '../../src/store/chart-db';
 import { ChartStore } from '../../src/store/chart-store';
-import type { OrgNode, ColorCategory } from '../../src/types';
+import type { OrgNode, ColorCategory, ChartBundle } from '../../src/types';
 
 let idCounter = 0;
 vi.mock('../../src/utils/id', () => ({
@@ -536,6 +536,194 @@ describe('ChartStore', () => {
       unsub();
       await store.createChart('Second');
       expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Bundle import
+  // ---------------------------------------------------------------------------
+
+  describe('Bundle import', () => {
+    function makeBundle(overrides?: Partial<ChartBundle>): ChartBundle {
+      return {
+        format: 'arbol-chart',
+        version: 1,
+        chart: {
+          name: 'Imported Chart',
+          workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+          categories: [{ id: 'cat-1', label: 'Open', color: '#ff0000' }],
+        },
+        versions: [
+          {
+            name: 'v1',
+            createdAt: '2026-01-01T00:00:00.000Z',
+            tree: { id: 'r', name: 'Root v1', title: 'CEO' },
+          },
+        ],
+        ...overrides,
+      };
+    }
+
+    beforeEach(async () => {
+      await store.initialize();
+    });
+
+    // --- importChartAsNew ---
+
+    describe('importChartAsNew', () => {
+      it('creates a new chart from bundle with correct tree and categories', async () => {
+        const bundle = makeBundle();
+        const chart = await store.importChartAsNew(bundle);
+
+        expect(chart.name).toBe('Imported Chart');
+        expect(chart.workingTree).toEqual({ id: 'r', name: 'Root', title: 'CEO' });
+        expect(chart.categories).toEqual([{ id: 'cat-1', label: 'Open', color: '#ff0000' }]);
+      });
+
+      it('creates versions with correct names and trees', async () => {
+        const bundle = makeBundle({
+          versions: [
+            { name: 'v1', createdAt: '2026-01-01T00:00:00.000Z', tree: { id: 'r', name: 'Root v1', title: 'CEO' } },
+            { name: 'v2', createdAt: '2026-02-01T00:00:00.000Z', tree: { id: 'r', name: 'Root v2', title: 'CEO' } },
+          ],
+        });
+        const chart = await store.importChartAsNew(bundle);
+        const versions = await store.getVersions(chart.id);
+
+        expect(versions).toHaveLength(2);
+        const names = versions.map((v) => v.name).sort();
+        expect(names).toEqual(['v1', 'v2']);
+        const v1 = versions.find((v) => v.name === 'v1')!;
+        expect(v1.tree.name).toBe('Root v1');
+        expect(v1.createdAt).toBe('2026-01-01T00:00:00.000Z');
+      });
+
+      it('generates fresh IDs for chart and versions', async () => {
+        const bundle = makeBundle();
+        const chart = await store.importChartAsNew(bundle);
+        const versions = await store.getVersions(chart.id);
+
+        // IDs should come from generateId (test-id-N), not from the bundle data
+        expect(chart.id).toMatch(/^test-id-/);
+        for (const v of versions) {
+          expect(v.id).toMatch(/^test-id-/);
+          expect(v.chartId).toBe(chart.id);
+        }
+      });
+
+      it('sets the new chart as active', async () => {
+        const bundle = makeBundle();
+        const chart = await store.importChartAsNew(bundle);
+        expect(store.getActiveChartId()).toBe(chart.id);
+      });
+
+      it('handles name collision — appends " (imported)" suffix', async () => {
+        await store.createChart('Imported Chart');
+        const bundle = makeBundle();
+        const chart = await store.importChartAsNew(bundle);
+        expect(chart.name).toBe('Imported Chart (imported)');
+      });
+
+      it('handles multiple name collisions — appends " (imported 2)", " (imported 3)"', async () => {
+        await store.createChart('Imported Chart');
+        await store.createChart('Imported Chart (imported)');
+        const chart = await store.importChartAsNew(makeBundle());
+        expect(chart.name).toBe('Imported Chart (imported 2)');
+
+        // One more collision
+        const chart2 = await store.importChartAsNew(makeBundle());
+        expect(chart2.name).toBe('Imported Chart (imported 3)');
+      });
+
+      it('works with empty versions array', async () => {
+        const bundle = makeBundle({ versions: [] });
+        const chart = await store.importChartAsNew(bundle);
+        expect(chart).toBeDefined();
+        expect(chart.workingTree.name).toBe('Root');
+        const versions = await store.getVersions(chart.id);
+        expect(versions).toHaveLength(0);
+      });
+
+      it('emits change event', async () => {
+        const listener = vi.fn();
+        store.onChange(listener);
+        await store.importChartAsNew(makeBundle());
+        expect(listener).toHaveBeenCalled();
+      });
+    });
+
+    // --- importChartReplaceCurrent ---
+
+    describe('importChartReplaceCurrent', () => {
+      it('replaces active chart working tree and categories', async () => {
+        const bundle = makeBundle();
+        const updated = await store.importChartReplaceCurrent(bundle);
+
+        expect(updated.workingTree).toEqual({ id: 'r', name: 'Root', title: 'CEO' });
+        expect(updated.categories).toEqual([{ id: 'cat-1', label: 'Open', color: '#ff0000' }]);
+      });
+
+      it('adds bundle versions as versions of the active chart', async () => {
+        const bundle = makeBundle({
+          versions: [
+            { name: 'imported-v1', createdAt: '2026-01-01T00:00:00.000Z', tree: { id: 'r', name: 'R1', title: 'CEO' } },
+          ],
+        });
+        const chart = await store.importChartReplaceCurrent(bundle);
+        const versions = await store.getVersions(chart.id);
+
+        const imported = versions.find((v) => v.name === 'imported-v1');
+        expect(imported).toBeDefined();
+        expect(imported!.chartId).toBe(chart.id);
+        expect(imported!.tree.name).toBe('R1');
+      });
+
+      it('preserves existing versions of the active chart', async () => {
+        await store.saveVersion('existing-v1', makeTree());
+        const bundle = makeBundle({
+          versions: [
+            { name: 'imported-v1', createdAt: '2026-01-01T00:00:00.000Z', tree: { id: 'r', name: 'R1', title: 'CEO' } },
+          ],
+        });
+        const chart = await store.importChartReplaceCurrent(bundle);
+        const versions = await store.getVersions(chart.id);
+
+        const names = versions.map((v) => v.name);
+        expect(names).toContain('existing-v1');
+        expect(names).toContain('imported-v1');
+      });
+
+      it('generates fresh IDs for imported versions', async () => {
+        const bundle = makeBundle();
+        const chart = await store.importChartReplaceCurrent(bundle);
+        const versions = await store.getVersions(chart.id);
+
+        for (const v of versions) {
+          expect(v.id).toMatch(/^test-id-/);
+          expect(v.chartId).toBe(chart.id);
+        }
+      });
+
+      it('throws if no active chart', async () => {
+        const freshStore = new ChartStore(db);
+        await expect(freshStore.importChartReplaceCurrent(makeBundle())).rejects.toThrow('No active chart');
+      });
+
+      it('emits change event', async () => {
+        const listener = vi.fn();
+        store.onChange(listener);
+        await store.importChartReplaceCurrent(makeBundle());
+        expect(listener).toHaveBeenCalled();
+      });
+
+      it('works with empty versions array', async () => {
+        const bundle = makeBundle({ versions: [] });
+        const chart = await store.importChartReplaceCurrent(bundle);
+        expect(chart.workingTree.name).toBe('Root');
+        // Only pre-existing versions remain (if any)
+        const versions = await store.getVersions(chart.id);
+        expect(versions).toHaveLength(0);
+      });
     });
   });
 });
