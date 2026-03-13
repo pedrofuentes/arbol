@@ -55,10 +55,10 @@ const DEFAULT_OPTS: ResolvedOptions = {
   showHeadcount: false,
   headcountBadgeColor: '#9ca3af',
   headcountBadgeTextColor: '#1e293b',
-  headcountBadgeFontSize: 9,
-  headcountBadgeRadius: 8,
-  headcountBadgePadding: 6,
-  headcountBadgeHeight: 18,
+  headcountBadgeFontSize: 11,
+  headcountBadgeRadius: 4,
+  headcountBadgePadding: 8,
+  headcountBadgeHeight: 22,
   categories: [],
 } as ResolvedOptions;
 

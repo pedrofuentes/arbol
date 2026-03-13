@@ -93,10 +93,10 @@ export function resolveStyles(options?: PptxExportOptions): ResolvedStyles {
     showHeadcount: options?.showHeadcount ?? false,
     headcountBadgeColor: stripHash(options?.headcountBadgeColor ?? '#9CA3AF'),
     headcountBadgeTextColor: stripHash(options?.headcountBadgeTextColor ?? '#1E293B'),
-    headcountBadgeFontSize: Math.max(3, Math.round((options?.headcountBadgeFontSize ?? 9) * PX_TO_PT)),
-    headcountBadgeHeight: options?.headcountBadgeHeight ?? 18,
-    headcountBadgePadding: options?.headcountBadgePadding ?? 6,
-    headcountBadgeRadius: options?.headcountBadgeRadius ?? 8,
+    headcountBadgeFontSize: Math.max(3, Math.round((options?.headcountBadgeFontSize ?? 11) * PX_TO_PT)),
+    headcountBadgeHeight: options?.headcountBadgeHeight ?? 22,
+    headcountBadgePadding: options?.headcountBadgePadding ?? 8,
+    headcountBadgeRadius: options?.headcountBadgeRadius ?? 4,
   };
 }
 
