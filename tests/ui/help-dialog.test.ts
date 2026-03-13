@@ -1,5 +1,24 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { showHelpDialog } from '../../src/ui/help-dialog';
+
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
+    _store: store,
+  };
+})();
+
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
 
 describe('showHelpDialog', () => {
   beforeEach(() => {
@@ -88,5 +107,30 @@ describe('showHelpDialog', () => {
     const headingTexts = Array.from(headings).map((h) => h.textContent);
     expect(headingTexts).toContain('Getting Started');
     expect(headingTexts).toContain('Keyboard Shortcuts');
+  });
+
+  it('contains Your Data section with privacy message', () => {
+    showHelpDialog();
+    expect(document.body.textContent).toContain('Your Data');
+    expect(document.body.textContent).toContain('never leave your device');
+    expect(document.body.textContent).toContain('no server');
+  });
+
+  it('renders Clear All Data button', () => {
+    showHelpDialog();
+    const clearBtn = document.querySelector('[aria-label="Clear all local data"]') as HTMLButtonElement;
+    expect(clearBtn).not.toBeNull();
+    expect(clearBtn.textContent).toContain('Clear All Data');
+  });
+
+  it('Clear All Data button triggers confirmation dialog', async () => {
+    showHelpDialog();
+    const clearBtn = document.querySelector('[aria-label="Clear all local data"]') as HTMLButtonElement;
+    clearBtn.click();
+
+    // Confirm dialog should appear with danger warning
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toContain('Delete everything');
+    });
   });
 });

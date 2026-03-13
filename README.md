@@ -27,6 +27,10 @@ An interactive org chart editor for the browser.
 - Keyboard shortcuts (Ctrl+Z, Ctrl+E, Ctrl+F, etc.)
 - Pan/zoom with fit-to-screen
 
+## Privacy
+
+Arbol runs entirely in your browser. Your org chart data, settings, and preferences are stored in your browser's local storage and **never leave your device**. There is no server, no database, no tracking, and no account required. When you close the tab, your data stays on your machine — nobody else can see it.
+
 ## Getting Started
 
 ```bash

@@ -1,4 +1,15 @@
 import { createOverlay, trapFocus } from './dialog-utils';
+import { showConfirmDialog } from './confirm-dialog';
+
+const ARBOL_STORAGE_KEYS = [
+  'arbol-org-data',
+  'arbol-settings',
+  'arbol-categories',
+  'arbol-csv-mappings',
+  'arbol-accordion-state',
+  'arbol-custom-presets',
+  'arbol-theme',
+];
 
 const HELP_SECTIONS = [
   {
@@ -83,6 +94,17 @@ const HELP_SECTIONS = [
         { tag: 'strong', text: 'Search' },
         ' — Type in the search bar to highlight matching people. Non-matches are dimmed.',
       ],
+    ],
+  },
+  {
+    title: 'Your Data',
+    items: [
+      [
+        'Arbol runs entirely in your browser. Your org chart, settings, and preferences are stored in your browser\u2019s local storage and ',
+        { tag: 'strong', text: 'never leave your device' },
+        '.',
+      ],
+      ['There is no server, no database, no tracking, and no account required. Your data stays on your machine\u200A\u2014\u200Anobody else can see it.'],
     ],
   },
   {
@@ -235,6 +257,48 @@ export function showHelpDialog(): void {
     }
 
     sectionEl.appendChild(list);
+
+    // Add "Clear All Data" button after the "Your Data" section
+    if (section.title === 'Your Data') {
+      const clearBtn = document.createElement('button');
+      clearBtn.textContent = '🗑 Clear All Data';
+      clearBtn.setAttribute('aria-label', 'Clear all local data');
+      clearBtn.style.cssText = `
+        margin-top:10px;margin-left:12px;padding:5px 14px;font-size:12px;
+        font-family:var(--font-sans);cursor:pointer;
+        background:transparent;color:var(--text-tertiary);
+        border:1px solid var(--border-default);border-radius:var(--radius-md);
+        transition:background var(--transition-fast),color var(--transition-fast),border-color var(--transition-fast);
+      `;
+      clearBtn.addEventListener('mouseenter', () => {
+        clearBtn.style.background = 'var(--bg-danger, #fef2f2)';
+        clearBtn.style.color = 'var(--text-danger, #dc2626)';
+        clearBtn.style.borderColor = 'var(--text-danger, #dc2626)';
+      });
+      clearBtn.addEventListener('mouseleave', () => {
+        clearBtn.style.background = 'transparent';
+        clearBtn.style.color = 'var(--text-tertiary)';
+        clearBtn.style.borderColor = 'var(--border-default)';
+      });
+      clearBtn.addEventListener('click', async () => {
+        const confirmed = await showConfirmDialog({
+          title: 'Clear All Data',
+          message:
+            'This will permanently delete your entire org chart, all settings, themes, and preferences. ' +
+            'This cannot be undone.\n\nAre you sure?',
+          confirmLabel: 'Delete everything',
+          danger: true,
+        });
+        if (confirmed) {
+          for (const key of ARBOL_STORAGE_KEYS) {
+            localStorage.removeItem(key);
+          }
+          window.location.reload();
+        }
+      });
+      sectionEl.appendChild(clearBtn);
+    }
+
     content.appendChild(sectionEl);
   }
 
