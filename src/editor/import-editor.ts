@@ -533,14 +533,28 @@ export class ImportEditor {
       const reader = new FileReader();
       reader.onload = async () => {
         try {
-          const xlsx = await import('xlsx');
-          const workbook = xlsx.read(reader.result, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const firstSheet = workbook.Sheets[sheetName];
-          const csvText = xlsx.utils.sheet_to_csv(firstSheet);
+          const ExcelJS = await import('exceljs');
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(reader.result as ArrayBuffer);
+          const worksheet = workbook.worksheets[0];
+          const rows: string[] = [];
+          worksheet.eachRow((row) => {
+            const cells = row.values as (string | number | boolean | null | undefined)[];
+            // row.values is 1-indexed (index 0 is undefined), so slice from 1
+            const csvRow = cells.slice(1).map((v) => {
+              if (v == null) return '';
+              const s = String(v);
+              return s.includes(',') || s.includes('"') || s.includes('\n')
+                ? '"' + s.replace(/"/g, '""') + '"'
+                : s;
+            });
+            rows.push(csvRow.join(','));
+          });
+          const csvText = rows.join('\n');
           const result = this.parseCsv(csvText, file.name);
-          if (workbook.SheetNames.length > 1) {
-            result.warning = `This workbook has ${workbook.SheetNames.length} sheets. Only "${sheetName}" was imported.`;
+          if (workbook.worksheets.length > 1) {
+            const sheetName = worksheet.name;
+            result.warning = `This workbook has ${workbook.worksheets.length} sheets. Only "${sheetName}" was imported.`;
           }
           this.pendingImport = result;
           this.showStatus(result);
