@@ -107,6 +107,12 @@ export class ChartDB {
     return this.put(VERSIONS_STORE, version);
   }
 
+  /** Writes multiple versions in a single transaction for efficient bulk imports. */
+  putVersionsBatch(versions: VersionRecord[]): Promise<void> {
+    if (versions.length === 0) return Promise.resolve();
+    return this.putBatch(VERSIONS_STORE, versions);
+  }
+
   deleteVersion(id: string): Promise<void> {
     return this.deleteByKey(VERSIONS_STORE, id);
   }
@@ -214,6 +220,30 @@ export class ChartDB {
       tx.oncomplete = () => resolve();
       tx.onerror = () => {
         reject(new Error(`Failed to delete ${key} from ${storeName}: ${tx.error?.message}`));
+      };
+    });
+  }
+
+  private putBatch(storeName: string, items: unknown[]): Promise<void> {
+    const db = this.requireDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
+      for (const item of items) {
+        store.put(item);
+      }
+
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => {
+        if (tx.error?.name === 'QuotaExceededError') {
+          reject(
+            new Error(
+              'Storage quota exceeded. Please delete old charts or versions to free up space.',
+            ),
+          );
+        } else {
+          reject(new Error(`Failed to batch put into ${storeName}: ${tx.error?.message}`));
+        }
       };
     });
   }

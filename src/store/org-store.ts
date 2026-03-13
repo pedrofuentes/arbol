@@ -1,17 +1,16 @@
 import { OrgNode } from '../types';
 import { findNodeById, findParent, cloneTree, flattenTree, isLeaf, isM1 } from '../utils/tree';
 import { generateId } from '../utils/id';
+import { EventEmitter } from '../utils/event-emitter';
 
-type ChangeListener = () => void;
-
-export class OrgStore {
+export class OrgStore extends EventEmitter {
   private root: OrgNode;
-  private listeners: Set<ChangeListener> = new Set();
   private undoStack: string[] = [];
   private redoStack: string[] = [];
   private static MAX_HISTORY = 50;
 
   constructor(root: OrgNode) {
+    super();
     this.root = cloneTree(root);
   }
 
@@ -128,16 +127,17 @@ export class OrgStore {
     this.emit();
   }
 
-  updateNode(id: string, fields: { name?: string; title?: string }): void {
+  updateNode(id: string, fields: { name?: string; title?: string }): OrgNode {
     this.snapshot();
     const node = findNodeById(this.root, id);
     if (!node) throw new Error(`Node "${id}" not found`);
     if (fields.name !== undefined) node.name = fields.name;
     if (fields.title !== undefined) node.title = fields.title;
     this.emit();
+    return node;
   }
 
-  setNodeCategory(nodeId: string, categoryId: string | null): void {
+  setNodeCategory(nodeId: string, categoryId: string | null): OrgNode {
     const node = findNodeById(this.root, nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
     this.snapshot();
@@ -147,6 +147,7 @@ export class OrgStore {
       node.categoryId = categoryId;
     }
     this.emit();
+    return node;
   }
 
   bulkSetCategory(nodeIds: string[], categoryId: string | null): void {
@@ -169,7 +170,7 @@ export class OrgStore {
     return JSON.stringify(this.root, null, 2);
   }
 
-  setDottedLine(nodeId: string, isDotted: boolean): void {
+  setDottedLine(nodeId: string, isDotted: boolean): OrgNode {
     if (this.root.id === nodeId) throw new Error('Cannot set dotted line on root node');
     const node = findNodeById(this.root, nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
@@ -186,9 +187,10 @@ export class OrgStore {
       delete node.dottedLine;
     }
     this.emit();
+    return node;
   }
 
-  moveNode(nodeId: string, newParentId: string, dottedLine?: boolean): void {
+  moveNode(nodeId: string, newParentId: string, dottedLine?: boolean): OrgNode {
     if (this.root.id === nodeId) throw new Error('Cannot move root node');
     const node = findNodeById(this.root, nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
@@ -199,7 +201,7 @@ export class OrgStore {
       throw new Error('Cannot move a node under its own descendant');
 
     const currentParent = findParent(this.root, nodeId);
-    if (currentParent && currentParent.id === newParentId) return;
+    if (currentParent && currentParent.id === newParentId) return node;
 
     this.snapshot();
     if (currentParent) {
@@ -216,6 +218,7 @@ export class OrgStore {
       }
     }
     this.emit();
+    return node;
   }
 
   bulkMoveNodes(nodeIds: string[], newParentId: string): void {
@@ -330,20 +333,4 @@ export class OrgStore {
     }
   }
 
-  onChange(listener: ChangeListener): () => void {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-
-  private emit(): void {
-    for (const listener of this.listeners) {
-      try {
-        listener();
-      } catch (e) {
-        console.error('OrgStore listener error:', e);
-      }
-    }
-  }
 }

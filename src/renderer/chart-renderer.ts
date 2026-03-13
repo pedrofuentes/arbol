@@ -612,7 +612,6 @@ export class ChartRenderer {
   private renderDiffLegend(layout: LayoutResult): void {
     if (!this.diffMap) return;
 
-    // Count occurrences per status
     const counts: Record<DiffStatus, number> = {
       added: 0, removed: 0, moved: 0, modified: 0, unchanged: 0,
     };
@@ -620,15 +619,13 @@ export class ChartRenderer {
       counts[entry.status]++;
     }
 
-    const items: { status: DiffStatus; label: string; color: string; count: number }[] = [];
+    const items: { label: string; color: string }[] = [];
     const statusOrder: DiffStatus[] = ['added', 'removed', 'moved', 'modified'];
     for (const status of statusOrder) {
       if (counts[status] > 0) {
         items.push({
-          status,
           label: `${ChartRenderer.DIFF_LABELS[status]} (${counts[status]})`,
           color: ChartRenderer.DIFF_COLORS[status],
-          count: counts[status],
         });
       }
     }
@@ -636,15 +633,8 @@ export class ChartRenderer {
 
     const { boundingBox } = layout;
     const legendFs = this.opts.legendFontSize ?? 12;
-    const legendPadding = legendFs;
-    const swatchSize = legendFs;
-    const textGap = Math.round(legendFs * 0.5);
-    const rowHeight = Math.round(legendFs * 1.6);
-    const swatchRx = Math.round(Math.max(1, legendFs * 0.15));
-    const bgRx = Math.round(Math.max(2, legendFs * 0.35));
-    const columnGap = Math.round(legendFs * 1.5);
 
-    // Position below existing legend if categories exist, otherwise below chart
+    // Position below existing category legend if present, otherwise below chart
     const existingLegend = this.g.select<SVGGElement>('.legend');
     let legendY: number;
     if (!existingLegend.empty()) {
@@ -658,25 +648,98 @@ export class ChartRenderer {
       legendY = boundingBox.minY + boundingBox.height + Math.round(legendFs * 2.2);
     }
 
-    const legendX = boundingBox.minX;
-    const diffLegendGroup = this.g.append('g').attr('class', 'diff-legend');
-    const bgRect = diffLegendGroup.append('rect').attr('class', 'diff-legend-bg');
+    this.renderLegendGeneric({
+      items,
+      groupClass: 'diff-legend',
+      bgClass: 'diff-legend-bg',
+      itemClass: 'diff-legend-item',
+      legendX: boundingBox.minX,
+      legendY,
+      rows: 1,
+      cols: items.length,
+      swatchStroke: false,
+      textWidthFallback: true,
+    });
+  }
 
-    // Lay items out in a single row
-    const maxTextWidths: number[] = [];
+  private renderLegend(layout: LayoutResult): void {
+    const categories = this.opts.categories;
+    if (!categories || categories.length === 0) return;
+
+    const { boundingBox } = layout;
+    const legendFs = this.opts.legendFontSize ?? 12;
+    const legendGap = Math.round(legendFs * 2.2);
+
+    const count = categories.length;
+    const legendRows = this.opts.legendRows ?? 0;
+    const rows = legendRows > 0 ? Math.min(legendRows, count) : count;
+    const cols = Math.ceil(count / rows);
+
+    this.renderLegendGeneric({
+      items: categories.map(cat => ({ label: cat.label, color: cat.color })),
+      groupClass: 'legend',
+      bgClass: 'legend-bg',
+      itemClass: 'legend-item',
+      legendX: boundingBox.minX,
+      legendY: boundingBox.minY + boundingBox.height + legendGap,
+      rows,
+      cols,
+      swatchStroke: true,
+      textWidthFallback: false,
+    });
+  }
+
+  private renderLegendGeneric(config: {
+    items: { label: string; color: string }[];
+    groupClass: string;
+    bgClass: string;
+    itemClass: string;
+    legendX: number;
+    legendY: number;
+    rows: number;
+    cols: number;
+    swatchStroke: boolean;
+    textWidthFallback: boolean;
+  }): void {
+    const {
+      items, groupClass, bgClass, itemClass,
+      legendX, legendY, rows, cols, swatchStroke, textWidthFallback,
+    } = config;
+
+    const legendFs = this.opts.legendFontSize ?? 12;
+    const legendPadding = legendFs;
+    const swatchSize = legendFs;
+    const textGap = Math.round(legendFs * 0.5);
+    const rowHeight = Math.round(legendFs * 1.6);
+    const swatchRx = Math.round(Math.max(1, legendFs * 0.15));
+    const bgRx = Math.round(Math.max(2, legendFs * 0.35));
+    const columnGap = Math.round(legendFs * 1.5);
+
+    const group = this.g.append('g').attr('class', groupClass);
+    const bgRect = group.append('rect').attr('class', bgClass);
+
+    const maxTextWidths: number[] = new Array(cols).fill(0);
 
     items.forEach((item, i) => {
-      const rowG = diffLegendGroup
-        .append('g')
-        .attr('class', 'diff-legend-item')
-        .attr('data-col', i);
+      const row = Math.floor(i / cols);
+      const col = i % cols;
 
-      rowG
+      const rowG = group
+        .append('g')
+        .attr('class', itemClass)
+        .attr('data-row', row)
+        .attr('data-col', col);
+
+      const swatch = rowG
         .append('rect')
         .attr('width', swatchSize)
         .attr('height', swatchSize)
         .attr('fill', item.color)
         .attr('rx', swatchRx);
+
+      if (swatchStroke) {
+        swatch.attr('stroke', '#cbd5e1').attr('stroke-width', 0.5);
+      }
 
       const text = rowG
         .append('text')
@@ -690,120 +753,19 @@ export class ChartRenderer {
 
       const textNode = text.node();
       const bbox = textNode && typeof textNode.getBBox === 'function' ? textNode.getBBox() : null;
-      maxTextWidths.push(bbox ? bbox.width : item.label.length * legendFs * 0.6);
-    });
-
-    // Compute column offsets
-    const colOffsets: number[] = [0];
-    for (let c = 1; c < items.length; c++) {
-      colOffsets[c] = colOffsets[c - 1] + swatchSize + textGap + maxTextWidths[c - 1] + columnGap;
-    }
-
-    // Position items
-    diffLegendGroup.selectAll<SVGGElement, unknown>('.diff-legend-item').each(function () {
-      const el = select(this);
-      const col = parseInt(el.attr('data-col'), 10);
-      const x = legendX + legendPadding + colOffsets[col];
-      const y = legendY + legendPadding;
-      el.attr('transform', `translate(${x}, ${y})`);
-    });
-
-    // Size background
-    const lastCol = items.length - 1;
-    const bgWidth = legendPadding * 2 + colOffsets[lastCol] + swatchSize + textGap + maxTextWidths[lastCol];
-    const bgHeight = legendPadding * 2 + rowHeight - (rowHeight - swatchSize);
-
-    bgRect
-      .attr('x', legendX)
-      .attr('y', legendY)
-      .attr('width', bgWidth)
-      .attr('height', bgHeight)
-      .attr('fill', 'var(--bg-surface, #ffffff)')
-      .attr('stroke', 'var(--border-default, #e2e8f0)')
-      .attr('stroke-width', 0.5)
-      .attr('rx', bgRx);
-  }
-
-  private renderLegend(layout: LayoutResult): void {
-    const categories = this.opts.categories;
-    if (!categories || categories.length === 0) return;
-
-    const { boundingBox } = layout;
-
-    // Scale all legend dimensions from legendFontSize so the legend
-    // matches the active layout preset (Compact → Presentation).
-    const legendFs = this.opts.legendFontSize ?? 12;
-    const legendPadding = legendFs;
-    const swatchSize = legendFs;
-    const textGap = Math.round(legendFs * 0.5);
-    const rowHeight = Math.round(legendFs * 1.6);
-    const fontSize = legendFs;
-    const swatchRx = Math.round(Math.max(1, legendFs * 0.15));
-    const bgRx = Math.round(Math.max(2, legendFs * 0.35));
-    const legendGap = Math.round(legendFs * 2.2);
-    const columnGap = Math.round(legendFs * 1.5);
-
-    const count = categories.length;
-    const legendRows = this.opts.legendRows ?? 0;
-    const rows = legendRows > 0 ? Math.min(legendRows, count) : count;
-    const cols = Math.ceil(count / rows);
-
-    const legendX = boundingBox.minX;
-    const legendY = boundingBox.minY + boundingBox.height + legendGap;
-
-    const legendGroup = this.g.append('g').attr('class', 'legend');
-
-    // Background rectangle (drawn after we know dimensions)
-    const bgRect = legendGroup.append('rect').attr('class', 'legend-bg');
-
-    const maxTextWidths: number[] = new Array(cols).fill(0);
-
-    categories.forEach((cat, i) => {
-      const row = Math.floor(i / cols);
-      const col = i % cols;
-
-      // Use temporary x; final x computed after measuring all text
-      const rowG = legendGroup
-        .append('g')
-        .attr('class', `legend-item`)
-        .attr('data-row', row)
-        .attr('data-col', col);
-
-      rowG
-        .append('rect')
-        .attr('width', swatchSize)
-        .attr('height', swatchSize)
-        .attr('fill', cat.color)
-        .attr('stroke', '#cbd5e1')
-        .attr('stroke-width', 0.5)
-        .attr('rx', swatchRx);
-
-      const text = rowG
-        .append('text')
-        .attr('x', swatchSize + textGap)
-        .attr('y', swatchSize / 2)
-        .attr('dominant-baseline', 'central')
-        .attr('font-size', `${fontSize}px`)
-        .attr('font-family', `${this.opts.fontFamily}, sans-serif`)
-        .attr('fill', 'var(--text-secondary, #64748b)')
-        .text(cat.label);
-
-      const textNode = text.node();
-      const bbox = textNode && typeof textNode.getBBox === 'function' ? textNode.getBBox() : null;
       if (bbox) {
         maxTextWidths[col] = Math.max(maxTextWidths[col], bbox.width);
+      } else if (textWidthFallback) {
+        maxTextWidths[col] = Math.max(maxTextWidths[col], item.label.length * legendFs * 0.6);
       }
     });
 
-    // Compute column x offsets based on measured text widths
     const colOffsets: number[] = [0];
     for (let c = 1; c < cols; c++) {
-      colOffsets[c] =
-        colOffsets[c - 1] + swatchSize + textGap + maxTextWidths[c - 1] + columnGap;
+      colOffsets[c] = colOffsets[c - 1] + swatchSize + textGap + maxTextWidths[c - 1] + columnGap;
     }
 
-    // Position all items now that we know column widths
-    legendGroup.selectAll<SVGGElement, unknown>('.legend-item').each(function () {
+    group.selectAll<SVGGElement, unknown>(`.${itemClass}`).each(function () {
       const el = select(this);
       const row = parseInt(el.attr('data-row'), 10);
       const col = parseInt(el.attr('data-col'), 10);
@@ -812,14 +774,8 @@ export class ChartRenderer {
       el.attr('transform', `translate(${x}, ${y})`);
     });
 
-    // Size the background
     const lastCol = cols - 1;
-    const bgWidth =
-      legendPadding * 2 +
-      colOffsets[lastCol] +
-      swatchSize +
-      textGap +
-      maxTextWidths[lastCol];
+    const bgWidth = legendPadding * 2 + colOffsets[lastCol] + swatchSize + textGap + maxTextWidths[lastCol];
     const bgHeight = legendPadding * 2 + rows * rowHeight - (rowHeight - swatchSize);
 
     bgRect

@@ -1,8 +1,7 @@
 import type { ColorCategory } from '../types';
 import { generateId } from '../utils/id';
 import { contrastingTextColor, contrastingTitleColor } from '../utils/contrast';
-
-type ChangeListener = () => void;
+import { EventEmitter } from '../utils/event-emitter';
 
 const STORAGE_KEY = 'arbol-categories';
 
@@ -32,8 +31,7 @@ const DEFAULT_CATEGORIES: ColorCategory[] = [
   },
 ];
 
-export class CategoryStore {
-  private listeners: Set<ChangeListener> = new Set();
+export class CategoryStore extends EventEmitter {
 
   getAll(): ColorCategory[] {
     const stored = this.loadFromStorage();
@@ -120,13 +118,6 @@ export class CategoryStore {
     this.emit();
   }
 
-  onChange(listener: ChangeListener): () => void {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-
   /** Ensure text colors exist on a category (migration for old data). */
   private ensureTextColors(cat: ColorCategory): ColorCategory {
     if (!cat.nameColor || !cat.titleColor) {
@@ -167,13 +158,4 @@ export class CategoryStore {
     }
   }
 
-  private emit(): void {
-    for (const listener of this.listeners) {
-      try {
-        listener();
-      } catch (e) {
-        console.error('CategoryStore listener error:', e);
-      }
-    }
-  }
 }

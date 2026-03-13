@@ -1,8 +1,7 @@
 import type { OrgNode, ColorCategory, ChartRecord, VersionRecord, ChartBundle } from '../types';
 import { ChartDB } from './chart-db';
 import { generateId } from '../utils/id';
-
-type ChangeListener = () => void;
+import { EventEmitter } from '../utils/event-emitter';
 
 const DEFAULT_ROOT: OrgNode = {
   id: 'root',
@@ -13,13 +12,13 @@ const DEFAULT_ROOT: OrgNode = {
 const LS_ORG_KEY = 'arbol-org-data';
 const LS_CAT_KEY = 'arbol-categories';
 
-export class ChartStore {
+export class ChartStore extends EventEmitter {
   private db: ChartDB;
   private activeChartId: string | null = null;
   private lastSavedTree: string | null = null;
-  private listeners: Set<ChangeListener> = new Set();
 
   constructor(db: ChartDB) {
+    super();
     this.db = db;
   }
 
@@ -305,16 +304,14 @@ export class ChartStore {
     };
     await this.db.putChart(chart);
 
-    for (const v of bundle.versions) {
-      const version: VersionRecord = {
-        id: generateId(),
-        chartId: chart.id,
-        name: v.name,
-        createdAt: v.createdAt,
-        tree: v.tree,
-      };
-      await this.db.putVersion(version);
-    }
+    const versions: VersionRecord[] = bundle.versions.map((v) => ({
+      id: generateId(),
+      chartId: chart.id,
+      name: v.name,
+      createdAt: v.createdAt,
+      tree: v.tree,
+    }));
+    await this.db.putVersionsBatch(versions);
 
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
@@ -332,41 +329,18 @@ export class ChartStore {
     chart.updatedAt = new Date().toISOString();
     await this.db.putChart(chart);
 
-    for (const v of bundle.versions) {
-      const version: VersionRecord = {
-        id: generateId(),
-        chartId: chart.id,
-        name: v.name,
-        createdAt: v.createdAt,
-        tree: v.tree,
-      };
-      await this.db.putVersion(version);
-    }
+    const versions: VersionRecord[] = bundle.versions.map((v) => ({
+      id: generateId(),
+      chartId: chart.id,
+      name: v.name,
+      createdAt: v.createdAt,
+      tree: v.tree,
+    }));
+    await this.db.putVersionsBatch(versions);
 
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.emit();
     return chart;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Events
-  // ---------------------------------------------------------------------------
-
-  onChange(listener: ChangeListener): () => void {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-
-  private emit(): void {
-    for (const listener of this.listeners) {
-      try {
-        listener();
-      } catch (e) {
-        console.error('ChartStore listener error:', e);
-      }
-    }
   }
 
   // ---------------------------------------------------------------------------
