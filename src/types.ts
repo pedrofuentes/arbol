@@ -32,3 +32,20 @@ export interface MappingPreset {
   name: string;
   mapping: ColumnMapping;
 }
+
+export interface ChartRecord {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  workingTree: OrgNode;
+  categories: ColorCategory[];
+}
+
+export interface VersionRecord {
+  id: string;
+  chartId: string;
+  name: string;
+  createdAt: string;
+  tree: OrgNode;
+}

@@ -981,4 +981,76 @@ describe('OrgStore', () => {
       expect(() => store.fromJSON(json)).toThrow('Invalid dottedLine');
     });
   });
+
+  describe('clearHistory', () => {
+    it('clears both undo and redo stacks', () => {
+      const store = new OrgStore(makeRoot());
+      store.addChild('root', { name: 'D', title: 'VP' });
+      store.addChild('root', { name: 'E', title: 'VP' });
+      expect(store.canUndo()).toBe(true);
+      store.undo();
+      expect(store.canRedo()).toBe(true);
+
+      store.clearHistory();
+
+      expect(store.canUndo()).toBe(false);
+      expect(store.canRedo()).toBe(false);
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(store.getRedoStackSize()).toBe(0);
+    });
+
+    it('does not affect the current tree', () => {
+      const store = new OrgStore(makeRoot());
+      store.addChild('root', { name: 'D', title: 'VP' });
+      const treeBefore = JSON.stringify(store.getTree());
+      store.clearHistory();
+      expect(JSON.stringify(store.getTree())).toBe(treeBefore);
+    });
+  });
+
+  describe('replaceTree', () => {
+    it('replaces the root with a clone of the given tree', () => {
+      const store = new OrgStore(makeRoot());
+      const newTree: OrgNode = { id: 'x', name: 'Xavier', title: 'Founder', children: [] };
+      store.replaceTree(newTree);
+      expect(store.getTree().id).toBe('x');
+      expect(store.getTree().name).toBe('Xavier');
+    });
+
+    it('clones the input tree (no shared references)', () => {
+      const store = new OrgStore(makeRoot());
+      const newTree: OrgNode = { id: 'x', name: 'Xavier', title: 'Founder' };
+      store.replaceTree(newTree);
+      newTree.name = 'CHANGED';
+      expect(store.getTree().name).toBe('Xavier');
+    });
+
+    it('clears undo and redo stacks', () => {
+      const store = new OrgStore(makeRoot());
+      store.addChild('root', { name: 'D', title: 'VP' });
+      store.addChild('root', { name: 'E', title: 'VP' });
+      store.undo();
+      expect(store.canUndo()).toBe(true);
+      expect(store.canRedo()).toBe(true);
+
+      store.replaceTree({ id: 'new', name: 'New', title: 'Root' });
+
+      expect(store.canUndo()).toBe(false);
+      expect(store.canRedo()).toBe(false);
+    });
+
+    it('does not emit a change event', () => {
+      const store = new OrgStore(makeRoot());
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.replaceTree({ id: 'x', name: 'X', title: 'T' });
+      expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('does not create an undo snapshot', () => {
+      const store = new OrgStore(makeRoot());
+      store.replaceTree({ id: 'x', name: 'X', title: 'T' });
+      expect(store.canUndo()).toBe(false);
+    });
+  });
 });

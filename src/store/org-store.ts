@@ -268,6 +268,17 @@ export class OrgStore {
     this.emit();
   }
 
+  clearHistory(): void {
+    this.undoStack.length = 0;
+    this.redoStack.length = 0;
+  }
+
+  replaceTree(tree: OrgNode): void {
+    this.root = cloneTree(tree);
+    this.undoStack.length = 0;
+    this.redoStack.length = 0;
+  }
+
   private validateTree(node: unknown, depth = 0, count = { value: 0 }): asserts node is OrgNode {
     if (depth > 100) throw new Error('Tree exceeds maximum depth of 100 levels');
     if (++count.value > 50000) throw new Error('Tree exceeds maximum of 50,000 nodes');

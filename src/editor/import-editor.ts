@@ -6,6 +6,7 @@ import { ColumnMapper } from '../ui/column-mapper';
 import { PresetCreator } from '../ui/preset-creator';
 import type { OrgNode, ColumnMapping, TextNormalization } from '../types';
 import { timestampedFilename } from '../utils/filename';
+import { showConfirmDialog } from '../ui/confirm-dialog';
 
 interface ParsedImport {
   tree: OrgNode;
@@ -35,10 +36,16 @@ export class ImportEditor {
   private pendingImport: ParsedImport | null = null;
   private nameNormSelect: HTMLSelectElement | null = null;
   private titleNormSelect: HTMLSelectElement | null = null;
+  private onImportAsNewChart: ((tree: OrgNode, name: string) => Promise<void>) | null;
 
-  constructor(container: HTMLElement, store: OrgStore) {
+  constructor(
+    container: HTMLElement,
+    store: OrgStore,
+    onImportAsNewChart?: (tree: OrgNode, name: string) => Promise<void>,
+  ) {
     this.container = container;
     this.store = store;
+    this.onImportAsNewChart = onImportAsNewChart ?? null;
     this.mappingStore = new MappingStore();
     this.build();
   }
@@ -723,7 +730,7 @@ export class ImportEditor {
     this.statusArea.appendChild(btnGroup);
   }
 
-  private applyImport(): void {
+  private async applyImport(): Promise<void> {
     if (!this.pendingImport) return;
     try {
       const nameMode = (this.nameNormSelect?.value ?? 'none') as TextNormalization;
@@ -732,7 +739,27 @@ export class ImportEditor {
       if (nameMode !== 'none' || titleMode !== 'none') {
         tree = normalizeTreeText(tree, nameMode, titleMode);
       }
-      this.store.fromJSON(JSON.stringify(tree));
+
+      if (this.onImportAsNewChart) {
+        const importAsNew = await showConfirmDialog({
+          title: 'Import Destination',
+          message: 'Would you like to create a new chart from this import, or replace the current chart?',
+          confirmLabel: 'New chart',
+          cancelLabel: 'Replace current',
+          danger: false,
+        });
+
+        if (importAsNew) {
+          const name = prompt('New chart name:');
+          if (!name?.trim()) return;
+          await this.onImportAsNewChart(tree, name.trim());
+        } else {
+          this.store.fromJSON(JSON.stringify(tree));
+        }
+      } else {
+        this.store.fromJSON(JSON.stringify(tree));
+      }
+
       this.pasteArea.value = '';
       this.clearStatus();
     } catch (e: unknown) {

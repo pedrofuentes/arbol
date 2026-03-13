@@ -11,7 +11,6 @@ import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { CategoryStore } from './store/category-store';
 import { getMatchingNodeIds } from './utils/search';
-import { OrgNode } from './types';
 import { flattenTree, findNodeById, isLeaf, countLeaves, countManagersByLevel } from './utils/tree';
 import { SAMPLE_ORG } from './data/sample-org';
 import { showHelpDialog } from './ui/help-dialog';
@@ -24,30 +23,23 @@ import { showManagerPicker } from './ui/manager-picker';
 import { showConfirmDialog } from './ui/confirm-dialog';
 import { showFocusBanner, dismissFocusBanner } from './ui/focus-banner';
 import { showCategoryLegend, dismissCategoryLegend } from './ui/category-legend';
+import { ChartDB } from './store/chart-db';
+import { ChartStore } from './store/chart-store';
+import { ChartEditor } from './editor/chart-editor';
+import { ChartNameHeader } from './ui/chart-name-header';
+import { showVersionViewer, dismissVersionViewer, isVersionViewerActive } from './ui/version-viewer';
 
-const ORG_STORAGE_KEY = 'arbol-org-data';
-
-const INITIAL_DATA: OrgNode = {
-  id: 'root',
-  name: 'Arbol',
-  title: 'CEO',
-};
-
-function loadSavedOrg(): OrgNode {
-  try {
-    const raw = localStorage.getItem(ORG_STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.warn('Failed to load org data from localStorage:', e);
-  }
-  return INITIAL_DATA;
-}
-
-function main(): void {
+async function main(): Promise<void> {
   const sidebar = document.getElementById('sidebar')!;
   const chartArea = document.getElementById('chart-area')!;
 
-  const store = new OrgStore(loadSavedOrg());
+  // Initialize chart database and store
+  const chartDB = new ChartDB();
+  await chartDB.open();
+  const chartStore = new ChartStore(chartDB);
+  const activeChart = await chartStore.initialize();
+
+  const store = new OrgStore(activeChart.workingTree);
 
   // Settings persistence
   const settingsStore = new SettingsStore();
@@ -92,7 +84,12 @@ function main(): void {
   // Category store
   const categoryStore = new CategoryStore();
 
-  const renderer = new ChartRenderer({
+  // Load per-chart categories
+  if (activeChart.categories.length > 0) {
+    categoryStore.replaceAll(activeChart.categories);
+  }
+
+  const renderer= new ChartRenderer({
     container: chartArea,
     ...savedSettings,
     categories: categoryStore.getAll(),
@@ -131,7 +128,7 @@ function main(): void {
     renderer.render(treeToRender);
     const opts = renderer.getOptions();
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
-    localStorage.setItem(ORG_STORAGE_KEY, JSON.stringify(fullTree));
+    chartStore.saveWorkingTree(fullTree, categoryStore.getAll());
 
     if (focusedNodeId) {
       const focusedNode = findNodeById(fullTree, focusedNodeId)!;
@@ -219,6 +216,32 @@ function main(): void {
   store.onChange(updateUndoRedoState);
   updateUndoRedoState();
 
+  // Chart name header (between logo and search)
+  const headerLeft = document.querySelector('.header-left')!;
+  const chartNameContainer = document.createElement('div');
+  chartNameContainer.style.cssText = 'display:flex;align-items:center;margin-left:12px;';
+  headerLeft.appendChild(chartNameContainer);
+
+  const chartNameHeader = new ChartNameHeader({
+    container: chartNameContainer,
+    initialName: activeChart.name,
+    onRename: async (newName: string) => {
+      const id = chartStore.getActiveChartId();
+      if (id) await chartStore.renameChart(id, newName);
+    },
+    onSaveVersion: () => {
+      const name = prompt('Version name:');
+      if (name?.trim()) {
+        chartStore.saveVersion(name.trim(), store.getTree());
+      }
+    },
+  });
+
+  // Update dirty indicator on every store change
+  store.onChange(() => {
+    chartNameHeader.setDirty(chartStore.isDirty(store.getTree()));
+  });
+
   // Search UI
   const headerCenter = document.getElementById('header-center')!;
 
@@ -249,6 +272,7 @@ function main(): void {
   const tabSwitcher = new TabSwitcher(sidebar, [
     { id: 'people', label: 'People' },
     { id: 'import', label: 'Import' },
+    { id: 'charts', label: 'Charts' },
     { id: 'settings', label: 'Settings' },
   ]);
 
@@ -318,6 +342,82 @@ function main(): void {
 
   const settingsContainer = tabSwitcher.getContentContainer('settings')!;
   new SettingsEditor(settingsContainer, renderer, rerender, settingsStore, categoryStore);
+
+  // Charts tab
+  const chartsContainer = tabSwitcher.getContentContainer('charts')!;
+
+  const handleBeforeSwitch = async (): Promise<boolean> => {
+    if (!chartStore.isDirty(store.getTree())) return true;
+    const confirmed = await showConfirmDialog({
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. Would you like to save a version before switching?',
+      confirmLabel: 'Switch without saving',
+      danger: true,
+    });
+    return confirmed;
+  };
+
+  new ChartEditor({
+    container: chartsContainer,
+    chartStore,
+    getCurrentTree: () => store.getTree(),
+    getCurrentCategories: () => categoryStore.getAll(),
+    onBeforeSwitch: handleBeforeSwitch,
+    onChartSwitch: (chart) => {
+      // Exit focus mode and version viewer
+      if (focusedNodeId) { focusedNodeId = null; dismissFocusBanner(); }
+      dismissVersionViewer();
+      clearMultiSelection();
+      // Load the new chart's data
+      store.replaceTree(chart.workingTree);
+      if (chart.categories.length > 0) {
+        categoryStore.replaceAll(chart.categories);
+      } else {
+        categoryStore.replaceAll([]);
+      }
+      chartNameHeader.setName(chart.name);
+      chartNameHeader.setDirty(false);
+      rerender();
+      renderer.getZoomManager()?.fitToContent();
+      formEditor.refresh();
+      jsonEditor.refresh();
+    },
+    onVersionRestore: (tree) => {
+      dismissVersionViewer();
+      store.replaceTree(tree);
+      chartNameHeader.setDirty(false);
+      rerender();
+      renderer.getZoomManager()?.fitToContent();
+      formEditor.refresh();
+      jsonEditor.refresh();
+    },
+    onVersionView: (version) => {
+      // Enter read-only view mode
+      const savedTree = store.getTree();
+      store.replaceTree(version.tree);
+      rerender();
+      renderer.getZoomManager()?.fitToContent();
+      showVersionViewer({
+        versionName: version.name,
+        container: chartArea,
+        onRestore: async () => {
+          const shouldProceed = await handleBeforeSwitch();
+          if (!shouldProceed) return;
+          await chartStore.restoreVersion(version.id);
+          dismissVersionViewer();
+          chartNameHeader.setDirty(false);
+          rerender();
+        },
+        onClose: () => {
+          // Restore the working tree
+          store.replaceTree(savedTree);
+          dismissVersionViewer();
+          rerender();
+          renderer.getZoomManager()?.fitToContent();
+        },
+      });
+    },
+  });
 
   // Multi-select state
   const multiSelectedIds = new Set<string>();
@@ -712,7 +812,9 @@ function main(): void {
     const icCount = countLeaves(tree);
     const levels = countManagersByLevel(tree);
 
-    const parts = [`${total} people`, `${managerCount} managers`, `${icCount} ICs`];
+    const activeChartName = chartNameHeader.getName();
+    const prefix = activeChartName ? `${activeChartName} · ` : '';
+    const parts = [`${prefix}${total} people`, `${managerCount} managers`, `${icCount} ICs`];
     const sortedLevels = Array.from(levels.entries()).sort((a, b) => a[0] - b[0]);
     for (const [depth, count] of sortedLevels) {
       parts.push(`${count} M${depth}`);
@@ -825,7 +927,11 @@ function main(): void {
     }
 
     const rendererOpts = renderer.getOptions();
+    const activeChart = await chartStore.getActiveChart();
+    const chartName = activeChart?.name ?? 'org-chart';
+    const safeChartName = chartName.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').toLowerCase();
     await exportToPptx(layout, {
+      fileName: `${safeChartName}.pptx`,
       categories: categoryStore.getAll(),
       nameFontSize: rendererOpts.nameFontSize,
       titleFontSize: rendererOpts.titleFontSize,
@@ -924,6 +1030,11 @@ function main(): void {
   shortcuts.register({
     key: 'Escape',
     handler: () => {
+      // Dismiss version viewer if active
+      if (isVersionViewerActive()) {
+        dismissVersionViewer();
+        return;
+      }
       // Clear search if active
       if (document.activeElement === searchInput) {
         searchInput.value = '';

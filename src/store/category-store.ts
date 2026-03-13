@@ -114,6 +114,12 @@ export class CategoryStore {
     this.emit();
   }
 
+  replaceAll(categories: ColorCategory[]): void {
+    const processed = categories.map((c) => this.ensureTextColors(c));
+    this.saveToStorage(processed);
+    this.emit();
+  }
+
   onChange(listener: ChangeListener): () => void {
     this.listeners.add(listener);
     return () => {
