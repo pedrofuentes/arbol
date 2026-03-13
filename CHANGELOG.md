@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] — 2026-03-13
+
+### Added
+- **Multiple org charts** — create, rename, and delete independent org charts; switch between them from the new "Charts" sidebar tab or the header chart name
+- **Version snapshots** — save named point-in-time snapshots of any chart; view in read-only mode, restore, or delete
+- **IndexedDB storage** — org chart data and categories moved from localStorage to IndexedDB for greater capacity (multiple charts × versions)
+- **Per-chart categories** — each chart has its own set of color categories
+- **Chart name in header** — editable chart name displayed next to the logo with a dirty-state indicator (●) and quick save-version button (💾)
+- **Charts sidebar tab** — full chart and version management UI (create, rename, delete, save version, view, restore)
+- **Version viewer overlay** — read-only banner when viewing a saved version with Restore / Close actions
+- **Import destination choice** — importing CSV/JSON now asks whether to create a new chart or replace the current one
+- **Unsaved-changes warnings** — switching charts or restoring versions warns if the current tree has unsaved changes
+- **Auto-migration** — existing localStorage data automatically migrates to IndexedDB on first load; no data loss on upgrade
+
+### Changed
+- PPTX export filename now includes the chart name
+- Status bar now displays the active chart name
+- Undo/redo stacks reset when switching charts or restoring versions
+- Escape key priority chain now includes dismissing the version viewer
+
 ## [1.9.0] — 2026-03-13
 
 ### Added
