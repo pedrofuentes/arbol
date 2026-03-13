@@ -45,7 +45,7 @@ export class ChartDB {
 
   getAllCharts(): Promise<ChartRecord[]> {
     return this.getAll<ChartRecord>(CHARTS_STORE).then((charts) =>
-      charts.sort((a, b) => (b.updatedAt > a.updatedAt ? 1 : b.updatedAt < a.updatedAt ? -1 : 0)),
+      charts.sort((a, b) => (a.createdAt > b.createdAt ? 1 : a.createdAt < b.createdAt ? -1 : 0)),
     );
   }
 

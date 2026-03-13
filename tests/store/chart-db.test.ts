@@ -96,10 +96,10 @@ describe('ChartDB', () => {
       expect(all).toHaveLength(1);
     });
 
-    it('getAllCharts returns charts sorted by updatedAt descending', async () => {
-      const oldest = makeChart({ id: 'c-old', name: 'Oldest', updatedAt: '2025-01-01T00:00:00.000Z' });
-      const middle = makeChart({ id: 'c-mid', name: 'Middle', updatedAt: '2025-03-01T00:00:00.000Z' });
-      const newest = makeChart({ id: 'c-new', name: 'Newest', updatedAt: '2025-06-01T00:00:00.000Z' });
+    it('getAllCharts returns charts sorted by createdAt ascending', async () => {
+      const oldest = makeChart({ id: 'c-old', name: 'Oldest', createdAt: '2025-01-01T00:00:00.000Z' });
+      const middle = makeChart({ id: 'c-mid', name: 'Middle', createdAt: '2025-03-01T00:00:00.000Z' });
+      const newest = makeChart({ id: 'c-new', name: 'Newest', createdAt: '2025-06-01T00:00:00.000Z' });
 
       await db.putChart(oldest);
       await db.putChart(middle);
@@ -107,9 +107,9 @@ describe('ChartDB', () => {
 
       const charts = await db.getAllCharts();
       expect(charts).toHaveLength(3);
-      expect(charts[0].id).toBe('c-new');
+      expect(charts[0].id).toBe('c-old');
       expect(charts[1].id).toBe('c-mid');
-      expect(charts[2].id).toBe('c-old');
+      expect(charts[2].id).toBe('c-new');
     });
 
     it('getChart returns undefined for non-existent id', async () => {
