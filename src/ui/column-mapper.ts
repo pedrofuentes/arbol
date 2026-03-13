@@ -1,5 +1,10 @@
 import type { ColumnMapping, TextNormalization } from '../types';
 
+let formIdCounter = 0;
+function uniqueId(prefix: string): string {
+  return `${prefix}-${++formIdCounter}`;
+}
+
 const NORMALIZATION_OPTIONS: { value: TextNormalization; label: string }[] = [
   { value: 'none', label: 'As imported' },
   { value: 'titleCase', label: 'Title Case' },
@@ -117,8 +122,10 @@ export class ColumnMapper {
   }
 
   private createDropdown(labelText: string, required: boolean): HTMLSelectElement {
-    const group = this.createFormGroup(labelText);
+    const id = uniqueId('mapper');
+    const group = this.createFormGroup(labelText, id);
     const select = document.createElement('select');
+    select.id = id;
     const placeholder = document.createElement('option');
     placeholder.value = '';
     placeholder.textContent = required ? '— Select —' : '— None —';
@@ -136,11 +143,12 @@ export class ColumnMapper {
     return select;
   }
 
-  private createFormGroup(labelText: string): HTMLDivElement {
+  private createFormGroup(labelText: string, inputId?: string): HTMLDivElement {
     const group = document.createElement('div');
     group.className = 'form-group';
     const label = document.createElement('label');
     label.textContent = labelText;
+    if (inputId) label.htmlFor = inputId;
     group.appendChild(label);
     return group;
   }
@@ -211,8 +219,10 @@ export class ColumnMapper {
   }
 
   private createNormDropdown(labelText: string): HTMLSelectElement {
-    const group = this.createFormGroup(labelText);
+    const id = uniqueId('mapper-norm');
+    const group = this.createFormGroup(labelText, id);
     const select = document.createElement('select');
+    select.id = id;
     for (const opt of NORMALIZATION_OPTIONS) {
       const option = document.createElement('option');
       option.value = opt.value;
@@ -255,9 +265,11 @@ export class ColumnMapper {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;gap:8px;align-items:flex-end;margin-bottom:12px;';
 
-    const inputGroup = this.createFormGroup('Preset Name');
+    const presetId = uniqueId('mapper-preset-name');
+    const inputGroup = this.createFormGroup('Preset Name', presetId);
     inputGroup.style.cssText = 'flex:1;margin-bottom:0;';
     this.presetNameInput = document.createElement('input');
+    this.presetNameInput.id = presetId;
     this.presetNameInput.type = 'text';
     this.presetNameInput.placeholder = 'My preset';
     inputGroup.appendChild(this.presetNameInput);

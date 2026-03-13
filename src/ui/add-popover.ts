@@ -1,5 +1,10 @@
 import { createDismissible } from './dismissible';
 
+let formIdCounter = 0;
+function uniqueId(prefix: string): string {
+  return `${prefix}-${++formIdCounter}`;
+}
+
 export interface AddPopoverOptions {
   anchor: DOMRect;
   parentName?: string;
@@ -53,8 +58,10 @@ export function showAddPopover(options: AddPopoverOptions): void {
   const nameGroup = document.createElement('div');
   nameGroup.style.cssText = 'margin-bottom:var(--space-2);';
 
+  const nameId = uniqueId('add-name');
   const nameLabel = document.createElement('label');
   nameLabel.textContent = 'Name';
+  nameLabel.htmlFor = nameId;
   nameLabel.style.cssText = `
     display:block;font-size:12px;font-weight:500;
     color:var(--text-secondary);
@@ -62,6 +69,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
   `;
 
   const nameInput = document.createElement('input');
+  nameInput.id = nameId;
   nameInput.type = 'text';
   nameInput.placeholder = 'Name';
   nameInput.style.cssText = `
@@ -84,8 +92,10 @@ export function showAddPopover(options: AddPopoverOptions): void {
   const titleGroup = document.createElement('div');
   titleGroup.style.cssText = 'margin-bottom:var(--space-3);';
 
+  const titleId = uniqueId('add-title');
   const titleLabel = document.createElement('label');
   titleLabel.textContent = 'Title';
+  titleLabel.htmlFor = titleId;
   titleLabel.style.cssText = `
     display:block;font-size:12px;font-weight:500;
     color:var(--text-secondary);
@@ -93,6 +103,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
   `;
 
   const titleInput = document.createElement('input');
+  titleInput.id = titleId;
   titleInput.type = 'text';
   titleInput.placeholder = 'Title';
   titleInput.style.cssText = nameInput.style.cssText;

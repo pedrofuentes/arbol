@@ -9,6 +9,11 @@ import type { ChartStore } from '../store/chart-store';
 import { timestampedFilename } from '../utils/filename';
 import { showConfirmDialog } from '../ui/confirm-dialog';
 
+let formIdCounter = 0;
+function uniqueId(prefix: string): string {
+  return `${prefix}-${++formIdCounter}`;
+}
+
 interface ParsedImport {
   tree: OrgNode;
   nodeCount: number;
@@ -81,6 +86,7 @@ export class ImportEditor {
     presetRow.className = 'flex-row gap-2 mb-2';
 
     this.presetSelect = document.createElement('select');
+    this.presetSelect.setAttribute('aria-label', 'Mapping preset');
     this.presetSelect.style.cssText =
       'flex:1;padding:4px 8px;font-size:11px;font-family:var(--font-sans);' +
       'background:var(--bg-base);border:1px solid var(--border-default);' +
@@ -328,6 +334,7 @@ export class ImportEditor {
     this.fileInput = document.createElement('input');
     this.fileInput.type = 'file';
     this.fileInput.accept = '.json,.csv,.xlsx,.xls';
+    this.fileInput.setAttribute('aria-label', 'Upload org chart file');
     this.fileInput.style.display = 'none';
     this.fileInput.addEventListener('change', () => {
       const file = this.fileInput.files?.[0];
@@ -399,6 +406,7 @@ export class ImportEditor {
 
     this.pasteArea = document.createElement('textarea');
     this.pasteArea.placeholder = 'Paste JSON or CSV here...';
+    this.pasteArea.setAttribute('aria-label', 'Paste JSON or CSV data');
     this.pasteArea.style.cssText =
       'width:100%;min-height:120px;font-family:var(--font-mono);font-size:11px;' +
       'resize:vertical;padding:8px 10px;line-height:1.5;' +
@@ -885,13 +893,16 @@ export class ImportEditor {
     const group = document.createElement('div');
     group.style.cssText = 'flex:1;';
 
+    const id = uniqueId('import-norm');
     const label = document.createElement('label');
     label.textContent = `${labelText} Format`;
+    label.htmlFor = id;
     label.style.cssText =
       'display:block;font-size:11px;color:var(--text-secondary);margin-bottom:2px;font-family:var(--font-sans);font-weight:var(--font-medium);';
     group.appendChild(label);
 
     const select = document.createElement('select');
+    select.id = id;
     select.dataset.normField = labelText.toLowerCase();
     select.style.cssText =
       'width:100%;padding:3px 6px;font-size:11px;font-family:var(--font-sans);' +

@@ -1303,6 +1303,7 @@ export class SettingsEditor {
   private createControl(setting: SettingDef, currentValue: number | string | boolean): HTMLDivElement {
     const wrapper = document.createElement('div');
     wrapper.className = 'form-group';
+    const inputId = `setting-${setting.key}`;
 
     if (setting.type === 'checkbox') {
       const label = document.createElement('label');
@@ -1327,6 +1328,7 @@ export class SettingsEditor {
       wrapper.appendChild(label);
     } else if (setting.type === 'range') {
       const label = document.createElement('label');
+      label.htmlFor = inputId;
       label.textContent = `${setting.label} `;
       const valueSpan = document.createElement('span');
       valueSpan.className = 'setting-value';
@@ -1334,6 +1336,7 @@ export class SettingsEditor {
       label.appendChild(valueSpan);
 
       const input = document.createElement('input');
+      input.id = inputId;
       input.type = 'range';
       input.min = String(setting.min);
       input.max = String(setting.max);
@@ -1351,9 +1354,11 @@ export class SettingsEditor {
       wrapper.appendChild(input);
     } else if (setting.type === 'select') {
       const label = document.createElement('label');
+      label.htmlFor = inputId;
       label.textContent = setting.label;
 
       const select = document.createElement('select');
+      select.id = inputId;
       select.style.cssText = `
         width:100%;box-sizing:border-box;
         padding:4px 8px;font-size:13px;
@@ -1381,9 +1386,11 @@ export class SettingsEditor {
       wrapper.appendChild(select);
     } else if (setting.type === 'text') {
       const label = document.createElement('label');
+      label.htmlFor = inputId;
       label.textContent = setting.label;
 
       const input = document.createElement('input');
+      input.id = inputId;
       input.type = 'text';
       input.value = String(currentValue);
       input.style.cssText = `
@@ -1405,9 +1412,11 @@ export class SettingsEditor {
       wrapper.appendChild(input);
     } else {
       const label = document.createElement('label');
+      label.htmlFor = inputId;
       label.textContent = setting.label;
 
       const input = document.createElement('input');
+      input.id = inputId;
       input.type = 'color';
       input.value = String(currentValue);
 

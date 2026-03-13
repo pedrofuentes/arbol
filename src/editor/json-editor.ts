@@ -28,6 +28,7 @@ export class JsonEditor {
     textareaGroup.className = 'form-group';
     this.textarea = document.createElement('textarea');
     this.textarea.dataset.field = 'json';
+    this.textarea.setAttribute('aria-label', 'Org chart JSON data');
     this.textarea.value = this.store.toJSON();
     this.textarea.style.cssText =
       'width:100%;min-height:200px;font-family:Calibri,sans-serif;font-size:12px;resize:vertical;';

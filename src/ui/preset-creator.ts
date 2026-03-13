@@ -1,5 +1,10 @@
 import type { ColumnMapping, MappingPreset } from '../types';
 
+let formIdCounter = 0;
+function uniqueId(prefix: string): string {
+  return `${prefix}-${++formIdCounter}`;
+}
+
 export class PresetCreator {
   private container: HTMLElement;
   private onSave: (preset: MappingPreset) => void;
@@ -86,8 +91,10 @@ export class PresetCreator {
   }
 
   private createTextInput(labelText: string, placeholder: string): HTMLInputElement {
-    const group = this.createFormGroup(labelText);
+    const id = uniqueId('preset');
+    const group = this.createFormGroup(labelText, id);
     const input = document.createElement('input');
+    input.id = id;
     input.type = 'text';
     input.placeholder = placeholder;
     group.appendChild(input);
@@ -95,11 +102,12 @@ export class PresetCreator {
     return input;
   }
 
-  private createFormGroup(labelText: string): HTMLDivElement {
+  private createFormGroup(labelText: string, inputId?: string): HTMLDivElement {
     const group = document.createElement('div');
     group.className = 'form-group';
     const label = document.createElement('label');
     label.textContent = labelText;
+    if (inputId) label.htmlFor = inputId;
     group.appendChild(label);
     return group;
   }

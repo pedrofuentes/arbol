@@ -1,6 +1,11 @@
 import { OrgStore } from '../store/org-store';
 import { flattenTree } from '../utils/tree';
 
+let formIdCounter = 0;
+function uniqueId(prefix: string): string {
+  return `${prefix}-${++formIdCounter}`;
+}
+
 type SelectionChangeHandler = (nodeId: string | null) => void;
 
 export class FormEditor {
@@ -55,16 +60,20 @@ export class FormEditor {
     this.container.appendChild(addHeading);
 
     // Parent dropdown
-    const parentGroup = this.createFormGroup('Parent');
+    const parentId = uniqueId('form-parent');
+    const parentGroup = this.createFormGroup('Parent', parentId);
     this.parentSelect = document.createElement('select');
+    this.parentSelect.id = parentId;
     this.parentSelect.dataset.field = 'parent';
     this.parentSelect.setAttribute('aria-label', 'Parent person');
     parentGroup.appendChild(this.parentSelect);
     this.container.appendChild(parentGroup);
 
     // Name input
-    const nameGroup = this.createFormGroup('Name');
+    const nameId = uniqueId('form-name');
+    const nameGroup = this.createFormGroup('Name', nameId);
     this.nameInput = document.createElement('input');
+    this.nameInput.id = nameId;
     this.nameInput.type = 'text';
     this.nameInput.maxLength = 200;
     this.nameInput.dataset.field = 'name';
@@ -73,8 +82,10 @@ export class FormEditor {
     this.container.appendChild(nameGroup);
 
     // Title input
-    const titleGroup = this.createFormGroup('Title');
+    const titleId = uniqueId('form-title');
+    const titleGroup = this.createFormGroup('Title', titleId);
     this.titleInput = document.createElement('input');
+    this.titleInput.id = titleId;
     this.titleInput.type = 'text';
     this.titleInput.maxLength = 200;
     this.titleInput.dataset.field = 'title';
@@ -97,11 +108,12 @@ export class FormEditor {
     this.populateParentDropdown();
   }
 
-  private createFormGroup(labelText: string): HTMLDivElement {
+  private createFormGroup(labelText: string, inputId?: string): HTMLDivElement {
     const group = document.createElement('div');
     group.className = 'form-group';
     const label = document.createElement('label');
     label.textContent = labelText;
+    if (inputId) label.htmlFor = inputId;
     group.appendChild(label);
     return group;
   }
@@ -147,8 +159,10 @@ export class FormEditor {
     this.editSection.appendChild(heading);
 
     // Edit Name
-    const nameGroup = this.createFormGroup('Name');
+    const editNameId = uniqueId('form-edit-name');
+    const nameGroup = this.createFormGroup('Name', editNameId);
     const editNameInput = document.createElement('input');
+    editNameInput.id = editNameId;
     editNameInput.type = 'text';
     editNameInput.maxLength = 200;
     editNameInput.dataset.field = 'edit-name';
@@ -157,8 +171,10 @@ export class FormEditor {
     this.editSection.appendChild(nameGroup);
 
     // Edit Title
-    const titleGroup = this.createFormGroup('Title');
+    const editTitleId = uniqueId('form-edit-title');
+    const titleGroup = this.createFormGroup('Title', editTitleId);
     const editTitleInput = document.createElement('input');
+    editTitleInput.id = editTitleId;
     editTitleInput.type = 'text';
     editTitleInput.maxLength = 200;
     editTitleInput.dataset.field = 'edit-title';
