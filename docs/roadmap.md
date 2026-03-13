@@ -133,6 +133,12 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Multi-select context menu — bulk category assignment
 - [x] Undo/redo support for category assignment operations
 - [x] JSON serialization preserves `categoryId` with validation
+- [x] Configurable name & title text colors (`nameColor`, `titleColor` in Typography settings)
+- [x] Auto-contrast text colors per category via WCAG 2.1 luminance (dark text on light BG, light text on dark BG)
+- [x] Per-category text color overrides (Name/Title color pickers in settings, auto-initialized with contrast-safe defaults)
+- [x] Color swatches in context menu category submenu
+- [x] `src/utils/contrast.ts` — `relativeLuminance()`, `contrastingTextColor()`, `contrastingTitleColor()`
+- [x] Midnight theme preset uses light text for dark card fills
 
 ### Phase 16 — Text Normalization & Utilities Tab
 - [x] `TextNormalization` type (`none`, `titleCase`, `uppercase`, `lowercase`) and fields on `ColumnMapping`
@@ -148,7 +154,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Success/error feedback after applying normalization
 
 ### Testing
-- [x] **816 tests across 35 test files** — all passing
+- [x] **857 tests across 36 test files** — all passing
 - [x] TDD approach from day one
 - [x] Unit tests: OrgStore, tree utilities, search, ID generation, version, text normalization
 - [x] Integration tests: renderer output, IC/Advisor stacks, spacing regression

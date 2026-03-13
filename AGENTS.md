@@ -21,7 +21,7 @@ Editor (People / Import) → OrgStore (data + events) → Renderer (D3 + SVG)
 
 ## Project Structure
 
-33 TypeScript source files in `src/`, organized by concern:
+34 TypeScript source files in `src/`, organized by concern:
 
 ```
 src/
@@ -62,6 +62,7 @@ src/
 │   ├── csv-parser.ts          # CSV parsing (RFC 4180 multi-line quotes, escapes) + tree building from flat CSV, duplicate/cycle/limit validation
 │   ├── shortcuts.ts           # Keyboard shortcut manager (register combos, prevent defaults)
 │   ├── text-normalize.ts      # Text normalization (titleCase, uppercase, lowercase) for names/titles
+│   ├── contrast.ts            # WCAG 2.1 luminance, auto-contrast text color helpers
 │   └── id.ts                  # UUID generation via crypto.randomUUID()
 ├── types.ts                   # Interfaces: OrgNode, ColumnMapping, MappingPreset, TextNormalization
 ├── version.ts                 # App version (injected from package.json at build time)
@@ -122,6 +123,8 @@ interface ColorCategory {
   id: string;          // UUID or preset ID (e.g., 'open-position')
   label: string;       // Display name (e.g., "Open Position")
   color: string;       // Hex color (e.g., "#fbbf24")
+  nameColor?: string;  // Text color for name (auto-computed from background for contrast)
+  titleColor?: string; // Text color for title (auto-computed, slightly muted)
 }
 ```
 
@@ -228,7 +231,7 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **621 tests across 30 files** — all must pass before committing
+- **857 tests across 36 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
@@ -243,7 +246,8 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `tests/utils/csv-parser.test.ts` | CSV parsing (quotes, escapes, multi-line), tree building, duplicate detection, node limit, cycle path, trailing metadata |
 | `tests/utils/shortcuts.test.ts` | Shortcut registration, key combos, prevent defaults |
 | `tests/utils/text-normalize.test.ts` | normalizeText (titleCase, uppercase, lowercase, none), normalizeTreeText (recursive, immutable) |
-| `tests/store/category-store.test.ts` | ColorCategory CRUD, defaults, localStorage persistence, validation, events |
+| `tests/utils/contrast.test.ts` | parseHex, relativeLuminance, contrastingTextColor, contrastingTitleColor |
+| `tests/store/category-store.test.ts` | ColorCategory CRUD, defaults, localStorage persistence, validation, events, text color auto-contrast |
 | `tests/store/org-store.test.ts` | Node CRUD, events, undo/redo, serialization, validation, bulk ops |
 | `tests/store/settings-store.test.ts` | Settings save/load from localStorage |
 | `tests/store/mapping-store.test.ts` | CSV mapping preset CRUD in localStorage |
