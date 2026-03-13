@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.2] — 2026-03-12
+
+### Fixed
+- **PPTX export now matches on-screen 100% zoom** — slide is dynamically sized to the chart's bounding box at 1:1 scale (96 DPI) instead of shrinking/stretching to fit a fixed slide
+  - Font sizes, card colors, stroke widths, and link styles are forwarded from renderer settings
+  - Safety cap at PowerPoint's 56″ max slide dimension (only scales down if exceeded)
+  - Backward compatible: explicit `slideWidth`/`slideHeight` still uses fit-to-slide behavior
+
 ## [1.5.1] — 2026-03-12
 
 ### Changed
