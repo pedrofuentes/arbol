@@ -149,6 +149,21 @@ export class ChartStore {
     return chart;
   }
 
+  async duplicateChart(chartId: string): Promise<ChartRecord> {
+    const source = await this.db.getChart(chartId);
+    if (!source) throw new Error(`Chart not found: ${chartId}`);
+
+    let copyName = `Copy of ${source.name}`;
+    let suffix = 2;
+    while (await this.db.isChartNameTaken(copyName)) {
+      copyName = `Copy of ${source.name} (${suffix++})`;
+    }
+
+    const clonedTree = structuredClone(source.workingTree);
+    const clonedCategories = structuredClone(source.categories);
+    return this.createChartFromTree(copyName, clonedTree, clonedCategories);
+  }
+
   async renameChart(id: string, name: string): Promise<void> {
     const trimmed = name.trim();
     if (!trimmed) throw new Error('Chart name cannot be empty');

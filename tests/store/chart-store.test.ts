@@ -144,6 +144,21 @@ describe('ChartStore', () => {
       expect(chart.workingTree.title).toBe('CEO');
     });
 
+    it('isDirty returns false for the new chart tree right after createChart', async () => {
+      const chart = await store.createChart('Fresh Chart');
+      expect(store.isDirty(chart.workingTree)).toBe(false);
+    });
+
+    it('isDirty returns true when comparing old modified tree after createChart', async () => {
+      // Simulate: user modified chart1's tree, then creates chart2
+      const modifiedTree = makeTree({ name: 'Modified CEO' });
+      await store.saveWorkingTree(modifiedTree, []);
+      await store.createChart('New Chart');
+      // After createChart, lastSavedTree is the new chart's DEFAULT_ROOT,
+      // so the old chart's modified tree should show as dirty
+      expect(store.isDirty(modifiedTree)).toBe(true);
+    });
+
     it('createChart throws if name is empty', async () => {
       await expect(store.createChart('')).rejects.toThrow('Chart name cannot be empty');
       await expect(store.createChart('   ')).rejects.toThrow('Chart name cannot be empty');
@@ -194,6 +209,66 @@ describe('ChartStore', () => {
     it('renameChart allows renaming to the same name (no-op check)', async () => {
       const chart = await store.createChart('Keep Name');
       await expect(store.renameChart(chart.id, 'Keep Name')).resolves.toBeUndefined();
+    });
+
+    it('duplicateChart creates a copy with "Copy of" prefix', async () => {
+      const original = await store.createChart('My Chart');
+      const tree = makeTree({ name: 'Custom Root', children: [{ id: 'c1', name: 'Child', title: 'VP' }] });
+      await store.saveWorkingTree(tree, makeCategories());
+
+      // Switch back to original to duplicate it with saved data
+      await store.switchChart(original.id);
+      // Save the tree so it's persisted
+      await store.saveWorkingTree(tree, makeCategories());
+
+      const copy = await store.duplicateChart(original.id);
+      expect(copy.name).toBe('Copy of My Chart');
+      expect(copy.id).not.toBe(original.id);
+      expect(copy.workingTree.name).toBe('Custom Root');
+      expect(copy.workingTree.children).toHaveLength(1);
+      expect(copy.categories).toHaveLength(2);
+    });
+
+    it('duplicateChart generates unique name with suffix when copy name is taken', async () => {
+      const original = await store.createChart('Org');
+      await store.createChart('Copy of Org');
+      const copy = await store.duplicateChart(original.id);
+      expect(copy.name).toBe('Copy of Org (2)');
+    });
+
+    it('duplicateChart throws if chart not found', async () => {
+      await expect(store.duplicateChart('nonexistent')).rejects.toThrow('Chart not found');
+    });
+
+    it('duplicateChart does not copy versions', async () => {
+      const original = await store.createChart('Versioned Chart');
+      const tree = makeTree();
+      await store.saveVersion('v1', tree);
+      const versionsBefore = await store.getVersions(original.id);
+      expect(versionsBefore.length).toBeGreaterThanOrEqual(1);
+
+      const copy = await store.duplicateChart(original.id);
+      const versionsAfter = await store.getVersions(copy.id);
+      expect(versionsAfter).toHaveLength(0);
+    });
+
+    it('duplicateChart switches active chart to the copy', async () => {
+      const original = await store.createChart('Source');
+      const copy = await store.duplicateChart(original.id);
+      expect(store.getActiveChartId()).toBe(copy.id);
+    });
+
+    it('duplicateChart deep clones (modifying copy does not affect original)', async () => {
+      const original = await store.createChart('Deep Clone Test');
+      const tree = makeTree({ name: 'Root', children: [{ id: 'c1', name: 'Child', title: 'VP' }] });
+      await store.saveWorkingTree(tree, makeCategories());
+
+      const copy = await store.duplicateChart(original.id);
+      // Modify the copy's tree
+      copy.workingTree.name = 'Modified';
+      // Original should be unchanged
+      const orig = (await db.getChart(original.id))!;
+      expect(orig.workingTree.name).toBe('Root');
     });
 
     it('deleteChart removes the chart and its versions', async () => {

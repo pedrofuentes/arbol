@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] — 2026-03-13
+
+### Added
+- **Duplicate chart** — new "Duplicate" button on each chart in the sidebar copies the working tree and categories into a new chart (versions are not copied); auto-switches to the copy
+- **Import destination choice** — importing CSV/JSON now shows a dialog asking whether to create a new chart or replace the current one (previously always replaced)
+
+### Fixed
+- **Dotted line disabled for ICs** — the "Set as dotted line" context menu option is now disabled for Individual Contributor nodes (leaf nodes under M1 managers), which have no connecting lines to make dotted
+- **New chart shows empty tree** — creating a new chart now properly loads the empty default tree instead of continuing to display the previous chart's data
+- **False unsaved changes warning** — creating a new chart no longer triggers a spurious "unsaved changes" warning when switching charts
+
 ## [2.2.1] — 2026-03-13
 
 ### Fixed

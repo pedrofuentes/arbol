@@ -284,6 +284,13 @@ export class ChartEditor {
     });
     actions.appendChild(renameBtn);
 
+    const duplicateBtn = this.createInlineButton('Duplicate');
+    duplicateBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.handleDuplicateChart(chart);
+    });
+    actions.appendChild(duplicateBtn);
+
     const deleteBtn = this.createInlineButton('Delete', true);
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -374,8 +381,12 @@ export class ChartEditor {
       return;
     }
 
+    const proceed = await this.onBeforeSwitch();
+    if (!proceed) return;
+
     try {
-      await this.chartStore.createChart(name);
+      const chart = await this.chartStore.createChart(name);
+      this.onChartSwitch(chart);
       this.chartNameInput.value = '';
       this.chartErrorEl.textContent = '';
       await this.refresh();
@@ -391,6 +402,19 @@ export class ChartEditor {
     try {
       const chart = await this.chartStore.switchChart(chartId);
       this.onChartSwitch(chart);
+      await this.refresh();
+    } catch (err) {
+      this.showError(this.chartErrorEl, (err as Error).message);
+    }
+  }
+
+  private async handleDuplicateChart(chart: ChartRecord): Promise<void> {
+    const proceed = await this.onBeforeSwitch();
+    if (!proceed) return;
+
+    try {
+      const copy = await this.chartStore.duplicateChart(chart.id);
+      this.onChartSwitch(copy);
       await this.refresh();
     } catch (err) {
       this.showError(this.chartErrorEl, (err as Error).message);
