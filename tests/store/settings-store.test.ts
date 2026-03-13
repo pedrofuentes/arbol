@@ -39,6 +39,7 @@ const DEFAULTS: PersistableSettings = {
   textGap: 2,
   textAlign: 'center',
   textPaddingHorizontal: 8,
+  fontFamily: 'Calibri',
   nameColor: '#1e293b',
   titleColor: '#64748b',
   linkColor: '#94a3b8',
@@ -47,6 +48,7 @@ const DEFAULTS: PersistableSettings = {
   cardFill: '#ffffff',
   cardStroke: '#22c55e',
   cardStrokeWidth: 1,
+  cardBorderRadius: 0,
   icContainerFill: '#e5e7eb',
   showHeadcount: false,
   headcountBadgeColor: '#9ca3af',
@@ -341,6 +343,50 @@ describe('SettingsStore', () => {
       store.saveImmediate({ textPaddingHorizontal: 12 });
       const loaded = store.load(DEFAULTS);
       expect(loaded.textPaddingHorizontal).toBe(12);
+    });
+  });
+
+  describe('cardBorderRadius', () => {
+    it('persists and loads cardBorderRadius', () => {
+      store.saveImmediate({ cardBorderRadius: 6 });
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.cardBorderRadius).toBe(6);
+    });
+
+    it('defaults to 0 when not in saved data', () => {
+      const oldSettings = { version: 1, settings: { nodeWidth: 180 } };
+      localStorageMock.setItem('arbol-settings', JSON.stringify(oldSettings));
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.cardBorderRadius).toBe(0);
+    });
+  });
+
+  describe('fontFamily', () => {
+    it('persists and loads fontFamily', () => {
+      store.saveImmediate({ fontFamily: 'Segoe UI' });
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.fontFamily).toBe('Segoe UI');
+    });
+
+    it('validates fontFamily values', () => {
+      for (const valid of ['Calibri', 'Arial', 'Verdana', 'Georgia', 'Tahoma', 'Trebuchet MS', 'Segoe UI']) {
+        store.saveImmediate({ fontFamily: valid });
+        const loaded = store.load(DEFAULTS);
+        expect(loaded.fontFamily).toBe(valid);
+      }
+    });
+
+    it('rejects invalid fontFamily values', () => {
+      const bad = { ...DEFAULTS, fontFamily: 'Comic Sans' };
+      const json = JSON.stringify({ version: 1, settings: bad });
+      expect(() => store.parseImport(json)).toThrow('expected one of');
+    });
+
+    it('defaults to Calibri when not in saved data', () => {
+      const oldSettings = { version: 1, settings: { nodeWidth: 180 } };
+      localStorageMock.setItem('arbol-settings', JSON.stringify(oldSettings));
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.fontFamily).toBe('Calibri');
     });
   });
 });

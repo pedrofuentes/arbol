@@ -76,6 +76,20 @@ describe('CHART_THEME_PRESETS', () => {
       expect(validAligns).toContain(preset.colors.textAlign);
     }
   });
+
+  it('all presets have cardBorderRadius defined', () => {
+    for (const preset of CHART_THEME_PRESETS) {
+      expect(preset.colors.cardBorderRadius).toBeTypeOf('number');
+      expect(preset.colors.cardBorderRadius).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('all presets have fontFamily defined', () => {
+    for (const preset of CHART_THEME_PRESETS) {
+      expect(preset.colors.fontFamily).toBeTypeOf('string');
+      expect(preset.colors.fontFamily!.length).toBeGreaterThan(0);
+    }
+  });
 });
 
 describe('getPresetById', () => {
@@ -93,6 +107,8 @@ describe('getPresetById', () => {
     expect(teal!.name).toBe('Ocean Teal');
     expect(teal!.colors.cardStroke).toBe('#14b8a6');
     expect(teal!.colors.textAlign).toBe('left');
+    expect(teal!.colors.cardBorderRadius).toBe(6);
+    expect(teal!.colors.fontFamily).toBe('Segoe UI');
   });
 
   it('returns undefined for nonexistent id', () => {

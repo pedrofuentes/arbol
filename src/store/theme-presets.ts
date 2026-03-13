@@ -12,6 +12,8 @@ export interface ChartThemePreset {
     nameColor: string;
     titleColor: string;
     textAlign?: 'left' | 'center' | 'right';
+    cardBorderRadius?: number;
+    fontFamily?: string;
   };
 }
 
@@ -30,6 +32,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
+      cardBorderRadius: 0,
+      fontFamily: 'Calibri',
     },
   },
   {
@@ -46,6 +50,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
+      cardBorderRadius: 0,
+      fontFamily: 'Calibri',
     },
   },
   {
@@ -62,6 +68,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
+      cardBorderRadius: 0,
+      fontFamily: 'Calibri',
     },
   },
   {
@@ -78,6 +86,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
+      cardBorderRadius: 0,
+      fontFamily: 'Calibri',
     },
   },
   {
@@ -94,6 +104,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
+      cardBorderRadius: 0,
+      fontFamily: 'Calibri',
     },
   },
   {
@@ -110,6 +122,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       nameColor: '#e2e8f0',
       titleColor: '#cbd5e1',
       textAlign: 'center',
+      cardBorderRadius: 0,
+      fontFamily: 'Calibri',
     },
   },
   {
@@ -126,6 +140,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'center',
+      cardBorderRadius: 0,
+      fontFamily: 'Calibri',
     },
   },
   {
@@ -142,6 +158,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       nameColor: '#000000',
       titleColor: '#374151',
       textAlign: 'center',
+      cardBorderRadius: 0,
+      fontFamily: 'Calibri',
     },
   },
   {
@@ -158,6 +176,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       nameColor: '#1e293b',
       titleColor: '#64748b',
       textAlign: 'left',
+      cardBorderRadius: 6,
+      fontFamily: 'Segoe UI',
     },
   },
 ];

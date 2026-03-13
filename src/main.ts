@@ -63,6 +63,7 @@ async function main(): Promise<void> {
     textGap: 2,
     textAlign: 'center',
     textPaddingHorizontal: 8,
+    fontFamily: 'Calibri',
     nameColor: '#1e293b',
     titleColor: '#64748b',
     linkColor: '#94a3b8',
@@ -71,6 +72,7 @@ async function main(): Promise<void> {
     cardFill: '#ffffff',
     cardStroke: '#22c55e',
     cardStrokeWidth: 1,
+    cardBorderRadius: 0,
     icContainerFill: '#e5e7eb',
     showHeadcount: false,
     headcountBadgeColor: '#9ca3af',
@@ -955,6 +957,8 @@ async function main(): Promise<void> {
       headcountBadgeHeight: rendererOpts.headcountBadgeHeight,
       legendRows: rendererOpts.legendRows,
       textAlign: rendererOpts.textAlign as 'left' | 'center' | 'right',
+      cardBorderRadius: rendererOpts.cardBorderRadius as number,
+      fontFamily: rendererOpts.fontFamily as string,
     });
   };
 

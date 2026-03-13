@@ -64,6 +64,8 @@ const DEFAULT_OPTS: ResolvedOptions = {
   legendRows: 0,
   textAlign: 'center',
   textPaddingHorizontal: 8,
+  fontFamily: 'Calibri',
+  cardBorderRadius: 0,
   categories: [],
 } as ResolvedOptions;
 
@@ -905,6 +907,35 @@ describe('SettingsEditor', () => {
       const rangeInputs = typoSection.querySelectorAll('input[type="range"]');
       // Should have range inputs including textPaddingHorizontal
       expect(rangeInputs.length).toBeGreaterThanOrEqual(5);
+    });
+
+    it('renders fontFamily select in Typography group', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
+        s.querySelector('.accordion-title')?.textContent === 'Typography',
+      )!;
+      const selects = typoSection.querySelectorAll('select');
+      // Should have 2 selects: textAlign and fontFamily
+      expect(selects.length).toBe(2);
+      const fontSelect = Array.from(selects).find((s) => {
+        const options = Array.from(s.querySelectorAll('option'));
+        return options.some((o) => o.value === 'Calibri');
+      });
+      expect(fontSelect).toBeDefined();
+      expect(fontSelect!.value).toBe('Calibri');
+    });
+  });
+
+  describe('card border radius control', () => {
+    it('renders cardBorderRadius range in Card Style group', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const cardSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
+        s.querySelector('.accordion-title')?.textContent === 'Card Style',
+      )!;
+      expect(cardSection).toBeDefined();
+      const rangeInputs = cardSection.querySelectorAll('input[type="range"]');
+      // cardStrokeWidth + cardBorderRadius = 2 range inputs
+      expect(rangeInputs.length).toBe(2);
     });
   });
 });

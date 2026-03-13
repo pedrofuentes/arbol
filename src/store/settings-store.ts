@@ -20,6 +20,7 @@ export interface PersistableSettings {
   textGap: number;
   textAlign: string;
   textPaddingHorizontal: number;
+  fontFamily: string;
   nameColor: string;
   titleColor: string;
   linkColor: string;
@@ -28,6 +29,7 @@ export interface PersistableSettings {
   cardFill: string;
   cardStroke: string;
   cardStrokeWidth: number;
+  cardBorderRadius: number;
   icContainerFill: string;
   showHeadcount: boolean;
   headcountBadgeColor: string;
@@ -70,6 +72,7 @@ const NUMERIC_KEYS: ReadonlySet<string> = new Set<string>([
   'textPaddingTop',
   'textGap',
   'textPaddingHorizontal',
+  'cardBorderRadius',
   'linkWidth',
   'cardStrokeWidth',
   'headcountBadgeFontSize',
@@ -96,6 +99,7 @@ const BOOLEAN_KEYS: ReadonlySet<string> = new Set<string>(['showHeadcount']);
 
 const ENUM_KEYS: ReadonlyMap<string, readonly string[]> = new Map([
   ['textAlign', ['left', 'center', 'right']],
+  ['fontFamily', ['Calibri', 'Arial', 'Verdana', 'Georgia', 'Tahoma', 'Trebuchet MS', 'Segoe UI']],
 ]);
 
 const ALL_KEYS = [

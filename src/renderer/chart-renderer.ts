@@ -35,6 +35,7 @@ export interface RendererOptions {
   nameFontSize?: number;
   titleFontSize?: number;
   legendFontSize?: number;
+  fontFamily?: string;
   textPaddingTop?: number;
   textGap?: number;
   nameColor?: string;
@@ -47,6 +48,7 @@ export interface RendererOptions {
   cardFill?: string;
   cardStroke?: string;
   cardStrokeWidth?: number;
+  cardBorderRadius?: number;
   icContainerFill?: string;
   // Text alignment
   textAlign?: 'left' | 'center' | 'right';
@@ -94,6 +96,7 @@ export class ChartRenderer {
       nameFontSize: 11,
       titleFontSize: 9,
       legendFontSize: 12,
+      fontFamily: 'Calibri',
       textPaddingTop: 6,
       textGap: 2,
       nameColor: '#1e293b',
@@ -104,6 +107,7 @@ export class ChartRenderer {
       cardFill: '#ffffff',
       cardStroke: '#22c55e',
       cardStrokeWidth: 1,
+      cardBorderRadius: 0,
       icContainerFill: '#e5e7eb',
       textAlign: 'center' as const,
       textPaddingHorizontal: 8,
@@ -310,10 +314,12 @@ export class ChartRenderer {
       cardFill,
       cardStroke,
       cardStrokeWidth,
+      cardBorderRadius,
       nameColor,
       titleColor,
       textAlign,
       textPaddingHorizontal,
+      fontFamily,
     } = this.opts;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -326,11 +332,14 @@ export class ChartRenderer {
         : textAlign === 'right'
           ? width - textPaddingHorizontal
           : width / 2;
+    const fontStack = `${fontFamily}, sans-serif`;
 
     selection
       .append('rect')
       .attr('width', width)
       .attr('height', height)
+      .attr('rx', cardBorderRadius)
+      .attr('ry', cardBorderRadius)
       .attr('fill', (d: CardDatum) => {
         const catId = d.data?.categoryId;
         if (catId && self.opts.categories.length > 0) {
@@ -360,7 +369,7 @@ export class ChartRenderer {
       .attr('dominant-baseline', 'hanging')
       .attr('text-anchor', svgAnchor)
       .attr('font-weight', 'bold')
-      .attr('font-family', 'Calibri, sans-serif')
+      .attr('font-family', fontStack)
       .attr('font-size', `${nameFontSize}px`)
       .attr('fill', (d: CardDatum) => {
         const catId = d.data?.categoryId;
@@ -380,7 +389,7 @@ export class ChartRenderer {
       .attr('y', titleY)
       .attr('dominant-baseline', 'hanging')
       .attr('text-anchor', svgAnchor)
-      .attr('font-family', 'Calibri, sans-serif')
+      .attr('font-family', fontStack)
       .attr('font-size', `${titleFontSize}px`)
       .attr('fill', (d: CardDatum) => {
         const catId = d.data?.categoryId;
@@ -437,7 +446,7 @@ export class ChartRenderer {
       .attr('y', badgeY + headcountBadgeHeight / 2)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('font-family', 'Calibri, sans-serif')
+      .attr('font-family', `${this.opts.fontFamily}, sans-serif`)
       .attr('font-size', `${headcountBadgeFontSize}px`)
       .attr('font-weight', 'bold')
       .attr('fill', headcountBadgeTextColor)
@@ -505,7 +514,7 @@ export class ChartRenderer {
         .attr('y', swatchSize / 2)
         .attr('dominant-baseline', 'central')
         .attr('font-size', `${fontSize}px`)
-        .attr('font-family', 'Calibri, sans-serif')
+        .attr('font-family', `${this.opts.fontFamily}, sans-serif`)
         .attr('fill', 'var(--text-secondary, #64748b)')
         .text(cat.label);
 

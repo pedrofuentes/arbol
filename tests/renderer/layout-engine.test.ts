@@ -46,6 +46,8 @@ function defaultOpts(): ResolvedOptions {
     legendRows: 0,
     textAlign: 'center' as const,
     textPaddingHorizontal: 8,
+    fontFamily: 'Calibri',
+    cardBorderRadius: 0,
     categories: [],
   };
 }
