@@ -1,3 +1,5 @@
+import { timestampedFilename } from '../utils/filename';
+
 export interface PersistableSettings {
   nodeWidth: number;
   nodeHeight: number;
@@ -181,7 +183,7 @@ export class SettingsStore {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${exportObj.name}.arbol-settings.json`;
+    a.download = timestampedFilename(`${exportObj.name}.arbol-settings.json`);
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
