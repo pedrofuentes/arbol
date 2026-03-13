@@ -1,4 +1,5 @@
-import * as d3 from 'd3';
+import { select, zoom, zoomIdentity, zoomTransform } from 'd3';
+import type { ZoomBehavior, Selection, D3ZoomEvent, ZoomTransform } from 'd3';
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 4;
@@ -8,17 +9,16 @@ const MAX_FIT_SCALE = 1.5;
 export class ZoomManager {
   private svg: SVGSVGElement;
   private g: SVGGElement;
-  private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
-  private svgSelection: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+  private zoom: ZoomBehavior<SVGSVGElement, unknown>;
+  private svgSelection: Selection<SVGSVGElement, unknown, null, undefined>;
   private zoomListeners: Set<() => void> = new Set();
 
   constructor(svg: SVGSVGElement, g: SVGGElement) {
     this.svg = svg;
     this.g = g;
-    this.svgSelection = d3.select(svg);
+    this.svgSelection = select(svg);
 
-    this.zoom = d3
-      .zoom<SVGSVGElement, unknown>()
+    this.zoom = zoom<SVGSVGElement, unknown>()
       .scaleExtent([MIN_ZOOM, MAX_ZOOM])
       .extent(() => {
         const w = this.svg.clientWidth || this.svg.getBoundingClientRect().width || 1;
@@ -28,8 +28,8 @@ export class ZoomManager {
           [w, h],
         ] as [[number, number], [number, number]];
       })
-      .on('zoom', (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
-        d3.select(this.g).attr('transform', event.transform.toString());
+      .on('zoom', (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
+        select(this.g).attr('transform', event.transform.toString());
         for (const listener of this.zoomListeners) listener();
       });
 
@@ -68,7 +68,7 @@ export class ZoomManager {
     const tx = svgWidth / 2 - (bbox.x + bbox.width / 2) * scale;
     const ty = padding - bbox.y * scale;
 
-    const transform = d3.zoomIdentity.translate(tx, ty).scale(scale);
+    const transform = zoomIdentity.translate(tx, ty).scale(scale);
     this.svgSelection.call(this.zoom.transform, transform);
   }
 
@@ -91,19 +91,19 @@ export class ZoomManager {
     const tx = svgWidth / 2 - (bbox.x + bbox.width / 2);
     const ty = padding - bbox.y;
 
-    const transform = d3.zoomIdentity.translate(tx, ty);
+    const transform = zoomIdentity.translate(tx, ty);
     this.svgSelection.call(this.zoom.transform, transform);
   }
 
   resetZoom(): void {
-    this.svgSelection.call(this.zoom.transform, d3.zoomIdentity);
+    this.svgSelection.call(this.zoom.transform, zoomIdentity);
   }
 
-  getCurrentTransform(): d3.ZoomTransform {
-    return d3.zoomTransform(this.svg);
+  getCurrentTransform(): ZoomTransform {
+    return zoomTransform(this.svg);
   }
 
-  applyTransform(transform: d3.ZoomTransform): void {
+  applyTransform(transform: ZoomTransform): void {
     this.svgSelection.call(this.zoom.transform, transform);
   }
 

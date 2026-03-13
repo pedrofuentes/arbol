@@ -1,4 +1,5 @@
-import * as d3 from 'd3';
+import { select } from 'd3';
+import type { Selection } from 'd3';
 import { OrgNode, ColorCategory, DiffEntry, DiffStatus } from '../types';
 import { computeLayout, LayoutResult, LayoutNode } from './layout-engine';
 import { ZoomManager } from './zoom-manager';
@@ -72,8 +73,8 @@ export type NodeClickHandler = (nodeId: string, event: MouseEvent) => void;
 export type NodeRightClickHandler = (nodeId: string, event: MouseEvent) => void;
 
 export class ChartRenderer {
-  private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
-  private g: d3.Selection<SVGGElement, unknown, null, undefined>;
+  private svg: Selection<SVGSVGElement, unknown, null, undefined>;
+  private g: Selection<SVGGElement, unknown, null, undefined>;
   private opts: ResolvedOptions;
   private onNodeClick: NodeClickHandler | null = null;
   private onNodeRightClick: NodeRightClickHandler | null = null;
@@ -83,6 +84,7 @@ export class ChartRenderer {
   private highlightedNodes: Set<string> | null = null;
   private diffMap: Map<string, DiffEntry> | null = null;
   private dimUnchanged = true;
+  private categoryMap: Map<string, ColorCategory> = new Map();
 
   constructor(options: RendererOptions) {
     this.opts = {
@@ -126,8 +128,7 @@ export class ChartRenderer {
       legendRows: 0,
       ...options,
     };
-    this.svg = d3
-      .select(options.container)
+    this.svg = select(options.container)
       .append('svg')
       .attr('width', '100%')
       .attr('height', '100%');
@@ -163,6 +164,11 @@ export class ChartRenderer {
   render(root: OrgNode): void {
     const layout = computeLayout(root, this.opts);
     this.lastLayout = layout;
+
+    // Pre-compute category lookup map for O(1) access during rendering
+    this.categoryMap = new Map<string, ColorCategory>(
+      this.opts.categories.map((c) => [c.id, c]),
+    );
 
     this.g.selectAll('*').remove();
 
@@ -208,9 +214,9 @@ export class ChartRenderer {
       const datum = {
         data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId },
       };
-      const sel = d3.select(g.node()!).datum(datum);
+      const sel = select(g.node()!).datum(datum);
       this.renderCardContent(
-        sel as d3.Selection<SVGGElement, CardDatum, null, undefined>,
+        sel as Selection<SVGGElement, CardDatum, null, undefined>,
         node.width,
         nodeHeight,
         () => node.id,
@@ -239,9 +245,9 @@ export class ChartRenderer {
       const datum = {
         data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId },
       };
-      const sel = d3.select(g.node()!).datum(datum);
+      const sel = select(g.node()!).datum(datum);
       this.renderCardContent(
-        sel as d3.Selection<SVGGElement, CardDatum, null, undefined>,
+        sel as Selection<SVGGElement, CardDatum, null, undefined>,
         node.width,
         nodeHeight,
         () => node.id,
@@ -262,9 +268,9 @@ export class ChartRenderer {
       const datum = {
         data: { id: node.id, name: node.name, title: node.title, categoryId: node.categoryId },
       };
-      const sel = d3.select(g.node()!).datum(datum);
+      const sel = select(g.node()!).datum(datum);
       this.renderCardContent(
-        sel as d3.Selection<SVGGElement, CardDatum, null, undefined>,
+        sel as Selection<SVGGElement, CardDatum, null, undefined>,
         node.width,
         nodeHeight,
         (d) => d.data.id,
@@ -317,7 +323,7 @@ export class ChartRenderer {
     const highlighted = this.highlightedNodes;
 
     this.g.selectAll('.node, .ic-node, .pal-node').each(function () {
-      const el = d3.select(this);
+      const el = select(this);
       const nodeId = el.attr('data-id');
       if (nodeId && highlighted.has(nodeId)) {
         el.style('opacity', '1');
@@ -330,7 +336,7 @@ export class ChartRenderer {
   }
 
   private renderCardContent(
-    selection: d3.Selection<SVGGElement, CardDatum, null, undefined>,
+    selection: Selection<SVGGElement, CardDatum, null, undefined>,
     width: number,
     height: number,
     getId: (d: CardDatum) => string,
@@ -371,8 +377,8 @@ export class ChartRenderer {
       .attr('ry', cardBorderRadius)
       .attr('fill', (d: CardDatum) => {
         const catId = d.data?.categoryId;
-        if (catId && self.opts.categories.length > 0) {
-          const cat = self.opts.categories.find((c: ColorCategory) => c.id === catId);
+        if (catId) {
+          const cat = self.categoryMap.get(catId);
           if (cat) return cat.color;
         }
         return cardFill;
@@ -402,8 +408,8 @@ export class ChartRenderer {
       .attr('font-size', `${nameFontSize}px`)
       .attr('fill', (d: CardDatum) => {
         const catId = d.data?.categoryId;
-        if (catId && self.opts.categories.length > 0) {
-          const cat = self.opts.categories.find((c: ColorCategory) => c.id === catId);
+        if (catId) {
+          const cat = self.categoryMap.get(catId);
           if (cat?.nameColor) return cat.nameColor;
         }
         return nameColor;
@@ -422,8 +428,8 @@ export class ChartRenderer {
       .attr('font-size', `${titleFontSize}px`)
       .attr('fill', (d: CardDatum) => {
         const catId = d.data?.categoryId;
-        if (catId && self.opts.categories.length > 0) {
-          const cat = self.opts.categories.find((c: ColorCategory) => c.id === catId);
+        if (catId) {
+          const cat = self.categoryMap.get(catId);
           if (cat?.titleColor) return cat.titleColor;
         }
         return titleColor;
@@ -433,7 +439,7 @@ export class ChartRenderer {
   }
 
   private renderHeadcountBadge(
-    parentGroup: d3.Selection<SVGGElement, unknown, null, undefined>,
+    parentGroup: Selection<SVGGElement, unknown, null, undefined>,
     node: LayoutNode,
   ): void {
     const {
@@ -505,7 +511,7 @@ export class ChartRenderer {
     const fontFamily = this.opts.fontFamily;
 
     this.g.selectAll<SVGGElement, unknown>('.node, .ic-node, .pal-node').each(function () {
-      const el = d3.select(this);
+      const el = select(this);
       const nodeId = el.attr('data-id');
       if (!nodeId) return;
 
@@ -580,7 +586,7 @@ export class ChartRenderer {
     const shouldDimUnchanged = this.dimUnchanged;
 
     this.g.selectAll<SVGGElement, unknown>('.node, .ic-node, .pal-node').each(function () {
-      const el = d3.select(this);
+      const el = select(this);
       const nodeId = el.attr('data-id');
       if (!nodeId) return;
 
@@ -695,7 +701,7 @@ export class ChartRenderer {
 
     // Position items
     diffLegendGroup.selectAll<SVGGElement, unknown>('.diff-legend-item').each(function () {
-      const el = d3.select(this);
+      const el = select(this);
       const col = parseInt(el.attr('data-col'), 10);
       const x = legendX + legendPadding + colOffsets[col];
       const y = legendY + legendPadding;
@@ -798,7 +804,7 @@ export class ChartRenderer {
 
     // Position all items now that we know column widths
     legendGroup.selectAll<SVGGElement, unknown>('.legend-item').each(function () {
-      const el = d3.select(this);
+      const el = select(this);
       const row = parseInt(el.attr('data-row'), 10);
       const col = parseInt(el.attr('data-col'), 10);
       const x = legendX + legendPadding + colOffsets[col];

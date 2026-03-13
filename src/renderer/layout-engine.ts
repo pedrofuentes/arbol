@@ -1,6 +1,7 @@
-import * as d3 from 'd3';
+import { hierarchy, tree } from 'd3';
+import type { HierarchyPointNode } from 'd3';
 import { OrgNode } from '../types';
-import { filterVisibleTree, stripM1Children, countDescendants, findNodeById } from '../utils/tree';
+import { filterVisibleTree, stripM1Children, countDescendants, flattenTree } from '../utils/tree';
 import type { ResolvedOptions } from './chart-renderer';
 
 export interface LayoutNode {
@@ -38,6 +39,9 @@ export interface LayoutResult {
 }
 
 export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResult {
+  // Pre-compute node lookup map for O(1) access by ID (avoids O(n²) findNodeById in loops)
+  const nodeById = new Map<string, OrgNode>(flattenTree(root).map((n) => [n.id, n]));
+
   const visibleTree = filterVisibleTree(root);
   const { layoutTree, icMap, palMap } = stripM1Children(visibleTree);
 
@@ -59,11 +63,10 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
 
   const totalVerticalSpacing = topVerticalSpacing + bottomVerticalSpacing;
 
-  const hierarchy = d3.hierarchy(layoutTree, (d) => d.children);
+  const hier = hierarchy(layoutTree, (d) => d.children);
   const palTotalWidth = nodeWidth * 2 + palCenterGap;
 
-  const treeLayout = d3
-    .tree<OrgNode>()
+  const treeLayout = tree<OrgNode>()
     .nodeSize([nodeWidth + horizontalSpacing, nodeHeight + totalVerticalSpacing])
     .separation((a, b) => {
       const aHasPals = palMap.has(a.data.id);
@@ -75,7 +78,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
       return base;
     });
 
-  const treeData = treeLayout(hierarchy);
+  const treeData = treeLayout(hier);
 
   // Compute Advisor stack height for a given node
   const getPalStackHeight = (nodeId: string): number => {
@@ -86,7 +89,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
   };
 
   // Shift a subtree vertically
-  const shiftSubtree = (node: d3.HierarchyPointNode<OrgNode>, extraY: number): void => {
+  const shiftSubtree = (node: HierarchyPointNode<OrgNode>, extraY: number): void => {
     node.y += extraY;
     for (const child of node.children ?? []) {
       shiftSubtree(child, extraY);
@@ -113,7 +116,13 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
   }
 
   // Enforce branchSpacing: ensure subtree bounding boxes don't overlap
-  const getSubtreeXBounds = (node: d3.HierarchyPointNode<OrgNode>): [number, number] => {
+  // Cache bounds to avoid O(n²) recomputation; invalidated on subtree shifts
+  const boundsCache = new Map<HierarchyPointNode<OrgNode>, [number, number]>();
+
+  const getSubtreeXBounds = (node: HierarchyPointNode<OrgNode>): [number, number] => {
+    const cached = boundsCache.get(node);
+    if (cached) return cached;
+
     let minX = node.x - nodeWidth / 2;
     let maxX = node.x + nodeWidth / 2;
 
@@ -138,17 +147,33 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
       minX = Math.min(minX, childMin);
       maxX = Math.max(maxX, childMax);
     }
-    return [minX, maxX];
+    const result: [number, number] = [minX, maxX];
+    boundsCache.set(node, result);
+    return result;
   };
 
-  const shiftSubtreeX = (node: d3.HierarchyPointNode<OrgNode>, dx: number): void => {
+  const invalidateBoundsUp = (node: HierarchyPointNode<OrgNode>): void => {
+    let current: HierarchyPointNode<OrgNode> | null = node;
+    while (current) {
+      boundsCache.delete(current);
+      current = current.parent;
+    }
+  };
+
+  const shiftSubtreeX = (node: HierarchyPointNode<OrgNode>, dx: number): void => {
     node.x += dx;
+    // Shift cached bounds directly for this node and all descendants
+    const cached = boundsCache.get(node);
+    if (cached) {
+      cached[0] += dx;
+      cached[1] += dx;
+    }
     for (const child of node.children ?? []) {
       shiftSubtreeX(child, dx);
     }
   };
 
-  const enforceSpacing = (node: d3.HierarchyPointNode<OrgNode>): void => {
+  const enforceSpacing = (node: HierarchyPointNode<OrgNode>): void => {
     if (!node.children || node.children.length < 2) {
       for (const child of node.children ?? []) {
         enforceSpacing(child);
@@ -158,6 +183,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
         const dx = node.x - node.children[0].x;
         if (dx !== 0) {
           shiftSubtreeX(node.children[0], dx);
+          invalidateBoundsUp(node);
         }
       }
       return;
@@ -183,6 +209,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
     const lastChild = node.children[node.children.length - 1];
     const childrenCenter = (firstChild.x + lastChild.x) / 2;
     node.x = childrenCenter;
+    boundsCache.delete(node);
   };
 
   enforceSpacing(treeData);
@@ -298,7 +325,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
     const hasTreeChildren = !!(treeNode.data.children && treeNode.data.children.length > 0);
     const hasICs = icMap.has(treeNode.data.id);
 
-    const originalNode = findNodeById(root, treeNode.data.id);
+    const originalNode = nodeById.get(treeNode.data.id);
     const descCount = originalNode ? countDescendants(originalNode) : 0;
 
     nodes.push({

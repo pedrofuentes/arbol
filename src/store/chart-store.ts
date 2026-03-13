@@ -35,7 +35,7 @@ export class ChartStore {
       charts = [chart];
     }
 
-    const active = charts[0];
+    const active = this.sanitizeChart(charts[0]);
     this.activeChartId = active.id;
     this.lastSavedTree = JSON.stringify(active.workingTree);
     return active;
@@ -202,8 +202,9 @@ export class ChartStore {
   }
 
   async switchChart(id: string): Promise<ChartRecord> {
-    const chart = await this.db.getChart(id);
-    if (!chart) throw new Error(`Chart not found: ${id}`);
+    const raw = await this.db.getChart(id);
+    if (!raw) throw new Error(`Chart not found: ${id}`);
+    const chart = this.sanitizeChart(raw);
 
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
@@ -383,6 +384,23 @@ export class ChartStore {
       categories: [],
     };
     await this.db.putChart(chart);
+    return chart;
+  }
+
+  /** Ensures a chart record loaded from IndexedDB has all required fields with valid defaults. */
+  private sanitizeChart(chart: ChartRecord): ChartRecord {
+    if (!chart.workingTree || typeof chart.workingTree !== 'object') {
+      chart.workingTree = { ...DEFAULT_ROOT };
+    }
+    const tree = chart.workingTree;
+    if (!tree.id || typeof tree.id !== 'string') tree.id = 'root';
+    if (typeof tree.name !== 'string') tree.name = '';
+    if (typeof tree.title !== 'string') tree.title = '';
+    if (!Array.isArray(chart.categories)) {
+      chart.categories = [];
+    }
+    if (!chart.createdAt) chart.createdAt = new Date().toISOString();
+    if (!chart.updatedAt) chart.updatedAt = chart.createdAt;
     return chart;
   }
 }

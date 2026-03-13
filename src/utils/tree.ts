@@ -119,14 +119,16 @@ export function managerLevel(node: OrgNode): number {
 /** Returns a map of manager level → count (e.g., M1→3, M2→2). Excludes leaves (level 0). */
 export function countManagersByLevel(root: OrgNode): Map<number, number> {
   const map = new Map<number, number>();
-  function walk(node: OrgNode): void {
-    const level = managerLevel(node);
-    if (level > 0) {
-      map.set(level, (map.get(level) ?? 0) + 1);
+  // Single-pass bottom-up computation avoids O(n²) repeated managerLevel() calls
+  function walk(node: OrgNode): number {
+    if (isLeaf(node)) return 0;
+    let maxChildLevel = 0;
+    for (const child of node.children!) {
+      maxChildLevel = Math.max(maxChildLevel, walk(child));
     }
-    for (const child of node.children ?? []) {
-      walk(child);
-    }
+    const level = maxChildLevel + 1;
+    map.set(level, (map.get(level) ?? 0) + 1);
+    return level;
   }
   walk(root);
   return map;
