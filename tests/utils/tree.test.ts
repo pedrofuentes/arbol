@@ -10,6 +10,7 @@ import {
   isM1,
   stripM1Children,
   countLeaves,
+  countDescendants,
   managerLevel,
   countManagersByLevel,
 } from '../../src/utils/tree';
@@ -396,5 +397,57 @@ describe('countManagersByLevel', () => {
     const levels = countManagersByLevel(tree);
     expect(levels.get(1)).toBe(1); // root is M1
     expect(levels.size).toBe(1);
+  });
+});
+
+describe('countDescendants', () => {
+  it('returns 0 for a leaf node', () => {
+    expect(countDescendants({ id: '1', name: 'Solo', title: 'Only' })).toBe(0);
+  });
+
+  it('returns 0 for a node with empty children array', () => {
+    expect(countDescendants({ id: '1', name: 'A', title: 'T', children: [] })).toBe(0);
+  });
+
+  it('counts all descendants in a mixed tree', () => {
+    const tree = makeTree(); // root→[Bob→[Diana,Eve], Carol] = 4 descendants
+    expect(countDescendants(tree)).toBe(4);
+  });
+
+  it('counts direct children for an M1 manager', () => {
+    const m1: OrgNode = {
+      id: 'm',
+      name: 'M',
+      title: 'Manager',
+      children: [
+        { id: 'a', name: 'A', title: 'IC' },
+        { id: 'b', name: 'B', title: 'IC' },
+      ],
+    };
+    expect(countDescendants(m1)).toBe(2);
+  });
+
+  it('counts all levels in a deep chain', () => {
+    const tree: OrgNode = {
+      id: 'a',
+      name: 'A',
+      title: 'A',
+      children: [
+        {
+          id: 'b',
+          name: 'B',
+          title: 'B',
+          children: [
+            {
+              id: 'c',
+              name: 'C',
+              title: 'C',
+              children: [{ id: 'd', name: 'D', title: 'D' }],
+            },
+          ],
+        },
+      ],
+    };
+    expect(countDescendants(tree)).toBe(3);
   });
 });

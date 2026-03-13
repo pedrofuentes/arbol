@@ -44,6 +44,13 @@ const DEFAULTS: PersistableSettings = {
   cardStroke: '#22c55e',
   cardStrokeWidth: 1,
   icContainerFill: '#e5e7eb',
+  showHeadcount: false,
+  headcountBadgeColor: '#9ca3af',
+  headcountBadgeTextColor: '#1e293b',
+  headcountBadgeFontSize: 11,
+  headcountBadgeRadius: 4,
+  headcountBadgePadding: 8,
+  headcountBadgeHeight: 22,
 };
 
 describe('SettingsStore', () => {
@@ -62,6 +69,19 @@ describe('SettingsStore', () => {
       const loaded = store.load(DEFAULTS);
       expect(loaded.nodeWidth).toBe(200);
       expect(loaded.cardFill).toBe('#000000');
+    });
+  });
+
+  describe('boolean settings', () => {
+    it('should save and load boolean settings', () => {
+      store.saveImmediate({ showHeadcount: true } as Partial<PersistableSettings>);
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.showHeadcount).toBe(true);
+    });
+
+    it('should default showHeadcount to false', () => {
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.showHeadcount).toBe(false);
     });
   });
 
@@ -231,6 +251,12 @@ describe('SettingsStore', () => {
       const bad = { ...DEFAULTS, linkColor: 42 };
       const json = JSON.stringify({ version: 1, settings: bad });
       expect(() => store.parseImport(json)).toThrow('expected a string');
+    });
+
+    it('throws on invalid boolean value', () => {
+      const bad = { ...DEFAULTS, showHeadcount: 'yes' };
+      const json = JSON.stringify({ version: 1, settings: bad });
+      expect(() => store.parseImport(json)).toThrow('expected a boolean');
     });
 
     it('handles different version gracefully (still parses if structure valid)', () => {

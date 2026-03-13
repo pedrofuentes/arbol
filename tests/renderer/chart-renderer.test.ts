@@ -1005,4 +1005,65 @@ describe('ChartRenderer', () => {
       );
     });
   });
+
+  describe('headcount badge', () => {
+    it('renders badge when showHeadcount is true', () => {
+      renderer.destroy();
+      renderer = createRenderer({ showHeadcount: true });
+      renderer.render(simpleTree());
+      const badges = container.querySelectorAll('.headcount-badge');
+      expect(badges.length).toBeGreaterThan(0);
+    });
+
+    it('does not render badge when showHeadcount is false', () => {
+      renderer.destroy();
+      renderer = createRenderer({ showHeadcount: false });
+      renderer.render(simpleTree());
+      const badges = container.querySelectorAll('.headcount-badge');
+      expect(badges.length).toBe(0);
+    });
+
+    it('does not render badge by default', () => {
+      renderer.render(simpleTree());
+      const badges = container.querySelectorAll('.headcount-badge');
+      expect(badges.length).toBe(0);
+    });
+
+    it('does not render badge on leaf managers (descendantCount = 0)', () => {
+      renderer.destroy();
+      renderer = createRenderer({ showHeadcount: true });
+      renderer.render(singleNode());
+      const badges = container.querySelectorAll('.headcount-badge');
+      expect(badges.length).toBe(0);
+    });
+
+    it('badge text matches descendant count', () => {
+      renderer.destroy();
+      renderer = createRenderer({ showHeadcount: true });
+      // simpleTree: root(Alice) -> Bob(1 child: Diana), Carol(leaf)
+      // root has 3 descendants, Bob has 1 descendant
+      renderer.render(simpleTree());
+      const badges = container.querySelectorAll('.headcount-badge');
+      const texts = Array.from(badges).map(
+        (b) => b.querySelector('text')!.textContent,
+      );
+      expect(texts).toContain('3'); // root: Bob + Carol + Diana
+      expect(texts).toContain('1'); // Bob: Diana
+    });
+
+    it('badge uses configured colors', () => {
+      renderer.destroy();
+      renderer = createRenderer({
+        showHeadcount: true,
+        headcountBadgeColor: '#ff0000',
+        headcountBadgeTextColor: '#00ff00',
+      });
+      renderer.render(simpleTree());
+      const badge = container.querySelector('.headcount-badge')!;
+      const rect = badge.querySelector('rect')!;
+      const text = badge.querySelector('text')!;
+      expect(rect.getAttribute('fill')).toBe('#ff0000');
+      expect(text.getAttribute('fill')).toBe('#00ff00');
+    });
+  });
 });

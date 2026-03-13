@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-03-13
+
+### Added
+- **Headcount badge** — optional badge on each manager card showing total number of reports
+  - Grey rounded-corner box positioned on the right edge of the card, vertically centered
+  - Enable via Settings → Headcount Badge → Show Headcount
+  - Fully configurable: font size, height, radius, padding, colors
+  - Renders in both SVG and PowerPoint exports
+- **PPTX export warning** — shows a confirmation dialog when the org chart exceeds PowerPoint's 56″ slide limit, suggesting to use Focus mode to export a sub-org instead
+- **1000-person sample org** — `public/big-org-1000.csv` with 8 levels of depth for testing large orgs
+
+### Fixed
+- Default layout for first-time users is now "Default" instead of "Compact"
+- PPTX badge text no longer wraps to 2 lines for multi-digit numbers
+
 ## [1.5.2] — 2026-03-12
 
 ### Fixed

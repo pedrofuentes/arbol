@@ -52,23 +52,23 @@ function main(): void {
   // Settings persistence
   const settingsStore = new SettingsStore();
   const defaultSettings: PersistableSettings = {
-    nodeWidth: 110,
-    nodeHeight: 22,
-    horizontalSpacing: 30,
-    branchSpacing: 10,
-    topVerticalSpacing: 5,
-    bottomVerticalSpacing: 12,
-    icNodeWidth: 99,
-    icGap: 4,
-    icContainerPadding: 6,
-    palTopGap: 7,
-    palBottomGap: 7,
-    palRowGap: 4,
-    palCenterGap: 50,
-    nameFontSize: 8,
-    titleFontSize: 7,
-    textPaddingTop: 4,
-    textGap: 1,
+    nodeWidth: 160,
+    nodeHeight: 34,
+    horizontalSpacing: 50,
+    branchSpacing: 20,
+    topVerticalSpacing: 10,
+    bottomVerticalSpacing: 20,
+    icNodeWidth: 141,
+    icGap: 6,
+    icContainerPadding: 10,
+    palTopGap: 12,
+    palBottomGap: 12,
+    palRowGap: 6,
+    palCenterGap: 70,
+    nameFontSize: 11,
+    titleFontSize: 9,
+    textPaddingTop: 6,
+    textGap: 2,
     linkColor: '#94a3b8',
     linkWidth: 1.5,
     dottedLineDash: '6,4',
@@ -76,6 +76,13 @@ function main(): void {
     cardStroke: '#22c55e',
     cardStrokeWidth: 1,
     icContainerFill: '#e5e7eb',
+    showHeadcount: false,
+    headcountBadgeColor: '#9ca3af',
+    headcountBadgeTextColor: '#1e293b',
+    headcountBadgeFontSize: 11,
+    headcountBadgeRadius: 4,
+    headcountBadgePadding: 8,
+    headcountBadgeHeight: 22,
   };
   const savedSettings = settingsStore.load(defaultSettings);
 
@@ -793,6 +800,25 @@ function main(): void {
   const exportCurrentChart = async () => {
     const layout = renderer.getLastLayout();
     if (!layout) return;
+
+    // Warn if chart will be scaled down due to PowerPoint's 56" limit
+    const PX_TO_IN = 1 / 96;
+    const MAX_SLIDE = 56;
+    const chartW = layout.boundingBox.width * PX_TO_IN + 1;
+    const chartH = layout.boundingBox.height * PX_TO_IN + 1;
+    if (chartW > MAX_SLIDE || chartH > MAX_SLIDE) {
+      const confirmed = await showConfirmDialog({
+        title: 'Large Org Chart',
+        message:
+          'This org chart is too large to fit at full size on a PowerPoint slide (max 56″). ' +
+          'It will be scaled down and may be hard to read.\n\n' +
+          'Tip: Right-click a manager and choose "Focus on sub-org" to export a smaller section instead.',
+        confirmLabel: 'Export anyway',
+        danger: false,
+      });
+      if (!confirmed) return;
+    }
+
     const rendererOpts = renderer.getOptions();
     await exportToPptx(layout, {
       categories: categoryStore.getAll(),
@@ -804,6 +830,13 @@ function main(): void {
       icContainerFill: rendererOpts.icContainerFill,
       linkColor: rendererOpts.linkColor,
       linkWidth: rendererOpts.linkWidth,
+      showHeadcount: rendererOpts.showHeadcount,
+      headcountBadgeColor: rendererOpts.headcountBadgeColor,
+      headcountBadgeTextColor: rendererOpts.headcountBadgeTextColor,
+      headcountBadgeFontSize: rendererOpts.headcountBadgeFontSize,
+      headcountBadgeRadius: rendererOpts.headcountBadgeRadius,
+      headcountBadgePadding: rendererOpts.headcountBadgePadding,
+      headcountBadgeHeight: rendererOpts.headcountBadgeHeight,
     });
   };
 

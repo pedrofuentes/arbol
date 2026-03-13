@@ -7,7 +7,7 @@ import { generateId } from '../utils/id';
 interface SettingDef {
   key: keyof RendererOptions;
   label: string;
-  type: 'range' | 'color' | 'text';
+  type: 'range' | 'color' | 'text' | 'checkbox';
   min?: number;
   max?: number;
   step?: number;
@@ -128,9 +128,49 @@ const SETTING_GROUPS: SettingGroup[] = [
       { key: 'icContainerFill', label: 'IC Container Fill', type: 'color' },
     ],
   },
+  {
+    title: 'Headcount Badge',
+    settings: [
+      { key: 'showHeadcount', label: 'Show Headcount', type: 'checkbox' },
+      {
+        key: 'headcountBadgeFontSize',
+        label: 'Badge Font Size',
+        type: 'range',
+        min: 5,
+        max: 16,
+        step: 1,
+      },
+      {
+        key: 'headcountBadgeHeight',
+        label: 'Badge Height',
+        type: 'range',
+        min: 10,
+        max: 30,
+        step: 1,
+      },
+      {
+        key: 'headcountBadgeRadius',
+        label: 'Badge Radius',
+        type: 'range',
+        min: 0,
+        max: 15,
+        step: 1,
+      },
+      {
+        key: 'headcountBadgePadding',
+        label: 'Badge Padding',
+        type: 'range',
+        min: 2,
+        max: 16,
+        step: 1,
+      },
+      { key: 'headcountBadgeColor', label: 'Badge Color', type: 'color' },
+      { key: 'headcountBadgeTextColor', label: 'Badge Text Color', type: 'color' },
+    ],
+  },
 ];
 
-const DEFAULT_SETTINGS: Record<string, number | string> = {
+const DEFAULT_SETTINGS: Record<string, number | string | boolean> = {
   nodeWidth: 160,
   nodeHeight: 34,
   horizontalSpacing: 50,
@@ -155,6 +195,13 @@ const DEFAULT_SETTINGS: Record<string, number | string> = {
   cardStroke: '#22c55e',
   cardStrokeWidth: 1,
   icContainerFill: '#e5e7eb',
+  showHeadcount: false,
+  headcountBadgeColor: '#9ca3af',
+  headcountBadgeTextColor: '#1e293b',
+  headcountBadgeFontSize: 11,
+  headcountBadgeRadius: 4,
+  headcountBadgePadding: 8,
+  headcountBadgeHeight: 22,
 };
 
 export const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<RendererOptions> }[] = [
@@ -508,7 +555,7 @@ export class SettingsEditor {
       const groupId = sectionIdFromTitle(group.title);
       const controlsContainer = document.createElement('div');
       for (const setting of group.settings) {
-        const value = opts[setting.key] as number | string;
+        const value = opts[setting.key] as number | string | boolean;
         controlsContainer.appendChild(this.createControl(setting, value));
       }
 
@@ -963,11 +1010,31 @@ export class SettingsEditor {
     return wrapper;
   }
 
-  private createControl(setting: SettingDef, currentValue: number | string): HTMLDivElement {
+  private createControl(setting: SettingDef, currentValue: number | string | boolean): HTMLDivElement {
     const wrapper = document.createElement('div');
     wrapper.className = 'form-group';
 
-    if (setting.type === 'range') {
+    if (setting.type === 'checkbox') {
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;';
+
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = Boolean(currentValue);
+      input.style.cssText = 'cursor:pointer;width:16px;height:16px;';
+
+      input.addEventListener('change', () => {
+        this.renderer.updateOptions({ [setting.key]: input.checked } as Partial<RendererOptions>);
+        this.rerenderCallback();
+      });
+
+      const span = document.createElement('span');
+      span.textContent = setting.label;
+
+      label.appendChild(input);
+      label.appendChild(span);
+      wrapper.appendChild(label);
+    } else if (setting.type === 'range') {
       const label = document.createElement('label');
       label.textContent = `${setting.label} `;
       const valueSpan = document.createElement('span');
