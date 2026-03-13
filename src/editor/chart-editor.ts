@@ -10,6 +10,7 @@ export interface ChartEditorOptions {
   onChartSwitch: (chart: ChartRecord) => void;
   onVersionRestore: (tree: OrgNode) => void;
   onVersionView: (version: VersionRecord) => void;
+  onVersionCompare: (version: VersionRecord) => void;
   getCurrentTree: () => OrgNode;
   getCurrentCategories: () => ColorCategory[];
   onBeforeSwitch: () => Promise<boolean>;
@@ -32,6 +33,7 @@ export class ChartEditor {
   private onChartSwitch: ChartEditorOptions['onChartSwitch'];
   private onVersionRestore: ChartEditorOptions['onVersionRestore'];
   private onVersionView: ChartEditorOptions['onVersionView'];
+  private onVersionCompare: ChartEditorOptions['onVersionCompare'];
   private getCurrentTree: ChartEditorOptions['getCurrentTree'];
   private getCurrentCategories: ChartEditorOptions['getCurrentCategories'];
   private onBeforeSwitch: ChartEditorOptions['onBeforeSwitch'];
@@ -54,6 +56,7 @@ export class ChartEditor {
     this.onChartSwitch = options.onChartSwitch;
     this.onVersionRestore = options.onVersionRestore;
     this.onVersionView = options.onVersionView;
+    this.onVersionCompare = options.onVersionCompare;
     this.getCurrentTree = options.getCurrentTree;
     this.getCurrentCategories = options.getCurrentCategories;
     this.onBeforeSwitch = options.onBeforeSwitch;
@@ -358,6 +361,10 @@ export class ChartEditor {
     const viewBtn = this.createInlineButton('View');
     viewBtn.addEventListener('click', () => this.onVersionView(version));
     actions.appendChild(viewBtn);
+
+    const compareBtn = this.createInlineButton('Compare');
+    compareBtn.addEventListener('click', () => this.onVersionCompare(version));
+    actions.appendChild(compareBtn);
 
     const restoreBtn = this.createInlineButton('Restore');
     restoreBtn.addEventListener('click', () => this.handleRestoreVersion(version.id));

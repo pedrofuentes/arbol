@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { OrgNode, ColorCategory } from '../types';
+import { OrgNode, ColorCategory, DiffEntry, DiffStatus } from '../types';
 import { computeLayout, LayoutResult, LayoutNode } from './layout-engine';
 import { ZoomManager } from './zoom-manager';
 
@@ -81,6 +81,7 @@ export class ChartRenderer {
   private zoomManager: ZoomManager;
   private hasRendered = false;
   private highlightedNodes: Set<string> | null = null;
+  private diffMap: Map<string, DiffEntry> | null = null;
 
   constructor(options: RendererOptions) {
     this.opts = {
@@ -144,6 +145,14 @@ export class ChartRenderer {
   setHighlightedNodes(nodeIds: Set<string> | null): void {
     this.highlightedNodes = nodeIds;
     this.applyHighlighting();
+  }
+
+  setDiffMap(diffMap: Map<string, DiffEntry> | null): void {
+    this.diffMap = diffMap;
+  }
+
+  getDiffMap(): Map<string, DiffEntry> | null {
+    return this.diffMap;
   }
 
   render(root: OrgNode): void {
@@ -261,6 +270,11 @@ export class ChartRenderer {
       }
     }
 
+    // Diff badges: render on all node types when diffMap is active
+    if (this.diffMap) {
+      this.renderDiffBadges();
+    }
+
     if (this.hasRendered) {
       this.zoomManager.applyTransform(this.zoomManager.getCurrentTransform());
     } else {
@@ -269,7 +283,13 @@ export class ChartRenderer {
     }
 
     this.applyHighlighting();
+    if (this.diffMap) {
+      this.applyDiffDimming();
+    }
     this.renderLegend(layout);
+    if (this.diffMap) {
+      this.renderDiffLegend(layout);
+    }
   }
 
   getLastLayout(): LayoutResult | null {
@@ -456,6 +476,227 @@ export class ChartRenderer {
       .attr('fill', headcountBadgeTextColor)
       .attr('pointer-events', 'none')
       .text(text);
+  }
+
+  private static readonly DIFF_COLORS: Record<DiffStatus, string> = {
+    added: '#22c55e',
+    removed: '#ef4444',
+    moved: '#a78bfa',
+    modified: '#f59e0b',
+    unchanged: '#64748b',
+  };
+
+  private static readonly DIFF_LABELS: Record<DiffStatus, string> = {
+    added: 'Added',
+    removed: 'Removed',
+    moved: 'Moved',
+    modified: 'Modified',
+    unchanged: 'Unchanged',
+  };
+
+  private renderDiffBadges(): void {
+    if (!this.diffMap) return;
+    const diffMap = this.diffMap;
+    const fontFamily = this.opts.fontFamily;
+
+    this.g.selectAll<SVGGElement, unknown>('.node, .ic-node, .pal-node').each(function () {
+      const el = d3.select(this);
+      const nodeId = el.attr('data-id');
+      if (!nodeId) return;
+
+      const entry = diffMap.get(nodeId);
+      if (!entry || entry.status === 'unchanged') return;
+
+      const color = ChartRenderer.DIFF_COLORS[entry.status];
+      const label = ChartRenderer.DIFF_LABELS[entry.status];
+
+      // Get card width from the first rect child
+      const rectEl = el.select('rect');
+      const cardWidth = rectEl.empty() ? 120 : parseFloat(rectEl.attr('width'));
+
+      const badgeFontSize = 8;
+      const charWidth = badgeFontSize * 0.65;
+      const textWidth = label.length * charWidth;
+      const badgePadding = 6;
+      const badgeHeight = 14;
+      const badgeWidth = textWidth + badgePadding * 2;
+      const badgeRadius = 4;
+
+      const badgeX = cardWidth - badgeWidth + 6;
+      const badgeY = -7;
+
+      const badgeGroup = el.append('g').attr('class', 'diff-badge');
+
+      badgeGroup
+        .append('rect')
+        .attr('x', badgeX)
+        .attr('y', badgeY)
+        .attr('width', badgeWidth)
+        .attr('height', badgeHeight)
+        .attr('rx', badgeRadius)
+        .attr('ry', badgeRadius)
+        .attr('fill', color)
+        .attr('pointer-events', 'none');
+
+      badgeGroup
+        .append('text')
+        .attr('x', badgeX + badgeWidth / 2)
+        .attr('y', badgeY + badgeHeight / 2)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'central')
+        .attr('font-family', `${fontFamily}, sans-serif`)
+        .attr('font-size', `${badgeFontSize}px`)
+        .attr('font-weight', 'bold')
+        .attr('fill', '#ffffff')
+        .attr('letter-spacing', '0.04em')
+        .attr('text-transform', 'uppercase')
+        .attr('pointer-events', 'none')
+        .text(label);
+
+      // Removed nodes: reduce opacity and add strikethrough
+      if (entry.status === 'removed') {
+        el.style('opacity', '0.55');
+        el.selectAll('.node-name, .node-title')
+          .attr('text-decoration', 'line-through')
+          .attr('text-decoration-color', ChartRenderer.DIFF_COLORS.removed);
+      }
+    });
+  }
+
+  private applyDiffDimming(): void {
+    if (!this.diffMap) return;
+    const diffMap = this.diffMap;
+
+    this.g.selectAll<SVGGElement, unknown>('.node, .ic-node, .pal-node').each(function () {
+      const el = d3.select(this);
+      const nodeId = el.attr('data-id');
+      if (!nodeId) return;
+
+      const entry = diffMap.get(nodeId);
+      if (!entry || entry.status === 'unchanged') {
+        el.style('opacity', '0.35');
+      } else if (entry.status === 'removed') {
+        el.style('opacity', '0.55');
+      }
+    });
+
+    // Dim links globally in diff mode
+    this.g.selectAll('.links, .pal-stacks .link').style('opacity', '0.4');
+  }
+
+  private renderDiffLegend(layout: LayoutResult): void {
+    if (!this.diffMap) return;
+
+    // Count occurrences per status
+    const counts: Record<DiffStatus, number> = {
+      added: 0, removed: 0, moved: 0, modified: 0, unchanged: 0,
+    };
+    for (const entry of this.diffMap.values()) {
+      counts[entry.status]++;
+    }
+
+    const items: { status: DiffStatus; label: string; color: string; count: number }[] = [];
+    const statusOrder: DiffStatus[] = ['added', 'removed', 'moved', 'modified'];
+    for (const status of statusOrder) {
+      if (counts[status] > 0) {
+        items.push({
+          status,
+          label: `${ChartRenderer.DIFF_LABELS[status]} (${counts[status]})`,
+          color: ChartRenderer.DIFF_COLORS[status],
+          count: counts[status],
+        });
+      }
+    }
+    if (items.length === 0) return;
+
+    const { boundingBox } = layout;
+    const legendFs = this.opts.legendFontSize ?? 12;
+    const legendPadding = legendFs;
+    const swatchSize = legendFs;
+    const textGap = Math.round(legendFs * 0.5);
+    const rowHeight = Math.round(legendFs * 1.6);
+    const swatchRx = Math.round(Math.max(1, legendFs * 0.15));
+    const bgRx = Math.round(Math.max(2, legendFs * 0.35));
+    const columnGap = Math.round(legendFs * 1.5);
+
+    // Position below existing legend if categories exist, otherwise below chart
+    const existingLegend = this.g.select<SVGGElement>('.legend');
+    let legendY: number;
+    if (!existingLegend.empty()) {
+      const existingBg = existingLegend.select('.legend-bg');
+      if (!existingBg.empty()) {
+        legendY = parseFloat(existingBg.attr('y')) + parseFloat(existingBg.attr('height')) + Math.round(legendFs * 1.2);
+      } else {
+        legendY = boundingBox.minY + boundingBox.height + Math.round(legendFs * 2.2);
+      }
+    } else {
+      legendY = boundingBox.minY + boundingBox.height + Math.round(legendFs * 2.2);
+    }
+
+    const legendX = boundingBox.minX;
+    const diffLegendGroup = this.g.append('g').attr('class', 'diff-legend');
+    const bgRect = diffLegendGroup.append('rect').attr('class', 'diff-legend-bg');
+
+    // Lay items out in a single row
+    const maxTextWidths: number[] = [];
+
+    items.forEach((item, i) => {
+      const rowG = diffLegendGroup
+        .append('g')
+        .attr('class', 'diff-legend-item')
+        .attr('data-col', i);
+
+      rowG
+        .append('rect')
+        .attr('width', swatchSize)
+        .attr('height', swatchSize)
+        .attr('fill', item.color)
+        .attr('rx', swatchRx);
+
+      const text = rowG
+        .append('text')
+        .attr('x', swatchSize + textGap)
+        .attr('y', swatchSize / 2)
+        .attr('dominant-baseline', 'central')
+        .attr('font-size', `${legendFs}px`)
+        .attr('font-family', `${this.opts.fontFamily}, sans-serif`)
+        .attr('fill', 'var(--text-secondary, #64748b)')
+        .text(item.label);
+
+      const textNode = text.node();
+      const bbox = textNode && typeof textNode.getBBox === 'function' ? textNode.getBBox() : null;
+      maxTextWidths.push(bbox ? bbox.width : item.label.length * legendFs * 0.6);
+    });
+
+    // Compute column offsets
+    const colOffsets: number[] = [0];
+    for (let c = 1; c < items.length; c++) {
+      colOffsets[c] = colOffsets[c - 1] + swatchSize + textGap + maxTextWidths[c - 1] + columnGap;
+    }
+
+    // Position items
+    diffLegendGroup.selectAll<SVGGElement, unknown>('.diff-legend-item').each(function () {
+      const el = d3.select(this);
+      const col = parseInt(el.attr('data-col'), 10);
+      const x = legendX + legendPadding + colOffsets[col];
+      const y = legendY + legendPadding;
+      el.attr('transform', `translate(${x}, ${y})`);
+    });
+
+    // Size background
+    const lastCol = items.length - 1;
+    const bgWidth = legendPadding * 2 + colOffsets[lastCol] + swatchSize + textGap + maxTextWidths[lastCol];
+    const bgHeight = legendPadding * 2 + rowHeight - (rowHeight - swatchSize);
+
+    bgRect
+      .attr('x', legendX)
+      .attr('y', legendY)
+      .attr('width', bgWidth)
+      .attr('height', bgHeight)
+      .attr('fill', 'var(--bg-surface, #ffffff)')
+      .attr('stroke', 'var(--border-default, #e2e8f0)')
+      .attr('stroke-width', 0.5)
+      .attr('rx', bgRx);
   }
 
   private renderLegend(layout: LayoutResult): void {

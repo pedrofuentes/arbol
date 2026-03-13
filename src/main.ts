@@ -29,6 +29,11 @@ import { ChartStore } from './store/chart-store';
 import { ChartEditor } from './editor/chart-editor';
 import { ChartNameHeader } from './ui/chart-name-header';
 import { showVersionViewer, dismissVersionViewer, isVersionViewerActive } from './ui/version-viewer';
+import { showComparisonBanner, dismissComparisonBanner, isComparisonBannerActive } from './ui/comparison-banner';
+import { showVersionPicker } from './ui/version-picker';
+import { compareTrees, buildMergedTree, getDiffStats } from './utils/tree-diff';
+import { SideBySideRenderer } from './renderer/side-by-side-renderer';
+import type { ComparisonState, VersionRecord } from './types';
 
 async function main(): Promise<void> {
   const sidebar = document.getElementById('sidebar')!;
@@ -106,6 +111,146 @@ async function main(): Promise<void> {
 
   // Focus mode: show only a subtree rooted at this node
   let focusedNodeId: string | null = null;
+
+  // Comparison mode: show diff between two trees
+  let comparisonState: ComparisonState | null = null;
+  let sideBySideRenderer: SideBySideRenderer | null = null;
+
+  const exitComparisonMode = () => {
+    comparisonState = null;
+    renderer.setDiffMap(null);
+    dismissComparisonBanner();
+    if (sideBySideRenderer) {
+      sideBySideRenderer.destroy();
+      sideBySideRenderer = null;
+    }
+    // Show main SVG again if it was hidden
+    const svgEl = chartArea.querySelector('svg');
+    if (svgEl) svgEl.removeAttribute('style');
+    rerender();
+    renderer.getZoomManager()?.fitToContent();
+  };
+
+  const showMergedView = (state: ComparisonState) => {
+    // Tear down side-by-side if active
+    if (sideBySideRenderer) {
+      sideBySideRenderer.destroy();
+      sideBySideRenderer = null;
+    }
+    // Show main SVG
+    const svgEl = chartArea.querySelector('svg');
+    if (svgEl) svgEl.removeAttribute('style');
+
+    const merged = buildMergedTree(state.oldTree, state.newTree, state.diff);
+    renderer.setDiffMap(state.diff);
+    renderer.updateOptions({ categories: categoryStore.getAll() });
+    renderer.render(merged);
+    renderer.getZoomManager()?.fitToContent();
+  };
+
+  const showSideBySideView = (state: ComparisonState) => {
+    // Hide main SVG
+    const svgEl = chartArea.querySelector('svg');
+    if (svgEl) svgEl.setAttribute('style', 'display:none');
+
+    // Tear down previous side-by-side if any
+    if (sideBySideRenderer) {
+      sideBySideRenderer.destroy();
+      sideBySideRenderer = null;
+    }
+
+    sideBySideRenderer = new SideBySideRenderer({
+      container: chartArea,
+      rendererOptions: { ...renderer.getOptions(), container: chartArea },
+      oldLabel: state.oldLabel,
+      newLabel: state.newLabel,
+    });
+    sideBySideRenderer.render(state.oldTree, state.newTree, state.diff);
+  };
+
+  const toggleComparisonView = () => {
+    if (!comparisonState) return;
+
+    const newMode = comparisonState.viewMode === 'merged' ? 'side-by-side' : 'merged';
+    comparisonState.viewMode = newMode;
+
+    if (newMode === 'merged') {
+      showMergedView(comparisonState);
+    } else {
+      showSideBySideView(comparisonState);
+    }
+
+    // Re-show banner with updated mode
+    const stats = getDiffStats(comparisonState.diff);
+    dismissComparisonBanner();
+    showComparisonBanner({
+      container: chartArea,
+      oldLabel: comparisonState.oldLabel,
+      newLabel: comparisonState.newLabel,
+      stats,
+      viewMode: newMode,
+      onToggleView: toggleComparisonView,
+      onExit: exitComparisonMode,
+    });
+  };
+
+  const enterComparisonMode = async (baseVersion: VersionRecord) => {
+    // Exit any active modes first
+    if (focusedNodeId) { focusedNodeId = null; dismissFocusBanner(); }
+    if (isVersionViewerActive()) { dismissVersionViewer(); }
+    if (comparisonState) {
+      renderer.setDiffMap(null);
+      dismissComparisonBanner();
+      if (sideBySideRenderer) { sideBySideRenderer.destroy(); sideBySideRenderer = null; }
+      const svgEl = chartArea.querySelector('svg');
+      if (svgEl) svgEl.removeAttribute('style');
+      comparisonState = null;
+    }
+
+    // Get all versions for the picker
+    const allVersions = await chartStore.getVersions();
+
+    const target = await showVersionPicker({
+      versions: allVersions,
+      excludeVersionId: baseVersion.id,
+      includeWorkingTree: true,
+    });
+
+    if (!target) return;
+
+    // Determine old (base) and new (target) trees
+    const oldTree = baseVersion.tree;
+    const oldLabel = baseVersion.name;
+    let newTree: typeof oldTree;
+    let newLabel: string;
+
+    if (target.type === 'working') {
+      newTree = store.getTree();
+      newLabel = 'Working tree';
+    } else {
+      newTree = target.version.tree;
+      newLabel = target.version.name;
+    }
+
+    // Compute diff
+    const diff = compareTrees(oldTree, newTree);
+    const stats = getDiffStats(diff);
+
+    comparisonState = { oldTree, newTree, oldLabel, newLabel, diff, viewMode: 'merged' };
+
+    // Show merged view by default
+    showMergedView(comparisonState);
+
+    showComparisonBanner({
+      container: chartArea,
+      oldLabel,
+      newLabel,
+      stats,
+      viewMode: 'merged',
+      onToggleView: toggleComparisonView,
+      onExit: exitComparisonMode,
+    });
+  };
 
   const exitFocusMode = () => {
     focusedNodeId = null;
@@ -448,6 +593,9 @@ async function main(): Promise<void> {
           renderer.getZoomManager()?.fitToContent();
         },
       });
+    },
+    onVersionCompare: (version) => {
+      enterComparisonMode(version);
     },
   });
 
@@ -1070,6 +1218,11 @@ async function main(): Promise<void> {
       // Dismiss version viewer if active
       if (isVersionViewerActive()) {
         dismissVersionViewer();
+        return;
+      }
+      // Exit comparison mode if active
+      if (isComparisonBannerActive()) {
+        exitComparisonMode();
         return;
       }
       // Clear search if active

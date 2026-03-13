@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ChartRenderer } from '../../src/renderer/chart-renderer';
-import { OrgNode, ColorCategory } from '../../src/types';
+import { OrgNode, ColorCategory, DiffEntry } from '../../src/types';
 
 // --- Test fixtures ---
 
@@ -1227,6 +1227,254 @@ describe('ChartRenderer', () => {
       const icContainerRect = container.querySelector('.ic-container')!;
       expect(icContainerRect.getAttribute('rx')).toBe('6');
       expect(icContainerRect.getAttribute('ry')).toBe('6');
+    });
+  });
+
+  describe('diff visualization', () => {
+    function diffTree(): OrgNode {
+      return {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          { id: 'a', name: 'Alice', title: 'VP Eng' },
+          { id: 'b', name: 'Bob', title: 'VP Sales' },
+          { id: 'c', name: 'Carol', title: 'VP Ops' },
+        ],
+      };
+    }
+
+    it('renders diff badges when diffMap is set', () => {
+      const diffMap = new Map<string, DiffEntry>([
+        ['a', { status: 'added' }],
+        ['b', { status: 'removed' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      renderer.render(diffTree());
+      const badges = container.querySelectorAll('.diff-badge');
+      expect(badges.length).toBe(2);
+    });
+
+    it('renders correct badge color for each diff status', () => {
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          { id: 'a', name: 'Added', title: 'T' },
+          { id: 'r', name: 'Removed', title: 'T' },
+          { id: 'm', name: 'Moved', title: 'T' },
+          { id: 'x', name: 'Modified', title: 'T' },
+        ],
+      };
+      const diffMap = new Map<string, DiffEntry>([
+        ['a', { status: 'added' }],
+        ['r', { status: 'removed' }],
+        ['m', { status: 'moved' }],
+        ['x', { status: 'modified' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      renderer.render(tree);
+
+      const expectedColors: Record<string, string> = {
+        a: '#22c55e',
+        r: '#ef4444',
+        m: '#a78bfa',
+        x: '#f59e0b',
+      };
+      for (const [nodeId, color] of Object.entries(expectedColors)) {
+        const node = container.querySelector(`[data-id="${nodeId}"]`)!;
+        const badgeRect = node.querySelector('.diff-badge rect')!;
+        expect(badgeRect.getAttribute('fill')).toBe(color);
+      }
+    });
+
+    it('does not render badge for unchanged nodes', () => {
+      const diffMap = new Map<string, DiffEntry>([
+        ['root', { status: 'unchanged' }],
+        ['a', { status: 'added' }],
+        ['b', { status: 'unchanged' }],
+        ['c', { status: 'unchanged' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      renderer.render(diffTree());
+
+      const rootNode = container.querySelector('[data-id="root"]')!;
+      expect(rootNode.querySelector('.diff-badge')).toBeNull();
+      const bNode = container.querySelector('[data-id="b"]')!;
+      expect(bNode.querySelector('.diff-badge')).toBeNull();
+      const aNode = container.querySelector('[data-id="a"]')!;
+      expect(aNode.querySelector('.diff-badge')).not.toBeNull();
+    });
+
+    it('reduces opacity of removed nodes', () => {
+      const diffMap = new Map<string, DiffEntry>([
+        ['a', { status: 'removed' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      renderer.render(diffTree());
+
+      const node = container.querySelector('[data-id="a"]') as SVGGElement;
+      expect(node.style.opacity).toBe('0.55');
+    });
+
+    it('adds strikethrough to removed node text', () => {
+      const diffMap = new Map<string, DiffEntry>([
+        ['a', { status: 'removed' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      renderer.render(diffTree());
+
+      const node = container.querySelector('[data-id="a"]')!;
+      const nameEl = node.querySelector('.node-name')!;
+      const titleEl = node.querySelector('.node-title')!;
+      expect(nameEl.getAttribute('text-decoration')).toBe('line-through');
+      expect(titleEl.getAttribute('text-decoration')).toBe('line-through');
+    });
+
+    it('dims unchanged nodes when diffMap is active', () => {
+      const diffMap = new Map<string, DiffEntry>([
+        ['root', { status: 'unchanged' }],
+        ['a', { status: 'added' }],
+        ['b', { status: 'unchanged' }],
+        ['c', { status: 'unchanged' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      renderer.render(diffTree());
+
+      const rootNode = container.querySelector('[data-id="root"]') as SVGGElement;
+      expect(rootNode.style.opacity).toBe('0.35');
+      const bNode = container.querySelector('[data-id="b"]') as SVGGElement;
+      expect(bNode.style.opacity).toBe('0.35');
+    });
+
+    it('does not dim changed nodes', () => {
+      const diffMap = new Map<string, DiffEntry>([
+        ['a', { status: 'added' }],
+        ['b', { status: 'modified' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      renderer.render(diffTree());
+
+      const aNode = container.querySelector('[data-id="a"]') as SVGGElement;
+      const bNode = container.querySelector('[data-id="b"]') as SVGGElement;
+      // Changed nodes should NOT have opacity 0.35
+      expect(aNode.style.opacity).not.toBe('0.35');
+      expect(bNode.style.opacity).not.toBe('0.35');
+    });
+
+    it('renders diff legend with correct items', () => {
+      const diffMap = new Map<string, DiffEntry>([
+        ['root', { status: 'unchanged' }],
+        ['a', { status: 'added' }],
+        ['b', { status: 'removed' }],
+        ['c', { status: 'moved' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      renderer.render(diffTree());
+
+      const legend = container.querySelector('.diff-legend');
+      expect(legend).not.toBeNull();
+      const items = legend!.querySelectorAll('.diff-legend-item');
+      expect(items.length).toBe(3); // added, removed, moved (not unchanged)
+    });
+
+    it('diff legend only shows statuses with count > 0', () => {
+      const diffMap = new Map<string, DiffEntry>([
+        ['a', { status: 'added' }],
+        ['b', { status: 'added' }],
+        ['root', { status: 'unchanged' }],
+        ['c', { status: 'unchanged' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      renderer.render(diffTree());
+
+      const legend = container.querySelector('.diff-legend')!;
+      const items = legend.querySelectorAll('.diff-legend-item');
+      // Only 'added' should appear (removed, moved, modified are all 0)
+      expect(items.length).toBe(1);
+      const texts = Array.from(legend.querySelectorAll('text')).map((t) => t.textContent);
+      expect(texts.some((t) => t!.includes('Added'))).toBe(true);
+      expect(texts.some((t) => t!.includes('Removed'))).toBe(false);
+    });
+
+    it('setDiffMap(null) clears diff state', () => {
+      const diffMap = new Map<string, DiffEntry>([
+        ['a', { status: 'added' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      expect(renderer.getDiffMap()).not.toBeNull();
+
+      renderer.setDiffMap(null);
+      expect(renderer.getDiffMap()).toBeNull();
+
+      renderer.render(diffTree());
+      const badges = container.querySelectorAll('.diff-badge');
+      expect(badges.length).toBe(0);
+      const diffLegend = container.querySelector('.diff-legend');
+      expect(diffLegend).toBeNull();
+    });
+
+    it('diff badges coexist with category colors', () => {
+      const categories: ColorCategory[] = [
+        { id: 'eng', label: 'Engineering', color: '#3b82f6' },
+      ];
+      renderer.destroy();
+      renderer = createRenderer({ categories });
+
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          { id: 'a', name: 'Alice', title: 'VP', categoryId: 'eng' },
+        ],
+      };
+      const diffMap = new Map<string, DiffEntry>([
+        ['a', { status: 'modified' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      renderer.render(tree);
+
+      // Category color on the card rect
+      const nodeSelector = '[data-id="a"]';
+      const node = container.querySelector(nodeSelector)!;
+      const cardRect = node.querySelector('rect')!;
+      expect(cardRect.getAttribute('fill')).toBe('#3b82f6');
+      // Diff badge also present
+      const badge = node.querySelector('.diff-badge');
+      expect(badge).not.toBeNull();
+    });
+
+    it('diff badges coexist with headcount badges', () => {
+      renderer.destroy();
+      renderer = createRenderer({ showHeadcount: true });
+
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          {
+            id: 'mgr',
+            name: 'Manager',
+            title: 'Dir',
+            children: [{ id: 'ic1', name: 'IC', title: 'Eng' }],
+          },
+        ],
+      };
+      const diffMap = new Map<string, DiffEntry>([
+        ['root', { status: 'modified' }],
+        ['mgr', { status: 'added' }],
+        ['ic1', { status: 'added' }],
+      ]);
+      renderer.setDiffMap(diffMap);
+      renderer.render(tree);
+
+      // Root should have both headcount badge and diff badge
+      const rootNode = container.querySelector('[data-id="root"]')!;
+      expect(rootNode.querySelector('.headcount-badge')).not.toBeNull();
+      expect(rootNode.querySelector('.diff-badge')).not.toBeNull();
     });
   });
 

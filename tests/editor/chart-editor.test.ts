@@ -81,6 +81,7 @@ describe('ChartEditor – Export button', () => {
       onChartSwitch: vi.fn(),
       onVersionRestore: vi.fn(),
       onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
       getCurrentTree: () => makeTree(),
       getCurrentCategories: () => [],
       onBeforeSwitch: vi.fn().mockResolvedValue(true),
@@ -183,5 +184,95 @@ describe('ChartEditor – Export button', () => {
     )!;
     expect(exportBtn.className).toContain('btn-secondary');
     expect(exportBtn.className).not.toContain('btn-danger');
+  });
+});
+
+describe('ChartEditor – Compare button', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let store: ReturnType<typeof mockChartStore>;
+  let onVersionCompare: ReturnType<typeof vi.fn<(version: VersionRecord) => void>>;
+  const chart = makeChart();
+  const versions = [makeVersion(), makeVersion({ id: 'ver-2', name: 'v2' })];
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = mockChartStore([chart], versions);
+    onVersionCompare = vi.fn();
+
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare,
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-chart-id]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    document.body.removeChild(container);
+  });
+
+  it('renders a Compare button in each version item', async () => {
+    // Expand versions — click the chart item to show version list
+    await vi.waitFor(() => {
+      const allButtons = Array.from(container.querySelectorAll('button'));
+      const labels = allButtons.map((b) => b.textContent);
+      expect(labels).toContain('Compare');
+    });
+    const compareButtons = Array.from(container.querySelectorAll('button')).filter(
+      (b) => b.textContent === 'Compare',
+    );
+    expect(compareButtons.length).toBe(versions.length);
+  });
+
+  it('calls onVersionCompare when Compare button is clicked', async () => {
+    await vi.waitFor(() => {
+      const allButtons = Array.from(container.querySelectorAll('button'));
+      expect(allButtons.map((b) => b.textContent)).toContain('Compare');
+    });
+
+    const compareBtn = Array.from(container.querySelectorAll('button')).find(
+      (b) => b.textContent === 'Compare',
+    )!;
+    compareBtn.click();
+
+    expect(onVersionCompare).toHaveBeenCalledTimes(1);
+    const calledWith = onVersionCompare.mock.calls[0][0];
+    expect(calledWith).toHaveProperty('id');
+    expect(calledWith).toHaveProperty('chartId');
+    expect(calledWith).toHaveProperty('name');
+    expect(calledWith).toHaveProperty('tree');
+  });
+
+  it('places Compare button between View and Restore', async () => {
+    await vi.waitFor(() => {
+      const allButtons = Array.from(container.querySelectorAll('button'));
+      expect(allButtons.map((b) => b.textContent)).toContain('Compare');
+    });
+
+    // Get buttons within the first version item's action row
+    const allButtons = Array.from(container.querySelectorAll('button'));
+    const versionActionButtons = allButtons.filter(
+      (b) => ['View', 'Compare', 'Restore', 'Delete'].includes(b.textContent ?? ''),
+    );
+    // First group of 4 = first version item
+    const labels = versionActionButtons.slice(0, 4).map((b) => b.textContent);
+    const viewIdx = labels.indexOf('View');
+    const compareIdx = labels.indexOf('Compare');
+    const restoreIdx = labels.indexOf('Restore');
+    expect(compareIdx).toBe(viewIdx + 1);
+    expect(restoreIdx).toBe(compareIdx + 1);
   });
 });

@@ -50,6 +50,26 @@ export interface VersionRecord {
   tree: OrgNode;
 }
 
+export type DiffStatus = 'added' | 'removed' | 'moved' | 'modified' | 'unchanged';
+
+export interface DiffEntry {
+  status: DiffStatus;
+  oldParentId?: string;
+  newParentId?: string;
+  oldName?: string;
+  oldTitle?: string;
+  oldCategoryId?: string;
+}
+
+export interface ComparisonState {
+  oldTree: OrgNode;
+  newTree: OrgNode;
+  oldLabel: string;
+  newLabel: string;
+  diff: Map<string, DiffEntry>;
+  viewMode: 'merged' | 'side-by-side';
+}
+
 export interface ChartBundleVersion {
   name: string;
   createdAt: string;
