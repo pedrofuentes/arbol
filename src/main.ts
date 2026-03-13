@@ -811,6 +811,13 @@ function main(): void {
       icContainerFill: rendererOpts.icContainerFill,
       linkColor: rendererOpts.linkColor,
       linkWidth: rendererOpts.linkWidth,
+      showHeadcount: rendererOpts.showHeadcount,
+      headcountBadgeColor: rendererOpts.headcountBadgeColor,
+      headcountBadgeTextColor: rendererOpts.headcountBadgeTextColor,
+      headcountBadgeFontSize: rendererOpts.headcountBadgeFontSize,
+      headcountBadgeRadius: rendererOpts.headcountBadgeRadius,
+      headcountBadgePadding: rendererOpts.headcountBadgePadding,
+      headcountBadgeHeight: rendererOpts.headcountBadgeHeight,
     });
   };
 
