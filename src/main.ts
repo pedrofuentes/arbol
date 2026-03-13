@@ -302,6 +302,18 @@ async function main(): Promise<void> {
     renderer.getZoomManager()?.fitToContent();
     formEditor.refresh();
     jsonEditor.refresh();
+  }, chartStore, (chart) => {
+    if (focusedNodeId) { focusedNodeId = null; dismissFocusBanner(); }
+    dismissVersionViewer();
+    clearMultiSelection();
+    store.replaceTree(chart.workingTree);
+    categoryStore.replaceAll(chart.categories);
+    chartNameHeader.setName(chart.name);
+    chartNameHeader.setDirty(false);
+    rerender();
+    renderer.getZoomManager()?.fitToContent();
+    formEditor.refresh();
+    jsonEditor.refresh();
   });
 
   // Text normalization section

@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { ImportEditor } from '../../src/editor/import-editor';
 import { OrgStore } from '../../src/store/org-store';
-import type { OrgNode } from '../../src/types';
+import type { OrgNode, ChartBundle } from '../../src/types';
+import type { ChartStore } from '../../src/store/chart-store';
 
 const ROOT = { id: 'r', name: 'Root', title: 'CEO' };
 
@@ -522,5 +523,180 @@ describe('ImportEditor — Text Normalization', () => {
     cancelBtn.click();
 
     expect(getNormSection()).toBeNull();
+  });
+});
+
+const VALID_BUNDLE: ChartBundle = {
+  format: 'arbol-chart',
+  version: 1,
+  chart: {
+    name: 'Test Org',
+    workingTree: { id: 'ceo', name: 'Jane Doe', title: 'CEO', children: [{ id: 'vp', name: 'John Smith', title: 'VP Eng' }] },
+    categories: [],
+  },
+  versions: [
+    { name: 'v1', createdAt: '2024-01-01T00:00:00Z', tree: { id: 'ceo', name: 'Jane Doe', title: 'CEO' } },
+  ],
+};
+
+describe('ImportEditor — Chart bundle import', () => {
+  let container: HTMLDivElement;
+  let store: OrgStore;
+  let editor: ImportEditor;
+  let mockChartStore: ChartStore;
+
+  const getParseBtn = () => container.querySelector('button.btn-primary') as HTMLButtonElement;
+  const getTextarea = () => container.querySelector('textarea') as HTMLTextAreaElement;
+  const getStatus = () => container.querySelector('[data-field="status"]') as HTMLDivElement;
+  const getError = () => container.querySelector('[data-field="error"]') as HTMLDivElement;
+  const getApplyBtn = () => container.querySelector('[data-action="apply"]') as HTMLButtonElement;
+  const getCancelBtn = () => container.querySelector('[data-action="cancel"]') as HTMLButtonElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = new OrgStore(ROOT);
+    mockChartStore = {
+      importChartAsNew: vi.fn().mockResolvedValue({
+        id: 'new-id', name: 'Test Org', workingTree: VALID_BUNDLE.chart.workingTree, categories: [],
+      }),
+      importChartReplaceCurrent: vi.fn().mockResolvedValue({
+        id: 'cur-id', name: 'Test Org', workingTree: VALID_BUNDLE.chart.workingTree, categories: [],
+      }),
+    } as unknown as ChartStore;
+    editor = new ImportEditor(container, store, undefined, mockChartStore);
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    document.body.removeChild(container);
+  });
+
+  it('auto-detects arbol-chart bundle format from JSON text', () => {
+    getTextarea().value = JSON.stringify(VALID_BUNDLE);
+    getParseBtn().click();
+
+    const status = getStatus();
+    expect(status.style.display).not.toBe('none');
+    expect(status.textContent).toContain('2');
+    expect(status.textContent).toContain('JSON');
+  });
+
+  it('shows bundle status with chart name and version count', () => {
+    getTextarea().value = JSON.stringify(VALID_BUNDLE);
+    getParseBtn().click();
+
+    const status = getStatus();
+    expect(status.textContent).toContain('Chart bundle "Test Org"');
+    expect(status.textContent).toContain('1 version');
+  });
+
+  it('shows bundle status for bundle with no versions', () => {
+    const noVersions = { ...VALID_BUNDLE, versions: [] };
+    getTextarea().value = JSON.stringify(noVersions);
+    getParseBtn().click();
+
+    const status = getStatus();
+    expect(status.textContent).toContain('Chart bundle "Test Org"');
+    expect(status.textContent).toContain('no versions');
+  });
+
+  it('throws error for unsupported bundle version', () => {
+    const bad = { ...VALID_BUNDLE, version: 99 };
+    getTextarea().value = JSON.stringify(bad);
+    getParseBtn().click();
+
+    expect(getError().textContent).toContain('Unsupported chart bundle version');
+  });
+
+  it('throws error for bundle with missing chart name', () => {
+    const bad = { ...VALID_BUNDLE, chart: { ...VALID_BUNDLE.chart, name: '' } };
+    getTextarea().value = JSON.stringify(bad);
+    getParseBtn().click();
+
+    expect(getError().textContent).toContain('missing chart name or working tree');
+  });
+
+  it('throws error for bundle with missing working tree', () => {
+    const bad = { format: 'arbol-chart', version: 1, chart: { name: 'X', categories: [] }, versions: [] };
+    getTextarea().value = JSON.stringify(bad);
+    getParseBtn().click();
+
+    expect(getError().textContent).toContain('missing chart name or working tree');
+  });
+
+  it('throws error for bundle with invalid version (missing name)', () => {
+    const bad = {
+      ...VALID_BUNDLE,
+      versions: [{ tree: { id: '1', name: 'A', title: 'B' } }],
+    };
+    getTextarea().value = JSON.stringify(bad);
+    getParseBtn().click();
+
+    expect(getError().textContent).toContain('each version must have name and tree');
+  });
+
+  it('apply triggers new chart flow when confirmed', async () => {
+    const onBundleImported = vi.fn();
+    editor.destroy();
+    editor = new ImportEditor(container, store, undefined, mockChartStore, onBundleImported);
+
+    getTextarea().value = JSON.stringify(VALID_BUNDLE);
+    getParseBtn().click();
+    getApplyBtn().click();
+
+    await new Promise((r) => setTimeout(r, 0));
+    const dialog = document.querySelector('[role="alertdialog"]');
+    expect(dialog).not.toBeNull();
+    expect(dialog!.textContent).toContain('Import Chart Bundle');
+
+    // Click "New chart" (confirm / primary button)
+    const confirmBtn = dialog!.querySelector('.btn-primary') as HTMLButtonElement;
+    confirmBtn.click();
+
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mockChartStore.importChartAsNew).toHaveBeenCalledTimes(1);
+    expect((mockChartStore.importChartAsNew as Mock).mock.calls[0][0].format).toBe('arbol-chart');
+    expect(onBundleImported).toHaveBeenCalledTimes(1);
+    expect(onBundleImported.mock.calls[0][0].id).toBe('new-id');
+  });
+
+  it('apply triggers replace current flow when canceled', async () => {
+    const onBundleImported = vi.fn();
+    editor.destroy();
+    editor = new ImportEditor(container, store, undefined, mockChartStore, onBundleImported);
+
+    getTextarea().value = JSON.stringify(VALID_BUNDLE);
+    getParseBtn().click();
+    getApplyBtn().click();
+
+    await new Promise((r) => setTimeout(r, 0));
+    const dialog = document.querySelector('[role="alertdialog"]');
+    // Click "Replace current" (cancel / secondary button)
+    const cancelBtn = dialog!.querySelector('.btn-secondary') as HTMLButtonElement;
+    cancelBtn.click();
+
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mockChartStore.importChartReplaceCurrent).toHaveBeenCalledTimes(1);
+    expect(onBundleImported).toHaveBeenCalledTimes(1);
+    expect(onBundleImported.mock.calls[0][0].id).toBe('cur-id');
+  });
+
+  it('clearing status resets pendingBundle', () => {
+    getTextarea().value = JSON.stringify(VALID_BUNDLE);
+    getParseBtn().click();
+
+    expect(getStatus().style.display).not.toBe('none');
+
+    getCancelBtn().click();
+
+    expect(getStatus().style.display).toBe('none');
+    // Verify bundle is cleared by re-parsing a normal JSON — should NOT enter bundle flow
+    const normalJson = JSON.stringify({ id: 'x', name: 'X', title: 'Y' });
+    getTextarea().value = normalJson;
+    getParseBtn().click();
+    getApplyBtn().click();
+
+    expect(store.getTree().id).toBe('x');
   });
 });
