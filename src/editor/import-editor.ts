@@ -5,6 +5,7 @@ import { normalizeTreeText } from '../utils/text-normalize';
 import { ColumnMapper } from '../ui/column-mapper';
 import { PresetCreator } from '../ui/preset-creator';
 import type { OrgNode, ColumnMapping, TextNormalization } from '../types';
+import { timestampedFilename } from '../utils/filename';
 
 interface ParsedImport {
   tree: OrgNode;
@@ -111,7 +112,7 @@ export class ImportEditor {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `arbol-${preset.name.replace(/\s+/g, '-').toLowerCase()}.json`;
+          a.download = timestampedFilename(`arbol-${preset.name.replace(/\s+/g, '-').toLowerCase()}.json`);
           a.click();
           URL.revokeObjectURL(url);
         });
@@ -296,7 +297,7 @@ export class ImportEditor {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'arbol-mappings.json';
+      a.download = timestampedFilename('arbol-mappings.json');
       a.click();
       URL.revokeObjectURL(url);
     });

@@ -6,6 +6,7 @@ import type {
   LayoutICContainer,
 } from '../renderer/layout-engine';
 import type { ColorCategory } from '../types';
+import { timestampedFilename } from '../utils/filename';
 
 export const PX_TO_INCHES = 1 / 96;
 export const PX_TO_PT = 72 / 96;
@@ -16,10 +17,7 @@ const DEFAULT_PADDING = 0.5;
 const MAX_SLIDE_DIMENSION = 56;
 
 function generateFileName(): string {
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
-  return `${timestamp}-org-chart.pptx`;
+  return timestampedFilename('org-chart.pptx');
 }
 
 const DEFAULT_CARD_STROKE = '22C55E';
