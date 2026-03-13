@@ -28,10 +28,11 @@ const ARBOL_STORAGE_KEYS = [
 interface SettingDef {
   key: keyof RendererOptions;
   label: string;
-  type: 'range' | 'color' | 'text' | 'checkbox';
+  type: 'range' | 'color' | 'text' | 'checkbox' | 'select';
   min?: number;
   max?: number;
   step?: number;
+  options?: string[];
 }
 
 interface SettingGroup {
@@ -123,6 +124,20 @@ const SETTING_GROUPS: SettingGroup[] = [
       { key: 'titleFontSize', label: 'Title Font Size', type: 'range', min: 5, max: 20, step: 1 },
       { key: 'textPaddingTop', label: 'Text Padding Top', type: 'range', min: 0, max: 15, step: 1 },
       { key: 'textGap', label: 'Text Gap', type: 'range', min: 0, max: 10, step: 1 },
+      {
+        key: 'textAlign',
+        label: 'Text Alignment',
+        type: 'select',
+        options: ['left', 'center', 'right'],
+      },
+      {
+        key: 'textPaddingHorizontal',
+        label: 'Text Padding Horizontal',
+        type: 'range',
+        min: 0,
+        max: 20,
+        step: 1,
+      },
       { key: 'nameColor', label: 'Name Color', type: 'color' },
       { key: 'titleColor', label: 'Title Color', type: 'color' },
     ],
@@ -224,6 +239,8 @@ const DEFAULT_SETTINGS: Record<string, number | string | boolean> = {
   titleFontSize: 9,
   textPaddingTop: 6,
   textGap: 2,
+  textAlign: 'center',
+  textPaddingHorizontal: 8,
   nameColor: '#1e293b',
   titleColor: '#64748b',
   linkColor: '#94a3b8',
@@ -1297,6 +1314,36 @@ export class SettingsEditor {
 
       wrapper.appendChild(label);
       wrapper.appendChild(input);
+    } else if (setting.type === 'select') {
+      const label = document.createElement('label');
+      label.textContent = setting.label;
+
+      const select = document.createElement('select');
+      select.style.cssText = `
+        width:100%;box-sizing:border-box;
+        padding:4px 8px;font-size:13px;
+        font-family:var(--font-sans);
+        border:1px solid var(--border-default);
+        border-radius:var(--radius-md);
+        background:var(--bg-base);
+        color:var(--text-primary);
+      `;
+
+      for (const opt of setting.options ?? []) {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt.charAt(0).toUpperCase() + opt.slice(1);
+        if (opt === String(currentValue)) option.selected = true;
+        select.appendChild(option);
+      }
+
+      select.addEventListener('change', () => {
+        this.renderer.updateOptions({ [setting.key]: select.value } as Partial<RendererOptions>);
+        this.rerenderCallback();
+      });
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(select);
     } else if (setting.type === 'text') {
       const label = document.createElement('label');
       label.textContent = setting.label;

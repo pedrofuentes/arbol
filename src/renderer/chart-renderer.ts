@@ -48,6 +48,9 @@ export interface RendererOptions {
   cardStroke?: string;
   cardStrokeWidth?: number;
   icContainerFill?: string;
+  // Text alignment
+  textAlign?: 'left' | 'center' | 'right';
+  textPaddingHorizontal?: number;
   // Headcount badge
   showHeadcount?: boolean;
   headcountBadgeColor?: string;
@@ -102,6 +105,8 @@ export class ChartRenderer {
       cardStroke: '#22c55e',
       cardStrokeWidth: 1,
       icContainerFill: '#e5e7eb',
+      textAlign: 'center' as const,
+      textPaddingHorizontal: 8,
       showHeadcount: false,
       headcountBadgeColor: '#9ca3af',
       headcountBadgeTextColor: '#1e293b',
@@ -307,10 +312,20 @@ export class ChartRenderer {
       cardStrokeWidth,
       nameColor,
       titleColor,
+      textAlign,
+      textPaddingHorizontal,
     } = this.opts;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const titleY = textPaddingTop + nameFontSize + textGap;
+
+    const svgAnchor = textAlign === 'left' ? 'start' : textAlign === 'right' ? 'end' : 'middle';
+    const textX =
+      textAlign === 'left'
+        ? textPaddingHorizontal
+        : textAlign === 'right'
+          ? width - textPaddingHorizontal
+          : width / 2;
 
     selection
       .append('rect')
@@ -340,10 +355,10 @@ export class ChartRenderer {
     selection
       .append('text')
       .attr('class', 'node-name')
-      .attr('x', width / 2)
+      .attr('x', textX)
       .attr('y', textPaddingTop)
       .attr('dominant-baseline', 'hanging')
-      .attr('text-anchor', 'middle')
+      .attr('text-anchor', svgAnchor)
       .attr('font-weight', 'bold')
       .attr('font-family', 'Calibri, sans-serif')
       .attr('font-size', `${nameFontSize}px`)
@@ -361,10 +376,10 @@ export class ChartRenderer {
     selection
       .append('text')
       .attr('class', 'node-title')
-      .attr('x', width / 2)
+      .attr('x', textX)
       .attr('y', titleY)
       .attr('dominant-baseline', 'hanging')
-      .attr('text-anchor', 'middle')
+      .attr('text-anchor', svgAnchor)
       .attr('font-family', 'Calibri, sans-serif')
       .attr('font-size', `${titleFontSize}px`)
       .attr('fill', (d: CardDatum) => {

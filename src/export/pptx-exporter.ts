@@ -52,6 +52,7 @@ export interface PptxExportOptions {
   headcountBadgePadding?: number;
   headcountBadgeHeight?: number;
   legendRows?: number;
+  textAlign?: 'left' | 'center' | 'right';
 }
 
 export interface Point {
@@ -77,6 +78,7 @@ interface ResolvedStyles {
   headcountBadgeHeight: number;
   headcountBadgePadding: number;
   headcountBadgeRadius: number;
+  textAlign: 'left' | 'center' | 'right';
 }
 
 function stripHash(color: string): string {
@@ -102,6 +104,7 @@ export function resolveStyles(options?: PptxExportOptions): ResolvedStyles {
     headcountBadgeHeight: options?.headcountBadgeHeight ?? 22,
     headcountBadgePadding: options?.headcountBadgePadding ?? 8,
     headcountBadgeRadius: options?.headcountBadgeRadius ?? 4,
+    textAlign: options?.textAlign ?? 'center',
   };
 }
 
@@ -212,7 +215,7 @@ function addNodeShape(
       y: topLeft.y,
       w,
       h,
-      align: 'center',
+      align: styles.textAlign,
       valign: 'middle',
       fontFace: DEFAULT_FONT_FAMILY,
       color: nodeNameColor,

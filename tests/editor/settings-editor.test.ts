@@ -62,6 +62,8 @@ const DEFAULT_OPTS: ResolvedOptions = {
   headcountBadgePadding: 8,
   headcountBadgeHeight: 22,
   legendRows: 0,
+  textAlign: 'center',
+  textPaddingHorizontal: 8,
   categories: [],
 } as ResolvedOptions;
 
@@ -858,6 +860,51 @@ describe('SettingsEditor', () => {
         'arbol-accordion-state',
         expect.any(String),
       );
+    });
+  });
+
+  describe('text alignment select control', () => {
+    it('renders a select element for textAlign in Typography group', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
+        s.querySelector('.accordion-title')?.textContent === 'Typography',
+      )!;
+      expect(typoSection).toBeDefined();
+      const selects = typoSection.querySelectorAll('select');
+      expect(selects.length).toBeGreaterThanOrEqual(1);
+      const textAlignSelect = Array.from(selects).find((s) => {
+        const options = Array.from(s.querySelectorAll('option'));
+        return options.some((o) => o.value === 'left') &&
+               options.some((o) => o.value === 'center') &&
+               options.some((o) => o.value === 'right');
+      });
+      expect(textAlignSelect).toBeDefined();
+    });
+
+    it('has center selected by default', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
+        s.querySelector('.accordion-title')?.textContent === 'Typography',
+      )!;
+      const selects = typoSection.querySelectorAll('select');
+      const textAlignSelect = Array.from(selects).find((s) => {
+        const options = Array.from(s.querySelectorAll('option'));
+        return options.some((o) => o.value === 'left') &&
+               options.some((o) => o.value === 'center') &&
+               options.some((o) => o.value === 'right');
+      });
+      expect(textAlignSelect).toBeDefined();
+      expect(textAlignSelect!.value).toBe('center');
+    });
+
+    it('renders textPaddingHorizontal range input', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
+        s.querySelector('.accordion-title')?.textContent === 'Typography',
+      )!;
+      const rangeInputs = typoSection.querySelectorAll('input[type="range"]');
+      // Should have range inputs including textPaddingHorizontal
+      expect(rangeInputs.length).toBeGreaterThanOrEqual(5);
     });
   });
 });

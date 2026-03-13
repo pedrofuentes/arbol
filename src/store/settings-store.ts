@@ -18,6 +18,8 @@ export interface PersistableSettings {
   titleFontSize: number;
   textPaddingTop: number;
   textGap: number;
+  textAlign: string;
+  textPaddingHorizontal: number;
   nameColor: string;
   titleColor: string;
   linkColor: string;
@@ -67,6 +69,7 @@ const NUMERIC_KEYS: ReadonlySet<string> = new Set<string>([
   'titleFontSize',
   'textPaddingTop',
   'textGap',
+  'textPaddingHorizontal',
   'linkWidth',
   'cardStrokeWidth',
   'headcountBadgeFontSize',
@@ -91,14 +94,32 @@ const DASH_PATTERN_KEYS: ReadonlySet<string> = new Set<string>(['dottedLineDash'
 
 const BOOLEAN_KEYS: ReadonlySet<string> = new Set<string>(['showHeadcount']);
 
-const ALL_KEYS = [...NUMERIC_KEYS, ...STRING_KEYS, ...DASH_PATTERN_KEYS, ...BOOLEAN_KEYS];
+const ENUM_KEYS: ReadonlyMap<string, readonly string[]> = new Map([
+  ['textAlign', ['left', 'center', 'right']],
+]);
+
+const ALL_KEYS = [
+  ...NUMERIC_KEYS,
+  ...STRING_KEYS,
+  ...DASH_PATTERN_KEYS,
+  ...BOOLEAN_KEYS,
+  ...ENUM_KEYS.keys(),
+];
 
 function validateSettings(obj: Record<string, unknown>): Partial<PersistableSettings> {
   const result: Record<string, unknown> = {};
   for (const key of ALL_KEYS) {
     if (!(key in obj)) continue;
     const val = obj[key];
-    if (BOOLEAN_KEYS.has(key)) {
+    if (ENUM_KEYS.has(key)) {
+      const allowed = ENUM_KEYS.get(key)!;
+      if (typeof val !== 'string' || !allowed.includes(val)) {
+        throw new Error(
+          `Invalid value for "${key}": expected one of ${allowed.map((v) => `"${v}"`).join(', ')}`,
+        );
+      }
+      result[key] = val;
+    } else if (BOOLEAN_KEYS.has(key)) {
       if (typeof val !== 'boolean') {
         throw new Error(`Invalid value for "${key}": expected a boolean`);
       }

@@ -734,6 +734,21 @@ describe('pptx-exporter', () => {
       expect(styles.nameFontPt).toBe(3);
       expect(styles.titleFontPt).toBe(3);
     });
+
+    it('defaults textAlign to center', () => {
+      const styles = resolveStyles();
+      expect(styles.textAlign).toBe('center');
+    });
+
+    it('passes through textAlign option', () => {
+      const styles = resolveStyles({ textAlign: 'left' });
+      expect(styles.textAlign).toBe('left');
+    });
+
+    it('passes through right textAlign', () => {
+      const styles = resolveStyles({ textAlign: 'right' });
+      expect(styles.textAlign).toBe('right');
+    });
   });
 
   // --- dynamic slide sizing ---
@@ -852,6 +867,53 @@ describe('pptx-exporter', () => {
       });
       expect(lineShape).toBeDefined();
       expect((lineShape![1] as any).line.width).toBeCloseTo(3 * PX_TO_PT);
+    });
+  });
+
+  describe('text alignment in export', () => {
+    it('uses center alignment by default', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
+      });
+      await exportToPptx(layout);
+      const textCalls = mockAddText.mock.calls;
+      const nodeTextCall = textCalls.find((call: any) => {
+        const textBlocks = call[0];
+        return Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => t.text === 'Boss');
+      });
+      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall![1].align).toBe('center');
+    });
+
+    it('uses left alignment when specified', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
+      });
+      await exportToPptx(layout, { textAlign: 'left' });
+      const textCalls = mockAddText.mock.calls;
+      const nodeTextCall = textCalls.find((call: any) => {
+        const textBlocks = call[0];
+        return Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => t.text === 'Boss');
+      });
+      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall![1].align).toBe('left');
+    });
+
+    it('uses right alignment when specified', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
+      });
+      await exportToPptx(layout, { textAlign: 'right' });
+      const textCalls = mockAddText.mock.calls;
+      const nodeTextCall = textCalls.find((call: any) => {
+        const textBlocks = call[0];
+        return Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => t.text === 'Boss');
+      });
+      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall![1].align).toBe('right');
     });
   });
 });

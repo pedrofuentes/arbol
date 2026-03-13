@@ -61,6 +61,8 @@ async function main(): Promise<void> {
     titleFontSize: 9,
     textPaddingTop: 6,
     textGap: 2,
+    textAlign: 'center',
+    textPaddingHorizontal: 8,
     nameColor: '#1e293b',
     titleColor: '#64748b',
     linkColor: '#94a3b8',
@@ -92,6 +94,7 @@ async function main(): Promise<void> {
   const renderer= new ChartRenderer({
     container: chartArea,
     ...savedSettings,
+    textAlign: savedSettings.textAlign as 'left' | 'center' | 'right',
     categories: categoryStore.getAll(),
   });
 
@@ -951,6 +954,7 @@ async function main(): Promise<void> {
       headcountBadgePadding: rendererOpts.headcountBadgePadding,
       headcountBadgeHeight: rendererOpts.headcountBadgeHeight,
       legendRows: rendererOpts.legendRows,
+      textAlign: rendererOpts.textAlign as 'left' | 'center' | 'right',
     });
   };
 

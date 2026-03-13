@@ -1105,4 +1105,70 @@ describe('ChartRenderer', () => {
       expect(text.getAttribute('fill')).toBe('#00ff00');
     });
   });
+
+  describe('text alignment', () => {
+    it('defaults to center text alignment', () => {
+      renderer.render(singleNode());
+      const nameEl = container.querySelector('.node-name')!;
+      const titleEl = container.querySelector('.node-title')!;
+      expect(nameEl.getAttribute('text-anchor')).toBe('middle');
+      expect(nameEl.getAttribute('x')).toBe('80'); // 160 / 2
+      expect(titleEl.getAttribute('text-anchor')).toBe('middle');
+    });
+
+    it('applies left text alignment', () => {
+      renderer.destroy();
+      renderer = createRenderer({ textAlign: 'left', textPaddingHorizontal: 8 });
+      renderer.render(singleNode());
+      const nameEl = container.querySelector('.node-name')!;
+      const titleEl = container.querySelector('.node-title')!;
+      expect(nameEl.getAttribute('text-anchor')).toBe('start');
+      expect(nameEl.getAttribute('x')).toBe('8');
+      expect(titleEl.getAttribute('text-anchor')).toBe('start');
+      expect(titleEl.getAttribute('x')).toBe('8');
+    });
+
+    it('applies right text alignment', () => {
+      renderer.destroy();
+      renderer = createRenderer({ textAlign: 'right', textPaddingHorizontal: 10 });
+      renderer.render(singleNode());
+      const nameEl = container.querySelector('.node-name')!;
+      const titleEl = container.querySelector('.node-title')!;
+      expect(nameEl.getAttribute('text-anchor')).toBe('end');
+      expect(nameEl.getAttribute('x')).toBe('150'); // 160 - 10
+      expect(titleEl.getAttribute('text-anchor')).toBe('end');
+      expect(titleEl.getAttribute('x')).toBe('150');
+    });
+
+    it('applies text alignment to IC nodes', () => {
+      renderer.destroy();
+      renderer = createRenderer({ textAlign: 'left', textPaddingHorizontal: 8 });
+      renderer.render(m1WithICs());
+      const icNames = container.querySelectorAll('.ic-node .node-name');
+      expect(icNames.length).toBeGreaterThan(0);
+      for (const nameEl of icNames) {
+        expect(nameEl.getAttribute('text-anchor')).toBe('start');
+      }
+    });
+
+    it('applies text alignment to advisor nodes', () => {
+      renderer.destroy();
+      renderer = createRenderer({ textAlign: 'left', textPaddingHorizontal: 8 });
+      renderer.render(managerWithPALs());
+      const palNames = container.querySelectorAll('.pal-node .node-name');
+      expect(palNames.length).toBeGreaterThan(0);
+      for (const nameEl of palNames) {
+        expect(nameEl.getAttribute('text-anchor')).toBe('start');
+      }
+    });
+
+    it('updates text alignment via updateOptions', () => {
+      renderer.render(singleNode());
+      expect(container.querySelector('.node-name')!.getAttribute('text-anchor')).toBe('middle');
+
+      renderer.updateOptions({ textAlign: 'left' });
+      renderer.render(singleNode());
+      expect(container.querySelector('.node-name')!.getAttribute('text-anchor')).toBe('start');
+    });
+  });
 });

@@ -11,6 +11,7 @@ export interface ChartThemePreset {
     icContainerFill: string;
     nameColor: string;
     titleColor: string;
+    textAlign?: 'left' | 'center' | 'right';
   };
 }
 
@@ -28,6 +29,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       icContainerFill: '#e5e7eb',
       nameColor: '#1e293b',
       titleColor: '#64748b',
+      textAlign: 'center',
     },
   },
   {
@@ -43,6 +45,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       icContainerFill: '#dbeafe',
       nameColor: '#1e293b',
       titleColor: '#64748b',
+      textAlign: 'center',
     },
   },
   {
@@ -58,6 +61,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       icContainerFill: '#dcfce7',
       nameColor: '#1e293b',
       titleColor: '#64748b',
+      textAlign: 'center',
     },
   },
   {
@@ -73,6 +77,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       icContainerFill: '#fef3c7',
       nameColor: '#1e293b',
       titleColor: '#64748b',
+      textAlign: 'center',
     },
   },
   {
@@ -88,6 +93,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       icContainerFill: '#e5e7eb',
       nameColor: '#1e293b',
       titleColor: '#64748b',
+      textAlign: 'center',
     },
   },
   {
@@ -103,6 +109,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       icContainerFill: '#0f172a',
       nameColor: '#e2e8f0',
       titleColor: '#cbd5e1',
+      textAlign: 'center',
     },
   },
   {
@@ -118,6 +125,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       icContainerFill: '#fce7f3',
       nameColor: '#1e293b',
       titleColor: '#64748b',
+      textAlign: 'center',
     },
   },
   {
@@ -133,6 +141,23 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       icContainerFill: '#f3f4f6',
       nameColor: '#000000',
       titleColor: '#374151',
+      textAlign: 'center',
+    },
+  },
+  {
+    id: 'ocean-teal',
+    name: 'Ocean Teal',
+    description: 'Modern teal-accented theme with left-aligned text',
+    colors: {
+      cardFill: '#ffffff',
+      cardStroke: '#14b8a6',
+      cardStrokeWidth: 1.5,
+      linkColor: '#5eead4',
+      linkWidth: 1.5,
+      icContainerFill: '#ccfbf1',
+      nameColor: '#1e293b',
+      titleColor: '#64748b',
+      textAlign: 'left',
     },
   },
 ];

@@ -37,6 +37,8 @@ const DEFAULTS: PersistableSettings = {
   titleFontSize: 9,
   textPaddingTop: 6,
   textGap: 2,
+  textAlign: 'center',
+  textPaddingHorizontal: 8,
   nameColor: '#1e293b',
   titleColor: '#64748b',
   linkColor: '#94a3b8',
@@ -296,6 +298,49 @@ describe('SettingsStore', () => {
       const loaded = store.load(DEFAULTS);
       expect(loaded.legendRows).toBe(0);
       expect(loaded.nodeWidth).toBe(180);
+    });
+  });
+
+  describe('textAlign', () => {
+    it('persists and loads textAlign', () => {
+      store.saveImmediate({ textAlign: 'left' });
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.textAlign).toBe('left');
+    });
+
+    it('validates textAlign values', () => {
+      for (const valid of ['left', 'center', 'right']) {
+        store.saveImmediate({ textAlign: valid });
+        const loaded = store.load(DEFAULTS);
+        expect(loaded.textAlign).toBe(valid);
+      }
+    });
+
+    it('rejects invalid textAlign values', () => {
+      const bad = { ...DEFAULTS, textAlign: 'justify' };
+      const json = JSON.stringify({ version: 1, settings: bad });
+      expect(() => store.parseImport(json)).toThrow('expected one of');
+    });
+
+    it('rejects non-string textAlign', () => {
+      const bad = { ...DEFAULTS, textAlign: 42 };
+      const json = JSON.stringify({ version: 1, settings: bad });
+      expect(() => store.parseImport(json)).toThrow('expected one of');
+    });
+
+    it('defaults textAlign to center when not in saved data', () => {
+      const oldSettings = { version: 1, settings: { nodeWidth: 180 } };
+      localStorageMock.setItem('arbol-settings', JSON.stringify(oldSettings));
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.textAlign).toBe('center');
+    });
+  });
+
+  describe('textPaddingHorizontal', () => {
+    it('persists and loads textPaddingHorizontal', () => {
+      store.saveImmediate({ textPaddingHorizontal: 12 });
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.textPaddingHorizontal).toBe(12);
     });
   });
 });

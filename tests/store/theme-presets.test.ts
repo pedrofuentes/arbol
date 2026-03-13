@@ -32,8 +32,8 @@ beforeEach(() => {
 });
 
 describe('CHART_THEME_PRESETS', () => {
-  it('has at least 8 built-in presets', () => {
-    expect(CHART_THEME_PRESETS.length).toBeGreaterThanOrEqual(8);
+  it('has at least 9 built-in presets', () => {
+    expect(CHART_THEME_PRESETS.length).toBeGreaterThanOrEqual(9);
   });
 
   it('each preset has id, name, description, and colors object', () => {
@@ -69,6 +69,13 @@ describe('CHART_THEME_PRESETS', () => {
     const ids = CHART_THEME_PRESETS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
+
+  it('all presets have a valid textAlign value', () => {
+    const validAligns = ['left', 'center', 'right'];
+    for (const preset of CHART_THEME_PRESETS) {
+      expect(validAligns).toContain(preset.colors.textAlign);
+    }
+  });
 });
 
 describe('getPresetById', () => {
@@ -77,6 +84,15 @@ describe('getPresetById', () => {
     expect(emerald).toBeDefined();
     expect(emerald!.id).toBe('emerald');
     expect(emerald!.name).toBe('Emerald');
+  });
+
+  it('returns the ocean-teal preset', () => {
+    const teal = getPresetById('ocean-teal');
+    expect(teal).toBeDefined();
+    expect(teal!.id).toBe('ocean-teal');
+    expect(teal!.name).toBe('Ocean Teal');
+    expect(teal!.colors.cardStroke).toBe('#14b8a6');
+    expect(teal!.colors.textAlign).toBe('left');
   });
 
   it('returns undefined for nonexistent id', () => {

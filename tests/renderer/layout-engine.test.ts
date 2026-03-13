@@ -44,6 +44,8 @@ function defaultOpts(): ResolvedOptions {
     headcountBadgePadding: 8,
     headcountBadgeHeight: 22,
     legendRows: 0,
+    textAlign: 'center' as const,
+    textPaddingHorizontal: 8,
     categories: [],
   };
 }
