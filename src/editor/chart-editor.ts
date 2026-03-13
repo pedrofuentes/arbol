@@ -246,6 +246,17 @@ export class ChartEditor {
       }
     });
 
+    if (!isActive) {
+      item.setAttribute('role', 'button');
+      item.setAttribute('tabindex', '0');
+      item.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.handleSwitchChart(chart.id);
+        }
+      });
+    }
+
     // Name row
     const nameRow = document.createElement('div');
     nameRow.className = 'flex-row';

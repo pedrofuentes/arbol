@@ -703,4 +703,48 @@ describe('ImportEditor — Chart bundle import', () => {
 
     expect(store.getTree().id).toBe('x');
   });
+
+  describe('drop zone keyboard accessibility', () => {
+    function getDropZone(): HTMLDivElement {
+      const allDivs = container.querySelectorAll('div');
+      return Array.from(allDivs).find(
+        (d) => d.textContent?.includes('Drop file'),
+      )! as HTMLDivElement;
+    }
+
+    it('drop zone has role="button" and tabindex="0"', () => {
+      const dropZone = getDropZone();
+      expect(dropZone.getAttribute('role')).toBe('button');
+      expect(dropZone.getAttribute('tabindex')).toBe('0');
+    });
+
+    it('drop zone has aria-label', () => {
+      const dropZone = getDropZone();
+      expect(dropZone.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('Enter key on drop zone triggers file input', () => {
+      const dropZone = getDropZone();
+      const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+      const clickSpy = vi.spyOn(fileInput, 'click');
+      dropZone.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      expect(clickSpy).toHaveBeenCalledOnce();
+    });
+
+    it('Space key on drop zone triggers file input', () => {
+      const dropZone = getDropZone();
+      const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+      const clickSpy = vi.spyOn(fileInput, 'click');
+      dropZone.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+      expect(clickSpy).toHaveBeenCalledOnce();
+    });
+
+    it('other keys on drop zone do not trigger file input', () => {
+      const dropZone = getDropZone();
+      const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+      const clickSpy = vi.spyOn(fileInput, 'click');
+      dropZone.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+      expect(clickSpy).not.toHaveBeenCalled();
+    });
+  });
 });

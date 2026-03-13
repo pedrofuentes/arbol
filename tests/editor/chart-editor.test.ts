@@ -276,3 +276,68 @@ describe('ChartEditor – Compare button', () => {
     expect(restoreIdx).toBe(compareIdx + 1);
   });
 });
+
+describe('ChartEditor – chart item keyboard accessibility', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let store: ReturnType<typeof mockChartStore>;
+  const chart1 = makeChart({ id: 'chart-1', name: 'Active Chart' });
+  const chart2 = makeChart({ id: 'chart-2', name: 'Other Chart' });
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = mockChartStore([chart1, chart2], []);
+
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-chart-id]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    document.body.removeChild(container);
+  });
+
+  it('inactive chart item has role="button" and tabindex="0"', () => {
+    const inactiveItem = container.querySelector('[data-chart-id="chart-2"]') as HTMLElement;
+    expect(inactiveItem).not.toBeNull();
+    expect(inactiveItem.getAttribute('role')).toBe('button');
+    expect(inactiveItem.getAttribute('tabindex')).toBe('0');
+  });
+
+  it('active chart item does not have role="button"', () => {
+    const activeItem = container.querySelector('[data-chart-id="chart-1"]') as HTMLElement;
+    expect(activeItem).not.toBeNull();
+    expect(activeItem.hasAttribute('role')).toBe(false);
+  });
+
+  it('Enter key on inactive chart item switches chart', async () => {
+    const inactiveItem = container.querySelector('[data-chart-id="chart-2"]') as HTMLElement;
+    inactiveItem.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await vi.waitFor(() => {
+      expect(store.switchChart).toHaveBeenCalledWith('chart-2');
+    });
+  });
+
+  it('Space key on inactive chart item switches chart', async () => {
+    const inactiveItem = container.querySelector('[data-chart-id="chart-2"]') as HTMLElement;
+    inactiveItem.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+    await vi.waitFor(() => {
+      expect(store.switchChart).toHaveBeenCalledWith('chart-2');
+    });
+  });
+});

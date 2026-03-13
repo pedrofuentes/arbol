@@ -292,4 +292,34 @@ describe('ChartNameHeader', () => {
       expect(nameEl.style.textDecoration).toBe('none');
     });
   });
+
+  describe('keyboard accessibility', () => {
+    it('name span has role="button" and tabindex="0"', () => {
+      new ChartNameHeader(defaultOptions({ container }));
+      const nameEl = getNameDisplay(container);
+      expect(nameEl.getAttribute('role')).toBe('button');
+      expect(nameEl.getAttribute('tabindex')).toBe('0');
+    });
+
+    it('Enter key on name span enters edit mode', () => {
+      new ChartNameHeader(defaultOptions({ container }));
+      const nameEl = getNameDisplay(container);
+      nameEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      expect(getNameInput(container)).not.toBeNull();
+    });
+
+    it('Space key on name span enters edit mode', () => {
+      new ChartNameHeader(defaultOptions({ container }));
+      const nameEl = getNameDisplay(container);
+      nameEl.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+      expect(getNameInput(container)).not.toBeNull();
+    });
+
+    it('other keys on name span do not enter edit mode', () => {
+      new ChartNameHeader(defaultOptions({ container }));
+      const nameEl = getNameDisplay(container);
+      nameEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+      expect(getNameInput(container)).toBeNull();
+    });
+  });
 });

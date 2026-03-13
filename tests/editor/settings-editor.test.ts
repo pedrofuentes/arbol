@@ -939,4 +939,56 @@ describe('SettingsEditor', () => {
       expect(rangeInputs.length).toBe(2);
     });
   });
+
+  describe('preset delete button accessibility', () => {
+    it('custom preset delete element is a button', () => {
+      localStorageMock.setItem(
+        'arbol-custom-presets',
+        JSON.stringify([
+          {
+            id: 'custom-btn-test',
+            name: 'BtnTest',
+            colors: {
+              cardFill: '#fff',
+              cardStroke: '#000',
+              cardStrokeWidth: 1,
+              linkColor: '#888',
+              linkWidth: 1,
+              icContainerFill: '#eee',
+            },
+            sizes: { nodeWidth: 110 },
+          },
+        ]),
+      );
+      new SettingsEditor(container, renderer, rerenderCb);
+      const customCard = container.querySelector('[data-preset-id="custom-btn-test"]')!;
+      const deleteBtn = customCard.querySelector('.preset-delete')!;
+      expect(deleteBtn.tagName).toBe('BUTTON');
+    });
+
+    it('custom preset delete button has aria-label', () => {
+      localStorageMock.setItem(
+        'arbol-custom-presets',
+        JSON.stringify([
+          {
+            id: 'custom-aria-test',
+            name: 'AriaTest',
+            colors: {
+              cardFill: '#fff',
+              cardStroke: '#000',
+              cardStrokeWidth: 1,
+              linkColor: '#888',
+              linkWidth: 1,
+              icContainerFill: '#eee',
+            },
+            sizes: { nodeWidth: 110 },
+          },
+        ]),
+      );
+      new SettingsEditor(container, renderer, rerenderCb);
+      const customCard = container.querySelector('[data-preset-id="custom-aria-test"]')!;
+      const deleteBtn = customCard.querySelector('.preset-delete')!;
+      expect(deleteBtn.getAttribute('aria-label')).toContain('Delete preset');
+    });
+  });
 });
