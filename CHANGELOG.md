@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] — 2026-03-13
+
+### Fixed
+- Standardized all exported filenames to use `yyyymmddhhmm-` prefix (backup files and PPTX chart exports were using inconsistent date formats)
+
 ## [2.2.0] — 2026-03-13
 
 ### Added
