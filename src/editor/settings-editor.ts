@@ -703,7 +703,7 @@ export class SettingsEditor {
       const confirmed = await showConfirmDialog({
         title: 'Clear All Data',
         message:
-          'This will permanently delete your entire org chart, all settings, themes, and preferences. ' +
+          'This will permanently delete all your org charts, versions, settings, themes, and preferences. ' +
           'This cannot be undone.\n\nAre you sure?',
         confirmLabel: 'Delete everything',
         danger: true,
@@ -712,6 +712,7 @@ export class SettingsEditor {
         for (const key of ARBOL_STORAGE_KEYS) {
           localStorage.removeItem(key);
         }
+        indexedDB.deleteDatabase('arbol-db');
         window.location.reload();
       }
     });
