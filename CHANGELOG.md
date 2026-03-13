@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] — 2026-03-13
+
+### Fixed
+- **Undo/redo resilience** — corrupted undo stack entries are now skipped instead of crashing the app
+- **Event listener isolation** — a failing listener no longer prevents other listeners from being notified
+- **Storage error handling** — localStorage writes wrapped in try/catch; IndexedDB quota errors show user-friendly messages
+- **crypto.randomUUID() fallback** — app now works in non-secure contexts (http://) with a fallback UUID generator
+- **IndexedDB data validation** — charts loaded from IndexedDB are now sanitized to handle missing/malformed fields
+
+### Improved
+- **Layout performance** — eliminated 4 O(n²) algorithms; pre-computed node lookup maps, cached subtree bounds, single-pass manager level computation
+- **Render performance** — pre-computed category Map for O(1) lookups instead of O(n) find per rendered element
+- **Bundle size** — converted D3 imports from namespace (`import * as d3`) to selective named imports for better tree-shaking
+- **Import speed** — version imports now use batched IndexedDB transactions (single transaction instead of N)
+- **Category import safety** — importing a chart bundle now warns before replacing existing categories
+
+### Refactored
+- Extracted `EventEmitter` base class, eliminating duplicated observer pattern across 3 stores
+- Extracted `dismissible.ts` utility for singleton UI element lifecycle management
+- Deduplicated legend rendering into shared generic method
+- Standardized OrgStore mutation return types (now return affected `OrgNode`)
+- Added JSDoc documentation to all core type interfaces
+
+### Tests
+- Added 68 new tests (1,230 → 1,298): dialog-utils (30), version-viewer (20), dismissible (9), IndexedDB error paths (4), category import warnings (5)
+- Centralized localStorage mock via shared test setup
+
 ## [2.5.0] — 2026-03-13
 
 ### Added
