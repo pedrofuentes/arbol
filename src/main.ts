@@ -11,7 +11,7 @@ import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { CategoryStore } from './store/category-store';
 import { getMatchingNodeIds } from './utils/search';
-import { flattenTree, findNodeById, isLeaf, countLeaves, countManagersByLevel } from './utils/tree';
+import { flattenTree, findNodeById, findParent, isLeaf, isM1, countLeaves, countManagersByLevel } from './utils/tree';
 import { SAMPLE_ORG } from './data/sample-org';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
@@ -483,6 +483,8 @@ async function main(): Promise<void> {
 
     const isRoot = tree.id === nodeId;
     const nodeIsLeaf = isLeaf(node);
+    const parent = findParent(tree, nodeId);
+    const nodeIsIC = nodeIsLeaf && parent !== null && isM1(parent);
 
     showContextMenu({
       x: event.clientX,
@@ -557,7 +559,7 @@ async function main(): Promise<void> {
         {
           label: node.dottedLine ? 'Remove dotted line' : 'Set as dotted line',
           icon: '┈',
-          disabled: isRoot,
+          disabled: isRoot || nodeIsIC,
           action: () => {
             store.setDottedLine(nodeId, !node.dottedLine);
           },

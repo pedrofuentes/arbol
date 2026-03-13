@@ -374,8 +374,12 @@ export class ChartEditor {
       return;
     }
 
+    const proceed = await this.onBeforeSwitch();
+    if (!proceed) return;
+
     try {
-      await this.chartStore.createChart(name);
+      const chart = await this.chartStore.createChart(name);
+      this.onChartSwitch(chart);
       this.chartNameInput.value = '';
       this.chartErrorEl.textContent = '';
       await this.refresh();

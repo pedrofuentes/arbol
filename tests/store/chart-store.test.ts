@@ -144,6 +144,21 @@ describe('ChartStore', () => {
       expect(chart.workingTree.title).toBe('CEO');
     });
 
+    it('isDirty returns false for the new chart tree right after createChart', async () => {
+      const chart = await store.createChart('Fresh Chart');
+      expect(store.isDirty(chart.workingTree)).toBe(false);
+    });
+
+    it('isDirty returns true when comparing old modified tree after createChart', async () => {
+      // Simulate: user modified chart1's tree, then creates chart2
+      const modifiedTree = makeTree({ name: 'Modified CEO' });
+      await store.saveWorkingTree(modifiedTree, []);
+      await store.createChart('New Chart');
+      // After createChart, lastSavedTree is the new chart's DEFAULT_ROOT,
+      // so the old chart's modified tree should show as dirty
+      expect(store.isDirty(modifiedTree)).toBe(true);
+    });
+
     it('createChart throws if name is empty', async () => {
       await expect(store.createChart('')).rejects.toThrow('Chart name cannot be empty');
       await expect(store.createChart('   ')).rejects.toThrow('Chart name cannot be empty');

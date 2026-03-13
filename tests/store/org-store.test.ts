@@ -791,15 +791,32 @@ describe('OrgStore', () => {
   });
 
   describe('setDottedLine', () => {
+    // Tree where 'b' is a manager (not an IC) so dotted line is allowed.
+    // 'd' is an IC (leaf under M1 'b') for testing IC rejection.
+    const makeDottedTree = (): OrgNode => ({
+      id: 'root',
+      name: 'Alice',
+      title: 'CEO',
+      children: [
+        {
+          id: 'b',
+          name: 'Bob',
+          title: 'CTO',
+          children: [{ id: 'd', name: 'Dave', title: 'Dev' }],
+        },
+        { id: 'c', name: 'Carol', title: 'CFO' },
+      ],
+    });
+
     it('sets dottedLine to true on a node', () => {
-      const store = new OrgStore(makeRoot());
+      const store = new OrgStore(makeDottedTree());
       store.setDottedLine('b', true);
       const bob = findNodeById(store.getTree(), 'b')!;
       expect(bob.dottedLine).toBe(true);
     });
 
     it('sets dottedLine to false (removes the property)', () => {
-      const store = new OrgStore(makeRoot());
+      const store = new OrgStore(makeDottedTree());
       store.setDottedLine('b', true);
       store.setDottedLine('b', false);
       const bob = findNodeById(store.getTree(), 'b')!;
@@ -808,19 +825,33 @@ describe('OrgStore', () => {
     });
 
     it('throws if node is root', () => {
-      const store = new OrgStore(makeRoot());
+      const store = new OrgStore(makeDottedTree());
       expect(() => store.setDottedLine('root', true)).toThrow('Cannot set dotted line on root node');
     });
 
     it('throws if node not found', () => {
-      const store = new OrgStore(makeRoot());
+      const store = new OrgStore(makeDottedTree());
       expect(() => store.setDottedLine('nonexistent', true)).toThrow(
         '"nonexistent" not found',
       );
     });
 
+    it('throws if node is an IC (leaf under M1)', () => {
+      const store = new OrgStore(makeDottedTree());
+      expect(() => store.setDottedLine('d', true)).toThrow(
+        'Cannot set dotted line on an IC',
+      );
+    });
+
+    it('allows dotted line on Advisor (leaf under non-M1)', () => {
+      const store = new OrgStore(makeDottedTree());
+      store.setDottedLine('c', true);
+      const carol = findNodeById(store.getTree(), 'c')!;
+      expect(carol.dottedLine).toBe(true);
+    });
+
     it('triggers change event', () => {
-      const store = new OrgStore(makeRoot());
+      const store = new OrgStore(makeDottedTree());
       const listener = vi.fn();
       store.onChange(listener);
       store.setDottedLine('b', true);
@@ -828,7 +859,7 @@ describe('OrgStore', () => {
     });
 
     it('is undoable', () => {
-      const store = new OrgStore(makeRoot());
+      const store = new OrgStore(makeDottedTree());
       store.setDottedLine('b', true);
       expect(store.getUndoStackSize()).toBe(1);
       store.undo();
@@ -837,7 +868,7 @@ describe('OrgStore', () => {
     });
 
     it('is redoable', () => {
-      const store = new OrgStore(makeRoot());
+      const store = new OrgStore(makeDottedTree());
       store.setDottedLine('b', true);
       store.undo();
       store.redo();
@@ -846,10 +877,10 @@ describe('OrgStore', () => {
     });
 
     it('persists through toJSON/fromJSON round-trip', () => {
-      const store = new OrgStore(makeRoot());
+      const store = new OrgStore(makeDottedTree());
       store.setDottedLine('b', true);
       const json = store.toJSON();
-      const store2 = new OrgStore(makeRoot());
+      const store2 = new OrgStore(makeDottedTree());
       store2.fromJSON(json);
       const bob = findNodeById(store2.getTree(), 'b')!;
       expect(bob.dottedLine).toBe(true);
@@ -868,6 +899,12 @@ describe('OrgStore', () => {
           title: 'VP',
           children: [
             { id: 'a1', name: 'A1', title: 'Dir' },
+            {
+              id: 'a2',
+              name: 'A2',
+              title: 'Mgr',
+              children: [{ id: 'a2a', name: 'A2a', title: 'IC' }],
+            },
           ],
         },
         { id: 'b', name: 'B', title: 'VP' },

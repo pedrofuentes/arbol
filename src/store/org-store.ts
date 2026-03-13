@@ -1,5 +1,5 @@
 import { OrgNode } from '../types';
-import { findNodeById, findParent, cloneTree, flattenTree } from '../utils/tree';
+import { findNodeById, findParent, cloneTree, flattenTree, isLeaf, isM1 } from '../utils/tree';
 import { generateId } from '../utils/id';
 
 type ChangeListener = () => void;
@@ -159,6 +159,12 @@ export class OrgStore {
     if (this.root.id === nodeId) throw new Error('Cannot set dotted line on root node');
     const node = findNodeById(this.root, nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
+    if (isLeaf(node)) {
+      const parent = findParent(this.root, nodeId);
+      if (parent && isM1(parent)) {
+        throw new Error('Cannot set dotted line on an IC (Individual Contributor) node');
+      }
+    }
     this.snapshot();
     if (isDotted) {
       node.dottedLine = true;
