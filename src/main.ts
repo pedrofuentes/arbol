@@ -270,9 +270,9 @@ async function main(): Promise<void> {
 
   // Sidebar tabs
   const tabSwitcher = new TabSwitcher(sidebar, [
+    { id: 'charts', label: 'Charts' },
     { id: 'people', label: 'People' },
     { id: 'import', label: 'Import' },
-    { id: 'charts', label: 'Charts' },
     { id: 'settings', label: 'Settings' },
   ]);
 
