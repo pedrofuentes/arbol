@@ -186,6 +186,116 @@ describe('showManagerPicker', () => {
     expect(result).toBeNull();
   });
 
+  describe('keyboard navigation', () => {
+    it('ArrowDown highlights first option', () => {
+      showManagerPicker({ title: 'Pick', managers: sampleManagers });
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+      const listbox = document.querySelector('[role="listbox"]')!;
+
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+
+      const items = listbox.querySelectorAll('[role="option"]');
+      expect(items[0].getAttribute('aria-selected')).toBe('true');
+      expect(input.getAttribute('aria-activedescendant')).toBe(items[0].id);
+    });
+
+    it('ArrowDown moves to next option', () => {
+      showManagerPicker({ title: 'Pick', managers: sampleManagers });
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+      const listbox = document.querySelector('[role="listbox"]')!;
+
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+
+      const items = listbox.querySelectorAll('[role="option"]');
+      expect(items[0].getAttribute('aria-selected')).toBe('false');
+      expect(items[1].getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('ArrowUp moves to previous option', () => {
+      showManagerPicker({ title: 'Pick', managers: sampleManagers });
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+      const listbox = document.querySelector('[role="listbox"]')!;
+
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+
+      const items = listbox.querySelectorAll('[role="option"]');
+      expect(items[0].getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('ArrowDown wraps from last to first', () => {
+      showManagerPicker({ title: 'Pick', managers: sampleManagers });
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+      const listbox = document.querySelector('[role="listbox"]')!;
+
+      for (let i = 0; i < sampleManagers.length; i++) {
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      }
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+
+      const items = listbox.querySelectorAll('[role="option"]');
+      expect(items[0].getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('ArrowUp from first wraps to last', () => {
+      showManagerPicker({ title: 'Pick', managers: sampleManagers });
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+      const listbox = document.querySelector('[role="listbox"]')!;
+
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+
+      const items = listbox.querySelectorAll('[role="option"]');
+      expect(items[items.length - 1].getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('Enter selects the highlighted option', async () => {
+      const promise = showManagerPicker({ title: 'Pick', managers: sampleManagers });
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      const result = await promise;
+      expect(result).not.toBeNull();
+      expect(result!.managerId).toBe('m1');
+    });
+
+    it('Enter without highlight does nothing', () => {
+      showManagerPicker({ title: 'Pick', managers: sampleManagers });
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      const listbox = document.querySelector('[role="listbox"]');
+      expect(listbox).not.toBeNull();
+    });
+
+    it('highlight resets when search query changes', () => {
+      showManagerPicker({ title: 'Pick', managers: sampleManagers });
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      const listbox = document.querySelector('[role="listbox"]')!;
+      expect(listbox.querySelector('[aria-selected="true"]')).not.toBeNull();
+
+      input.value = 'bob';
+      input.dispatchEvent(new Event('input'));
+
+      expect(input.getAttribute('aria-activedescendant')).toBe('');
+    });
+
+    it('option items have unique ids', () => {
+      showManagerPicker({ title: 'Pick', managers: sampleManagers });
+      const items = document.querySelectorAll('[role="option"]');
+      const ids = Array.from(items).map((item) => item.id);
+      expect(ids.every((id) => id.length > 0)).toBe(true);
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+  });
+
   describe('dotted-line option', () => {
     it('does not show dotted-line checkbox by default', () => {
       showManagerPicker({ title: 'Pick', managers: sampleManagers });

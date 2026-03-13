@@ -88,6 +88,29 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<Manage
       color:var(--text-tertiary);
     `;
 
+    let highlightIndex = -1;
+    searchInput.setAttribute('aria-activedescendant', '');
+
+    const getVisibleOptions = (): HTMLButtonElement[] =>
+      Array.from(listContainer.querySelectorAll<HTMLButtonElement>('[role="option"]'));
+
+    const updateHighlight = (newIndex: number) => {
+      const items = getVisibleOptions();
+      for (const item of items) {
+        item.setAttribute('aria-selected', 'false');
+        item.style.background = 'transparent';
+      }
+      highlightIndex = newIndex;
+      if (newIndex >= 0 && newIndex < items.length) {
+        items[newIndex].setAttribute('aria-selected', 'true');
+        items[newIndex].style.background = 'var(--bg-hover)';
+        searchInput.setAttribute('aria-activedescendant', items[newIndex].id);
+        items[newIndex].scrollIntoView?.({ block: 'nearest' });
+      } else {
+        searchInput.setAttribute('aria-activedescendant', '');
+      }
+    };
+
     const renderList = (query: string) => {
       listContainer.textContent = '';
       const lower = query.toLowerCase();
@@ -102,6 +125,7 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<Manage
 
       for (const manager of filtered) {
         const item = document.createElement('button');
+        item.id = 'manager-option-' + manager.id;
         item.setAttribute('role', 'option');
         item.style.cssText = `
           display:flex;flex-direction:column;align-items:flex-start;
@@ -138,12 +162,35 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<Manage
         item.addEventListener('click', () => dismiss({ managerId: manager.id, dottedLine: dottedLineChecked }));
         listContainer.appendChild(item);
       }
+
+      highlightIndex = -1;
+      searchInput.setAttribute('aria-activedescendant', '');
     };
 
     renderList('');
 
     searchInput.addEventListener('input', () => {
       renderList(searchInput.value);
+    });
+
+    searchInput.addEventListener('keydown', (e: KeyboardEvent) => {
+      const items = getVisibleOptions();
+      if (items.length === 0) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = highlightIndex < items.length - 1 ? highlightIndex + 1 : 0;
+        updateHighlight(next);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const next = highlightIndex > 0 ? highlightIndex - 1 : items.length - 1;
+        updateHighlight(next);
+      } else if (e.key === 'Enter') {
+        if (highlightIndex >= 0 && highlightIndex < items.length) {
+          e.preventDefault();
+          items[highlightIndex].click();
+        }
+      }
     });
 
     const btnGroup = document.createElement('div');
