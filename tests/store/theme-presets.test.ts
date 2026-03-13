@@ -32,8 +32,8 @@ beforeEach(() => {
 });
 
 describe('CHART_THEME_PRESETS', () => {
-  it('has at least 8 built-in presets', () => {
-    expect(CHART_THEME_PRESETS.length).toBeGreaterThanOrEqual(8);
+  it('has at least 9 built-in presets', () => {
+    expect(CHART_THEME_PRESETS.length).toBeGreaterThanOrEqual(9);
   });
 
   it('each preset has id, name, description, and colors object', () => {
@@ -69,6 +69,27 @@ describe('CHART_THEME_PRESETS', () => {
     const ids = CHART_THEME_PRESETS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
+
+  it('all presets have a valid textAlign value', () => {
+    const validAligns = ['left', 'center', 'right'];
+    for (const preset of CHART_THEME_PRESETS) {
+      expect(validAligns).toContain(preset.colors.textAlign);
+    }
+  });
+
+  it('all presets have cardBorderRadius defined', () => {
+    for (const preset of CHART_THEME_PRESETS) {
+      expect(preset.colors.cardBorderRadius).toBeTypeOf('number');
+      expect(preset.colors.cardBorderRadius).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('all presets have fontFamily defined', () => {
+    for (const preset of CHART_THEME_PRESETS) {
+      expect(preset.colors.fontFamily).toBeTypeOf('string');
+      expect(preset.colors.fontFamily!.length).toBeGreaterThan(0);
+    }
+  });
 });
 
 describe('getPresetById', () => {
@@ -77,6 +98,18 @@ describe('getPresetById', () => {
     expect(emerald).toBeDefined();
     expect(emerald!.id).toBe('emerald');
     expect(emerald!.name).toBe('Emerald');
+  });
+
+  it('returns the ocean-teal preset', () => {
+    const teal = getPresetById('ocean-teal');
+    expect(teal).toBeDefined();
+    expect(teal!.id).toBe('ocean-teal');
+    expect(teal!.name).toBe('Ocean Teal');
+    expect(teal!.colors.cardStroke).toBe('#14b8a6');
+    expect(teal!.colors.textAlign).toBe('left');
+    expect(teal!.colors.cardBorderRadius).toBe(6);
+    expect(teal!.colors.fontFamily).toBe('Microsoft Sans Serif');
+    expect(teal!.colors.icContainerBorderRadius).toBe(8);
   });
 
   it('returns undefined for nonexistent id', () => {

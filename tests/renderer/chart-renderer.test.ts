@@ -1105,4 +1105,166 @@ describe('ChartRenderer', () => {
       expect(text.getAttribute('fill')).toBe('#00ff00');
     });
   });
+
+  describe('text alignment', () => {
+    it('defaults to center text alignment', () => {
+      renderer.render(singleNode());
+      const nameEl = container.querySelector('.node-name')!;
+      const titleEl = container.querySelector('.node-title')!;
+      expect(nameEl.getAttribute('text-anchor')).toBe('middle');
+      expect(nameEl.getAttribute('x')).toBe('80'); // 160 / 2
+      expect(titleEl.getAttribute('text-anchor')).toBe('middle');
+    });
+
+    it('applies left text alignment', () => {
+      renderer.destroy();
+      renderer = createRenderer({ textAlign: 'left', textPaddingHorizontal: 8 });
+      renderer.render(singleNode());
+      const nameEl = container.querySelector('.node-name')!;
+      const titleEl = container.querySelector('.node-title')!;
+      expect(nameEl.getAttribute('text-anchor')).toBe('start');
+      expect(nameEl.getAttribute('x')).toBe('8');
+      expect(titleEl.getAttribute('text-anchor')).toBe('start');
+      expect(titleEl.getAttribute('x')).toBe('8');
+    });
+
+    it('applies right text alignment', () => {
+      renderer.destroy();
+      renderer = createRenderer({ textAlign: 'right', textPaddingHorizontal: 10 });
+      renderer.render(singleNode());
+      const nameEl = container.querySelector('.node-name')!;
+      const titleEl = container.querySelector('.node-title')!;
+      expect(nameEl.getAttribute('text-anchor')).toBe('end');
+      expect(nameEl.getAttribute('x')).toBe('150'); // 160 - 10
+      expect(titleEl.getAttribute('text-anchor')).toBe('end');
+      expect(titleEl.getAttribute('x')).toBe('150');
+    });
+
+    it('applies text alignment to IC nodes', () => {
+      renderer.destroy();
+      renderer = createRenderer({ textAlign: 'left', textPaddingHorizontal: 8 });
+      renderer.render(m1WithICs());
+      const icNames = container.querySelectorAll('.ic-node .node-name');
+      expect(icNames.length).toBeGreaterThan(0);
+      for (const nameEl of icNames) {
+        expect(nameEl.getAttribute('text-anchor')).toBe('start');
+      }
+    });
+
+    it('applies text alignment to advisor nodes', () => {
+      renderer.destroy();
+      renderer = createRenderer({ textAlign: 'left', textPaddingHorizontal: 8 });
+      renderer.render(managerWithPALs());
+      const palNames = container.querySelectorAll('.pal-node .node-name');
+      expect(palNames.length).toBeGreaterThan(0);
+      for (const nameEl of palNames) {
+        expect(nameEl.getAttribute('text-anchor')).toBe('start');
+      }
+    });
+
+    it('updates text alignment via updateOptions', () => {
+      renderer.render(singleNode());
+      expect(container.querySelector('.node-name')!.getAttribute('text-anchor')).toBe('middle');
+
+      renderer.updateOptions({ textAlign: 'left' });
+      renderer.render(singleNode());
+      expect(container.querySelector('.node-name')!.getAttribute('text-anchor')).toBe('start');
+    });
+  });
+
+  describe('card border radius', () => {
+    it('defaults to no border radius (rx=0, ry=0)', () => {
+      renderer.render(singleNode());
+      const rect = container.querySelector('.node rect')!;
+      expect(rect.getAttribute('rx')).toBe('0');
+      expect(rect.getAttribute('ry')).toBe('0');
+    });
+
+    it('applies border radius to card rects', () => {
+      renderer.destroy();
+      renderer = createRenderer({ cardBorderRadius: 6 });
+      renderer.render(singleNode());
+      const rect = container.querySelector('.node rect')!;
+      expect(rect.getAttribute('rx')).toBe('6');
+      expect(rect.getAttribute('ry')).toBe('6');
+    });
+
+    it('applies border radius to IC card rects', () => {
+      renderer.destroy();
+      renderer = createRenderer({ cardBorderRadius: 4 });
+      renderer.render(m1WithICs());
+      const icRects = container.querySelectorAll('.ic-node rect');
+      expect(icRects.length).toBeGreaterThan(0);
+      for (const rect of icRects) {
+        expect(rect.getAttribute('rx')).toBe('4');
+      }
+    });
+
+    it('applies border radius to advisor card rects', () => {
+      renderer.destroy();
+      renderer = createRenderer({ cardBorderRadius: 8 });
+      renderer.render(managerWithPALs());
+      const palRects = container.querySelectorAll('.pal-node rect');
+      expect(palRects.length).toBeGreaterThan(0);
+      for (const rect of palRects) {
+        expect(rect.getAttribute('rx')).toBe('8');
+      }
+    });
+  });
+
+  describe('IC container border radius', () => {
+    it('defaults to no border radius on IC containers', () => {
+      renderer.render(m1WithICs());
+      const icContainerRect = container.querySelector('.ic-container')!;
+      expect(icContainerRect.getAttribute('rx')).toBe('0');
+      expect(icContainerRect.getAttribute('ry')).toBe('0');
+    });
+
+    it('applies border radius to IC container', () => {
+      renderer.destroy();
+      renderer = createRenderer({ icContainerBorderRadius: 6 });
+      renderer.render(m1WithICs());
+      const icContainerRect = container.querySelector('.ic-container')!;
+      expect(icContainerRect.getAttribute('rx')).toBe('6');
+      expect(icContainerRect.getAttribute('ry')).toBe('6');
+    });
+  });
+
+  describe('font family', () => {
+    it('defaults to Calibri font family', () => {
+      renderer.render(singleNode());
+      const nameEl = container.querySelector('.node-name')!;
+      expect(nameEl.getAttribute('font-family')).toBe('Calibri, sans-serif');
+    });
+
+    it('applies custom font family', () => {
+      renderer.destroy();
+      renderer = createRenderer({ fontFamily: 'Segoe UI' });
+      renderer.render(singleNode());
+      const nameEl = container.querySelector('.node-name')!;
+      const titleEl = container.querySelector('.node-title')!;
+      expect(nameEl.getAttribute('font-family')).toBe('Segoe UI, sans-serif');
+      expect(titleEl.getAttribute('font-family')).toBe('Segoe UI, sans-serif');
+    });
+
+    it('applies font family to IC nodes', () => {
+      renderer.destroy();
+      renderer = createRenderer({ fontFamily: 'Arial' });
+      renderer.render(m1WithICs());
+      const icNames = container.querySelectorAll('.ic-node .node-name');
+      expect(icNames.length).toBeGreaterThan(0);
+      for (const el of icNames) {
+        expect(el.getAttribute('font-family')).toBe('Arial, sans-serif');
+      }
+    });
+
+    it('updates font family via updateOptions', () => {
+      renderer.render(singleNode());
+      expect(container.querySelector('.node-name')!.getAttribute('font-family')).toBe('Calibri, sans-serif');
+
+      renderer.updateOptions({ fontFamily: 'Verdana' });
+      renderer.render(singleNode());
+      expect(container.querySelector('.node-name')!.getAttribute('font-family')).toBe('Verdana, sans-serif');
+    });
+  });
 });

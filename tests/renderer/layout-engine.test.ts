@@ -44,6 +44,11 @@ function defaultOpts(): ResolvedOptions {
     headcountBadgePadding: 8,
     headcountBadgeHeight: 22,
     legendRows: 0,
+    textAlign: 'center' as const,
+    textPaddingHorizontal: 8,
+    fontFamily: 'Calibri',
+    cardBorderRadius: 0,
+    icContainerBorderRadius: 0,
     categories: [],
   };
 }

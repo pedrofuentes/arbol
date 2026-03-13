@@ -227,20 +227,21 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
   for (const treeNode of treeData.descendants()) {
     const ics = icMap.get(treeNode.data.id);
     if (ics && ics.length > 0) {
-      const startY = treeNode.y + nodeHeight;
-      const totalHeight =
+      const nodesStartY = treeNode.y + nodeHeight;
+      const containerTop = treeNode.y + nodeHeight / 2;
+      const contentHeight =
         ics.length * nodeHeight + (ics.length - 1) * icGap + icContainerPadding * 2;
       const totalWidth = icNodeWidth + icContainerPadding * 2;
 
       icContainers.push({
         x: treeNode.x - totalWidth / 2,
-        y: startY,
+        y: containerTop,
         width: totalWidth,
-        height: totalHeight,
+        height: contentHeight + (nodesStartY - containerTop),
       });
 
       ics.forEach((ic, i) => {
-        const y = startY + icContainerPadding + i * (nodeHeight + icGap);
+        const y = nodesStartY + icContainerPadding + i * (nodeHeight + icGap);
         nodes.push({
           id: ic.id,
           name: ic.name,

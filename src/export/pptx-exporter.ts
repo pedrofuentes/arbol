@@ -52,6 +52,9 @@ export interface PptxExportOptions {
   headcountBadgePadding?: number;
   headcountBadgeHeight?: number;
   legendRows?: number;
+  textAlign?: 'left' | 'center' | 'right';
+  cardBorderRadius?: number;
+  fontFamily?: string;
 }
 
 export interface Point {
@@ -77,6 +80,9 @@ interface ResolvedStyles {
   headcountBadgeHeight: number;
   headcountBadgePadding: number;
   headcountBadgeRadius: number;
+  textAlign: 'left' | 'center' | 'right';
+  cardBorderRadius: number;
+  fontFamily: string;
 }
 
 function stripHash(color: string): string {
@@ -102,6 +108,9 @@ export function resolveStyles(options?: PptxExportOptions): ResolvedStyles {
     headcountBadgeHeight: options?.headcountBadgeHeight ?? 22,
     headcountBadgePadding: options?.headcountBadgePadding ?? 8,
     headcountBadgeRadius: options?.headcountBadgeRadius ?? 4,
+    textAlign: options?.textAlign ?? 'center',
+    cardBorderRadius: options?.cardBorderRadius ?? 0,
+    fontFamily: options?.fontFamily ?? 'Calibri',
   };
 }
 
@@ -193,14 +202,19 @@ function addNodeShape(
     }
   }
 
-  slide.addShape('rect', {
+  const shapeType = styles.cardBorderRadius > 0 ? 'roundRect' : 'rect';
+  const shapeOpts: Record<string, unknown> = {
     x: topLeft.x,
     y: topLeft.y,
     w,
     h,
     fill: { color: fillColor },
     line: { color: styles.cardStroke, width: styles.cardStrokeWidth },
-  });
+  };
+  if (styles.cardBorderRadius > 0) {
+    shapeOpts.rectRadius = Math.min(styles.cardBorderRadius * PX_TO_INCHES / (h / 2), 1);
+  }
+  slide.addShape(shapeType as 'rect', shapeOpts);
 
   slide.addText(
     [
@@ -212,9 +226,9 @@ function addNodeShape(
       y: topLeft.y,
       w,
       h,
-      align: 'center',
+      align: styles.textAlign,
       valign: 'middle',
-      fontFace: DEFAULT_FONT_FAMILY,
+      fontFace: styles.fontFamily,
       color: nodeNameColor,
       margin: 0,
     },
@@ -255,7 +269,7 @@ function addNodeShape(
       h: badgeH,
       align: 'center',
       valign: 'middle',
-      fontFace: DEFAULT_FONT_FAMILY,
+      fontFace: styles.fontFamily,
       fontSize: badgeFontSize,
       bold: true,
       color: styles.headcountBadgeTextColor,
@@ -407,7 +421,7 @@ export async function exportToPptx(
 
   // Layer 4: Legend
   if (categories && categories.length > 0) {
-    addLegend(slide, categories, slideWidth, slideHeight, padding, options?.legendRows);
+    addLegend(slide, categories, slideWidth, slideHeight, padding, options?.legendRows, styles.fontFamily);
   }
 
   await pres.writeFile({ fileName });
@@ -420,6 +434,7 @@ function addLegend(
   slideHeight: number,
   padding: number,
   legendRows?: number,
+  fontFamily?: string,
 ): void {
   const legendX = padding;
   const swatchSize = 0.15;
@@ -473,7 +488,7 @@ function addLegend(
       w: textWidth,
       h: rowHeight,
       fontSize,
-      fontFace: DEFAULT_FONT_FAMILY,
+      fontFace: fontFamily ?? 'Calibri',
       color: '64748B',
       valign: 'middle',
     });

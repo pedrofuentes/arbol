@@ -1,6 +1,6 @@
 # Arbol — Project Roadmap
 
-> Last updated: 2026-03-12
+> Last updated: 2026-03-13
 
 ## Overview
 
@@ -8,7 +8,45 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
-## 🚀 v1.2.0 (Current Release)
+## 🚀 v2.2.0 — Card Styling & Ocean Teal
+
+### Phase 18 — Card Styling Options
+- [x] `textAlign` option (left / center / right) for card text alignment
+- [x] `textPaddingHorizontal` for left/right-aligned text padding
+- [x] `fontFamily` option — 8 PowerPoint-safe fonts (Calibri, Arial, Verdana, Georgia, Tahoma, Trebuchet MS, Segoe UI, Microsoft Sans Serif)
+- [x] `cardBorderRadius` option (0–15px) — rounded card corners in SVG and PPTX
+- [x] `icContainerBorderRadius` option (0–15px) — rounded IC group container corners
+- [x] IC container starts at M1 card midpoint to eliminate visual gaps with rounded corners
+- [x] New `select` control type in settings editor for dropdown options
+- [x] **Ocean Teal** theme preset — teal #14b8a6 border, left-aligned text, Segoe UI, rounded corners
+- [x] All options propagate to PPTX export (font, alignment, rounded shapes)
+- [x] Full test coverage: 1056 tests across 41 files
+
+---
+
+## 🚀 v2.1.0 — Backup & Restore
+
+### Phase 17.5 — Backup & Restore
+- [x] Export all app data as `.arbol-backup.json` (charts, versions, settings, presets)
+- [x] Two restore strategies: Replace All or Merge
+- [x] Auto-backup safety net before destructive actions
+- [x] Restore strategy picker dialog with backup summary
+
+---
+
+## 🚀 v2.0.0 — Multiple Charts & Versions
+
+### Phase 17.1 — Multiple Charts & IndexedDB
+- [x] Multiple org charts with independent categories
+- [x] Version snapshots — save, view, restore named point-in-time snapshots
+- [x] IndexedDB storage for charts and versions
+- [x] Chart name header, dirty indicator, charts sidebar tab
+- [x] Import destination choice (new chart vs replace)
+- [x] Auto-migration from localStorage to IndexedDB
+
+---
+
+## 🚀 v1.2.0
 
 ### Phase 1 — Project Foundation
 - [x] Initialize project with Vite + TypeScript + D3.js + Vitest

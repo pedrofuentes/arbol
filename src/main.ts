@@ -61,6 +61,9 @@ async function main(): Promise<void> {
     titleFontSize: 9,
     textPaddingTop: 6,
     textGap: 2,
+    textAlign: 'center',
+    textPaddingHorizontal: 8,
+    fontFamily: 'Calibri',
     nameColor: '#1e293b',
     titleColor: '#64748b',
     linkColor: '#94a3b8',
@@ -69,7 +72,9 @@ async function main(): Promise<void> {
     cardFill: '#ffffff',
     cardStroke: '#22c55e',
     cardStrokeWidth: 1,
+    cardBorderRadius: 0,
     icContainerFill: '#e5e7eb',
+    icContainerBorderRadius: 0,
     showHeadcount: false,
     headcountBadgeColor: '#9ca3af',
     headcountBadgeTextColor: '#1e293b',
@@ -92,6 +97,7 @@ async function main(): Promise<void> {
   const renderer= new ChartRenderer({
     container: chartArea,
     ...savedSettings,
+    textAlign: savedSettings.textAlign as 'left' | 'center' | 'right',
     categories: categoryStore.getAll(),
   });
 
@@ -951,6 +957,9 @@ async function main(): Promise<void> {
       headcountBadgePadding: rendererOpts.headcountBadgePadding,
       headcountBadgeHeight: rendererOpts.headcountBadgeHeight,
       legendRows: rendererOpts.legendRows,
+      textAlign: rendererOpts.textAlign as 'left' | 'center' | 'right',
+      cardBorderRadius: rendererOpts.cardBorderRadius as number,
+      fontFamily: rendererOpts.fontFamily as string,
     });
   };
 

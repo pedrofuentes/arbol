@@ -734,6 +734,41 @@ describe('pptx-exporter', () => {
       expect(styles.nameFontPt).toBe(3);
       expect(styles.titleFontPt).toBe(3);
     });
+
+    it('defaults textAlign to center', () => {
+      const styles = resolveStyles();
+      expect(styles.textAlign).toBe('center');
+    });
+
+    it('passes through textAlign option', () => {
+      const styles = resolveStyles({ textAlign: 'left' });
+      expect(styles.textAlign).toBe('left');
+    });
+
+    it('passes through right textAlign', () => {
+      const styles = resolveStyles({ textAlign: 'right' });
+      expect(styles.textAlign).toBe('right');
+    });
+
+    it('defaults cardBorderRadius to 0', () => {
+      const styles = resolveStyles();
+      expect(styles.cardBorderRadius).toBe(0);
+    });
+
+    it('passes through cardBorderRadius', () => {
+      const styles = resolveStyles({ cardBorderRadius: 6 });
+      expect(styles.cardBorderRadius).toBe(6);
+    });
+
+    it('defaults fontFamily to Calibri', () => {
+      const styles = resolveStyles();
+      expect(styles.fontFamily).toBe('Calibri');
+    });
+
+    it('passes through fontFamily', () => {
+      const styles = resolveStyles({ fontFamily: 'Segoe UI' });
+      expect(styles.fontFamily).toBe('Segoe UI');
+    });
   });
 
   // --- dynamic slide sizing ---
@@ -852,6 +887,108 @@ describe('pptx-exporter', () => {
       });
       expect(lineShape).toBeDefined();
       expect((lineShape![1] as any).line.width).toBeCloseTo(3 * PX_TO_PT);
+    });
+  });
+
+  describe('text alignment in export', () => {
+    it('uses center alignment by default', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
+      });
+      await exportToPptx(layout);
+      const textCalls = mockAddText.mock.calls;
+      const nodeTextCall = textCalls.find((call: any) => {
+        const textBlocks = call[0];
+        return Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => t.text === 'Boss');
+      });
+      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall![1].align).toBe('center');
+    });
+
+    it('uses left alignment when specified', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
+      });
+      await exportToPptx(layout, { textAlign: 'left' });
+      const textCalls = mockAddText.mock.calls;
+      const nodeTextCall = textCalls.find((call: any) => {
+        const textBlocks = call[0];
+        return Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => t.text === 'Boss');
+      });
+      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall![1].align).toBe('left');
+    });
+
+    it('uses right alignment when specified', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
+      });
+      await exportToPptx(layout, { textAlign: 'right' });
+      const textCalls = mockAddText.mock.calls;
+      const nodeTextCall = textCalls.find((call: any) => {
+        const textBlocks = call[0];
+        return Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => t.text === 'Boss');
+      });
+      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall![1].align).toBe('right');
+    });
+  });
+
+  describe('card border radius in export', () => {
+    it('uses rect shape when cardBorderRadius is 0', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
+      });
+      await exportToPptx(layout, { cardBorderRadius: 0 });
+      const shapeCalls = mockAddShape.mock.calls;
+      const rectCall = shapeCalls.find((call: any) => call[0] === 'rect');
+      expect(rectCall).toBeDefined();
+    });
+
+    it('uses roundRect shape when cardBorderRadius > 0', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
+      });
+      await exportToPptx(layout, { cardBorderRadius: 6 });
+      const shapeCalls = mockAddShape.mock.calls;
+      const roundRectCall = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      expect(roundRectCall).toBeDefined();
+      expect(roundRectCall![1].rectRadius).toBeGreaterThan(0);
+    });
+  });
+
+  describe('font family in export', () => {
+    it('uses default Calibri font', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
+      });
+      await exportToPptx(layout);
+      const textCalls = mockAddText.mock.calls;
+      const nodeTextCall = textCalls.find((call: any) => {
+        const textBlocks = call[0];
+        return Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => t.text === 'Boss');
+      });
+      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall![1].fontFace).toBe('Calibri');
+    });
+
+    it('uses custom font family when specified', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
+      });
+      await exportToPptx(layout, { fontFamily: 'Segoe UI' });
+      const textCalls = mockAddText.mock.calls;
+      const nodeTextCall = textCalls.find((call: any) => {
+        const textBlocks = call[0];
+        return Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => t.text === 'Boss');
+      });
+      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall![1].fontFace).toBe('Segoe UI');
     });
   });
 });

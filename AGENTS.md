@@ -167,7 +167,12 @@ All spacing is configurable via `RendererOptions`:
 - `nameFontSize`, `titleFontSize`, `textPaddingTop`, `textGap` — typography
 - `linkColor`, `linkWidth` — connector lines
 - `cardFill`, `cardStroke`, `cardStrokeWidth` — card appearance
+- `cardBorderRadius` — rounded corners on cards
 - `icContainerFill` — IC group background
+- `icContainerBorderRadius` — rounded corners on IC group containers
+- `textAlign` — text alignment within cards (left / center / right)
+- `textPaddingHorizontal` — horizontal padding for left/right-aligned text
+- `fontFamily` — font for names/titles (7 PowerPoint-safe options)
 
 ### OrgStore API
 
@@ -287,12 +292,12 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **968 tests across 39 files** — all must pass before committing
+- **1056 tests across 41 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
 
-### Test Files (all 30)
+### Test Files (all 30+)
 
 | File | Scope |
 |------|-------|

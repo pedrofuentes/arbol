@@ -37,6 +37,9 @@ const DEFAULTS: PersistableSettings = {
   titleFontSize: 9,
   textPaddingTop: 6,
   textGap: 2,
+  textAlign: 'center',
+  textPaddingHorizontal: 8,
+  fontFamily: 'Calibri',
   nameColor: '#1e293b',
   titleColor: '#64748b',
   linkColor: '#94a3b8',
@@ -45,7 +48,9 @@ const DEFAULTS: PersistableSettings = {
   cardFill: '#ffffff',
   cardStroke: '#22c55e',
   cardStrokeWidth: 1,
+  cardBorderRadius: 0,
   icContainerFill: '#e5e7eb',
+  icContainerBorderRadius: 0,
   showHeadcount: false,
   headcountBadgeColor: '#9ca3af',
   headcountBadgeTextColor: '#1e293b',
@@ -296,6 +301,93 @@ describe('SettingsStore', () => {
       const loaded = store.load(DEFAULTS);
       expect(loaded.legendRows).toBe(0);
       expect(loaded.nodeWidth).toBe(180);
+    });
+  });
+
+  describe('textAlign', () => {
+    it('persists and loads textAlign', () => {
+      store.saveImmediate({ textAlign: 'left' });
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.textAlign).toBe('left');
+    });
+
+    it('validates textAlign values', () => {
+      for (const valid of ['left', 'center', 'right']) {
+        store.saveImmediate({ textAlign: valid });
+        const loaded = store.load(DEFAULTS);
+        expect(loaded.textAlign).toBe(valid);
+      }
+    });
+
+    it('rejects invalid textAlign values', () => {
+      const bad = { ...DEFAULTS, textAlign: 'justify' };
+      const json = JSON.stringify({ version: 1, settings: bad });
+      expect(() => store.parseImport(json)).toThrow('expected one of');
+    });
+
+    it('rejects non-string textAlign', () => {
+      const bad = { ...DEFAULTS, textAlign: 42 };
+      const json = JSON.stringify({ version: 1, settings: bad });
+      expect(() => store.parseImport(json)).toThrow('expected one of');
+    });
+
+    it('defaults textAlign to center when not in saved data', () => {
+      const oldSettings = { version: 1, settings: { nodeWidth: 180 } };
+      localStorageMock.setItem('arbol-settings', JSON.stringify(oldSettings));
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.textAlign).toBe('center');
+    });
+  });
+
+  describe('textPaddingHorizontal', () => {
+    it('persists and loads textPaddingHorizontal', () => {
+      store.saveImmediate({ textPaddingHorizontal: 12 });
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.textPaddingHorizontal).toBe(12);
+    });
+  });
+
+  describe('cardBorderRadius', () => {
+    it('persists and loads cardBorderRadius', () => {
+      store.saveImmediate({ cardBorderRadius: 6 });
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.cardBorderRadius).toBe(6);
+    });
+
+    it('defaults to 0 when not in saved data', () => {
+      const oldSettings = { version: 1, settings: { nodeWidth: 180 } };
+      localStorageMock.setItem('arbol-settings', JSON.stringify(oldSettings));
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.cardBorderRadius).toBe(0);
+    });
+  });
+
+  describe('fontFamily', () => {
+    it('persists and loads fontFamily', () => {
+      store.saveImmediate({ fontFamily: 'Segoe UI' });
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.fontFamily).toBe('Segoe UI');
+    });
+
+    it('validates fontFamily values', () => {
+      for (const valid of ['Calibri', 'Arial', 'Verdana', 'Georgia', 'Tahoma', 'Trebuchet MS', 'Segoe UI']) {
+        store.saveImmediate({ fontFamily: valid });
+        const loaded = store.load(DEFAULTS);
+        expect(loaded.fontFamily).toBe(valid);
+      }
+    });
+
+    it('rejects invalid fontFamily values', () => {
+      const bad = { ...DEFAULTS, fontFamily: 'Comic Sans' };
+      const json = JSON.stringify({ version: 1, settings: bad });
+      expect(() => store.parseImport(json)).toThrow('expected one of');
+    });
+
+    it('defaults to Calibri when not in saved data', () => {
+      const oldSettings = { version: 1, settings: { nodeWidth: 180 } };
+      localStorageMock.setItem('arbol-settings', JSON.stringify(oldSettings));
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.fontFamily).toBe('Calibri');
     });
   });
 });
