@@ -113,6 +113,8 @@ const SETTING_GROUPS: SettingGroup[] = [
       { key: 'titleFontSize', label: 'Title Font Size', type: 'range', min: 5, max: 20, step: 1 },
       { key: 'textPaddingTop', label: 'Text Padding Top', type: 'range', min: 0, max: 15, step: 1 },
       { key: 'textGap', label: 'Text Gap', type: 'range', min: 0, max: 10, step: 1 },
+      { key: 'nameColor', label: 'Name Color', type: 'color' },
+      { key: 'titleColor', label: 'Title Color', type: 'color' },
     ],
   },
   {
@@ -199,6 +201,8 @@ const DEFAULT_SETTINGS: Record<string, number | string | boolean> = {
   titleFontSize: 9,
   textPaddingTop: 6,
   textGap: 2,
+  nameColor: '#1e293b',
+  titleColor: '#64748b',
   linkColor: '#94a3b8',
   linkWidth: 1.5,
   dottedLineDash: '6,4',
@@ -639,6 +643,8 @@ export class SettingsEditor {
                 linkColor: settings.linkColor,
                 linkWidth: settings.linkWidth,
                 icContainerFill: settings.icContainerFill,
+                nameColor: settings.nameColor,
+                titleColor: settings.titleColor,
               },
             });
 
@@ -765,8 +771,11 @@ export class SettingsEditor {
     const categories = this.categoryStore!.getAll();
 
     for (const cat of categories) {
+      const container = document.createElement('div');
+      container.style.cssText = 'margin-bottom:8px;';
+
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;';
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
 
       const colorInput = document.createElement('input');
       colorInput.type = 'color';
@@ -774,8 +783,36 @@ export class SettingsEditor {
       colorInput.style.cssText =
         'width:28px;height:22px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
       colorInput.setAttribute('aria-label', `Color for ${cat.label}`);
+
+      // Name and title color pickers (created before colorInput listener so they can be referenced)
+      const nameColorInput = document.createElement('input');
+      nameColorInput.type = 'color';
+      nameColorInput.value = cat.nameColor ?? '#1e293b';
+      nameColorInput.style.cssText =
+        'width:22px;height:18px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
+      nameColorInput.setAttribute('aria-label', `Name color for ${cat.label}`);
+      nameColorInput.addEventListener('input', () => {
+        this.categoryStore!.update(cat.id, { nameColor: nameColorInput.value });
+        this.rerenderCallback();
+      });
+
+      const titleColorInput = document.createElement('input');
+      titleColorInput.type = 'color';
+      titleColorInput.value = cat.titleColor ?? '#64748b';
+      titleColorInput.style.cssText =
+        'width:22px;height:18px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
+      titleColorInput.setAttribute('aria-label', `Title color for ${cat.label}`);
+      titleColorInput.addEventListener('input', () => {
+        this.categoryStore!.update(cat.id, { titleColor: titleColorInput.value });
+        this.rerenderCallback();
+      });
+
       colorInput.addEventListener('input', () => {
         this.categoryStore!.update(cat.id, { color: colorInput.value });
+        // Sync text color pickers with auto-computed values
+        const updated = this.categoryStore!.getById(cat.id);
+        if (updated?.nameColor) nameColorInput.value = updated.nameColor;
+        if (updated?.titleColor) titleColorInput.value = updated.titleColor;
         this.rerenderCallback();
       });
       row.appendChild(colorInput);
@@ -817,7 +854,26 @@ export class SettingsEditor {
       });
       row.appendChild(deleteBtn);
 
-      wrapper.appendChild(row);
+      container.appendChild(row);
+
+      // Text color sub-row
+      const textRow = document.createElement('div');
+      textRow.style.cssText =
+        'display:flex;align-items:center;gap:6px;padding-left:34px;font-size:10px;color:var(--text-tertiary);';
+
+      const nameLabel = document.createElement('span');
+      nameLabel.textContent = 'Name';
+      textRow.appendChild(nameLabel);
+      textRow.appendChild(nameColorInput);
+
+      const titleLabel = document.createElement('span');
+      titleLabel.textContent = 'Title';
+      titleLabel.style.cssText = 'margin-left:4px;';
+      textRow.appendChild(titleLabel);
+      textRow.appendChild(titleColorInput);
+
+      container.appendChild(textRow);
+      wrapper.appendChild(container);
     }
 
     const addBtn = document.createElement('button');
@@ -1018,6 +1074,8 @@ export class SettingsEditor {
           linkColor: String(opts.linkColor),
           linkWidth: Number(opts.linkWidth),
           icContainerFill: String(opts.icContainerFill),
+          nameColor: String(opts.nameColor),
+          titleColor: String(opts.titleColor),
         },
         sizes: {
           nodeWidth: Number(opts.nodeWidth),

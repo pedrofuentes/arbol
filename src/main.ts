@@ -69,6 +69,8 @@ function main(): void {
     titleFontSize: 9,
     textPaddingTop: 6,
     textGap: 2,
+    nameColor: '#1e293b',
+    titleColor: '#64748b',
     linkColor: '#94a3b8',
     linkWidth: 1.5,
     dottedLineDash: '6,4',
@@ -436,6 +438,7 @@ function main(): void {
               (cat): ContextMenuItem => ({
                 label: cat.label,
                 icon: node.categoryId === cat.id ? '✓' : ' ',
+                swatch: cat.color,
                 action: () => {
                   store.setNodeCategory(nodeId, cat.id);
                 },
@@ -539,6 +542,7 @@ function main(): void {
             ...categoryStore.getAll().map(
               (cat): ContextMenuItem => ({
                 label: cat.label,
+                swatch: cat.color,
                 action: () => {
                   store.bulkSetCategory(selectedArray, cat.id);
                 },
@@ -830,6 +834,8 @@ function main(): void {
       icContainerFill: rendererOpts.icContainerFill,
       linkColor: rendererOpts.linkColor,
       linkWidth: rendererOpts.linkWidth,
+      nameColor: rendererOpts.nameColor,
+      titleColor: rendererOpts.titleColor,
       showHeadcount: rendererOpts.showHeadcount,
       headcountBadgeColor: rendererOpts.headcountBadgeColor,
       headcountBadgeTextColor: rendererOpts.headcountBadgeTextColor,

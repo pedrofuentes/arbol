@@ -37,6 +37,8 @@ const DEFAULTS: PersistableSettings = {
   titleFontSize: 9,
   textPaddingTop: 6,
   textGap: 2,
+  nameColor: '#1e293b',
+  titleColor: '#64748b',
   linkColor: '#94a3b8',
   linkWidth: 1.5,
   dottedLineDash: '6,4',

@@ -840,6 +840,45 @@ describe('ChartRenderer', () => {
       const icRect = container.querySelector('.ic-node[data-id="ic1"] rect')!;
       expect(icRect.getAttribute('fill')).toBe('#3b82f6');
     });
+
+    it('uses category nameColor and titleColor on text', () => {
+      const catsWithTextColors: ColorCategory[] = [
+        { id: 'dark-bg', label: 'Dark', color: '#1e293b', nameColor: '#ffffff', titleColor: '#cbd5e1' },
+      ];
+      renderer.destroy();
+      renderer = createRenderer({ categories: catsWithTextColors });
+      const tree: OrgNode = { id: 'root', name: 'Alice', title: 'CEO', categoryId: 'dark-bg' };
+      renderer.render(tree);
+      const nameEl = container.querySelector('.node[data-id="root"] .node-name')!;
+      expect(nameEl.getAttribute('fill')).toBe('#ffffff');
+      const titleEl = container.querySelector('.node[data-id="root"] .node-title')!;
+      expect(titleEl.getAttribute('fill')).toBe('#cbd5e1');
+    });
+
+    it('uses global nameColor/titleColor when node has no category', () => {
+      renderer.destroy();
+      renderer = createRenderer({ categories, nameColor: '#112233', titleColor: '#445566' });
+      const tree: OrgNode = { id: 'root', name: 'Alice', title: 'CEO' };
+      renderer.render(tree);
+      const nameEl = container.querySelector('.node[data-id="root"] .node-name')!;
+      expect(nameEl.getAttribute('fill')).toBe('#112233');
+      const titleEl = container.querySelector('.node[data-id="root"] .node-title')!;
+      expect(titleEl.getAttribute('fill')).toBe('#445566');
+    });
+
+    it('falls back to global text colors when category has no text colors', () => {
+      const catsNoTextColors: ColorCategory[] = [
+        { id: 'plain', label: 'Plain', color: '#aabbcc' },
+      ];
+      renderer.destroy();
+      renderer = createRenderer({ categories: catsNoTextColors, nameColor: '#112233', titleColor: '#445566' });
+      const tree: OrgNode = { id: 'root', name: 'Alice', title: 'CEO', categoryId: 'plain' };
+      renderer.render(tree);
+      const nameEl = container.querySelector('.node[data-id="root"] .node-name')!;
+      expect(nameEl.getAttribute('fill')).toBe('#112233');
+      const titleEl = container.querySelector('.node[data-id="root"] .node-title')!;
+      expect(titleEl.getAttribute('fill')).toBe('#445566');
+    });
   });
 
   describe('dotted-line rendering', () => {

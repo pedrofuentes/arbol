@@ -1,5 +1,6 @@
 import type { ColorCategory } from '../types';
 import { generateId } from '../utils/id';
+import { contrastingTextColor, contrastingTitleColor } from '../utils/contrast';
 
 type ChangeListener = () => void;
 
@@ -8,9 +9,27 @@ const STORAGE_KEY = 'arbol-categories';
 const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
 const DEFAULT_CATEGORIES: ColorCategory[] = [
-  { id: 'open-position', label: 'Open Position', color: '#fbbf24' },
-  { id: 'offer-pending', label: 'Offer Pending', color: '#60a5fa' },
-  { id: 'future-start', label: 'Future Start', color: '#a78bfa' },
+  {
+    id: 'open-position',
+    label: 'Open Position',
+    color: '#fbbf24',
+    nameColor: contrastingTextColor('#fbbf24'),
+    titleColor: contrastingTitleColor('#fbbf24'),
+  },
+  {
+    id: 'offer-pending',
+    label: 'Offer Pending',
+    color: '#60a5fa',
+    nameColor: contrastingTextColor('#60a5fa'),
+    titleColor: contrastingTitleColor('#60a5fa'),
+  },
+  {
+    id: 'future-start',
+    label: 'Future Start',
+    color: '#a78bfa',
+    nameColor: contrastingTextColor('#a78bfa'),
+    titleColor: contrastingTitleColor('#a78bfa'),
+  },
 ];
 
 export class CategoryStore {
@@ -18,7 +37,8 @@ export class CategoryStore {
 
   getAll(): ColorCategory[] {
     const stored = this.loadFromStorage();
-    return stored.length > 0 ? stored : DEFAULT_CATEGORIES.map((c) => ({ ...c }));
+    const list = stored.length > 0 ? stored : DEFAULT_CATEGORIES.map((c) => ({ ...c }));
+    return list.map((c) => this.ensureTextColors(c));
   }
 
   getById(id: string): ColorCategory | undefined {
@@ -33,7 +53,13 @@ export class CategoryStore {
       throw new Error(`Invalid color format: ${color}`);
     }
 
-    const category: ColorCategory = { id: generateId(), label: label.trim(), color };
+    const category: ColorCategory = {
+      id: generateId(),
+      label: label.trim(),
+      color,
+      nameColor: contrastingTextColor(color),
+      titleColor: contrastingTitleColor(color),
+    };
     const categories = this.loadFromStorage();
     const list = categories.length > 0 ? categories : DEFAULT_CATEGORIES.map((c) => ({ ...c }));
     list.push(category);
@@ -42,7 +68,7 @@ export class CategoryStore {
     return category;
   }
 
-  update(id: string, fields: { label?: string; color?: string }): void {
+  update(id: string, fields: { label?: string; color?: string; nameColor?: string; titleColor?: string }): void {
     const categories = this.getAll();
     const category = categories.find((c) => c.id === id);
     if (!category) {
@@ -60,6 +86,21 @@ export class CategoryStore {
         throw new Error(`Invalid color format: ${fields.color}`);
       }
       category.color = fields.color;
+      // Recompute text colors when background changes
+      category.nameColor = contrastingTextColor(fields.color);
+      category.titleColor = contrastingTitleColor(fields.color);
+    }
+    if (fields.nameColor !== undefined) {
+      if (!HEX_COLOR_RE.test(fields.nameColor)) {
+        throw new Error(`Invalid color format: ${fields.nameColor}`);
+      }
+      category.nameColor = fields.nameColor;
+    }
+    if (fields.titleColor !== undefined) {
+      if (!HEX_COLOR_RE.test(fields.titleColor)) {
+        throw new Error(`Invalid color format: ${fields.titleColor}`);
+      }
+      category.titleColor = fields.titleColor;
     }
 
     this.saveToStorage(categories);
@@ -78,6 +119,18 @@ export class CategoryStore {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  /** Ensure text colors exist on a category (migration for old data). */
+  private ensureTextColors(cat: ColorCategory): ColorCategory {
+    if (!cat.nameColor || !cat.titleColor) {
+      return {
+        ...cat,
+        nameColor: cat.nameColor ?? contrastingTextColor(cat.color),
+        titleColor: cat.titleColor ?? contrastingTitleColor(cat.color),
+      };
+    }
+    return cat;
   }
 
   private loadFromStorage(): ColorCategory[] {

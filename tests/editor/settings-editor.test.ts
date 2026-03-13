@@ -52,6 +52,8 @@ const DEFAULT_OPTS: ResolvedOptions = {
   cardStroke: '#cccccc',
   cardFill: '#ffffff',
   icContainerFill: '#f0f0f0',
+  nameColor: '#1e293b',
+  titleColor: '#64748b',
   showHeadcount: false,
   headcountBadgeColor: '#9ca3af',
   headcountBadgeTextColor: '#1e293b',
@@ -316,6 +318,52 @@ describe('SettingsEditor', () => {
       )!;
       addBtn.click();
       expect(addSpy).toHaveBeenCalledWith('New Category', '#94a3b8');
+      expect(rerenderCb).toHaveBeenCalled();
+    });
+
+    it('renders name and title color pickers for each category', () => {
+      const catStore = new CategoryStore();
+      new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
+      const categories = catStore.getAll();
+      for (const cat of categories) {
+        const nameInput = container.querySelector<HTMLInputElement>(
+          `input[aria-label="Name color for ${cat.label}"]`,
+        );
+        expect(nameInput).not.toBeNull();
+        expect(nameInput!.type).toBe('color');
+        const titleInput = container.querySelector<HTMLInputElement>(
+          `input[aria-label="Title color for ${cat.label}"]`,
+        );
+        expect(titleInput).not.toBeNull();
+        expect(titleInput!.type).toBe('color');
+      }
+    });
+
+    it('updates category nameColor on name color input change', () => {
+      const catStore = new CategoryStore();
+      const updateSpy = vi.spyOn(catStore, 'update');
+      new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
+      const categories = catStore.getAll();
+      const nameInput = container.querySelector<HTMLInputElement>(
+        `input[aria-label="Name color for ${categories[0].label}"]`,
+      )!;
+      nameInput.value = '#aabbcc';
+      nameInput.dispatchEvent(new Event('input'));
+      expect(updateSpy).toHaveBeenCalledWith(categories[0].id, { nameColor: '#aabbcc' });
+      expect(rerenderCb).toHaveBeenCalled();
+    });
+
+    it('updates category titleColor on title color input change', () => {
+      const catStore = new CategoryStore();
+      const updateSpy = vi.spyOn(catStore, 'update');
+      new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
+      const categories = catStore.getAll();
+      const titleInput = container.querySelector<HTMLInputElement>(
+        `input[aria-label="Title color for ${categories[0].label}"]`,
+      )!;
+      titleInput.value = '#ddeeff';
+      titleInput.dispatchEvent(new Event('input'));
+      expect(updateSpy).toHaveBeenCalledWith(categories[0].id, { titleColor: '#ddeeff' });
       expect(rerenderCb).toHaveBeenCalled();
     });
 

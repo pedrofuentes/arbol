@@ -37,6 +37,8 @@ export interface RendererOptions {
   legendFontSize?: number;
   textPaddingTop?: number;
   textGap?: number;
+  nameColor?: string;
+  titleColor?: string;
   // Link style
   linkColor?: string;
   linkWidth?: number;
@@ -90,6 +92,8 @@ export class ChartRenderer {
       legendFontSize: 12,
       textPaddingTop: 6,
       textGap: 2,
+      nameColor: '#1e293b',
+      titleColor: '#64748b',
       linkColor: '#94a3b8',
       linkWidth: 1.5,
       dottedLineDash: '6,4',
@@ -299,6 +303,8 @@ export class ChartRenderer {
       cardFill,
       cardStroke,
       cardStrokeWidth,
+      nameColor,
+      titleColor,
     } = this.opts;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -339,6 +345,14 @@ export class ChartRenderer {
       .attr('font-weight', 'bold')
       .attr('font-family', 'Calibri, sans-serif')
       .attr('font-size', `${nameFontSize}px`)
+      .attr('fill', (d: CardDatum) => {
+        const catId = d.data?.categoryId;
+        if (catId && self.opts.categories.length > 0) {
+          const cat = self.opts.categories.find((c: ColorCategory) => c.id === catId);
+          if (cat?.nameColor) return cat.nameColor;
+        }
+        return nameColor;
+      })
       .attr('pointer-events', 'none')
       .text((d: CardDatum) => d.data.name);
 
@@ -351,7 +365,14 @@ export class ChartRenderer {
       .attr('text-anchor', 'middle')
       .attr('font-family', 'Calibri, sans-serif')
       .attr('font-size', `${titleFontSize}px`)
-      .attr('fill', '#64748b')
+      .attr('fill', (d: CardDatum) => {
+        const catId = d.data?.categoryId;
+        if (catId && self.opts.categories.length > 0) {
+          const cat = self.opts.categories.find((c: ColorCategory) => c.id === catId);
+          if (cat?.titleColor) return cat.titleColor;
+        }
+        return titleColor;
+      })
       .attr('pointer-events', 'none')
       .text((d: CardDatum) => d.data.title);
   }

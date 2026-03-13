@@ -18,6 +18,8 @@ export interface PersistableSettings {
   titleFontSize: number;
   textPaddingTop: number;
   textGap: number;
+  nameColor: string;
+  titleColor: string;
   linkColor: string;
   linkWidth: number;
   dottedLineDash: string;
@@ -79,6 +81,8 @@ const STRING_KEYS: ReadonlySet<string> = new Set<string>([
   'icContainerFill',
   'headcountBadgeColor',
   'headcountBadgeTextColor',
+  'nameColor',
+  'titleColor',
 ]);
 
 const DASH_PATTERN_KEYS: ReadonlySet<string> = new Set<string>(['dottedLineDash']);

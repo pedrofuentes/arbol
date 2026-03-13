@@ -11,6 +11,8 @@ export interface ColorCategory {
   id: string;
   label: string;
   color: string;
+  nameColor?: string;
+  titleColor?: string;
 }
 
 export type TextNormalization = 'none' | 'titleCase' | 'uppercase' | 'lowercase';

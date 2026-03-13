@@ -1,6 +1,7 @@
 export interface ContextMenuItem {
   label: string;
   icon?: string;
+  swatch?: string;
   disabled?: boolean;
   danger?: boolean;
   action?: () => void;
@@ -88,6 +89,13 @@ export function showContextMenu(options: ContextMenuOptions): void {
       btn.appendChild(iconSpan);
     }
 
+    if (item.swatch) {
+      const swatchSpan = document.createElement('span');
+      swatchSpan.setAttribute('aria-hidden', 'true');
+      swatchSpan.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${item.swatch};border:1px solid var(--border-default);`;
+      btn.appendChild(swatchSpan);
+    }
+
     const labelSpan = document.createElement('span');
     labelSpan.textContent = item.label;
     btn.appendChild(labelSpan);
@@ -157,6 +165,13 @@ export function showContextMenu(options: ContextMenuOptions): void {
             iconSpan.textContent = subItem.icon;
             iconSpan.style.cssText = 'flex-shrink:0;width:16px;text-align:center;';
             subBtn.appendChild(iconSpan);
+          }
+
+          if (subItem.swatch) {
+            const swatchSpan = document.createElement('span');
+            swatchSpan.setAttribute('aria-hidden', 'true');
+            swatchSpan.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${subItem.swatch};border:1px solid var(--border-default);`;
+            subBtn.appendChild(swatchSpan);
           }
 
           const labelSpan = document.createElement('span');

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.0] — 2026-03-13
+
+### Added
+- **Configurable name & title text colors** — new `nameColor` and `titleColor` settings in the Typography section, persisted across sessions and included in all 8 theme presets
+- **Auto-contrast text colors for categories** — when a category's background color is set or changed, name and title text colors are auto-computed using WCAG 2.1 relative luminance for readability
+- **Per-category text color overrides** — each category row in Settings now has Name and Title color pickers, auto-initialized with contrast-safe defaults but manually adjustable
+- **Color swatches in context menu** — category submenu items now display a colored circle swatch for quick visual identification
+- **Contrast utility module** (`src/utils/contrast.ts`) — `relativeLuminance()`, `contrastingTextColor()`, `contrastingTitleColor()` helpers
+- Midnight theme preset now uses light text colors (`#e2e8f0` / `#cbd5e1`) for readability on dark cards
+- PPTX export respects both global and per-category text colors
+
+### Changed
+- Title text color is no longer hardcoded to `#64748b` — it now uses the configurable `titleColor` setting
+- Name text color is no longer inherited black — it now uses the configurable `nameColor` setting
+- `ColorCategory` interface extended with optional `nameColor` and `titleColor` fields (backward-compatible — old data auto-migrated)
+
 ## [1.7.2] — 2026-03-13
 
 ### Changed
