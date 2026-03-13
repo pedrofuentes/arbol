@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.2] — 2026-03-13
+
+### Changed
+- **Timestamped filenames on all exports** — mapping preset exports, settings exports, and PPTX exports now all use `yyyymmddhhmm-` prefix for consistent file naming
+- Extracted shared `generateTimestamp()` utility from PPTX exporter into `src/utils/filename.ts`
+
 ## [1.7.1] — 2026-03-13
 
 ### Security

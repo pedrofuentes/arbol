@@ -48,6 +48,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Native `.pptx` export using pptxgenjs — fully editable shapes and connectors
 - [x] Title font 1pt smaller than name, grey color
 - [x] Timestamped filenames (`yyyymmddhhmm-org-chart.pptx`)
+- [x] Timestamped filenames on all exports (settings, mapping presets)
 - [x] Code-split pptxgenjs for smaller initial bundle
 
 ### Phase 7 — UI/UX Redesign ("Architect's Desk")
@@ -147,7 +148,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Success/error feedback after applying normalization
 
 ### Testing
-- [x] **621 tests across 30 test files** — all passing
+- [x] **816 tests across 35 test files** — all passing
 - [x] TDD approach from day one
 - [x] Unit tests: OrgStore, tree utilities, search, ID generation, version, text normalization
 - [x] Integration tests: renderer output, IC/Advisor stacks, spacing regression
