@@ -1,5 +1,6 @@
 import { OrgStore } from '../store/org-store';
 import { flattenTree } from '../utils/tree';
+import { t } from '../i18n';
 
 let formIdCounter = 0;
 function uniqueId(prefix: string): string {
@@ -54,24 +55,24 @@ export class FormEditor {
 
     // --- Add Person Section ---
     const addHeading = document.createElement('h4');
-    addHeading.textContent = 'Add Person';
+    addHeading.textContent = t('form.add_heading');
     addHeading.style.cssText =
       'margin:0 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
     this.container.appendChild(addHeading);
 
     // Parent dropdown
     const parentId = uniqueId('form-parent');
-    const parentGroup = this.createFormGroup('Parent', parentId);
+    const parentGroup = this.createFormGroup(t('form.parent_label'), parentId);
     this.parentSelect = document.createElement('select');
     this.parentSelect.id = parentId;
     this.parentSelect.dataset.field = 'parent';
-    this.parentSelect.setAttribute('aria-label', 'Parent person');
+    this.parentSelect.setAttribute('aria-label', t('form.parent_aria'));
     parentGroup.appendChild(this.parentSelect);
     this.container.appendChild(parentGroup);
 
     // Name input
     const nameId = uniqueId('form-name');
-    const nameGroup = this.createFormGroup('Name', nameId);
+    const nameGroup = this.createFormGroup(t('form.name_label'), nameId);
     this.nameInput = document.createElement('input');
     this.nameInput.id = nameId;
     this.nameInput.type = 'text';
@@ -83,7 +84,7 @@ export class FormEditor {
 
     // Title input
     const titleId = uniqueId('form-title');
-    const titleGroup = this.createFormGroup('Title', titleId);
+    const titleGroup = this.createFormGroup(t('form.title_label'), titleId);
     this.titleInput = document.createElement('input');
     this.titleInput.id = titleId;
     this.titleInput.type = 'text';
@@ -97,7 +98,7 @@ export class FormEditor {
     const addBtn = document.createElement('button');
     addBtn.className = 'btn btn-primary';
     addBtn.dataset.action = 'add';
-    addBtn.textContent = 'Add';
+    addBtn.textContent = t('form.add_button');
     addBtn.addEventListener('click', () => this.handleAdd());
     this.container.appendChild(addBtn);
 
@@ -153,14 +154,14 @@ export class FormEditor {
     const isRoot = node.id === tree.id;
 
     const heading = document.createElement('h4');
-    heading.textContent = 'Edit Person';
+    heading.textContent = t('form.edit_heading');
     heading.style.cssText =
       'margin:16px 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);';
     this.editSection.appendChild(heading);
 
     // Edit Name
     const editNameId = uniqueId('form-edit-name');
-    const nameGroup = this.createFormGroup('Name', editNameId);
+    const nameGroup = this.createFormGroup(t('form.name_label'), editNameId);
     const editNameInput = document.createElement('input');
     editNameInput.id = editNameId;
     editNameInput.type = 'text';
@@ -172,7 +173,7 @@ export class FormEditor {
 
     // Edit Title
     const editTitleId = uniqueId('form-edit-title');
-    const titleGroup = this.createFormGroup('Title', editTitleId);
+    const titleGroup = this.createFormGroup(t('form.title_label'), editTitleId);
     const editTitleInput = document.createElement('input');
     editTitleInput.id = editTitleId;
     editTitleInput.type = 'text';
@@ -189,7 +190,7 @@ export class FormEditor {
     const saveBtn = document.createElement('button');
     saveBtn.className = 'btn btn-primary';
     saveBtn.dataset.action = 'save';
-    saveBtn.textContent = 'Save';
+    saveBtn.textContent = t('form.save_button');
     saveBtn.addEventListener('click', () => {
       this.store.updateNode(this.selectedNodeId!, {
         name: editNameInput.value,
@@ -202,8 +203,8 @@ export class FormEditor {
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'btn btn-danger';
       deleteBtn.dataset.action = 'delete';
-      deleteBtn.setAttribute('aria-label', 'Delete selected person');
-      deleteBtn.textContent = 'Delete';
+      deleteBtn.setAttribute('aria-label', t('form.delete_aria'));
+      deleteBtn.textContent = t('form.delete_button');
       deleteBtn.addEventListener('click', () => {
         this.store.removeNode(this.selectedNodeId!);
         this.selectNode(null);
@@ -214,7 +215,7 @@ export class FormEditor {
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-secondary';
     cancelBtn.dataset.action = 'deselect';
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = t('form.cancel_button');
     cancelBtn.addEventListener('click', () => {
       this.selectNode(null);
     });

@@ -1,4 +1,5 @@
 import { trapFocus } from './dialog-utils';
+import { t } from '../i18n';
 
 export interface InlineEditorOptions {
   rect: DOMRect;
@@ -37,7 +38,7 @@ export function showInlineEditor(options: InlineEditorOptions): void {
 
   const container = document.createElement('div');
   container.setAttribute('role', 'dialog');
-  container.setAttribute('aria-label', 'Edit person');
+  container.setAttribute('aria-label', t('inline_editor.aria'));
   container.style.position = 'fixed';
   container.style.left = `${rect.left}px`;
   container.style.top = `${rect.top}px`;
@@ -56,7 +57,7 @@ export function showInlineEditor(options: InlineEditorOptions): void {
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
   nameInput.value = name;
-  nameInput.setAttribute('aria-label', 'Name');
+  nameInput.setAttribute('aria-label', t('inline_editor.name_aria'));
   nameInput.style.border = 'none';
   nameInput.style.background = 'transparent';
   nameInput.style.outline = 'none';
@@ -70,7 +71,7 @@ export function showInlineEditor(options: InlineEditorOptions): void {
   const titleInput = document.createElement('input');
   titleInput.type = 'text';
   titleInput.value = title;
-  titleInput.setAttribute('aria-label', 'Title');
+  titleInput.setAttribute('aria-label', t('inline_editor.title_aria'));
   titleInput.style.border = 'none';
   titleInput.style.background = 'transparent';
   titleInput.style.outline = 'none';
@@ -88,13 +89,13 @@ export function showInlineEditor(options: InlineEditorOptions): void {
 
   const saveBtn = document.createElement('button');
   saveBtn.className = 'btn btn-primary';
-  saveBtn.textContent = 'Save';
+  saveBtn.textContent = t('inline_editor.save');
   saveBtn.style.padding = 'var(--space-1) var(--space-2)';
   saveBtn.style.fontSize = '11px';
 
   const cancelBtn = document.createElement('button');
   cancelBtn.className = 'btn btn-secondary';
-  cancelBtn.textContent = 'Cancel';
+  cancelBtn.textContent = t('inline_editor.cancel');
   cancelBtn.style.padding = 'var(--space-1) var(--space-2)';
   cancelBtn.style.fontSize = '11px';
 
@@ -122,7 +123,7 @@ export function showInlineEditor(options: InlineEditorOptions): void {
     if (dismissed) return;
     const trimmedName = nameInput.value.trim();
     if (!trimmedName) {
-      errorMsg.textContent = 'Name is required';
+      errorMsg.textContent = t('inline_editor.name_required');
       nameInput.focus();
       return;
     }

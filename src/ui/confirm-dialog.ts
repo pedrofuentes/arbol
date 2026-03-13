@@ -1,4 +1,5 @@
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
+import { t } from '../i18n';
 
 export interface ConfirmDialogOptions {
   title: string;
@@ -10,6 +11,7 @@ export interface ConfirmDialogOptions {
 
 export function showConfirmDialog(options: ConfirmDialogOptions): Promise<boolean> {
   return new Promise((resolve) => {
+    const previouslyFocused = document.activeElement;
     const overlay = createOverlay();
 
     const dialogTitleId = 'confirm-dialog-title';
@@ -40,12 +42,12 @@ export function showConfirmDialog(options: ConfirmDialogOptions): Promise<boolea
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-secondary';
-    cancelBtn.textContent = options.cancelLabel ?? 'Cancel';
+    cancelBtn.textContent = options.cancelLabel ?? t('dialog.cancel');
     btnGroup.appendChild(cancelBtn);
 
     const confirmBtn = document.createElement('button');
     confirmBtn.className = options.danger ? 'btn btn-danger' : 'btn btn-primary';
-    confirmBtn.textContent = options.confirmLabel ?? 'Confirm';
+    confirmBtn.textContent = options.confirmLabel ?? t('dialog.confirm');
     btnGroup.appendChild(confirmBtn);
 
     dialog.appendChild(btnGroup);
@@ -58,6 +60,9 @@ export function showConfirmDialog(options: ConfirmDialogOptions): Promise<boolea
       document.removeEventListener('keydown', escHandler);
       if (document.body.contains(overlay)) {
         document.body.removeChild(overlay);
+      }
+      if (previouslyFocused && previouslyFocused instanceof HTMLElement) {
+        previouslyFocused.focus();
       }
     };
 
@@ -89,6 +94,10 @@ export function showConfirmDialog(options: ConfirmDialogOptions): Promise<boolea
     document.addEventListener('keydown', escHandler);
 
     document.body.appendChild(overlay);
-    confirmBtn.focus();
+    if (options.danger) {
+      cancelBtn.focus();
+    } else {
+      confirmBtn.focus();
+    }
   });
 }

@@ -1,4 +1,5 @@
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
+import { t } from '../i18n';
 
 export interface InputDialogOptions {
   title: string;
@@ -68,12 +69,12 @@ export function showInputDialog(options: InputDialogOptions): Promise<string | n
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-secondary';
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = t('dialog.cancel');
     btnGroup.appendChild(cancelBtn);
 
     const confirmBtn = document.createElement('button');
     confirmBtn.className = 'btn btn-primary';
-    confirmBtn.textContent = options.confirmLabel ?? 'OK';
+    confirmBtn.textContent = options.confirmLabel ?? t('dialog.ok');
     btnGroup.appendChild(confirmBtn);
 
     dialog.appendChild(btnGroup);

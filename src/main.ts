@@ -1,3 +1,5 @@
+import { setLocale, t } from './i18n';
+import en from './i18n/en';
 import { OrgStore } from './store/org-store';
 import { ChartRenderer } from './renderer/chart-renderer';
 import { TabSwitcher } from './editor/tab-switcher';
@@ -44,6 +46,8 @@ async function main(): Promise<void> {
   const sidebar = document.getElementById('sidebar')!;
   const chartArea = document.getElementById('chart-area')!;
 
+  setLocale('en', en);
+
   // Show loading state during IndexedDB initialization
   const appLoadingEl = document.createElement('div');
   appLoadingEl.className = 'app-loading';
@@ -54,7 +58,7 @@ async function main(): Promise<void> {
   loadingSpinner.setAttribute('aria-hidden', 'true');
   appLoadingEl.appendChild(loadingSpinner);
   const loadingText = document.createElement('span');
-  loadingText.textContent = 'Loading…';
+  loadingText.textContent = t('app.loading');
   appLoadingEl.appendChild(loadingText);
   chartArea.appendChild(appLoadingEl);
 
@@ -264,7 +268,7 @@ async function main(): Promise<void> {
 
     if (target.type === 'working') {
       newTree = store.getTree();
-      newLabel = 'Working tree';
+      newLabel = t('comparison.working_tree');
     } else {
       newTree = target.version.tree;
       newLabel = target.version.name;
@@ -322,7 +326,7 @@ async function main(): Promise<void> {
 
   // Initialize focus mode controller now that rerender is defined
   focusMode = new FocusModeController(store, renderer, rerender);
-  focusMode.onExit(() => announce('Showing full org'));
+  focusMode.onExit(() => announce(t('focus.exited')));
 
   // Theme toggle
   const themeManager = new ThemeManager();
@@ -330,24 +334,27 @@ async function main(): Promise<void> {
 
   const themeBtn = document.createElement('button');
   themeBtn.className = 'icon-btn';
-  themeBtn.setAttribute('data-tooltip', 'Toggle theme');
-  themeBtn.setAttribute('aria-label', 'Toggle dark/light theme');
-  themeBtn.textContent = themeManager.getTheme() === 'dark' ? '☀️' : '🌙';
+  themeBtn.setAttribute('data-tooltip', t('toolbar.toggle_theme'));
+  themeBtn.setAttribute('aria-label', t('toolbar.toggle_theme_aria'));
+  const themeIcon = document.createElement('span');
+  themeIcon.setAttribute('aria-hidden', 'true');
+  themeIcon.textContent = themeManager.getTheme() === 'dark' ? t('toolbar.theme_icon_dark') : t('toolbar.theme_icon_light');
+  themeBtn.appendChild(themeIcon);
   themeBtn.addEventListener('click', () => {
     themeManager.toggle();
   });
   themeManager.onChange((theme: Theme) => {
-    themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
-    announce(`Switched to ${theme} theme`);
+    themeIcon.textContent = theme === 'dark' ? t('toolbar.theme_icon_dark') : t('toolbar.theme_icon_light');
+    announce(t('toolbar.theme_switched', { theme }));
   });
   headerRight.appendChild(themeBtn);
 
   // Help button
   const helpBtn = document.createElement('button');
   helpBtn.className = 'icon-btn';
-  helpBtn.setAttribute('data-tooltip', 'Help & shortcuts');
-  helpBtn.setAttribute('aria-label', 'Show help');
-  helpBtn.textContent = '?';
+  helpBtn.setAttribute('data-tooltip', t('toolbar.help_tooltip'));
+  helpBtn.setAttribute('aria-label', t('toolbar.help_aria'));
+  helpBtn.textContent = t('toolbar.help_text');
   helpBtn.style.fontWeight = '700';
   helpBtn.addEventListener('click', () => showHelpDialog());
   headerRight.appendChild(helpBtn);
@@ -355,25 +362,31 @@ async function main(): Promise<void> {
   // Undo/Redo buttons (inserted before theme button)
   const undoBtn = document.createElement('button');
   undoBtn.className = 'icon-btn';
-  undoBtn.setAttribute('data-tooltip', 'Undo (Ctrl+Z)');
-  undoBtn.setAttribute('aria-label', 'Undo');
+  undoBtn.setAttribute('data-tooltip', t('toolbar.undo_tooltip'));
+  undoBtn.setAttribute('aria-label', t('toolbar.undo_aria'));
   undoBtn.setAttribute('aria-keyshortcuts', 'Control+Z');
-  undoBtn.textContent = '↩';
+  const undoIcon = document.createElement('span');
+  undoIcon.setAttribute('aria-hidden', 'true');
+  undoIcon.textContent = t('toolbar.undo_icon');
+  undoBtn.appendChild(undoIcon);
   undoBtn.disabled = true;
   undoBtn.addEventListener('click', () => {
-    if (store.undo()) announce('Undo');
+    if (store.undo()) announce(t('announce.undo'));
   });
   headerRight.insertBefore(undoBtn, themeBtn);
 
-  const redoBtn = document.createElement('button');
+  const redoBtn= document.createElement('button');
   redoBtn.className = 'icon-btn';
-  redoBtn.setAttribute('data-tooltip', 'Redo (Ctrl+Shift+Z)');
-  redoBtn.setAttribute('aria-label', 'Redo');
+  redoBtn.setAttribute('data-tooltip', t('toolbar.redo_tooltip'));
+  redoBtn.setAttribute('aria-label', t('toolbar.redo_aria'));
   redoBtn.setAttribute('aria-keyshortcuts', 'Control+Shift+Z');
-  redoBtn.textContent = '↪';
+  const redoIcon = document.createElement('span');
+  redoIcon.setAttribute('aria-hidden', 'true');
+  redoIcon.textContent = t('toolbar.redo_icon');
+  redoBtn.appendChild(redoIcon);
   redoBtn.disabled = true;
   redoBtn.addEventListener('click', () => {
-    if (store.redo()) announce('Redo');
+    if (store.redo()) announce(t('announce.redo'));
   });
   headerRight.insertBefore(redoBtn, themeBtn);
 
@@ -406,14 +419,14 @@ async function main(): Promise<void> {
     },
     onSaveVersion: async () => {
       const name = await showInputDialog({
-        title: 'Save Version',
-        label: 'Version name',
-        placeholder: 'e.g. Q1 2024 Plan',
+        title: t('dialog.save_version.title'),
+        label: t('dialog.save_version.label'),
+        placeholder: t('dialog.save_version.placeholder'),
         maxLength: 100,
       });
       if (name?.trim()) {
         chartStore.saveVersion(name.trim(), store.getTree());
-        announce('Chart saved');
+        announce(t('announce.chart_saved'));
       }
     },
   });
@@ -422,6 +435,35 @@ async function main(): Promise<void> {
   store.onChange(() => {
     chartNameHeader.setDirty(chartStore.isDirty(store.getTree()));
   });
+
+  // Mobile sidebar toggle (hamburger menu)
+  const menuToggle = document.createElement('button');
+  menuToggle.className = 'menu-toggle icon-btn';
+  menuToggle.setAttribute('aria-label', t('toolbar.toggle_sidebar'));
+  menuToggle.setAttribute('aria-expanded', 'false');
+  const menuIcon = document.createElement('span');
+  menuIcon.setAttribute('aria-hidden', 'true');
+  menuIcon.textContent = t('toolbar.hamburger_icon');
+  menuToggle.appendChild(menuIcon);
+  headerLeft.insertBefore(menuToggle, headerLeft.firstChild);
+
+  const sidebarBackdrop = document.createElement('div');
+  sidebarBackdrop.className = 'sidebar-backdrop';
+  document.body.appendChild(sidebarBackdrop);
+
+  const closeSidebar = () => {
+    sidebar.classList.remove('sidebar-open');
+    menuToggle.setAttribute('aria-expanded', 'false');
+    sidebarBackdrop.classList.remove('visible');
+  };
+
+  menuToggle.addEventListener('click', () => {
+    const isOpen = sidebar.classList.toggle('sidebar-open');
+    menuToggle.setAttribute('aria-expanded', String(isOpen));
+    sidebarBackdrop.classList.toggle('visible', isOpen);
+  });
+
+  sidebarBackdrop.addEventListener('click', closeSidebar);
 
   // Search UI
   const headerCenter = document.getElementById('header-center')!;
@@ -433,22 +475,22 @@ async function main(): Promise<void> {
   searchInput.className = 'search-input';
   searchInput.type = 'text';
   searchInput.setAttribute('role', 'searchbox');
-  searchInput.setAttribute('aria-label', 'Search people by name or title');
+  searchInput.setAttribute('aria-label', t('search.aria'));
   searchInput.setAttribute('aria-keyshortcuts', 'Control+F');
-  searchInput.placeholder = 'Search people... (Ctrl+F)';
+  searchInput.placeholder = t('search.placeholder');
   searchWrapper.appendChild(searchInput);
 
   const noResultsHint = document.createElement('span');
   noResultsHint.className = 'search-no-results';
   noResultsHint.setAttribute('data-testid', 'search-no-results');
-  noResultsHint.textContent = 'No results found';
+  noResultsHint.textContent = t('search.no_results');
   noResultsHint.style.display = 'none';
   searchWrapper.appendChild(noResultsHint);
 
   headerCenter.appendChild(searchWrapper);
 
   const search = new SearchController(searchInput, store, renderer, 200, (count) => {
-    announce(count > 0 ? `${count} results found` : 'No results found');
+    announce(count > 0 ? t('search.results_found', { count }) : t('search.no_results'));
     noResultsHint.style.display = count === 0 ? '' : 'none';
   });
 
@@ -460,10 +502,10 @@ async function main(): Promise<void> {
 
   // Sidebar tabs
   const tabSwitcher = new TabSwitcher(sidebar, [
-    { id: 'charts', label: 'Charts' },
-    { id: 'people', label: 'People' },
-    { id: 'import', label: 'Import' },
-    { id: 'settings', label: 'Settings' },
+    { id: 'charts', label: t('tabs.charts') },
+    { id: 'people', label: t('tabs.people') },
+    { id: 'import', label: t('tabs.import') },
+    { id: 'settings', label: t('tabs.settings') },
   ]);
 
   const peopleContainer = tabSwitcher.getContentContainer('people')!;
@@ -525,9 +567,9 @@ async function main(): Promise<void> {
 
   const jsonArrow = document.createElement('span');
   jsonArrow.style.cssText = 'font-size:8px;transition:transform 150ms ease;display:inline-block;';
-  jsonArrow.textContent = '▶';
+  jsonArrow.textContent = t('json_editor.expand_icon');
   jsonSummary.appendChild(jsonArrow);
-  jsonSummary.appendChild(document.createTextNode('Edit JSON'));
+  jsonSummary.appendChild(document.createTextNode(t('json_editor.section_title')));
   jsonDetails.appendChild(jsonSummary);
 
   jsonDetails.addEventListener('toggle', () => {
@@ -548,7 +590,7 @@ async function main(): Promise<void> {
 
   const sampleBtn = document.createElement('button');
   sampleBtn.className = 'btn btn-secondary';
-  sampleBtn.textContent = '🌳 Load Sample Org Chart';
+  sampleBtn.textContent = t('import.sample_button');
   sampleBtn.style.cssText = 'width:100%;padding:8px;font-size:12px;';
   sampleBtn.addEventListener('click', () => {
     store.fromJSON(JSON.stringify(SAMPLE_ORG));
@@ -564,9 +606,9 @@ async function main(): Promise<void> {
   const handleBeforeSwitch = async (): Promise<boolean> => {
     if (!chartStore.isDirty(store.getTree())) return true;
     const confirmed = await showConfirmDialog({
-      title: 'Unsaved Changes',
-      message: 'You have unsaved changes. Would you like to save a version before switching?',
-      confirmLabel: 'Switch without saving',
+      title: t('dialog.unsaved.title'),
+      message: t('dialog.unsaved.message'),
+      confirmLabel: t('dialog.unsaved.confirm'),
       danger: true,
     });
     return confirmed;
@@ -596,7 +638,7 @@ async function main(): Promise<void> {
       renderer.getZoomManager()?.fitToContent();
       formEditor.refresh();
       jsonEditor.refresh();
-      announce(`Switched to ${chart.name}`);
+      announce(t('announce.chart_switched', { name: chart.name }));
     },
     onVersionRestore: (tree) => {
       dismissVersionViewer();
@@ -671,13 +713,13 @@ async function main(): Promise<void> {
       selection.toggle(nodeId);
       syncSelectionToRenderer();
       updateSelectionIndicator();
-      announce(`${selection.count} people selected`);
+      announce(t('announce.multi_selected', { count: selection.count }));
     } else {
       // Regular click: clear multi-selection, highlight card only (no sidebar form)
       clearMultiSelection();
       renderer.setSelectedNode(nodeId);
       const node = findNodeById(store.getTree(), nodeId);
-      if (node) announce(`Selected ${node.name}, ${node.title}`);
+      if (node) announce(t('announce.selected', { name: node.name, title: node.title }));
     }
   });
 
@@ -705,8 +747,8 @@ async function main(): Promise<void> {
       y: event.clientY,
       items: [
         {
-          label: 'Edit',
-          icon: '✏️',
+          label: t('menu.edit'),
+          icon: t('menu.edit_icon'),
           action: () => {
             const rect = renderer.getNodeScreenRect(nodeId);
             if (!rect) return;
@@ -722,8 +764,8 @@ async function main(): Promise<void> {
           },
         },
         {
-          label: 'Add',
-          icon: '➕',
+          label: t('menu.add'),
+          icon: t('menu.add_icon'),
           action: () => {
             const rect = renderer.getNodeScreenRect(nodeId);
             if (!rect) return;
@@ -738,21 +780,21 @@ async function main(): Promise<void> {
           },
         },
         {
-          label: 'Focus on sub-org',
-          icon: '🔎',
+          label: t('menu.focus'),
+          icon: t('menu.focus_icon'),
           disabled: nodeIsLeaf || focusMode.focusedId === nodeId,
           action: () => {
             focusMode.enter(nodeId);
-            announce(`Focused on ${node.name} org`);
+            announce(t('focus.entered', { name: node.name }));
           },
         },
         {
-          label: 'Set Category',
-          icon: '🏷️',
+          label: t('menu.category'),
+          icon: t('menu.category_icon'),
           submenu: [
             {
-              label: 'None (default)',
-              icon: node.categoryId ? ' ' : '✓',
+              label: t('menu.category_none'),
+              icon: node.categoryId ? ' ' : t('menu.category_check'),
               action: () => {
                 store.setNodeCategory(nodeId, null);
               },
@@ -760,7 +802,7 @@ async function main(): Promise<void> {
             ...categoryStore.getAll().map(
               (cat): ContextMenuItem => ({
                 label: cat.label,
-                icon: node.categoryId === cat.id ? '✓' : ' ',
+                icon: node.categoryId === cat.id ? t('menu.category_check') : ' ',
                 swatch: cat.color,
                 action: () => {
                   store.setNodeCategory(nodeId, cat.id);
@@ -770,16 +812,16 @@ async function main(): Promise<void> {
           ],
         },
         {
-          label: node.dottedLine ? 'Remove dotted line' : 'Set as dotted line',
-          icon: '┈',
+          label: node.dottedLine ? t('menu.dotted_line_remove') : t('menu.dotted_line_set'),
+          icon: t('menu.dotted_line_icon'),
           disabled: isRoot || nodeIsIC,
           action: () => {
             store.setDottedLine(nodeId, !node.dottedLine);
           },
         },
         {
-          label: 'Move',
-          icon: '↗️',
+          label: t('menu.move'),
+          icon: t('menu.move_icon'),
           disabled: isRoot,
           action: async () => {
             try {
@@ -791,37 +833,37 @@ async function main(): Promise<void> {
                 .map((n) => ({ id: n.id, name: n.name, title: n.title }));
 
               const result = await showManagerPicker({
-                title: `Move "${node.name}" to…`,
+                title: t('picker.move_to', { name: node.name }),
                 managers,
                 showDottedLineOption: true,
               });
               if (result) {
                 const targetNode = findNodeById(tree, result.managerId);
                 store.moveNode(nodeId, result.managerId, result.dottedLine);
-                announce(`${node.name} moved to ${targetNode?.name ?? 'new manager'}`);
+                announce(t('announce.moved', { name: node.name, target: targetNode?.name ?? t('announce.move_fallback_target') }));
               }
             } catch (e) {
-              showToast(e instanceof Error ? e.message : 'Operation failed', 'error');
+              showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
             }
           },
         },
         {
-          label: 'Remove',
-          icon: '🗑️',
+          label: t('menu.remove'),
+          icon: t('menu.remove_icon'),
           danger: true,
           disabled: isRoot,
           action: async () => {
             try {
               if (nodeIsLeaf) {
                 const confirmed = await showConfirmDialog({
-                  title: 'Remove Person',
-                  message: `Remove "${node.name}"? You can undo this with Ctrl+Z.`,
-                  confirmLabel: 'Remove',
+                  title: t('dialog.remove_person.title'),
+                  message: t('dialog.remove_person.message', { name: node.name }),
+                  confirmLabel: t('dialog.remove_person.confirm'),
                   danger: true,
                 });
                 if (confirmed) {
                   store.removeNode(nodeId);
-                  announce(`${node.name} removed`);
+                  announce(t('announce.removed', { name: node.name }));
                 }
               } else {
                 const allNodes = flattenTree(tree);
@@ -832,16 +874,16 @@ async function main(): Promise<void> {
                   .map((n) => ({ id: n.id, name: n.name, title: n.title }));
 
                 const result = await showManagerPicker({
-                  title: `Reassign "${node.name}"'s reports to…`,
+                  title: t('picker.reassign_to', { name: node.name }),
                   managers,
                 });
                 if (result) {
                   store.removeNodeWithReassign(nodeId, result.managerId);
-                  announce(`${node.name} removed`);
+                  announce(t('announce.removed', { name: node.name }));
                 }
               }
             } catch (e) {
-              showToast(e instanceof Error ? e.message : 'Operation failed', 'error');
+              showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
             }
           },
         },
@@ -859,11 +901,11 @@ async function main(): Promise<void> {
       y: event.clientY,
       items: [
         {
-          label: `Set Category (${count} people)`,
+          label: t('menu.multi_category', { count }),
           icon: '🏷️',
           submenu: [
             {
-              label: 'None (default)',
+              label: t('menu.category_none'),
               action: () => {
                 store.bulkSetCategory(selectedArray, null);
               },
@@ -880,7 +922,7 @@ async function main(): Promise<void> {
           ],
         },
         {
-          label: `Move all (${count} people)`,
+          label: t('menu.multi_move', { count }),
           icon: '↗️',
           action: async () => {
             try {
@@ -897,21 +939,21 @@ async function main(): Promise<void> {
                 .map((n) => ({ id: n.id, name: n.name, title: n.title }));
 
               const result = await showManagerPicker({
-                title: `Move ${count} people to…`,
+                title: t('picker.multi_move_to', { count }),
                 managers,
               });
               if (result) {
                 store.bulkMoveNodes(selectedArray, result.managerId);
                 const targetNode = findNodeById(store.getTree(), result.managerId);
-                announce(`${count} people moved to ${targetNode?.name ?? 'new manager'}`);
+                announce(t('announce.multi_moved', { count, target: targetNode?.name ?? t('announce.move_fallback_target') }));
               }
             } catch (e) {
-              showToast(e instanceof Error ? e.message : 'Operation failed', 'error');
+              showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
             }
           },
         },
         {
-          label: `Remove all (${count} people)`,
+          label: t('menu.multi_remove', { count }),
           icon: '🗑️',
           danger: true,
           action: async () => {
@@ -936,7 +978,7 @@ async function main(): Promise<void> {
                   .map((n) => ({ id: n.id, name: n.name, title: n.title }));
 
                 const result = await showManagerPicker({
-                  title: `Reassign children of selected managers to…`,
+                  title: t('picker.reassign_managers'),
                   managers,
                 });
                 if (result) {
@@ -949,23 +991,23 @@ async function main(): Promise<void> {
                       store.removeNode(id);
                     }
                   }
-                  announce(`${count} people removed`);
+                  announce(t('announce.multi_removed', { count }));
                 }
               } else {
                 // All leaves — simple confirm and bulk remove
                 const confirmed = await showConfirmDialog({
-                  title: 'Remove Selected',
-                  message: `Remove ${count} people? You can use Ctrl+Z to undo.`,
-                  confirmLabel: 'Remove All',
+                  title: t('dialog.remove_selected.title'),
+                  message: t('dialog.remove_selected.message', { count }),
+                  confirmLabel: t('dialog.remove_selected.confirm'),
                   danger: true,
                 });
                 if (confirmed) {
                   store.bulkRemoveNodes(selectedArray);
-                  announce(`${count} people removed`);
+                  announce(t('announce.multi_removed', { count }));
                 }
               }
             } catch (e) {
-              showToast(e instanceof Error ? e.message : 'Operation failed', 'error');
+              showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
             }
           },
         },
@@ -1001,7 +1043,7 @@ async function main(): Promise<void> {
   versionLabel.id = 'footer-version';
   versionLabel.style.cssText =
     'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
-  versionLabel.textContent = `v${APP_VERSION}`;
+  versionLabel.textContent = t('footer.version', { version: APP_VERSION });
   footerLeft.appendChild(versionLabel);
 
   const versionSeparator = document.createElement('span');
@@ -1022,7 +1064,7 @@ async function main(): Promise<void> {
   saveIndicator.style.cssText =
     'font-size:10px;color:var(--accent);font-family:var(--font-sans);font-weight:600;' +
     'opacity:0;transition:opacity 200ms ease;';
-  saveIndicator.textContent = '✓ Saved';
+  saveIndicator.textContent = t('footer.saved');
   footerLeft.appendChild(saveIndicator);
 
   let saveFlashTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1045,10 +1087,10 @@ async function main(): Promise<void> {
 
     const activeChartName = chartNameHeader.getName();
     const prefix = activeChartName ? `${activeChartName} · ` : '';
-    const parts = [`${prefix}${total} people`, `${managerCount} managers`, `${icCount} ICs`];
+    const parts = [`${prefix}${t('footer.people', { count: total })}`, t('footer.managers', { count: managerCount }), t('footer.ics', { count: icCount })];
     const sortedLevels = Array.from(levels.entries()).sort((a, b) => a[0] - b[0]);
     for (const [depth, count] of sortedLevels) {
-      parts.push(`${count} M${depth}`);
+      parts.push(t('footer.manager_level', { count, depth }));
     }
     statusText.textContent = parts.join(' · ');
   };
@@ -1069,7 +1111,7 @@ async function main(): Promise<void> {
   githubLink.href = 'https://github.com/pedrofuentes/arbol';
   githubLink.target = '_blank';
   githubLink.rel = 'noopener noreferrer';
-  githubLink.textContent = '✦ Built with Arbol';
+  githubLink.textContent = t('footer.built_with');
   footerCenter.appendChild(githubLink);
 
   const centerSeparator = document.createElement('span');
@@ -1081,7 +1123,7 @@ async function main(): Promise<void> {
   issuesLink.href = 'https://github.com/pedrofuentes/arbol/issues';
   issuesLink.target = '_blank';
   issuesLink.rel = 'noopener noreferrer';
-  issuesLink.textContent = 'Report bugs & request features';
+  issuesLink.textContent = t('footer.report_bugs');
   footerCenter.appendChild(issuesLink);
 
   footer.appendChild(footerCenter);
@@ -1089,7 +1131,7 @@ async function main(): Promise<void> {
   // Update selection indicator when multi-select changes
   updateSelectionIndicator = () => {
     if (selection.hasSelection) {
-      selectionIndicator.textContent = `${selection.count} selected`;
+      selectionIndicator.textContent = t('footer.selected', { count: selection.count });
       selectionIndicator.style.display = '';
       // Hide links when selection is active
       githubLink.style.display = 'none';
@@ -1128,10 +1170,15 @@ async function main(): Promise<void> {
   const exportBtn = document.createElement('button');
   exportBtn.className = 'footer-btn';
   exportBtn.dataset.action = 'export-pptx';
-  exportBtn.textContent = '📊 Export PPTX';
-  exportBtn.setAttribute('aria-label', 'Export to PowerPoint');
+  const exportIconSpan = document.createElement('span');
+  exportIconSpan.setAttribute('aria-hidden', 'true');
+  exportIconSpan.textContent = t('footer.export_icon');
+  exportBtn.appendChild(exportIconSpan);
+  const exportLabel = document.createTextNode(t('footer.export_label'));
+  exportBtn.appendChild(exportLabel);
+  exportBtn.setAttribute('aria-label', t('footer.export_aria'));
   exportBtn.setAttribute('aria-keyshortcuts', 'Control+E');
-  exportBtn.setAttribute('data-tooltip', 'Export to PowerPoint (Ctrl+E)');
+  exportBtn.setAttribute('data-tooltip', t('footer.export_tooltip'));
   footerRight.appendChild(exportBtn);
 
   const exportCurrentChart = async () => {
@@ -1145,19 +1192,16 @@ async function main(): Promise<void> {
     const chartH = layout.boundingBox.height * PX_TO_IN + 1;
     if (chartW > MAX_SLIDE || chartH > MAX_SLIDE) {
       const confirmed = await showConfirmDialog({
-        title: 'Large Org Chart',
-        message:
-          'This org chart is too large to fit at full size on a PowerPoint slide (max 56″). ' +
-          'It will be scaled down and may be hard to read.\n\n' +
-          'Tip: Right-click a manager and choose "Focus on sub-org" to export a smaller section instead.',
-        confirmLabel: 'Export anyway',
+        title: t('dialog.large_export.title'),
+        message: t('dialog.large_export.message'),
+        confirmLabel: t('dialog.large_export.confirm'),
         danger: false,
       });
       if (!confirmed) return;
     }
 
-    const originalText = exportBtn.textContent;
-    exportBtn.textContent = '⏳ Exporting…';
+    exportIconSpan.textContent = t('footer.exporting_icon');
+    exportLabel.textContent = t('footer.exporting_label');
     exportBtn.classList.add('btn-loading');
     exportBtn.disabled = true;
 
@@ -1191,11 +1235,12 @@ async function main(): Promise<void> {
         cardBorderRadius: rendererOpts.cardBorderRadius as number,
         fontFamily: rendererOpts.fontFamily as string,
       });
-      showToast('Exported to PowerPoint', 'success');
+      showToast(t('footer.exported'), 'success');
     } catch (e) {
-      showToast(`Export failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
+      showToast(t('footer.export_failed', { error: e instanceof Error ? e.message : String(e) }), 'error');
     } finally {
-      exportBtn.textContent = originalText;
+      exportIconSpan.textContent = t('footer.export_icon');
+      exportLabel.textContent = t('footer.export_label');
       exportBtn.classList.remove('btn-loading');
       exportBtn.disabled = false;
     }
@@ -1206,9 +1251,13 @@ async function main(): Promise<void> {
   const fitBtn = document.createElement('button');
   fitBtn.className = 'footer-btn';
   fitBtn.dataset.action = 'fit';
-  fitBtn.textContent = '⊞ Fit';
-  fitBtn.setAttribute('aria-label', 'Fit chart to screen');
-  fitBtn.setAttribute('data-tooltip', 'Fit chart to screen');
+  const fitIcon = document.createElement('span');
+  fitIcon.setAttribute('aria-hidden', 'true');
+  fitIcon.textContent = t('footer.fit_icon');
+  fitBtn.appendChild(fitIcon);
+  fitBtn.appendChild(document.createTextNode(t('footer.fit_label')));
+  fitBtn.setAttribute('aria-label', t('footer.fit_aria'));
+  fitBtn.setAttribute('data-tooltip', t('footer.fit_tooltip'));
   footerRight.appendChild(fitBtn);
 
   fitBtn.addEventListener('click', () => {
@@ -1218,9 +1267,13 @@ async function main(): Promise<void> {
   const resetZoomBtn = document.createElement('button');
   resetZoomBtn.className = 'footer-btn';
   resetZoomBtn.dataset.action = 'reset-zoom';
-  resetZoomBtn.textContent = '⟲ Reset';
-  resetZoomBtn.setAttribute('aria-label', 'Reset zoom');
-  resetZoomBtn.setAttribute('data-tooltip', 'Reset zoom');
+  const resetIcon = document.createElement('span');
+  resetIcon.setAttribute('aria-hidden', 'true');
+  resetIcon.textContent = t('footer.reset_icon');
+  resetZoomBtn.appendChild(resetIcon);
+  resetZoomBtn.appendChild(document.createTextNode(t('footer.reset_label')));
+  resetZoomBtn.setAttribute('aria-label', t('footer.reset_aria'));
+  resetZoomBtn.setAttribute('data-tooltip', t('footer.reset_tooltip'));
   footerRight.appendChild(resetZoomBtn);
 
   resetZoomBtn.addEventListener('click', () => {
@@ -1239,30 +1292,30 @@ async function main(): Promise<void> {
   shortcuts.register({
     key: 'z',
     ctrl: true,
-    handler: () => { if (store.undo()) announce('Undo'); },
-    description: 'Undo',
+    handler: () => { if (store.undo()) announce(t('announce.undo')); },
+    description: t('shortcut.undo'),
   });
 
   shortcuts.register({
     key: 'z',
     ctrl: true,
     shift: true,
-    handler: () => { if (store.redo()) announce('Redo'); },
-    description: 'Redo',
+    handler: () => { if (store.redo()) announce(t('announce.redo')); },
+    description: t('shortcut.redo'),
   });
 
   shortcuts.register({
     key: 'y',
     ctrl: true,
-    handler: () => { if (store.redo()) announce('Redo'); },
-    description: 'Redo (alt)',
+    handler: () => { if (store.redo()) announce(t('announce.redo')); },
+    description: t('shortcut.redo_alt'),
   });
 
   shortcuts.register({
     key: 'e',
     ctrl: true,
     handler: exportCurrentChart,
-    description: 'Export PPTX',
+    description: t('shortcut.export'),
   });
 
   shortcuts.register({
@@ -1271,7 +1324,7 @@ async function main(): Promise<void> {
     handler: () => {
       search.focus();
     },
-    description: 'Search',
+    description: t('shortcut.search'),
   });
 
   shortcuts.register({
@@ -1305,7 +1358,7 @@ async function main(): Promise<void> {
       formEditor.selectNode(null);
       renderer.setSelectedNode(null);
     },
-    description: 'Deselect / Clear search',
+    description: t('shortcut.escape'),
   });
 
   window.addEventListener('beforeunload', (e) => {

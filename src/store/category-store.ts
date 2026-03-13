@@ -3,6 +3,7 @@ import { generateId } from '../utils/id';
 import { contrastingTextColor, contrastingTitleColor } from '../utils/contrast';
 import { EventEmitter } from '../utils/event-emitter';
 import { type IStorage, browserStorage } from '../utils/storage';
+import { t } from '../i18n';
 
 const STORAGE_KEY = 'arbol-categories';
 
@@ -11,21 +12,21 @@ const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const DEFAULT_CATEGORIES: ColorCategory[] = [
   {
     id: 'open-position',
-    label: 'Open Position',
+    label: t('category.open_position'),
     color: '#fbbf24',
     nameColor: contrastingTextColor('#fbbf24'),
     titleColor: contrastingTitleColor('#fbbf24'),
   },
   {
     id: 'offer-pending',
-    label: 'Offer Pending',
+    label: t('category.offer_pending'),
     color: '#60a5fa',
     nameColor: contrastingTextColor('#60a5fa'),
     titleColor: contrastingTitleColor('#60a5fa'),
   },
   {
     id: 'future-start',
-    label: 'Future Start',
+    label: t('category.future_start'),
     color: '#a78bfa',
     nameColor: contrastingTextColor('#a78bfa'),
     titleColor: contrastingTitleColor('#a78bfa'),

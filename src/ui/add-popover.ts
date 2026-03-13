@@ -1,5 +1,6 @@
 import { createDismissible } from './dismissible';
 import { trapFocus } from './dialog-utils';
+import { t } from '../i18n';
 
 let formIdCounter = 0;
 function uniqueId(prefix: string): string {
@@ -30,7 +31,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
   const container = document.createElement('div');
   container.setAttribute('role', 'dialog');
   container.setAttribute('aria-modal', 'true');
-  container.setAttribute('aria-label', 'Add Person');
+  container.setAttribute('aria-label', t('add_popover.aria'));
   container.style.cssText = `
     position:fixed;
     z-index:1001;
@@ -51,7 +52,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   // Title
   const heading = document.createElement('div');
-  heading.textContent = parentName ? `Add under ${parentName}` : 'Add Person';
+  heading.textContent = parentName ? t('add_popover.heading', { name: parentName }) : t('add_popover.heading_default');
   heading.style.cssText = `
     font-size:14px;font-weight:600;
     color:var(--text-primary);
@@ -65,7 +66,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   const nameId = uniqueId('add-name');
   const nameLabel = document.createElement('label');
-  nameLabel.textContent = 'Name';
+  nameLabel.textContent = t('add_popover.name_label');
   nameLabel.htmlFor = nameId;
   nameLabel.style.cssText = `
     display:block;font-size:12px;font-weight:500;
@@ -76,7 +77,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
   const nameInput = document.createElement('input');
   nameInput.id = nameId;
   nameInput.type = 'text';
-  nameInput.placeholder = 'Name';
+  nameInput.placeholder = t('add_popover.name_placeholder');
   nameInput.style.cssText = `
     width:100%;box-sizing:border-box;
     padding:var(--space-1) var(--space-2);
@@ -107,7 +108,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   const titleId = uniqueId('add-title');
   const titleLabel = document.createElement('label');
-  titleLabel.textContent = 'Title';
+  titleLabel.textContent = t('add_popover.title_label');
   titleLabel.htmlFor = titleId;
   titleLabel.style.cssText = `
     display:block;font-size:12px;font-weight:500;
@@ -118,7 +119,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
   const titleInput = document.createElement('input');
   titleInput.id = titleId;
   titleInput.type = 'text';
-  titleInput.placeholder = 'Title';
+  titleInput.placeholder = t('add_popover.title_placeholder');
   titleInput.style.cssText = nameInput.style.cssText;
 
   titleGroup.appendChild(titleLabel);
@@ -131,11 +132,11 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   const cancelBtn = document.createElement('button');
   cancelBtn.className = 'btn btn-secondary';
-  cancelBtn.textContent = 'Cancel';
+  cancelBtn.textContent = t('add_popover.cancel');
 
   const addBtn = document.createElement('button');
   addBtn.className = 'btn btn-primary';
-  addBtn.textContent = 'Add';
+  addBtn.textContent = t('add_popover.add');
 
   btnGroup.appendChild(cancelBtn);
   btnGroup.appendChild(addBtn);
@@ -147,7 +148,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
     const title = titleInput.value.trim();
     if (!name) {
       nameInput.style.borderColor = 'var(--danger, #e53e3e)';
-      nameError.textContent = 'Name is required';
+      nameError.textContent = t('add_popover.name_required');
       return;
     }
     onAdd(name, title);

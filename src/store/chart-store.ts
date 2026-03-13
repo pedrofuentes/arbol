@@ -3,11 +3,12 @@ import { ChartDB } from './chart-db';
 import { generateId } from '../utils/id';
 import { EventEmitter } from '../utils/event-emitter';
 import { type IStorage, browserStorage } from '../utils/storage';
+import { t } from '../i18n';
 
 const DEFAULT_ROOT: OrgNode = {
   id: 'root',
-  name: 'Organization',
-  title: 'CEO',
+  name: t('chart_store.default_root_name'),
+  title: t('chart_store.default_root_title'),
 };
 
 const LS_ORG_KEY = 'arbol-org-data';
@@ -71,7 +72,7 @@ export class ChartStore extends EventEmitter {
     const now = new Date().toISOString();
     const chart: ChartRecord = {
       id: generateId(),
-      name: 'My Org Chart',
+      name: t('chart_store.default_chart_name'),
       createdAt: now,
       updatedAt: now,
       workingTree: tree,
@@ -366,7 +367,7 @@ export class ChartStore extends EventEmitter {
     const now = new Date().toISOString();
     const chart: ChartRecord = {
       id: generateId(),
-      name: 'My Org Chart',
+      name: t('chart_store.default_chart_name'),
       createdAt: now,
       updatedAt: now,
       workingTree: { ...DEFAULT_ROOT },

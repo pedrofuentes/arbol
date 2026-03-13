@@ -3,6 +3,7 @@ import type { ChartStore } from '../store/chart-store';
 import { showConfirmDialog } from '../ui/confirm-dialog';
 import { showExportDialog } from '../ui/export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../export/chart-exporter';
+import { t } from '../i18n';
 
 export interface ChartEditorOptions {
   container: HTMLElement;
@@ -158,7 +159,7 @@ export class ChartEditor {
 
     this.chartNameInput = document.createElement('input');
     this.chartNameInput.type = 'text';
-    this.chartNameInput.placeholder = 'New chart name';
+    this.chartNameInput.placeholder = t('chart_editor.new_chart_placeholder');
     this.chartNameInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this.handleCreateChart();
     });
@@ -168,7 +169,7 @@ export class ChartEditor {
 
     const addBtn = document.createElement('button');
     addBtn.className = 'btn btn-primary';
-    addBtn.textContent = '+';
+    addBtn.textContent = t('chart_editor.add_chart');
     addBtn.style.cssText = 'padding:4px 10px;flex-shrink:0;';
     addBtn.addEventListener('click', () => this.handleCreateChart());
 
@@ -188,7 +189,7 @@ export class ChartEditor {
 
     this.versionNameInput = document.createElement('input');
     this.versionNameInput.type = 'text';
-    this.versionNameInput.placeholder = 'Version name';
+    this.versionNameInput.placeholder = t('chart_editor.version_placeholder');
     this.versionNameInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') this.handleSaveVersion();
     });
@@ -198,7 +199,7 @@ export class ChartEditor {
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'btn btn-primary';
-    saveBtn.textContent = '💾 Save';
+    saveBtn.textContent = t('chart_editor.save_version');
     saveBtn.style.cssText = 'flex-shrink:0;';
     saveBtn.addEventListener('click', () => this.handleSaveVersion());
 
@@ -218,7 +219,7 @@ export class ChartEditor {
       const empty = document.createElement('div');
       empty.className = 'text-sm text-tertiary';
       empty.style.cssText = 'padding:8px 0;font-family:var(--font-sans);';
-      empty.textContent = 'No charts yet';
+      empty.textContent = t('chart_editor.no_charts');
       this.chartListEl.appendChild(empty);
       return;
     }
@@ -266,7 +267,7 @@ export class ChartEditor {
 
     if (isActive) {
       const dot = document.createElement('span');
-      dot.textContent = '●';
+      dot.textContent = t('chart_editor.active_dot');
       dot.style.cssText = 'color:var(--accent);font-size:10px;flex-shrink:0;';
       nameRow.appendChild(dot);
     }
@@ -280,7 +281,7 @@ export class ChartEditor {
 
     if (isActive) {
       const badge = document.createElement('span');
-      badge.textContent = '(active)';
+      badge.textContent = t('chart_editor.active_badge');
       badge.className = 'text-xs text-tertiary';
       badge.style.cssText = 'flex-shrink:0;';
       nameRow.appendChild(badge);
@@ -291,7 +292,7 @@ export class ChartEditor {
     // Date row
     const dateEl = document.createElement('div');
     dateEl.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:2px;font-family:var(--font-sans);';
-    dateEl.textContent = 'Updated: ' + new Date(chart.updatedAt).toLocaleString();
+    dateEl.textContent = t('chart_editor.updated_prefix') + new Date(chart.updatedAt).toLocaleString();
     item.appendChild(dateEl);
 
     // Action buttons
@@ -299,28 +300,28 @@ export class ChartEditor {
     actions.className = 'flex-row mt-1';
     actions.style.cssText = 'gap:6px;';
 
-    const renameBtn = this.createInlineButton('Rename');
+    const renameBtn = this.createInlineButton(t('chart_editor.rename'));
     renameBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.handleRenameChart(chart, item);
     });
     actions.appendChild(renameBtn);
 
-    const duplicateBtn = this.createInlineButton('Duplicate');
+    const duplicateBtn = this.createInlineButton(t('chart_editor.duplicate'));
     duplicateBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.handleDuplicateChart(chart);
     });
     actions.appendChild(duplicateBtn);
 
-    const exportBtn = this.createInlineButton('Export');
+    const exportBtn = this.createInlineButton(t('chart_editor.export'));
     exportBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.handleExportChart(chart);
     });
     actions.appendChild(exportBtn);
 
-    const deleteBtn = this.createInlineButton('Delete', true);
+    const deleteBtn = this.createInlineButton(t('chart_editor.delete'), true);
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.handleDeleteChart(chart);
@@ -342,7 +343,7 @@ export class ChartEditor {
       const empty = document.createElement('div');
       empty.className = 'text-sm text-tertiary';
       empty.style.cssText = 'padding:8px 0;font-family:var(--font-sans);';
-      empty.textContent = 'No versions saved yet';
+      empty.textContent = t('chart_editor.no_versions');
       this.versionListEl.appendChild(empty);
       return;
     }
@@ -371,26 +372,26 @@ export class ChartEditor {
 
     const dateEl = document.createElement('div');
     dateEl.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:2px;font-family:var(--font-sans);';
-    dateEl.textContent = 'Saved: ' + new Date(version.createdAt).toLocaleString();
+    dateEl.textContent = t('chart_editor.saved_prefix') + new Date(version.createdAt).toLocaleString();
     item.appendChild(dateEl);
 
     const actions = document.createElement('div');
     actions.className = 'flex-row mt-1';
     actions.style.cssText = 'gap:6px;';
 
-    const viewBtn = this.createInlineButton('View');
+    const viewBtn = this.createInlineButton(t('chart_editor.view'));
     viewBtn.addEventListener('click', () => this.onVersionView(version));
     actions.appendChild(viewBtn);
 
-    const compareBtn = this.createInlineButton('Compare');
+    const compareBtn = this.createInlineButton(t('chart_editor.compare'));
     compareBtn.addEventListener('click', () => this.onVersionCompare(version));
     actions.appendChild(compareBtn);
 
-    const restoreBtn = this.createInlineButton('Restore');
+    const restoreBtn = this.createInlineButton(t('chart_editor.restore'));
     restoreBtn.addEventListener('click', () => this.handleRestoreVersion(version.id));
     actions.appendChild(restoreBtn);
 
-    const deleteBtn = this.createInlineButton('Delete', true);
+    const deleteBtn = this.createInlineButton(t('chart_editor.delete'), true);
     deleteBtn.addEventListener('click', () => this.handleDeleteVersion(version));
     actions.appendChild(deleteBtn);
 
@@ -413,7 +414,7 @@ export class ChartEditor {
   private async handleCreateChart(): Promise<void> {
     const name = this.chartNameInput.value.trim();
     if (!name) {
-      this.showError(this.chartErrorEl, 'Please enter a chart name');
+      this.showError(this.chartErrorEl, t('chart_editor.name_required'));
       return;
     }
 
@@ -499,7 +500,7 @@ export class ChartEditor {
     const commitRename = async (): Promise<void> => {
       const newName = input.value.trim();
       if (!newName) {
-        this.showError(this.chartErrorEl, 'Chart name cannot be empty');
+        this.showError(this.chartErrorEl, t('chart_header.name_empty_error'));
         await this.refresh();
         return;
       }
@@ -530,9 +531,9 @@ export class ChartEditor {
 
   private async handleDeleteChart(chart: ChartRecord): Promise<void> {
     const confirmed = await showConfirmDialog({
-      title: 'Delete Chart',
-      message: `Are you sure you want to delete "${chart.name}"? This cannot be undone.`,
-      confirmLabel: 'Delete',
+      title: t('dialog.delete_chart.title'),
+      message: t('dialog.delete_chart.message', { name: chart.name }),
+      confirmLabel: t('dialog.delete_chart.confirm'),
       danger: true,
     });
     if (!confirmed) return;
@@ -550,7 +551,7 @@ export class ChartEditor {
   private async handleSaveVersion(): Promise<void> {
     const name = this.versionNameInput.value.trim();
     if (!name) {
-      this.showError(this.versionErrorEl, 'Please enter a version name');
+      this.showError(this.versionErrorEl, t('chart_editor.version_name_required'));
       return;
     }
 
@@ -582,9 +583,9 @@ export class ChartEditor {
 
   private async handleDeleteVersion(version: VersionRecord): Promise<void> {
     const confirmed = await showConfirmDialog({
-      title: 'Delete Version',
-      message: `Are you sure you want to delete version "${version.name}"? This cannot be undone.`,
-      confirmLabel: 'Delete',
+      title: t('dialog.delete_version.title'),
+      message: t('dialog.delete_version.message', { name: version.name }),
+      confirmLabel: t('dialog.delete_version.confirm'),
       danger: true,
     });
     if (!confirmed) return;

@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 export interface ChartThemePreset {
   id: string;
   name: string;
@@ -21,8 +23,8 @@ export interface ChartThemePreset {
 export const CHART_THEME_PRESETS: ChartThemePreset[] = [
   {
     id: 'emerald',
-    name: 'Emerald',
-    description: 'The default green-accented theme with clean white cards',
+    name: t('theme.emerald.name'),
+    description: t('theme.emerald.description'),
     colors: {
       cardFill: '#ffffff',
       cardStroke: '#22c55e',
@@ -40,8 +42,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
   },
   {
     id: 'corporate-blue',
-    name: 'Corporate Blue',
-    description: 'Professional blue-toned theme suited for business presentations',
+    name: t('theme.corporate_blue.name'),
+    description: t('theme.corporate_blue.description'),
     colors: {
       cardFill: '#f8fafc',
       cardStroke: '#2563eb',
@@ -59,8 +61,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
   },
   {
     id: 'forest',
-    name: 'Forest',
-    description: 'Deep forest greens evoking a natural, organic feel',
+    name: t('theme.forest.name'),
+    description: t('theme.forest.description'),
     colors: {
       cardFill: '#f0fdf4',
       cardStroke: '#166534',
@@ -78,8 +80,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
   },
   {
     id: 'sunset',
-    name: 'Sunset Warm',
-    description: 'Warm amber and orange tones inspired by golden-hour light',
+    name: t('theme.sunset_warm.name'),
+    description: t('theme.sunset_warm.description'),
     colors: {
       cardFill: '#fffbeb',
       cardStroke: '#d97706',
@@ -97,8 +99,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
   },
   {
     id: 'monochrome',
-    name: 'Monochrome',
-    description: 'Clean grayscale palette that keeps the focus on structure',
+    name: t('theme.monochrome.name'),
+    description: t('theme.monochrome.description'),
     colors: {
       cardFill: '#ffffff',
       cardStroke: '#374151',
@@ -116,8 +118,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
   },
   {
     id: 'midnight',
-    name: 'Midnight',
-    description: 'Dark-mode chart colors with light-blue accents on dark cards',
+    name: t('theme.midnight.name'),
+    description: t('theme.midnight.description'),
     colors: {
       cardFill: '#1e293b',
       cardStroke: '#38bdf8',
@@ -135,8 +137,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
   },
   {
     id: 'pastel',
-    name: 'Pastel',
-    description: 'Soft pink and purple tones for a gentle, approachable look',
+    name: t('theme.pastel.name'),
+    description: t('theme.pastel.description'),
     colors: {
       cardFill: '#fdf2f8',
       cardStroke: '#ec4899',
@@ -146,7 +148,7 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       icContainerFill: '#fce7f3',
       icContainerBorderRadius: 0,
       nameColor: '#1e293b',
-      titleColor: '#64748b',
+      titleColor: '#475569',
       textAlign: 'center',
       cardBorderRadius: 0,
       fontFamily: 'Calibri',
@@ -154,8 +156,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
   },
   {
     id: 'high-contrast',
-    name: 'High Contrast',
-    description: 'Maximum-accessibility theme with bold borders and stark contrasts',
+    name: t('theme.high_contrast.name'),
+    description: t('theme.high_contrast.description'),
     colors: {
       cardFill: '#ffffff',
       cardStroke: '#000000',
@@ -173,8 +175,8 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
   },
   {
     id: 'ocean-teal',
-    name: 'Ocean Teal',
-    description: 'Modern teal-accented theme with left-aligned text',
+    name: t('theme.ocean_teal.name'),
+    description: t('theme.ocean_teal.description'),
     colors: {
       cardFill: '#ffffff',
       cardStroke: '#14b8a6',

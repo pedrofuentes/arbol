@@ -29,3 +29,8 @@ Object.defineProperty(globalThis, 'localStorage', {
   writable: true,
   configurable: true,
 });
+
+// Initialize i18n with English translations for all tests.
+import { setLocale } from '../src/i18n';
+import en from '../src/i18n/en';
+setLocale('en', en);

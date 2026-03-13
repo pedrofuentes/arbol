@@ -1,4 +1,5 @@
 import { showToast } from './toast';
+import { t } from '../i18n';
 
 export interface ChartNameHeaderOptions {
   container: HTMLElement;
@@ -80,10 +81,10 @@ export class ChartNameHeader {
     this.saveBtn = document.createElement('button');
     this.saveBtn.setAttribute('data-testid', 'save-version-btn');
     this.saveBtn.textContent = '💾';
-    this.saveBtn.title = 'Save version';
+    this.saveBtn.title = t('chart_header.save_version_tooltip');
     this.saveBtn.className = 'icon-btn';
-    this.saveBtn.setAttribute('aria-label', 'Save version');
-    this.saveBtn.setAttribute('data-tooltip', 'Save version');
+    this.saveBtn.setAttribute('aria-label', t('chart_header.save_version_aria'));
+    this.saveBtn.setAttribute('data-tooltip', t('chart_header.save_version_tooltip'));
 
     const onSaveClick = () => this.onSaveVersion();
     this.saveBtn.addEventListener('click', onSaveClick);
@@ -138,7 +139,7 @@ export class ChartNameHeader {
     input.value = this.currentName;
     input.maxLength = MAX_NAME_LENGTH;
     input.setAttribute('data-testid', 'chart-name-input');
-    input.setAttribute('aria-label', 'Chart name');
+    input.setAttribute('aria-label', t('chart_header.name_aria'));
     input.style.cssText = [
       'font-size:13px',
       'font-weight:600',
@@ -182,7 +183,7 @@ export class ChartNameHeader {
           return;
         }
         if (!newName) {
-          showToast('Chart name cannot be empty', 'error');
+          showToast(t('chart_header.name_empty_error'), 'error');
         }
       }
 

@@ -1,4 +1,5 @@
 import { createDismissible } from './dismissible';
+import { t } from '../i18n';
 
 export interface FocusBannerOptions {
   name: string;
@@ -57,7 +58,7 @@ export function showFocusBanner(options: FocusBannerOptions): void {
 
   const label = document.createElement('span');
   label.setAttribute('data-testid', 'focus-banner-label');
-  label.textContent = `🔎 Viewing ${options.name}'s org`;
+  label.textContent = t('focus.viewing', { name: options.name });
   banner.appendChild(label);
 
   const separator = document.createElement('span');
@@ -66,7 +67,7 @@ export function showFocusBanner(options: FocusBannerOptions): void {
 
   const exitBtn = document.createElement('button');
   exitBtn.setAttribute('data-testid', 'focus-banner-exit');
-  exitBtn.textContent = 'Show full org';
+  exitBtn.textContent = t('focus.show_full');
   exitBtn.style.cssText = [
     'border:none',
     'background:transparent',
