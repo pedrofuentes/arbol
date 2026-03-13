@@ -3,6 +3,7 @@ import type { Selection } from 'd3';
 import { OrgNode, ColorCategory, DiffEntry, DiffStatus } from '../types';
 import { computeLayout, LayoutResult, LayoutNode } from './layout-engine';
 import { ZoomManager } from './zoom-manager';
+import { KeyboardNav } from './keyboard-nav';
 
 interface CardDatum {
   data: {
@@ -85,6 +86,7 @@ export class ChartRenderer {
   private diffMap: Map<string, DiffEntry> | null = null;
   private dimUnchanged = true;
   private categoryMap: Map<string, ColorCategory> = new Map();
+  private keyboardNav: KeyboardNav;
 
   constructor(options: RendererOptions) {
     this.opts = {
@@ -131,9 +133,13 @@ export class ChartRenderer {
     this.svg = select(options.container)
       .append('svg')
       .attr('width', '100%')
-      .attr('height', '100%');
+      .attr('height', '100%')
+      .attr('role', 'tree')
+      .attr('aria-label', 'Organization chart');
+    this.svg.append('title').text('Organization chart');
     this.g = this.svg.append('g').attr('class', 'chart-group');
     this.zoomManager = new ZoomManager(this.svg.node()!, this.g.node()!);
+    this.keyboardNav = new KeyboardNav(this.svg.node()!);
   }
 
   setNodeClickHandler(handler: NodeClickHandler): void {
@@ -195,7 +201,7 @@ export class ChartRenderer {
       );
 
     // Layer 2: IC stacks (behind manager nodes)
-    const icGroup = this.g.append('g').attr('class', 'ic-stacks');
+    const icGroup = this.g.append('g').attr('class', 'ic-stacks').attr('role', 'group');
     icGroup
       .selectAll<SVGRectElement, (typeof layout.icContainers)[number]>('rect.ic-container')
       .data(layout.icContainers)
@@ -225,6 +231,7 @@ export class ChartRenderer {
             .append('g')
             .attr('class', 'node ic-node')
             .attr('data-id', (d) => d.id)
+            .attr('aria-label', (d) => `${d.name}, ${d.title}`)
             .attr('transform', (d) => `translate(${d.x - d.width / 2},${d.y})`);
           // eslint-disable-next-line @typescript-eslint/no-this-alias
           const self = this;
@@ -247,7 +254,7 @@ export class ChartRenderer {
       );
 
     // Layer 3: Advisor stacks (on top of tree links)
-    const palGroup = this.g.append('g').attr('class', 'pal-stacks');
+    const palGroup = this.g.append('g').attr('class', 'pal-stacks').attr('role', 'group');
     const palLinks = layout.links.filter((l) => l.layer === 'pal');
     palGroup
       .selectAll<SVGPathElement, (typeof palLinks)[number]>('path.link')
@@ -275,6 +282,7 @@ export class ChartRenderer {
             .append('g')
             .attr('class', 'node pal-node')
             .attr('data-id', (d) => d.id)
+            .attr('aria-label', (d) => `${d.name}, ${d.title}`)
             .attr('transform', (d) => `translate(${d.x - d.width / 2},${d.y})`);
           // eslint-disable-next-line @typescript-eslint/no-this-alias
           const self = this;
@@ -311,6 +319,7 @@ export class ChartRenderer {
             .append('g')
             .attr('class', 'node')
             .attr('data-id', (d) => d.id)
+            .attr('aria-label', (d) => `${d.name}, ${d.title}`)
             .attr('transform', (d) => `translate(${d.x - d.width / 2},${d.y})`);
           g.each(function (d) {
             const datum = {
@@ -341,6 +350,9 @@ export class ChartRenderer {
     if (this.diffMap) {
       this.renderDiffBadges();
     }
+
+    this.applyAriaAttributes(root);
+    this.keyboardNav.setTree(root);
 
     if (this.hasRendered) {
       this.zoomManager.applyTransform(this.zoomManager.getCurrentTransform());
@@ -389,6 +401,35 @@ export class ChartRenderer {
     });
 
     this.g.selectAll('.links').style('opacity', '0.3');
+  }
+
+  private applyAriaAttributes(root: OrgNode): void {
+    const depthMap = new Map<string, number>();
+    const hasChildren = new Map<string, boolean>();
+    function walk(node: OrgNode, depth: number) {
+      depthMap.set(node.id, depth);
+      hasChildren.set(node.id, !!(node.children && node.children.length > 0));
+      for (const child of node.children ?? []) walk(child, depth + 1);
+    }
+    walk(root, 1);
+
+    const rootId = root.id;
+    this.g
+      .selectAll<SVGGElement, unknown>('.node[data-id], .ic-node[data-id], .pal-node[data-id]')
+      .each(function () {
+        const el = this;
+        const nodeId = el.getAttribute('data-id');
+        if (!nodeId) return;
+        el.setAttribute('role', 'treeitem');
+        const level = depthMap.get(nodeId);
+        if (level !== undefined) el.setAttribute('aria-level', String(level));
+        if (hasChildren.get(nodeId)) {
+          el.setAttribute('aria-expanded', 'true');
+        } else {
+          el.removeAttribute('aria-expanded');
+        }
+        el.setAttribute('tabindex', nodeId === rootId ? '0' : '-1');
+      });
   }
 
   private renderCardContent(
@@ -894,7 +935,12 @@ export class ChartRenderer {
     return node.node()!.getBoundingClientRect();
   }
 
+  getKeyboardNav(): KeyboardNav {
+    return this.keyboardNav;
+  }
+
   destroy(): void {
+    this.keyboardNav.destroy();
     this.svg.remove();
   }
 }

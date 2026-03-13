@@ -307,6 +307,21 @@ body {
   height: 100%;
 }
 
+/* SVG card focus indicator — keyboard navigation */
+g.node:focus,
+g.ic-node:focus,
+g.pal-node:focus {
+  outline: none;
+}
+
+g.node:focus-visible > rect,
+g.ic-node:focus-visible > rect,
+g.pal-node:focus-visible > rect {
+  stroke: var(--accent) !important;
+  stroke-width: 2 !important;
+  filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+
 /* ======================================================================
    Footer — Status bar
    ====================================================================== */
