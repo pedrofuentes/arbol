@@ -348,9 +348,18 @@ export async function exportToPptx(
     slideHeight = DEFAULT_SLIDE_HEIGHT;
     scale = 1;
   } else {
-    slideWidth = layout.boundingBox.width * PX_TO_INCHES + padding * 2;
-    slideHeight = layout.boundingBox.height * PX_TO_INCHES + padding * 2;
-    scale = 1;
+    const chartW = layout.boundingBox.width * PX_TO_INCHES + padding * 2;
+    const chartH = layout.boundingBox.height * PX_TO_INCHES + padding * 2;
+
+    // PowerPoint hard limit is 56" per dimension
+    slideWidth = Math.min(chartW, MAX_SLIDE_DIMENSION);
+    slideHeight = Math.min(chartH, MAX_SLIDE_DIMENSION);
+
+    if (chartW > MAX_SLIDE_DIMENSION || chartH > MAX_SLIDE_DIMENSION) {
+      scale = computeScale(layout.boundingBox, slideWidth, slideHeight, padding);
+    } else {
+      scale = 1;
+    }
   }
 
   const { default: PptxGenJS } = await import('pptxgenjs');
