@@ -10,7 +10,6 @@ import { exportToPptx } from './export/pptx-exporter';
 import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { CategoryStore } from './store/category-store';
-import { getMatchingNodeIds } from './utils/search';
 import { flattenTree, findNodeById, findParent, isLeaf, isM1, countLeaves, countManagersByLevel } from './utils/tree';
 import { SAMPLE_ORG } from './data/sample-org';
 import { showHelpDialog } from './ui/help-dialog';
@@ -22,7 +21,6 @@ import { showInlineEditor, dismissInlineEditor } from './ui/inline-editor';
 import { showAddPopover, dismissAddPopover } from './ui/add-popover';
 import { showManagerPicker } from './ui/manager-picker';
 import { showConfirmDialog } from './ui/confirm-dialog';
-import { showFocusBanner, dismissFocusBanner } from './ui/focus-banner';
 import { showCategoryLegend, dismissCategoryLegend } from './ui/category-legend';
 import { ChartDB } from './store/chart-db';
 import { ChartStore } from './store/chart-store';
@@ -33,6 +31,9 @@ import { showComparisonBanner, dismissComparisonBanner, isComparisonBannerActive
 import { showVersionPicker } from './ui/version-picker';
 import { compareTrees, buildMergedTree, getDiffStats } from './utils/tree-diff';
 import { SideBySideRenderer } from './renderer/side-by-side-renderer';
+import { FocusModeController } from './controllers/focus-mode';
+import { SelectionManager } from './controllers/selection-manager';
+import { SearchController } from './controllers/search-controller';
 import type { ComparisonState, VersionRecord } from './types';
 
 async function main(): Promise<void> {
@@ -109,8 +110,9 @@ async function main(): Promise<void> {
 
   let onSettingsSaved: (() => void) | null = null;
 
-  // Focus mode: show only a subtree rooted at this node
-  let focusedNodeId: string | null = null;
+  // Controllers (initialized after rerender is defined)
+  let focusMode: FocusModeController;
+  const selection = new SelectionManager();
 
   // Comparison mode: show diff between two trees
   let comparisonState: ComparisonState | null = null;
@@ -212,7 +214,7 @@ async function main(): Promise<void> {
 
   const enterComparisonMode = async (baseVersion: VersionRecord) => {
     // Exit any active modes first
-    if (focusedNodeId) { focusedNodeId = null; dismissFocusBanner(); }
+    if (focusMode.isFocused) { focusMode.clear(); }
     if (isVersionViewerActive()) { dismissVersionViewer(); }
     if (comparisonState) {
       renderer.setDiffMap(null);
@@ -270,28 +272,13 @@ async function main(): Promise<void> {
     });
   };
 
-  const exitFocusMode = () => {
-    focusedNodeId = null;
-    dismissFocusBanner();
-    rerender();
-    renderer.getZoomManager()?.fitToContent();
-  };
-
   const rerender = () => {
     const fullTree = store.getTree();
 
-    // If focused, validate the node still exists; if not, exit focus mode
-    if (focusedNodeId) {
-      const focusedNode = findNodeById(fullTree, focusedNodeId);
-      if (!focusedNode) {
-        focusedNodeId = null;
-        dismissFocusBanner();
-      }
-    }
+    // Validate focus target still exists
+    focusMode.validate();
 
-    const treeToRender = focusedNodeId
-      ? (findNodeById(fullTree, focusedNodeId) ?? fullTree)
-      : fullTree;
+    const treeToRender = focusMode.getVisibleTree();
 
     // Refresh categories so renderer picks up any changes
     renderer.updateOptions({ categories: categoryStore.getAll() });
@@ -300,16 +287,7 @@ async function main(): Promise<void> {
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
     chartStore.saveWorkingTree(fullTree, categoryStore.getAll());
 
-    if (focusedNodeId) {
-      const focusedNode = findNodeById(fullTree, focusedNodeId)!;
-      showFocusBanner({
-        name: focusedNode.name,
-        container: chartArea,
-        onExit: exitFocusMode,
-      });
-    } else {
-      dismissFocusBanner();
-    }
+    focusMode.showBanner(chartArea);
 
     onSettingsSaved?.();
 
@@ -321,6 +299,9 @@ async function main(): Promise<void> {
       dismissCategoryLegend();
     }
   };
+
+  // Initialize focus mode controller now that rerender is defined
+  focusMode = new FocusModeController(store, renderer, rerender);
 
   // Theme toggle
   const themeManager = new ThemeManager();
@@ -423,20 +404,7 @@ async function main(): Promise<void> {
   searchInput.placeholder = 'Search people... (Ctrl+F)';
   headerCenter.appendChild(searchInput);
 
-  let searchTimeout: ReturnType<typeof setTimeout> | null = null;
-
-  searchInput.addEventListener('input', () => {
-    if (searchTimeout) clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const query = searchInput.value.trim();
-      if (query.length === 0) {
-        renderer.setHighlightedNodes(null);
-      } else {
-        const matchIds = getMatchingNodeIds(store.getTree(), query);
-        renderer.setHighlightedNodes(matchIds.size > 0 ? matchIds : null);
-      }
-    }, 200);
-  });
+  const search = new SearchController(searchInput, store, renderer);
 
   // Sidebar tabs
   const tabSwitcher = new TabSwitcher(sidebar, [
@@ -454,7 +422,7 @@ async function main(): Promise<void> {
   importContainer.appendChild(importEditorWrapper);
   new ImportEditor(importEditorWrapper, store, async (tree, name) => {
     const chart = await chartStore.createChartFromTree(name, tree);
-    if (focusedNodeId) { focusedNodeId = null; dismissFocusBanner(); }
+    focusMode.clear();
     dismissVersionViewer();
     clearMultiSelection();
     store.replaceTree(chart.workingTree);
@@ -466,7 +434,7 @@ async function main(): Promise<void> {
     formEditor.refresh();
     jsonEditor.refresh();
   }, chartStore, (chart) => {
-    if (focusedNodeId) { focusedNodeId = null; dismissFocusBanner(); }
+    focusMode.clear();
     dismissVersionViewer();
     clearMultiSelection();
     store.replaceTree(chart.workingTree);
@@ -560,7 +528,7 @@ async function main(): Promise<void> {
     onBeforeSwitch: handleBeforeSwitch,
     onChartSwitch: (chart) => {
       // Exit focus mode and version viewer
-      if (focusedNodeId) { focusedNodeId = null; dismissFocusBanner(); }
+      focusMode.clear();
       dismissVersionViewer();
       clearMultiSelection();
       // Load the new chart's data
@@ -617,14 +585,17 @@ async function main(): Promise<void> {
     },
   });
 
-  // Multi-select state
-  const multiSelectedIds = new Set<string>();
-  let onMultiSelectionChanged: (() => void) | null = null;
+  // Multi-select helpers
+  let updateSelectionIndicator: () => void = () => {};
+
+  const syncSelectionToRenderer = () => {
+    renderer.setMultiSelectedNodes(selection.hasSelection ? selection.ids : null);
+  };
 
   const clearMultiSelection = () => {
-    multiSelectedIds.clear();
-    renderer.setMultiSelectedNodes(null);
-    onMultiSelectionChanged?.();
+    selection.clear();
+    syncSelectionToRenderer();
+    updateSelectionIndicator();
   };
 
   store.onChange(() => {
@@ -644,13 +615,9 @@ async function main(): Promise<void> {
       const tree = store.getTree();
       if (tree.id === nodeId) return;
 
-      if (multiSelectedIds.has(nodeId)) {
-        multiSelectedIds.delete(nodeId);
-      } else {
-        multiSelectedIds.add(nodeId);
-      }
-      renderer.setMultiSelectedNodes(multiSelectedIds.size > 0 ? multiSelectedIds : null);
-      onMultiSelectionChanged?.();
+      selection.toggle(nodeId);
+      syncSelectionToRenderer();
+      updateSelectionIndicator();
     } else {
       // Regular click: clear multi-selection, highlight card only (no sidebar form)
       clearMultiSelection();
@@ -717,11 +684,9 @@ async function main(): Promise<void> {
         {
           label: 'Focus on sub-org',
           icon: '🔎',
-          disabled: nodeIsLeaf || focusedNodeId === nodeId,
+          disabled: nodeIsLeaf || focusMode.focusedId === nodeId,
           action: () => {
-            focusedNodeId = nodeId;
-            rerender();
-            renderer.getZoomManager()?.fitToContent();
+            focusMode.enter(nodeId);
           },
         },
         {
@@ -823,8 +788,8 @@ async function main(): Promise<void> {
 
   // Helper: show multi-select context menu
   const showMultiSelectMenu = (event: MouseEvent) => {
-    const count = multiSelectedIds.size;
-    const selectedArray = Array.from(multiSelectedIds);
+    const count = selection.count;
+    const selectedArray = selection.toArray();
 
     showContextMenu({
       x: event.clientX,
@@ -945,7 +910,7 @@ async function main(): Promise<void> {
   renderer.setNodeRightClickHandler((nodeId: string, event: MouseEvent) => {
     dismissAllOverlays();
 
-    if (multiSelectedIds.size > 0 && multiSelectedIds.has(nodeId)) {
+    if (selection.hasSelection && selection.isSelected(nodeId)) {
       // Right-clicked on a multi-selected card → show bulk menu
       showMultiSelectMenu(event);
     } else {
@@ -1004,8 +969,7 @@ async function main(): Promise<void> {
   onSettingsSaved = flashSaved;
 
   const updateStatus = () => {
-    const fullTree = store.getTree();
-    const tree = focusedNodeId ? (findNodeById(fullTree, focusedNodeId) ?? fullTree) : fullTree;
+    const tree = focusMode.getVisibleTree();
     const allNodes = flattenTree(tree);
     const total = allNodes.length;
     const managerCount = allNodes.filter((n) => !isLeaf(n)).length;
@@ -1056,9 +1020,9 @@ async function main(): Promise<void> {
   footer.appendChild(footerCenter);
 
   // Update selection indicator when multi-select changes
-  const updateSelectionIndicator = () => {
-    if (multiSelectedIds.size > 0) {
-      selectionIndicator.textContent = `${multiSelectedIds.size} selected`;
+  updateSelectionIndicator = () => {
+    if (selection.hasSelection) {
+      selectionIndicator.textContent = `${selection.count} selected`;
       selectionIndicator.style.display = '';
       // Hide links when selection is active
       githubLink.style.display = 'none';
@@ -1088,8 +1052,6 @@ async function main(): Promise<void> {
     updateZoomIndicator();
   });
   updateZoomIndicator();
-
-  onMultiSelectionChanged = updateSelectionIndicator;
 
   // Footer: Buttons (right side)
   const footerRight = document.createElement('div');
@@ -1225,7 +1187,7 @@ async function main(): Promise<void> {
     key: 'f',
     ctrl: true,
     handler: () => {
-      searchInput.focus();
+      search.focus();
     },
     description: 'Search',
   });
@@ -1244,15 +1206,14 @@ async function main(): Promise<void> {
         return;
       }
       // Clear search if active
-      if (document.activeElement === searchInput) {
-        searchInput.value = '';
+      if (search.isActive) {
+        search.clear();
         searchInput.blur();
-        renderer.setHighlightedNodes(null);
         return;
       }
       // Exit focus mode if active
-      if (focusedNodeId) {
-        exitFocusMode();
+      if (focusMode.isFocused) {
+        focusMode.exit();
         return;
       }
       // Clear multi-selection
