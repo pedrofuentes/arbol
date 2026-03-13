@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] — 2026-03-13
+
+### Added
+- **Text alignment** — new `textAlign` option (left / center / right) for card name and title text, with `textPaddingHorizontal` for left/right-aligned padding; syncs to PPTX export
+- **Font family** — configurable `fontFamily` with 8 PowerPoint-safe options (Calibri, Arial, Verdana, Georgia, Tahoma, Trebuchet MS, Segoe UI, Microsoft Sans Serif); replaces all hardcoded Calibri references
+- **Card border radius** — new `cardBorderRadius` option (0–15px) for rounded card corners; PPTX export uses `roundRect` shape when radius > 0
+- **IC container border radius** — new `icContainerBorderRadius` option (0–15px) for rounded bottom corners on IC group containers
+- **Ocean Teal preset** — new theme preset with teal `#14b8a6` border, 1.5px stroke, left-aligned text, 6px card radius, 8px IC container radius, Segoe UI font
+- **Select control type** — new dropdown control type in settings editor for enum options (textAlign, fontFamily)
+
+### Changed
+- IC container background now starts at the vertical midpoint of the M1 manager card (instead of the bottom edge), eliminating visual gaps with rounded card corners
+- IC container fill and IC container border radius settings moved to IC Options group
+- All 8 existing theme presets now include explicit `textAlign`, `cardBorderRadius`, `fontFamily`, and `icContainerBorderRadius` values
+
 ## [2.1.0] — 2026-03-13
 
 ### Added
