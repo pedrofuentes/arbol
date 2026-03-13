@@ -37,17 +37,34 @@ import { FocusModeController } from './controllers/focus-mode';
 import { SelectionManager } from './controllers/selection-manager';
 import { SearchController } from './controllers/search-controller';
 import { announce } from './ui/announcer';
+import { showWelcomeBanner } from './ui/welcome-banner';
 import type { ComparisonState, VersionRecord } from './types';
 
 async function main(): Promise<void> {
   const sidebar = document.getElementById('sidebar')!;
   const chartArea = document.getElementById('chart-area')!;
 
+  // Show loading state during IndexedDB initialization
+  const appLoadingEl = document.createElement('div');
+  appLoadingEl.className = 'app-loading';
+  appLoadingEl.setAttribute('role', 'status');
+  appLoadingEl.setAttribute('aria-live', 'polite');
+  const loadingSpinner = document.createElement('span');
+  loadingSpinner.className = 'loading-spinner';
+  loadingSpinner.setAttribute('aria-hidden', 'true');
+  appLoadingEl.appendChild(loadingSpinner);
+  const loadingText = document.createElement('span');
+  loadingText.textContent = 'Loading…';
+  appLoadingEl.appendChild(loadingText);
+  chartArea.appendChild(appLoadingEl);
+
   // Initialize chart database and store
   const chartDB = new ChartDB();
   await chartDB.open();
   const chartStore = new ChartStore(chartDB);
   const activeChart = await chartStore.initialize();
+
+  appLoadingEl.remove();
 
   const store = new OrgStore(activeChart.workingTree);
 
@@ -340,6 +357,7 @@ async function main(): Promise<void> {
   undoBtn.className = 'icon-btn';
   undoBtn.setAttribute('data-tooltip', 'Undo (Ctrl+Z)');
   undoBtn.setAttribute('aria-label', 'Undo');
+  undoBtn.setAttribute('aria-keyshortcuts', 'Control+Z');
   undoBtn.textContent = '↩';
   undoBtn.disabled = true;
   undoBtn.addEventListener('click', () => {
@@ -351,6 +369,7 @@ async function main(): Promise<void> {
   redoBtn.className = 'icon-btn';
   redoBtn.setAttribute('data-tooltip', 'Redo (Ctrl+Shift+Z)');
   redoBtn.setAttribute('aria-label', 'Redo');
+  redoBtn.setAttribute('aria-keyshortcuts', 'Control+Shift+Z');
   redoBtn.textContent = '↪';
   redoBtn.disabled = true;
   redoBtn.addEventListener('click', () => {
@@ -407,16 +426,36 @@ async function main(): Promise<void> {
   // Search UI
   const headerCenter = document.getElementById('header-center')!;
 
+  const searchWrapper = document.createElement('div');
+  searchWrapper.className = 'search-wrapper';
+
   const searchInput = document.createElement('input');
   searchInput.className = 'search-input';
   searchInput.type = 'text';
   searchInput.setAttribute('role', 'searchbox');
   searchInput.setAttribute('aria-label', 'Search people by name or title');
+  searchInput.setAttribute('aria-keyshortcuts', 'Control+F');
   searchInput.placeholder = 'Search people... (Ctrl+F)';
-  headerCenter.appendChild(searchInput);
+  searchWrapper.appendChild(searchInput);
+
+  const noResultsHint = document.createElement('span');
+  noResultsHint.className = 'search-no-results';
+  noResultsHint.setAttribute('data-testid', 'search-no-results');
+  noResultsHint.textContent = 'No results found';
+  noResultsHint.style.display = 'none';
+  searchWrapper.appendChild(noResultsHint);
+
+  headerCenter.appendChild(searchWrapper);
 
   const search = new SearchController(searchInput, store, renderer, 200, (count) => {
     announce(count > 0 ? `${count} results found` : 'No results found');
+    noResultsHint.style.display = count === 0 ? '' : 'none';
+  });
+
+  searchInput.addEventListener('input', () => {
+    if (searchInput.value.trim().length === 0) {
+      noResultsHint.style.display = 'none';
+    }
   });
 
   // Sidebar tabs
@@ -1091,6 +1130,7 @@ async function main(): Promise<void> {
   exportBtn.dataset.action = 'export-pptx';
   exportBtn.textContent = '📊 Export PPTX';
   exportBtn.setAttribute('aria-label', 'Export to PowerPoint');
+  exportBtn.setAttribute('aria-keyshortcuts', 'Control+E');
   exportBtn.setAttribute('data-tooltip', 'Export to PowerPoint (Ctrl+E)');
   footerRight.appendChild(exportBtn);
 
@@ -1116,35 +1156,49 @@ async function main(): Promise<void> {
       if (!confirmed) return;
     }
 
-    const rendererOpts = renderer.getOptions();
-    const activeChart = await chartStore.getActiveChart();
-    const chartName = activeChart?.name ?? 'org-chart';
-    const safeChartName = chartName.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').toLowerCase();
-    await exportToPptx(layout, {
-      fileName: timestampedFilename(`${safeChartName}.pptx`),
-      categories: categoryStore.getAll(),
-      nameFontSize: rendererOpts.nameFontSize,
-      titleFontSize: rendererOpts.titleFontSize,
-      cardFill: rendererOpts.cardFill,
-      cardStroke: rendererOpts.cardStroke,
-      cardStrokeWidth: rendererOpts.cardStrokeWidth,
-      icContainerFill: rendererOpts.icContainerFill,
-      linkColor: rendererOpts.linkColor,
-      linkWidth: rendererOpts.linkWidth,
-      nameColor: rendererOpts.nameColor,
-      titleColor: rendererOpts.titleColor,
-      showHeadcount: rendererOpts.showHeadcount,
-      headcountBadgeColor: rendererOpts.headcountBadgeColor,
-      headcountBadgeTextColor: rendererOpts.headcountBadgeTextColor,
-      headcountBadgeFontSize: rendererOpts.headcountBadgeFontSize,
-      headcountBadgeRadius: rendererOpts.headcountBadgeRadius,
-      headcountBadgePadding: rendererOpts.headcountBadgePadding,
-      headcountBadgeHeight: rendererOpts.headcountBadgeHeight,
-      legendRows: rendererOpts.legendRows,
-      textAlign: rendererOpts.textAlign as 'left' | 'center' | 'right',
-      cardBorderRadius: rendererOpts.cardBorderRadius as number,
-      fontFamily: rendererOpts.fontFamily as string,
-    });
+    const originalText = exportBtn.textContent;
+    exportBtn.textContent = '⏳ Exporting…';
+    exportBtn.classList.add('btn-loading');
+    exportBtn.disabled = true;
+
+    try {
+      const rendererOpts = renderer.getOptions();
+      const activeChart = await chartStore.getActiveChart();
+      const chartName = activeChart?.name ?? 'org-chart';
+      const safeChartName = chartName.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').toLowerCase();
+      await exportToPptx(layout, {
+        fileName: timestampedFilename(`${safeChartName}.pptx`),
+        categories: categoryStore.getAll(),
+        nameFontSize: rendererOpts.nameFontSize,
+        titleFontSize: rendererOpts.titleFontSize,
+        cardFill: rendererOpts.cardFill,
+        cardStroke: rendererOpts.cardStroke,
+        cardStrokeWidth: rendererOpts.cardStrokeWidth,
+        icContainerFill: rendererOpts.icContainerFill,
+        linkColor: rendererOpts.linkColor,
+        linkWidth: rendererOpts.linkWidth,
+        nameColor: rendererOpts.nameColor,
+        titleColor: rendererOpts.titleColor,
+        showHeadcount: rendererOpts.showHeadcount,
+        headcountBadgeColor: rendererOpts.headcountBadgeColor,
+        headcountBadgeTextColor: rendererOpts.headcountBadgeTextColor,
+        headcountBadgeFontSize: rendererOpts.headcountBadgeFontSize,
+        headcountBadgeRadius: rendererOpts.headcountBadgeRadius,
+        headcountBadgePadding: rendererOpts.headcountBadgePadding,
+        headcountBadgeHeight: rendererOpts.headcountBadgeHeight,
+        legendRows: rendererOpts.legendRows,
+        textAlign: rendererOpts.textAlign as 'left' | 'center' | 'right',
+        cardBorderRadius: rendererOpts.cardBorderRadius as number,
+        fontFamily: rendererOpts.fontFamily as string,
+      });
+      showToast('Exported to PowerPoint', 'success');
+    } catch (e) {
+      showToast(`Export failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
+    } finally {
+      exportBtn.textContent = originalText;
+      exportBtn.classList.remove('btn-loading');
+      exportBtn.disabled = false;
+    }
   };
 
   exportBtn.addEventListener('click', exportCurrentChart);
@@ -1236,6 +1290,7 @@ async function main(): Promise<void> {
       // Clear search if active
       if (search.isActive) {
         search.clear();
+        noResultsHint.style.display = 'none';
         searchInput.blur();
         return;
       }
@@ -1260,6 +1315,7 @@ async function main(): Promise<void> {
   });
 
   rerender();
+  showWelcomeBanner(chartArea);
 }
 
 document.addEventListener('DOMContentLoaded', main);

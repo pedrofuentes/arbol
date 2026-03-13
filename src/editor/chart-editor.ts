@@ -104,6 +104,7 @@ export class ChartEditor {
     this.container.appendChild(this.chartErrorEl);
     this.chartListEl = document.createElement('div');
     this.chartListEl.dataset.field = 'chart-list';
+    this.chartListEl.setAttribute('role', 'list');
     this.container.appendChild(this.chartListEl);
 
     // Versions section
@@ -115,6 +116,7 @@ export class ChartEditor {
     this.container.appendChild(this.versionErrorEl);
     this.versionListEl = document.createElement('div');
     this.versionListEl.dataset.field = 'version-list';
+    this.versionListEl.setAttribute('role', 'list');
     this.container.appendChild(this.versionListEl);
 
     this.refresh();
@@ -229,6 +231,7 @@ export class ChartEditor {
 
   private createChartItem(chart: ChartRecord, isActive: boolean): HTMLDivElement {
     const item = document.createElement('div');
+    item.setAttribute('role', 'listitem');
     item.dataset.chartId = chart.id;
     item.style.cssText =
       ITEM_STYLE +
@@ -247,7 +250,6 @@ export class ChartEditor {
     });
 
     if (!isActive) {
-      item.setAttribute('role', 'button');
       item.setAttribute('tabindex', '0');
       item.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -352,6 +354,7 @@ export class ChartEditor {
 
   private createVersionItem(version: VersionRecord): HTMLDivElement {
     const item = document.createElement('div');
+    item.setAttribute('role', 'listitem');
     item.dataset.versionId = version.id;
     item.style.cssText = ITEM_STYLE;
     item.addEventListener('mouseenter', () => {
@@ -432,11 +435,15 @@ export class ChartEditor {
     const proceed = await this.onBeforeSwitch();
     if (!proceed) return;
 
+    const item = this.container.querySelector(`[data-chart-id="${chartId}"]`) as HTMLElement | null;
+    item?.classList.add('chart-item-loading');
+
     try {
       const chart = await this.chartStore.switchChart(chartId);
       this.onChartSwitch(chart);
       await this.refresh();
     } catch (err) {
+      item?.classList.remove('chart-item-loading');
       this.showError(this.chartErrorEl, (err as Error).message);
     }
   }

@@ -548,6 +548,21 @@ export class ImportEditor {
 
   private static MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+  private showLoading(message: string): void {
+    this.statusArea.style.display = 'block';
+    this.statusArea.innerHTML = '';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'import-loading';
+    const spinner = document.createElement('span');
+    spinner.className = 'loading-spinner';
+    spinner.setAttribute('aria-hidden', 'true');
+    wrapper.appendChild(spinner);
+    const label = document.createElement('span');
+    label.textContent = message;
+    wrapper.appendChild(label);
+    this.statusArea.appendChild(wrapper);
+  }
+
   private processFile(file: File): void {
     this.clearStatus();
     if (file.size > ImportEditor.MAX_FILE_SIZE) {
@@ -556,6 +571,8 @@ export class ImportEditor {
       );
       return;
     }
+
+    this.showLoading(`Parsing ${file.name}…`);
 
     const ext =
       file.name.lastIndexOf('.') >= 0
