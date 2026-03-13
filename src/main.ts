@@ -800,6 +800,25 @@ function main(): void {
   const exportCurrentChart = async () => {
     const layout = renderer.getLastLayout();
     if (!layout) return;
+
+    // Warn if chart will be scaled down due to PowerPoint's 56" limit
+    const PX_TO_IN = 1 / 96;
+    const MAX_SLIDE = 56;
+    const chartW = layout.boundingBox.width * PX_TO_IN + 1;
+    const chartH = layout.boundingBox.height * PX_TO_IN + 1;
+    if (chartW > MAX_SLIDE || chartH > MAX_SLIDE) {
+      const confirmed = await showConfirmDialog({
+        title: 'Large Org Chart',
+        message:
+          'This org chart is too large to fit at full size on a PowerPoint slide (max 56″). ' +
+          'It will be scaled down and may be hard to read.\n\n' +
+          'Tip: Right-click a manager and choose "Focus on sub-org" to export a smaller section instead.',
+        confirmLabel: 'Export anyway',
+        danger: false,
+      });
+      if (!confirmed) return;
+    }
+
     const rendererOpts = renderer.getOptions();
     await exportToPptx(layout, {
       categories: categoryStore.getAll(),
