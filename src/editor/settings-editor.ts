@@ -14,6 +14,7 @@ import {
   getBackupSummary,
 } from '../store/backup-manager';
 import { showRestoreStrategyDialog } from '../ui/restore-dialog';
+import { type IStorage, browserStorage } from '../utils/storage';
 
 const ARBOL_STORAGE_KEYS = [
   'arbol-org-data',
@@ -412,6 +413,7 @@ export class SettingsEditor {
   private settingsStore: SettingsStore | null;
   private categoryStore: CategoryStore | null;
   private chartDB: ChartDB | null;
+  private storage: IStorage;
 
   private static ACCORDION_STORAGE_KEY = 'arbol-accordion-state';
   private static DEFAULT_EXPANDED = new Set(['presets', 'categories']);
@@ -427,6 +429,7 @@ export class SettingsEditor {
     settingsStore?: SettingsStore,
     categoryStore?: CategoryStore,
     chartDB?: ChartDB,
+    storage: IStorage = browserStorage,
   ) {
     this.container = container;
     this.renderer = renderer;
@@ -434,13 +437,14 @@ export class SettingsEditor {
     this.settingsStore = settingsStore ?? null;
     this.categoryStore = categoryStore ?? null;
     this.chartDB = chartDB ?? null;
+    this.storage = storage;
     this.loadAccordionState();
     this.build();
   }
 
   private loadAccordionState(): void {
     try {
-      const raw = localStorage.getItem(SettingsEditor.ACCORDION_STORAGE_KEY);
+      const raw = this.storage.getItem(SettingsEditor.ACCORDION_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (typeof parsed === 'object') {
@@ -461,7 +465,7 @@ export class SettingsEditor {
     for (const [key, value] of this.accordionState) {
       obj[key] = value;
     }
-    localStorage.setItem(SettingsEditor.ACCORDION_STORAGE_KEY, JSON.stringify(obj));
+    this.storage.setItem(SettingsEditor.ACCORDION_STORAGE_KEY, JSON.stringify(obj));
   }
 
   private isExpanded(sectionId: string): boolean {
@@ -479,7 +483,7 @@ export class SettingsEditor {
 
   private loadCustomPresets(): CombinedPreset[] {
     try {
-      const raw = localStorage.getItem(SettingsEditor.CUSTOM_PRESETS_KEY);
+      const raw = this.storage.getItem(SettingsEditor.CUSTOM_PRESETS_KEY);
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
@@ -493,7 +497,7 @@ export class SettingsEditor {
   }
 
   private saveCustomPresets(presets: CombinedPreset[]): void {
-    localStorage.setItem(
+    this.storage.setItem(
       SettingsEditor.CUSTOM_PRESETS_KEY,
       JSON.stringify(presets.map(({ id, name, colors, sizes }) => ({ id, name, colors, sizes }))),
     );
@@ -572,7 +576,8 @@ export class SettingsEditor {
 
     // Settings filter
     const filterWrapper = document.createElement('div');
-    filterWrapper.style.cssText = 'margin-bottom:8px;position:relative;';
+    filterWrapper.className = 'mb-2';
+    filterWrapper.style.cssText = 'position:relative;';
 
     const filterInput = document.createElement('input');
     filterInput.type = 'text';
@@ -868,7 +873,7 @@ export class SettingsEditor {
       });
       if (confirmed) {
         for (const key of ARBOL_STORAGE_KEYS) {
-          localStorage.removeItem(key);
+          this.storage.removeItem(key);
         }
         indexedDB.deleteDatabase('arbol-db');
         window.location.reload();
@@ -945,10 +950,11 @@ export class SettingsEditor {
 
     for (const cat of categories) {
       const container = document.createElement('div');
-      container.style.cssText = 'margin-bottom:8px;';
+      container.className = 'mb-2';
 
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
+      row.className = 'flex-row';
+      row.style.cssText = 'gap:6px;margin-bottom:4px;';
 
       const colorInput = document.createElement('input');
       colorInput.type = 'color';
@@ -1031,8 +1037,8 @@ export class SettingsEditor {
 
       // Text color sub-row
       const textRow = document.createElement('div');
-      textRow.style.cssText =
-        'display:flex;align-items:center;gap:6px;padding-left:34px;font-size:10px;color:var(--text-tertiary);';
+      textRow.className = 'flex-row text-xs text-tertiary';
+      textRow.style.cssText = 'gap:6px;padding-left:34px;';
 
       const nameLabel = document.createElement('span');
       nameLabel.textContent = 'Name';
@@ -1050,9 +1056,9 @@ export class SettingsEditor {
     }
 
     const addBtn = document.createElement('button');
-    addBtn.className = 'btn btn-secondary';
+    addBtn.className = 'btn btn-secondary w-full';
     addBtn.textContent = '+ Add Category';
-    addBtn.style.cssText = 'font-size:11px;padding:4px 8px;width:100%;';
+    addBtn.style.cssText = 'font-size:11px;padding:4px 8px;';
     addBtn.addEventListener('click', () => {
       this.categoryStore!.add('New Category', '#94a3b8');
       this.rerenderCallback();
@@ -1155,8 +1161,8 @@ export class SettingsEditor {
     // Layout preset buttons (4-column grid)
     const layoutHeading = document.createElement('div');
     layoutHeading.textContent = 'Layout';
-    layoutHeading.style.cssText =
-      'font-size:10px;color:var(--text-tertiary);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;';
+    layoutHeading.className = 'text-xs text-tertiary';
+    layoutHeading.style.cssText = 'margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;';
     wrapper.appendChild(layoutHeading);
 
     const layoutGrid = document.createElement('div');
@@ -1174,12 +1180,14 @@ export class SettingsEditor {
 
       const icon = document.createElement('span');
       icon.textContent = lp.icon;
-      icon.style.cssText = 'font-size:14px;line-height:1;color:var(--text-secondary);';
+      icon.className = 'text-base text-secondary';
+      icon.style.cssText = 'line-height:1;';
       btn.appendChild(icon);
 
       const label = document.createElement('span');
       label.textContent = lp.name;
-      label.style.cssText = 'font-size:9px;color:var(--text-tertiary);font-weight:600;';
+      label.className = 'text-tertiary';
+      label.style.cssText = 'font-size:9px;font-weight:600;';
       btn.appendChild(label);
 
       btn.addEventListener('mouseenter', () => {
@@ -1204,7 +1212,8 @@ export class SettingsEditor {
 
     // Save as Preset button + inline name input
     const saveRow = document.createElement('div');
-    saveRow.style.cssText = 'display:flex;gap:6px;align-items:center;';
+    saveRow.className = 'flex-row';
+    saveRow.style.cssText = 'gap:6px;';
 
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
@@ -1216,9 +1225,9 @@ export class SettingsEditor {
       'background:var(--bg-surface);color:var(--text-primary);display:none;';
 
     const saveBtn = document.createElement('button');
-    saveBtn.className = 'btn btn-secondary save-preset-btn';
+    saveBtn.className = 'btn btn-secondary save-preset-btn w-full';
     saveBtn.textContent = '💾 Save as Preset';
-    saveBtn.style.cssText = 'font-size:11px;padding:4px 8px;width:100%;';
+    saveBtn.style.cssText = 'font-size:11px;padding:4px 8px;';
 
     const confirmBtn = document.createElement('button');
     confirmBtn.className = 'btn btn-primary';
@@ -1297,7 +1306,8 @@ export class SettingsEditor {
 
     if (setting.type === 'checkbox') {
       const label = document.createElement('label');
-      label.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;';
+      label.className = 'flex-row gap-2';
+      label.style.cssText = 'cursor:pointer;';
 
       const input = document.createElement('input');
       input.type = 'checkbox';

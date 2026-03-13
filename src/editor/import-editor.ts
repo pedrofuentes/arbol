@@ -78,7 +78,7 @@ export class ImportEditor {
     this.container.appendChild(presetHeading);
 
     const presetRow = document.createElement('div');
-    presetRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;';
+    presetRow.className = 'flex-row gap-2 mb-2';
 
     this.presetSelect = document.createElement('select');
     this.presetSelect.style.cssText =
@@ -92,7 +92,7 @@ export class ImportEditor {
 
     // --- Preset list (always visible) ---
     const presetListContainer = document.createElement('div');
-    presetListContainer.style.cssText = 'margin-bottom:8px;';
+    presetListContainer.className = 'mb-2';
 
     const rebuildManageList = () => {
       presetListContainer.innerHTML = '';
@@ -107,15 +107,15 @@ export class ImportEditor {
       }
       for (const preset of presets) {
         const row = document.createElement('div');
-        row.style.cssText =
-          'display:flex;align-items:center;justify-content:space-between;padding:3px 0;';
+        row.className = 'flex-between';
+        row.style.cssText = 'padding:3px 0;';
         const label = document.createElement('span');
         label.textContent = preset.name;
         label.style.cssText =
           'font-size:11px;color:var(--text-primary);font-family:var(--font-sans);';
 
         const btnGroup = document.createElement('div');
-        btnGroup.style.cssText = 'display:flex;gap:4px;';
+        btnGroup.className = 'flex-row gap-1';
 
         const exportBtn = document.createElement('button');
         exportBtn.className = 'btn btn-secondary';
@@ -257,7 +257,8 @@ export class ImportEditor {
       });
 
       const btnRow = document.createElement('div');
-      btnRow.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;';
+      btnRow.className = 'flex-row gap-2';
+      btnRow.style.cssText = 'justify-content:flex-end;';
 
       const cancelImportBtn = document.createElement('button');
       cancelImportBtn.className = 'btn btn-secondary';
@@ -355,14 +356,14 @@ export class ImportEditor {
     browseLabel.style.cursor = 'pointer';
     browseLabel.textContent = 'browse';
     dropLabel.append(icon, '\u00A0\u00A0Drop file or ', browseLabel);
-    dropLabel.style.cssText =
-      'color:var(--text-secondary);font-size:12px;font-family:var(--font-sans);';
+    dropLabel.className = 'text-secondary text-sm';
+    dropLabel.style.cssText = 'font-family:var(--font-sans);';
     dropZone.appendChild(dropLabel);
 
     const dropHint = document.createElement('div');
     dropHint.textContent = 'Supports .json, .csv, .xlsx, and .arbol.json files';
-    dropHint.style.cssText =
-      'color:var(--text-tertiary);font-size:10px;margin-top:4px;font-family:var(--font-sans);';
+    dropHint.className = 'text-tertiary text-xs mt-1';
+    dropHint.style.cssText = 'font-family:var(--font-sans);';
     dropZone.appendChild(dropHint);
 
     dropZone.addEventListener('click', () => this.fileInput.click());
@@ -407,9 +408,8 @@ export class ImportEditor {
     this.container.appendChild(this.pasteArea);
 
     const pasteBtn = document.createElement('button');
-    pasteBtn.className = 'btn btn-primary';
+    pasteBtn.className = 'btn btn-primary mt-2';
     pasteBtn.textContent = 'Parse & Preview';
-    pasteBtn.style.marginTop = '8px';
     pasteBtn.addEventListener('click', () => this.processPaste());
     this.container.appendChild(pasteBtn);
 
@@ -421,8 +421,7 @@ export class ImportEditor {
 
     this.errorArea = document.createElement('div');
     this.errorArea.dataset.field = 'error';
-    this.errorArea.className = 'error-msg';
-    this.errorArea.style.cssText = 'margin-top:8px;';
+    this.errorArea.className = 'error-msg mt-2';
     this.errorArea.textContent = '';
     this.container.appendChild(this.errorArea);
 
@@ -862,7 +861,7 @@ export class ImportEditor {
   private buildNormalizationRow(): HTMLElement {
     const wrapper = document.createElement('div');
     wrapper.dataset.section = 'normalization';
-    wrapper.style.cssText = 'margin-bottom:8px;';
+    wrapper.className = 'mb-2';
 
     const heading = document.createElement('div');
     heading.textContent = 'Text Normalization';
@@ -871,9 +870,9 @@ export class ImportEditor {
     wrapper.appendChild(heading);
 
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:8px;';
+    row.className = 'flex-row gap-2';
 
-    this.nameNormSelect = this.createNormSelect('Name');
+    this.nameNormSelect= this.createNormSelect('Name');
     this.titleNormSelect = this.createNormSelect('Title');
     row.appendChild(this.nameNormSelect.parentElement!);
     row.appendChild(this.titleNormSelect.parentElement!);

@@ -214,7 +214,8 @@ export class ChartEditor {
 
     if (charts.length === 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'font-size:12px;color:var(--text-tertiary);padding:8px 0;font-family:var(--font-sans);';
+      empty.className = 'text-sm text-tertiary';
+      empty.style.cssText = 'padding:8px 0;font-family:var(--font-sans);';
       empty.textContent = 'No charts yet';
       this.chartListEl.appendChild(empty);
       return;
@@ -247,7 +248,8 @@ export class ChartEditor {
 
     // Name row
     const nameRow = document.createElement('div');
-    nameRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    nameRow.className = 'flex-row';
+    nameRow.style.cssText = 'gap:6px;';
 
     if (isActive) {
       const dot = document.createElement('span');
@@ -266,7 +268,8 @@ export class ChartEditor {
     if (isActive) {
       const badge = document.createElement('span');
       badge.textContent = '(active)';
-      badge.style.cssText = 'font-size:10px;color:var(--text-tertiary);flex-shrink:0;';
+      badge.className = 'text-xs text-tertiary';
+      badge.style.cssText = 'flex-shrink:0;';
       nameRow.appendChild(badge);
     }
 
@@ -280,7 +283,8 @@ export class ChartEditor {
 
     // Action buttons
     const actions = document.createElement('div');
-    actions.style.cssText = 'display:flex;gap:6px;margin-top:4px;';
+    actions.className = 'flex-row mt-1';
+    actions.style.cssText = 'gap:6px;';
 
     const renameBtn = this.createInlineButton('Rename');
     renameBtn.addEventListener('click', (e) => {
@@ -323,7 +327,8 @@ export class ChartEditor {
 
     if (versions.length === 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'font-size:12px;color:var(--text-tertiary);padding:8px 0;font-family:var(--font-sans);';
+      empty.className = 'text-sm text-tertiary';
+      empty.style.cssText = 'padding:8px 0;font-family:var(--font-sans);';
       empty.textContent = 'No versions saved yet';
       this.versionListEl.appendChild(empty);
       return;
@@ -356,7 +361,8 @@ export class ChartEditor {
     item.appendChild(dateEl);
 
     const actions = document.createElement('div');
-    actions.style.cssText = 'display:flex;gap:6px;margin-top:4px;';
+    actions.className = 'flex-row mt-1';
+    actions.style.cssText = 'gap:6px;';
 
     const viewBtn = this.createInlineButton('View');
     viewBtn.addEventListener('click', () => this.onVersionView(version));
