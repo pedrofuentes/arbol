@@ -1,12 +1,16 @@
+import { type IStorage, browserStorage } from '../utils/storage';
+
 export type Theme = 'dark' | 'light';
 
 export class ThemeManager {
   private static STORAGE_KEY = 'arbol-theme';
   private currentTheme: Theme;
   private listeners: Set<(theme: Theme) => void> = new Set();
+  private storage: IStorage;
 
-  constructor() {
-    const saved = localStorage.getItem(ThemeManager.STORAGE_KEY);
+  constructor(storage: IStorage = browserStorage) {
+    this.storage = storage;
+    const saved = this.storage.getItem(ThemeManager.STORAGE_KEY);
     this.currentTheme = saved === 'light' || saved === 'dark' ? saved : 'dark';
     this.apply();
   }
@@ -17,7 +21,7 @@ export class ThemeManager {
 
   setTheme(theme: Theme): void {
     this.currentTheme = theme;
-    localStorage.setItem(ThemeManager.STORAGE_KEY, theme);
+    this.storage.setItem(ThemeManager.STORAGE_KEY, theme);
     this.apply();
     this.emit();
   }

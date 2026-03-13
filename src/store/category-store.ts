@@ -2,6 +2,7 @@ import type { ColorCategory } from '../types';
 import { generateId } from '../utils/id';
 import { contrastingTextColor, contrastingTitleColor } from '../utils/contrast';
 import { EventEmitter } from '../utils/event-emitter';
+import { type IStorage, browserStorage } from '../utils/storage';
 
 const STORAGE_KEY = 'arbol-categories';
 
@@ -32,6 +33,12 @@ const DEFAULT_CATEGORIES: ColorCategory[] = [
 ];
 
 export class CategoryStore extends EventEmitter {
+  private storage: IStorage;
+
+  constructor(storage: IStorage = browserStorage) {
+    super();
+    this.storage = storage;
+  }
 
   getAll(): ColorCategory[] {
     const stored = this.loadFromStorage();
@@ -132,7 +139,7 @@ export class CategoryStore extends EventEmitter {
 
   private loadFromStorage(): ColorCategory[] {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = this.storage.getItem(STORAGE_KEY);
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
@@ -152,7 +159,7 @@ export class CategoryStore extends EventEmitter {
 
   private saveToStorage(categories: ColorCategory[]): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
+      this.storage.setItem(STORAGE_KEY, JSON.stringify(categories));
     } catch (e) {
       console.error('Failed to save categories to localStorage:', e);
     }

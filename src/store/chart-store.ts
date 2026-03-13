@@ -2,6 +2,7 @@ import type { OrgNode, ColorCategory, ChartRecord, VersionRecord, ChartBundle } 
 import { ChartDB } from './chart-db';
 import { generateId } from '../utils/id';
 import { EventEmitter } from '../utils/event-emitter';
+import { type IStorage, browserStorage } from '../utils/storage';
 
 const DEFAULT_ROOT: OrgNode = {
   id: 'root',
@@ -16,10 +17,12 @@ export class ChartStore extends EventEmitter {
   private db: ChartDB;
   private activeChartId: string | null = null;
   private lastSavedTree: string | null = null;
+  private storage: IStorage;
 
-  constructor(db: ChartDB) {
+  constructor(db: ChartDB, storage: IStorage = browserStorage) {
     super();
     this.db = db;
+    this.storage = storage;
   }
 
   // ---------------------------------------------------------------------------
@@ -41,7 +44,7 @@ export class ChartStore extends EventEmitter {
   }
 
   private async createFromLocalStorageOrDefault(): Promise<ChartRecord> {
-    const rawTree = localStorage.getItem(LS_ORG_KEY);
+    const rawTree = this.storage.getItem(LS_ORG_KEY);
     let tree: OrgNode = DEFAULT_ROOT;
     let categories: ColorCategory[] = [];
 
@@ -52,7 +55,7 @@ export class ChartStore extends EventEmitter {
         tree = DEFAULT_ROOT;
       }
 
-      const rawCats = localStorage.getItem(LS_CAT_KEY);
+      const rawCats = this.storage.getItem(LS_CAT_KEY);
       if (rawCats) {
         try {
           categories = JSON.parse(rawCats) as ColorCategory[];
@@ -61,8 +64,8 @@ export class ChartStore extends EventEmitter {
         }
       }
 
-      localStorage.removeItem(LS_ORG_KEY);
-      localStorage.removeItem(LS_CAT_KEY);
+      this.storage.removeItem(LS_ORG_KEY);
+      this.storage.removeItem(LS_CAT_KEY);
     }
 
     const now = new Date().toISOString();

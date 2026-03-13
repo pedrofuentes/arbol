@@ -1,11 +1,18 @@
 import type { MappingPreset } from '../types';
+import { type IStorage, browserStorage } from '../utils/storage';
 
 const STORAGE_KEY = 'arbol-csv-mappings';
 
 export class MappingStore {
+  private storage: IStorage;
+
+  constructor(storage: IStorage = browserStorage) {
+    this.storage = storage;
+  }
+
   getPresets(): MappingPreset[] {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = this.storage.getItem(STORAGE_KEY);
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
@@ -37,7 +44,7 @@ export class MappingStore {
       presets.push(preset);
     }
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(presets));
+      this.storage.setItem(STORAGE_KEY, JSON.stringify(presets));
     } catch (e) {
       console.error('Failed to save mapping presets to localStorage:', e);
     }
@@ -47,7 +54,7 @@ export class MappingStore {
     const presets = this.getPresets();
     const filtered = presets.filter((p) => p.name !== name);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+      this.storage.setItem(STORAGE_KEY, JSON.stringify(filtered));
     } catch (e) {
       console.error('Failed to save mapping presets to localStorage:', e);
     }

@@ -1,5 +1,6 @@
 import { createOverlay, trapFocus } from './dialog-utils';
 import { showConfirmDialog } from './confirm-dialog';
+import { type IStorage, browserStorage } from '../utils/storage';
 
 const ARBOL_STORAGE_KEYS = [
   'arbol-org-data',
@@ -195,7 +196,7 @@ function buildHelpItem(fragments: HelpFragment[]): DocumentFragment {
   return frag;
 }
 
-export function showHelpDialog(): void {
+export function showHelpDialog(storage: IStorage = browserStorage): void {
   const overlay = createOverlay();
   overlay.style.background = 'rgba(0,0,0,0.6)';
   overlay.style.backdropFilter = 'blur(3px)';
@@ -321,7 +322,7 @@ export function showHelpDialog(): void {
         });
         if (confirmed) {
           for (const key of ARBOL_STORAGE_KEYS) {
-            localStorage.removeItem(key);
+            storage.removeItem(key);
           }
           indexedDB.deleteDatabase('arbol-db');
           window.location.reload();

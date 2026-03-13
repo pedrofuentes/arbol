@@ -1,4 +1,5 @@
 import { timestampedFilename } from '../utils/filename';
+import { type IStorage, browserStorage } from '../utils/storage';
 
 export interface PersistableSettings {
   nodeWidth: number;
@@ -164,6 +165,11 @@ export class SettingsStore {
   private static STORAGE_KEY = 'arbol-settings';
   private static CURRENT_VERSION = 1;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private storage: IStorage;
+
+  constructor(storage: IStorage = browserStorage) {
+    this.storage = storage;
+  }
 
   save(settings: Partial<PersistableSettings>): void {
     if (this.debounceTimer !== null) {
@@ -185,7 +191,7 @@ export class SettingsStore {
 
   load(defaults: PersistableSettings): PersistableSettings {
     try {
-      const raw = localStorage.getItem(SettingsStore.STORAGE_KEY);
+      const raw = this.storage.getItem(SettingsStore.STORAGE_KEY);
       if (!raw) return { ...defaults };
       const envelope: StorageEnvelope = JSON.parse(raw);
       if (!envelope || typeof envelope !== 'object' || !envelope.settings) {
@@ -200,11 +206,11 @@ export class SettingsStore {
   }
 
   hasSaved(): boolean {
-    return localStorage.getItem(SettingsStore.STORAGE_KEY) !== null;
+    return this.storage.getItem(SettingsStore.STORAGE_KEY) !== null;
   }
 
   clear(): void {
-    localStorage.removeItem(SettingsStore.STORAGE_KEY);
+    this.storage.removeItem(SettingsStore.STORAGE_KEY);
   }
 
   exportToFile(name?: string): void {
@@ -281,7 +287,7 @@ export class SettingsStore {
       settings: merged,
     };
     try {
-      localStorage.setItem(SettingsStore.STORAGE_KEY, JSON.stringify(envelope));
+      this.storage.setItem(SettingsStore.STORAGE_KEY, JSON.stringify(envelope));
     } catch (e) {
       console.error('Failed to save settings to localStorage:', e);
     }
@@ -289,7 +295,7 @@ export class SettingsStore {
 
   private loadRaw(): Partial<PersistableSettings> | null {
     try {
-      const raw = localStorage.getItem(SettingsStore.STORAGE_KEY);
+      const raw = this.storage.getItem(SettingsStore.STORAGE_KEY);
       if (!raw) return null;
       const envelope: StorageEnvelope = JSON.parse(raw);
       if (!envelope || typeof envelope !== 'object' || !envelope.settings) return null;

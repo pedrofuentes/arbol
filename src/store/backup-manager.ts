@@ -2,6 +2,7 @@ import type { ChartRecord, VersionRecord } from '../types';
 import type { ChartDB } from './chart-db';
 import { APP_VERSION } from '../version';
 import { timestampedFilename } from '../utils/filename';
+import { type IStorage, browserStorage } from '../utils/storage';
 
 // ── Backup format ────────────────────────────────────────────────────────────
 
@@ -68,7 +69,7 @@ function safeJsonParse(raw: string | null): unknown | null {
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export async function createBackup(db: ChartDB): Promise<ArbolBackup> {
+export async function createBackup(db: ChartDB, storage: IStorage = browserStorage): Promise<ArbolBackup> {
   const charts = await db.getAllCharts();
 
   const versions: VersionRecord[] = [];
@@ -84,11 +85,11 @@ export async function createBackup(db: ChartDB): Promise<ArbolBackup> {
     data: {
       charts,
       versions,
-      settings: safeJsonParse(localStorage.getItem(BACKUP_LS_KEYS.settings)),
-      theme: localStorage.getItem(BACKUP_LS_KEYS.theme),
-      csvMappings: safeJsonParse(localStorage.getItem(BACKUP_LS_KEYS.csvMappings)),
-      customPresets: safeJsonParse(localStorage.getItem(BACKUP_LS_KEYS.customPresets)),
-      accordionState: safeJsonParse(localStorage.getItem(BACKUP_LS_KEYS.accordionState)),
+      settings: safeJsonParse(storage.getItem(BACKUP_LS_KEYS.settings)),
+      theme: storage.getItem(BACKUP_LS_KEYS.theme),
+      csvMappings: safeJsonParse(storage.getItem(BACKUP_LS_KEYS.csvMappings)),
+      customPresets: safeJsonParse(storage.getItem(BACKUP_LS_KEYS.customPresets)),
+      accordionState: safeJsonParse(storage.getItem(BACKUP_LS_KEYS.accordionState)),
     },
   };
 }
@@ -158,10 +159,10 @@ export function getBackupSummary(backup: ArbolBackup): BackupSummary {
   };
 }
 
-export async function restoreFullReplace(db: ChartDB, backup: ArbolBackup): Promise<void> {
+export async function restoreFullReplace(db: ChartDB, backup: ArbolBackup, storage: IStorage = browserStorage): Promise<void> {
   // Clear localStorage
   for (const key of ALL_ARBOL_LS_KEYS) {
-    localStorage.removeItem(key);
+    storage.removeItem(key);
   }
 
   // Delete all existing charts (this cascades to versions)
@@ -181,7 +182,7 @@ export async function restoreFullReplace(db: ChartDB, backup: ArbolBackup): Prom
   }
 
   // Restore localStorage
-  restoreLocalStorage(backup);
+  restoreLocalStorage(backup, storage);
 }
 
 export async function restoreMerge(db: ChartDB, backup: ArbolBackup): Promise<MergeResult> {
@@ -211,22 +212,22 @@ export async function restoreMerge(db: ChartDB, backup: ArbolBackup): Promise<Me
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
 
-function restoreLocalStorage(backup: ArbolBackup): void {
+function restoreLocalStorage(backup: ArbolBackup, storage: IStorage = browserStorage): void {
   const { data } = backup;
 
   if (data.settings !== null && data.settings !== undefined) {
-    localStorage.setItem(BACKUP_LS_KEYS.settings, JSON.stringify(data.settings));
+    storage.setItem(BACKUP_LS_KEYS.settings, JSON.stringify(data.settings));
   }
   if (data.theme !== null && data.theme !== undefined) {
-    localStorage.setItem(BACKUP_LS_KEYS.theme, data.theme);
+    storage.setItem(BACKUP_LS_KEYS.theme, data.theme);
   }
   if (data.csvMappings !== null && data.csvMappings !== undefined) {
-    localStorage.setItem(BACKUP_LS_KEYS.csvMappings, JSON.stringify(data.csvMappings));
+    storage.setItem(BACKUP_LS_KEYS.csvMappings, JSON.stringify(data.csvMappings));
   }
   if (data.customPresets !== null && data.customPresets !== undefined) {
-    localStorage.setItem(BACKUP_LS_KEYS.customPresets, JSON.stringify(data.customPresets));
+    storage.setItem(BACKUP_LS_KEYS.customPresets, JSON.stringify(data.customPresets));
   }
   if (data.accordionState !== null && data.accordionState !== undefined) {
-    localStorage.setItem(BACKUP_LS_KEYS.accordionState, JSON.stringify(data.accordionState));
+    storage.setItem(BACKUP_LS_KEYS.accordionState, JSON.stringify(data.accordionState));
   }
 }
