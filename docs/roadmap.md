@@ -140,7 +140,15 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] `src/utils/contrast.ts` — `relativeLuminance()`, `contrastingTextColor()`, `contrastingTitleColor()`
 - [x] Midnight theme preset uses light text for dark card fills
 
-### Phase 16 — Text Normalization & Utilities Tab
+### Phase 16 — Configurable Legend Layout
+- [x] `legendRows` setting — controls number of rows in category legend; columns auto-calculated
+- [x] Multi-column layout in SVG canvas legend (`chart-renderer.ts`)
+- [x] Multi-column layout in HTML overlay legend (`category-legend.ts` via CSS grid)
+- [x] Multi-column layout in PPTX export legend (`pptx-exporter.ts`)
+- [x] "Categories Legend" section in settings editor with slider (0 = auto)
+- [x] Proper vertical centering of PPTX legend items
+
+### Phase 17 — Text Normalization & Utilities Tab
 - [x] `TextNormalization` type (`none`, `titleCase`, `uppercase`, `lowercase`) and fields on `ColumnMapping`
 - [x] `normalizeText()` utility — handles hyphens, apostrophes (e.g., "O'Brien", "Mary-Jane")
 - [x] `normalizeTreeText()` — deep immutable tree normalization for name and title independently

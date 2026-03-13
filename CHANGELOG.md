@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] — 2026-03-13
+
+### Added
+- **Configurable legend rows** — new `legendRows` setting in the "Categories Legend" section controls how many rows the category legend uses; columns are auto-calculated (`ceil(count / rows)`) with row-major fill order
+- Multi-column layout applies to all three legend renderers: SVG canvas, HTML overlay, and PPTX export
+- Default `legendRows = 0` preserves existing single-column behavior
+
+### Changed
+- PPTX legend items are now properly vertically centered within the legend box
+- PPTX legend column spacing tightened for a more compact multi-column layout
+
 ## [1.8.0] — 2026-03-13
 
 ### Added
