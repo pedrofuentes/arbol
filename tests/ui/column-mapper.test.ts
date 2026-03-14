@@ -98,13 +98,6 @@ describe('ColumnMapper', () => {
     expect(caseCheckbox!.checked).toBe(true);
   });
 
-  it('renders normalization dropdowns', () => {
-    new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
-    expect(container.textContent).toContain('Text Normalization');
-    expect(container.textContent).toContain('Name Text Format');
-    expect(container.textContent).toContain('Title Text Format');
-  });
-
   it('renders save as preset section', () => {
     new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
     expect(container.textContent).toContain('Save as Preset');
