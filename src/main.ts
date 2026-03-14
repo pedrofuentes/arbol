@@ -40,6 +40,7 @@ import { PropertyPanel } from './ui/property-panel';
 import { FloatingActions } from './ui/floating-actions';
 import { SettingsModal } from './ui/settings-modal';
 import { ImportWizard } from './ui/import-wizard';
+import { WizardState, renderSourceStep, renderMappingStep, renderPreviewStep, renderImportStep } from './ui/import-wizard-steps';
 import type { ComparisonState, VersionRecord } from './types';
 
 async function main(): Promise<void> {
@@ -420,6 +421,8 @@ async function main(): Promise<void> {
   headerRight.insertBefore(settingsBtn, divider);
 
   // Import wizard (opens via header button)
+  let wizardState: WizardState = {};
+
   const importWizard = new ImportWizard({
     steps: [
       { id: 'source', label: t('import_wizard.step_source') },
@@ -427,9 +430,38 @@ async function main(): Promise<void> {
       { id: 'preview', label: t('import_wizard.step_preview') },
       { id: 'import', label: t('import_wizard.step_import') },
     ],
-    onClose: () => {},
-    onStepChange: () => {},
-    onComplete: () => { importWizard.close(); },
+    onClose: () => { wizardState = {}; },
+    onStepChange: (stepId) => {
+      const content = importWizard.getStepContentArea();
+      const setNext = (ready: boolean) => importWizard.setNextEnabled(ready);
+      switch (stepId) {
+        case 'source': renderSourceStep(content, wizardState, setNext); break;
+        case 'mapping': renderMappingStep(content, wizardState, setNext); break;
+        case 'preview': renderPreviewStep(content, wizardState, setNext); break;
+        case 'import': renderImportStep(content, wizardState, setNext); break;
+      }
+    },
+    onComplete: async () => {
+      if (!wizardState.tree) return;
+      try {
+        let finalTree = wizardState.tree;
+        if (wizardState.nameNormalization || wizardState.titleNormalization) {
+          const { normalizeTreeText } = await import('./utils/text-normalize');
+          finalTree = normalizeTreeText(finalTree, wizardState.nameNormalization ?? 'none', wizardState.titleNormalization ?? 'none');
+        }
+        if (wizardState.destination === 'new' && wizardState.chartName) {
+          await chartStore.createChartFromTree(wizardState.chartName, finalTree);
+          announce(t('announce.chart_switched', { name: wizardState.chartName }));
+        } else {
+          store.fromJSON(JSON.stringify(finalTree));
+        }
+        importWizard.close();
+        wizardState = {};
+        showToast(t('footer.imported'), 'success');
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : String(e), 'error');
+      }
+    },
   });
 
   const importBtn = document.createElement('button');
@@ -441,7 +473,12 @@ async function main(): Promise<void> {
   importIcon.textContent = '📂';
   importBtn.appendChild(importIcon);
   importBtn.appendChild(document.createTextNode(' Import'));
-  importBtn.addEventListener('click', () => { importWizard.open(); });
+  importBtn.addEventListener('click', () => {
+    wizardState = {};
+    importWizard.open();
+    const content = importWizard.getStepContentArea();
+    renderSourceStep(content, wizardState, (ready) => importWizard.setNextEnabled(ready));
+  });
   headerRight.insertBefore(importBtn, settingsBtn);
 
   const exportHeaderBtn = document.createElement('button');
