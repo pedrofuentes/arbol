@@ -384,7 +384,7 @@ export class ChartRenderer {
   private applyHighlighting(): void {
     if (!this.highlightedNodes) {
       this.g.selectAll('.node, .ic-node, .pal-node').style('opacity', null);
-      this.g.selectAll('.links, .pal-stacks .link').style('opacity', null);
+      this.g.selectAll('.link').style('opacity', null);
       this.g.selectAll('.ic-container').style('opacity', null);
       return;
     }
@@ -401,8 +401,10 @@ export class ChartRenderer {
       }
     });
 
-    this.g.selectAll('.links, .pal-stacks .link').style('opacity', '0.3');
-    this.g.selectAll('.ic-container').style('opacity', '0.2');
+    // Target individual path.link elements, not the parent <g> groups,
+    // to avoid SVG compositing layers that cause visible color banding
+    this.g.selectAll('.link').style('opacity', '0.3');
+    this.g.selectAll('.ic-container').style('opacity', '0');
   }
 
   private applyAriaAttributes(root: OrgNode): void {

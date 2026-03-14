@@ -792,8 +792,10 @@ describe('ChartRenderer', () => {
     it('dims tree links when search is active', () => {
       renderer.render(simpleTree());
       renderer.setHighlightedNodes(new Set(['root']));
-      const linksGroup = container.querySelector('.links') as SVGGElement;
-      expect(linksGroup.style.opacity).toBe('0.3');
+      const links = container.querySelectorAll('.links .link');
+      for (const link of links) {
+        expect((link as SVGElement).style.opacity).toBe('0.3');
+      }
     });
 
     it('dims advisor links when search is active', () => {
@@ -805,11 +807,11 @@ describe('ChartRenderer', () => {
       }
     });
 
-    it('dims IC containers when search is active', () => {
+    it('hides IC containers when search is active', () => {
       renderer.render(m1WithICs());
       renderer.setHighlightedNodes(new Set(['root']));
       const icContainer = container.querySelector('.ic-container') as SVGRectElement;
-      expect(icContainer.style.opacity).toBe('0.2');
+      expect(icContainer.style.opacity).toBe('0');
     });
 
     it('clears all highlighting when called with null', () => {
@@ -821,8 +823,10 @@ describe('ChartRenderer', () => {
       for (const node of nodes) {
         expect((node as SVGGElement).style.opacity).toBe('');
       }
-      const linksGroup = container.querySelector('.links') as SVGGElement;
-      expect(linksGroup.style.opacity).toBe('');
+      const links = container.querySelectorAll('.link');
+      for (const link of links) {
+        expect((link as SVGElement).style.opacity).toBe('');
+      }
     });
 
     it('clears IC container opacity when highlighting is cleared', () => {
