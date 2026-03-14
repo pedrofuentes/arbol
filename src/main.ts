@@ -1388,7 +1388,7 @@ async function main(): Promise<void> {
 
   // Footer: Buttons (right side) — hidden, controls moved to canvas/header
   const footerRight = document.createElement('div');
-  footerRight.style.cssText = 'display:none;';
+  footerRight.style.cssText = 'display:flex;align-items:center;gap:var(--space-2);';
   footer.appendChild(footerRight);
 
   const exportBtn = document.createElement('button');
@@ -1517,56 +1517,6 @@ async function main(): Promise<void> {
   zoomSeparator.style.cssText = 'width:1px;height:14px;background:var(--border-default);';
   footerRight.appendChild(zoomSeparator);
   footerRight.appendChild(zoomIndicator);
-
-  // Floating zoom controls on canvas
-  const zoomControls = document.createElement('div');
-  zoomControls.className = 'zoom-controls-float';
-
-  const zoomOutFloatBtn = document.createElement('button');
-  zoomOutFloatBtn.className = 'zoom-btn zoom-btn-icon';
-  zoomOutFloatBtn.textContent = '\u2212';
-  zoomOutFloatBtn.title = 'Zoom out';
-  zoomOutFloatBtn.addEventListener('click', () => { renderer.getZoomManager()?.zoomOut(); });
-
-  const zoomInFloatBtn = document.createElement('button');
-  zoomInFloatBtn.className = 'zoom-btn zoom-btn-icon';
-  zoomInFloatBtn.textContent = '+';
-  zoomInFloatBtn.title = 'Zoom in';
-  zoomInFloatBtn.addEventListener('click', () => { renderer.getZoomManager()?.zoomIn(); });
-
-  const zoomPctEl = document.createElement('span');
-  zoomPctEl.className = 'zoom-pct';
-  zoomPctEl.textContent = '100%';
-
-  const fitCanvasBtn = document.createElement('button');
-  fitCanvasBtn.className = 'zoom-btn';
-  fitCanvasBtn.textContent = '\u2293 Fit';
-  fitCanvasBtn.addEventListener('click', () => {
-    if (sideBySideRenderer) {
-      sideBySideRenderer.fitToContent();
-    } else {
-      renderer.getZoomManager()?.fitToContent();
-    }
-  });
-
-  const resetCanvasBtn = document.createElement('button');
-  resetCanvasBtn.className = 'zoom-btn';
-  resetCanvasBtn.textContent = '\u21BA Reset';
-  resetCanvasBtn.addEventListener('click', () => {
-    if (sideBySideRenderer) {
-      sideBySideRenderer.centerAtRealSize();
-    } else {
-      renderer.getZoomManager()?.centerAtRealSize();
-    }
-  });
-
-  zoomControls.append(zoomOutFloatBtn, zoomInFloatBtn, zoomPctEl, fitCanvasBtn, resetCanvasBtn);
-  chartArea.appendChild(zoomControls);
-
-  zoomManager?.onZoom(() => {
-    const pct = zoomManager?.getRelativeZoomPercent();
-    if (pct !== undefined) zoomPctEl.textContent = `${Math.round(pct)}%`;
-  });
 
   // Keyboard shortcuts
   const shortcuts = new ShortcutManager();
