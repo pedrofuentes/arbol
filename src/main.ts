@@ -43,6 +43,7 @@ import { showWelcomeBanner } from './ui/welcome-banner';
 import { CommandPalette, CommandItem } from './ui/command-palette';
 import { PropertyPanel } from './ui/property-panel';
 import { FloatingActions } from './ui/floating-actions';
+import { SettingsModal } from './ui/settings-modal';
 import type { ComparisonState, VersionRecord } from './types';
 
 async function main(): Promise<void> {
@@ -398,6 +399,24 @@ async function main(): Promise<void> {
   const divider = document.createElement('span');
   divider.className = 'header-divider';
   headerRight.insertBefore(divider, themeBtn);
+
+  // Settings modal (opens via header button)
+  const settingsModal = new SettingsModal({
+    onClose: () => {},
+    onApply: () => { rerender(); },
+  });
+
+  const settingsBtn = document.createElement('button');
+  settingsBtn.className = 'icon-btn';
+  settingsBtn.setAttribute('data-tooltip', t('toolbar.settings_tooltip'));
+  settingsBtn.setAttribute('aria-label', t('toolbar.settings_aria'));
+  settingsBtn.setAttribute('aria-keyshortcuts', 'Control+,');
+  const settingsIcon = document.createElement('span');
+  settingsIcon.setAttribute('aria-hidden', 'true');
+  settingsIcon.textContent = '⚙️';
+  settingsBtn.appendChild(settingsIcon);
+  settingsBtn.addEventListener('click', () => { settingsModal.open(); });
+  headerRight.insertBefore(settingsBtn, divider);
 
   const updateUndoRedoState = () => {
     undoBtn.disabled = !store.canUndo();

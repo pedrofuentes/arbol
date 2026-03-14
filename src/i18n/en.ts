@@ -25,6 +25,8 @@ const en: Record<string, string> = {
   'toolbar.redo_icon': '↪',
   'toolbar.toggle_sidebar': 'Toggle sidebar',
   'toolbar.hamburger_icon': '☰',
+  'toolbar.settings_tooltip': 'Settings',
+  'toolbar.settings_aria': 'Open settings',
 
   // ─── Search ────────────────────────────────────────────────────────
   'search.aria': 'Search people by name or title',
@@ -97,6 +99,14 @@ const en: Record<string, string> = {
   'property_panel.remove': '🗑️ Remove',
   'announce.panel_opened': 'Properties panel opened for {name}',
   'announce.panel_closed': 'Properties panel closed',
+
+  // ─── Settings Modal ─────────────────────────────────────────────────
+  'settings_modal.title': '⚙️ Settings',
+  'settings_modal.aria_label': 'Settings dialog',
+  'settings_modal.close_aria': 'Close settings',
+  'settings_modal.cancel': 'Cancel',
+  'settings_modal.apply': 'Apply Changes',
+  'settings_modal.nav_aria': 'Settings sections',
 
   // ─── Floating Actions ───────────────────────────────────────────────
   'floating.aria_label': 'Quick actions toolbar',
