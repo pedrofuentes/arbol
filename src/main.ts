@@ -450,7 +450,8 @@ async function main(): Promise<void> {
           finalTree = normalizeTreeText(finalTree, wizardState.nameNormalization ?? 'none', wizardState.titleNormalization ?? 'none');
         }
         if (wizardState.destination === 'new' && wizardState.chartName) {
-          await chartStore.createChartFromTree(wizardState.chartName, finalTree);
+          const chart = await chartStore.createChartFromTree(wizardState.chartName, finalTree);
+          await chartStore.saveVersion(t('import_wizard.original_version'), chart.workingTree);
           announce(t('announce.chart_switched', { name: wizardState.chartName }));
         } else {
           store.fromJSON(JSON.stringify(finalTree));

@@ -830,6 +830,7 @@ const en: Record<string, string> = {
   'import_wizard.dest_new': 'Create new chart',
   'import_wizard.dest_name_label': 'Chart name',
   'import_wizard.dest_name_placeholder': 'My Org Chart',
+  'import_wizard.original_version': 'Original',
 
   // ─── Toolbar (Step 6) ──────────────────────────────────────────────
   'toolbar.export_tooltip': 'Export to PowerPoint (Ctrl+E)',
