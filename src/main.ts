@@ -2,18 +2,13 @@ import { setLocale, t } from './i18n';
 import en from './i18n/en';
 import { OrgStore } from './store/org-store';
 import { ChartRenderer } from './renderer/chart-renderer';
-import { TabSwitcher } from './editor/tab-switcher';
-import { SettingsEditor } from './editor/settings-editor';
 import { FormEditor } from './editor/form-editor';
 import { JsonEditor } from './editor/json-editor';
-import { ImportEditor } from './editor/import-editor';
-import { UtilitiesEditor } from './editor/utilities-editor';
 import { exportToPptx } from './export/pptx-exporter';
 import { ThemeManager, Theme } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { CategoryStore } from './store/category-store';
 import { flattenTree, findNodeById, findParent, isLeaf, isM1, countLeaves, countManagersByLevel } from './utils/tree';
-import { SAMPLE_ORG } from './data/sample-org';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
 import { timestampedFilename } from './utils/filename';
@@ -50,6 +45,11 @@ import type { ComparisonState, VersionRecord } from './types';
 async function main(): Promise<void> {
   const sidebar = document.getElementById('sidebar')!;
   const chartArea = document.getElementById('chart-area')!;
+
+  // Offscreen host for editors that need to exist but aren't visible in the sidebar
+  const offscreenHost = document.createElement('div');
+  offscreenHost.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden;';
+  document.body.appendChild(offscreenHost);
 
   setLocale('en', en);
 
@@ -444,6 +444,19 @@ async function main(): Promise<void> {
   importBtn.addEventListener('click', () => { importWizard.open(); });
   headerRight.insertBefore(importBtn, settingsBtn);
 
+  const exportHeaderBtn = document.createElement('button');
+  exportHeaderBtn.className = 'icon-btn';
+  exportHeaderBtn.setAttribute('data-tooltip', t('toolbar.export_tooltip'));
+  exportHeaderBtn.setAttribute('aria-label', t('toolbar.export_aria'));
+  exportHeaderBtn.setAttribute('aria-keyshortcuts', 'Control+e');
+  const exportHeaderIcon = document.createElement('span');
+  exportHeaderIcon.setAttribute('aria-hidden', 'true');
+  exportHeaderIcon.textContent = '📤';
+  exportHeaderBtn.appendChild(exportHeaderIcon);
+  exportHeaderBtn.appendChild(document.createTextNode(' Export'));
+  exportHeaderBtn.addEventListener('click', () => { exportCurrentChart(); });
+  headerRight.insertBefore(exportHeaderBtn, settingsBtn);
+
   const updateUndoRedoState = () => {
     undoBtn.disabled = !store.canUndo();
     redoBtn.disabled = !store.canRedo();
@@ -453,11 +466,11 @@ async function main(): Promise<void> {
   store.onChange(updateUndoRedoState);
   updateUndoRedoState();
 
-  // Chart name header (between logo and search)
+  // Chart name header (moved offscreen — name shown in sidebar)
   const headerLeft = document.querySelector('.header-left')!;
   const chartNameContainer = document.createElement('div');
   chartNameContainer.style.cssText = 'display:flex;align-items:center;margin-left:12px;';
-  headerLeft.appendChild(chartNameContainer);
+  offscreenHost.appendChild(chartNameContainer);
 
   const chartNameHeader = new ChartNameHeader({
     container: chartNameContainer,
@@ -549,110 +562,16 @@ async function main(): Promise<void> {
     }
   });
 
-  // Sidebar tabs
-  const tabSwitcher = new TabSwitcher(sidebar, [
-    { id: 'charts', label: t('tabs.charts') },
-    { id: 'people', label: t('tabs.people') },
-    { id: 'import', label: t('tabs.import') },
-    { id: 'settings', label: t('tabs.settings') },
-  ]);
+  // Editors hosted offscreen (still instantiated for API calls)
+  const formEditorHost = document.createElement('div');
+  offscreenHost.appendChild(formEditorHost);
+  const formEditor = new FormEditor(formEditorHost, store);
 
-  const peopleContainer = tabSwitcher.getContentContainer('people')!;
-  const formEditor = new FormEditor(peopleContainer, store);
+  const jsonEditorHost = document.createElement('div');
+  offscreenHost.appendChild(jsonEditorHost);
+  const jsonEditor = new JsonEditor(jsonEditorHost, store);
 
-  const importContainer = tabSwitcher.getContentContainer('import')!;
-  const importEditorWrapper = document.createElement('div');
-  importContainer.appendChild(importEditorWrapper);
-  new ImportEditor(importEditorWrapper, store, async (tree, name) => {
-    const chart = await chartStore.createChartFromTree(name, tree);
-    await chartStore.saveVersion(t('import.original_version_name'), chart.workingTree);
-    focusMode.clear();
-    dismissVersionViewer();
-    clearMultiSelection();
-    store.replaceTree(chart.workingTree);
-    categoryStore.replaceAll(chart.categories);
-    chartNameHeader.setName(chart.name);
-    chartNameHeader.setDirty(false);
-    rerender();
-    renderer.getZoomManager()?.fitToContent();
-    formEditor.refresh();
-    jsonEditor.refresh();
-  }, chartStore, (chart) => {
-    focusMode.clear();
-    dismissVersionViewer();
-    clearMultiSelection();
-    store.replaceTree(chart.workingTree);
-    categoryStore.replaceAll(chart.categories);
-    chartNameHeader.setName(chart.name);
-    chartNameHeader.setDirty(false);
-    rerender();
-    renderer.getZoomManager()?.fitToContent();
-    formEditor.refresh();
-    jsonEditor.refresh();
-  });
-
-  // Text normalization section
-  const normSeparator = document.createElement('hr');
-  normSeparator.style.cssText =
-    'border:none;border-top:1px solid var(--border-subtle);margin:16px 0;';
-  importContainer.appendChild(normSeparator);
-  const normWrapper = document.createElement('div');
-  importContainer.appendChild(normWrapper);
-  new UtilitiesEditor(normWrapper, store);
-
-  // JSON Editor as collapsible details
-  const jsonSeparator = document.createElement('hr');
-  jsonSeparator.style.cssText =
-    'border:none;border-top:1px solid var(--border-subtle);margin:16px 0;';
-  importContainer.appendChild(jsonSeparator);
-
-  const jsonDetails = document.createElement('details');
-  jsonDetails.style.cssText = 'margin-bottom:14px;';
-
-  const jsonSummary = document.createElement('summary');
-  jsonSummary.style.cssText =
-    'padding:6px 0;font-size:11px;font-weight:700;font-family:var(--font-sans);' +
-    'color:var(--text-tertiary);cursor:pointer;user-select:none;text-transform:uppercase;letter-spacing:0.08em;' +
-    'list-style:none;display:flex;align-items:center;gap:6px;';
-
-  const jsonArrow = document.createElement('span');
-  jsonArrow.style.cssText = 'font-size:8px;transition:transform 150ms ease;display:inline-block;';
-  jsonArrow.textContent = t('json_editor.expand_icon');
-  jsonSummary.appendChild(jsonArrow);
-  jsonSummary.appendChild(document.createTextNode(t('json_editor.section_title')));
-  jsonDetails.appendChild(jsonSummary);
-
-  jsonDetails.addEventListener('toggle', () => {
-    jsonArrow.style.transform = jsonDetails.open ? 'rotate(90deg)' : '';
-  });
-
-  const jsonContent = document.createElement('div');
-  jsonDetails.appendChild(jsonContent);
-  importContainer.appendChild(jsonDetails);
-
-  const jsonEditor = new JsonEditor(jsonContent, store);
-
-  // Load sample org button (after Edit JSON, at the bottom)
-  const sampleSeparator = document.createElement('hr');
-  sampleSeparator.style.cssText =
-    'border:none;border-top:1px solid var(--border-subtle);margin:14px 0;';
-  importContainer.appendChild(sampleSeparator);
-
-  const sampleBtn = document.createElement('button');
-  sampleBtn.className = 'btn btn-secondary';
-  sampleBtn.textContent = t('import.sample_button');
-  sampleBtn.style.cssText = 'width:100%;padding:8px;font-size:12px;';
-  sampleBtn.addEventListener('click', () => {
-    store.fromJSON(JSON.stringify(SAMPLE_ORG));
-  });
-  importContainer.appendChild(sampleBtn);
-
-  const settingsContainer = tabSwitcher.getContentContainer('settings')!;
-  new SettingsEditor(settingsContainer, renderer, rerender, settingsStore, categoryStore, chartDB);
-
-  // Charts tab
-  const chartsContainer = tabSwitcher.getContentContainer('charts')!;
-
+  // Charts — mounted directly in sidebar (no tabs)
   const handleBeforeSwitch = async (): Promise<boolean> => {
     if (!chartStore.isDirty(store.getTree())) return true;
     const confirmed = await showConfirmDialog({
@@ -665,17 +584,15 @@ async function main(): Promise<void> {
   };
 
   new ChartEditor({
-    container: chartsContainer,
+    container: sidebar,
     chartStore,
     getCurrentTree: () => store.getTree(),
     getCurrentCategories: () => categoryStore.getAll(),
     onBeforeSwitch: handleBeforeSwitch,
     onChartSwitch: (chart) => {
-      // Exit focus mode and version viewer
       focusMode.clear();
       dismissVersionViewer();
       clearMultiSelection();
-      // Load the new chart's data
       store.replaceTree(chart.workingTree);
       if (chart.categories.length > 0) {
         categoryStore.replaceAll(chart.categories);
@@ -700,7 +617,6 @@ async function main(): Promise<void> {
       jsonEditor.refresh();
     },
     onVersionView: (version) => {
-      // Enter read-only view mode
       const savedTree = store.getTree();
       store.replaceTree(version.tree);
       rerender();
@@ -717,7 +633,6 @@ async function main(): Promise<void> {
           rerender();
         },
         onClose: () => {
-          // Restore the working tree
           store.replaceTree(savedTree);
           dismissVersionViewer();
           rerender();
@@ -729,6 +644,33 @@ async function main(): Promise<void> {
       enterComparisonMode(version);
     },
   });
+
+  // Sidebar collapse toggle
+  const sidebarToggle = document.createElement('button');
+  sidebarToggle.className = 'sidebar-toggle';
+  sidebarToggle.textContent = '\u2039';
+  sidebarToggle.setAttribute('aria-label', t('toolbar.toggle_sidebar'));
+  const mainEl = document.getElementById('main')!;
+  mainEl.appendChild(sidebarToggle);
+
+  sidebarToggle.addEventListener('click', () => {
+    const collapsed = mainEl.classList.toggle('sidebar-collapsed');
+    sidebar.classList.toggle('collapsed', collapsed);
+    sidebarToggle.textContent = collapsed ? '\u203A' : '\u2039';
+  });
+
+  // Sidebar footer with ⌘K button
+  const sidebarFooter = document.createElement('div');
+  sidebarFooter.className = 'chart-nav-footer';
+  const cmdKBtn = document.createElement('button');
+  cmdKBtn.className = 'chart-nav-cmdk';
+  cmdKBtn.textContent = t('toolbar.quick_actions');
+  cmdKBtn.addEventListener('click', () => {
+    commandPalette.setItems(buildCommandItems());
+    commandPalette.open();
+  });
+  sidebarFooter.appendChild(cmdKBtn);
+  sidebar.appendChild(sidebarFooter);
 
   // Multi-select helpers
   let updateSelectionIndicator: () => void = () => {};
@@ -1444,9 +1386,9 @@ async function main(): Promise<void> {
   });
   updateZoomIndicator();
 
-  // Footer: Buttons (right side)
+  // Footer: Buttons (right side) — hidden, controls moved to canvas/header
   const footerRight = document.createElement('div');
-  footerRight.style.cssText = 'display:flex;align-items:center;gap:6px;';
+  footerRight.style.cssText = 'display:none;';
   footer.appendChild(footerRight);
 
   const exportBtn = document.createElement('button');
@@ -1575,6 +1517,56 @@ async function main(): Promise<void> {
   zoomSeparator.style.cssText = 'width:1px;height:14px;background:var(--border-default);';
   footerRight.appendChild(zoomSeparator);
   footerRight.appendChild(zoomIndicator);
+
+  // Floating zoom controls on canvas
+  const zoomControls = document.createElement('div');
+  zoomControls.className = 'zoom-controls-float';
+
+  const zoomOutFloatBtn = document.createElement('button');
+  zoomOutFloatBtn.className = 'zoom-btn zoom-btn-icon';
+  zoomOutFloatBtn.textContent = '\u2212';
+  zoomOutFloatBtn.title = 'Zoom out';
+  zoomOutFloatBtn.addEventListener('click', () => { renderer.getZoomManager()?.zoomOut(); });
+
+  const zoomInFloatBtn = document.createElement('button');
+  zoomInFloatBtn.className = 'zoom-btn zoom-btn-icon';
+  zoomInFloatBtn.textContent = '+';
+  zoomInFloatBtn.title = 'Zoom in';
+  zoomInFloatBtn.addEventListener('click', () => { renderer.getZoomManager()?.zoomIn(); });
+
+  const zoomPctEl = document.createElement('span');
+  zoomPctEl.className = 'zoom-pct';
+  zoomPctEl.textContent = '100%';
+
+  const fitCanvasBtn = document.createElement('button');
+  fitCanvasBtn.className = 'zoom-btn';
+  fitCanvasBtn.textContent = '\u2293 Fit';
+  fitCanvasBtn.addEventListener('click', () => {
+    if (sideBySideRenderer) {
+      sideBySideRenderer.fitToContent();
+    } else {
+      renderer.getZoomManager()?.fitToContent();
+    }
+  });
+
+  const resetCanvasBtn = document.createElement('button');
+  resetCanvasBtn.className = 'zoom-btn';
+  resetCanvasBtn.textContent = '\u21BA Reset';
+  resetCanvasBtn.addEventListener('click', () => {
+    if (sideBySideRenderer) {
+      sideBySideRenderer.centerAtRealSize();
+    } else {
+      renderer.getZoomManager()?.centerAtRealSize();
+    }
+  });
+
+  zoomControls.append(zoomOutFloatBtn, zoomInFloatBtn, zoomPctEl, fitCanvasBtn, resetCanvasBtn);
+  chartArea.appendChild(zoomControls);
+
+  zoomManager?.onZoom(() => {
+    const pct = zoomManager?.getRelativeZoomPercent();
+    if (pct !== undefined) zoomPctEl.textContent = `${Math.round(pct)}%`;
+  });
 
   // Keyboard shortcuts
   const shortcuts = new ShortcutManager();

@@ -804,6 +804,11 @@ const en: Record<string, string> = {
   'people.other': '{count} people',
   'presets_imported.one': '{count} preset',
   'presets_imported.other': '{count} presets',
+
+  // ─── Toolbar (Step 6) ──────────────────────────────────────────────
+  'toolbar.export_tooltip': 'Export to PowerPoint (Ctrl+E)',
+  'toolbar.export_aria': 'Export chart to PowerPoint',
+  'toolbar.quick_actions': '⌘K Quick actions',
 };
 
 export default en;

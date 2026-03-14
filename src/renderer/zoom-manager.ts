@@ -99,6 +99,14 @@ export class ZoomManager {
     this.svgSelection.call(this.zoom.transform, zoomIdentity);
   }
 
+  zoomIn(): void {
+    this.zoom.scaleBy(select(this.svg).transition().duration(200), 1.25);
+  }
+
+  zoomOut(): void {
+    this.zoom.scaleBy(select(this.svg).transition().duration(200), 0.8);
+  }
+
   getCurrentTransform(): ZoomTransform {
     return zoomTransform(this.svg);
   }
