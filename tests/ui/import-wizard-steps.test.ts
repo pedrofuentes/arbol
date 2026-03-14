@@ -59,13 +59,21 @@ describe('renderSourceStep', () => {
     expect(input.style.display).toBe('none');
   });
 
-  it('renders textarea with placeholder', () => {
+  it('renders paste option buttons', () => {
     const state: WizardState = {};
     renderSourceStep(container, state, vi.fn());
+    const btns = container.querySelectorAll('.wizard-source-option');
+    expect(btns.length).toBe(2);
+  });
+
+  it('shows textarea after clicking paste button', () => {
+    const state: WizardState = {};
+    renderSourceStep(container, state, vi.fn());
+    const pasteBtn = container.querySelector('.wizard-source-option') as HTMLElement;
+    pasteBtn.click();
     const textarea = container.querySelector('.wizard-paste-area') as HTMLTextAreaElement;
     expect(textarea).not.toBeNull();
-    expect(textarea.placeholder).toBe('Paste CSV or JSON data here...');
-    expect(textarea.rows).toBe(6);
+    expect(textarea.closest('.wizard-paste-wrap')!.getAttribute('style')).not.toContain('display: none');
   });
 
   it('calls onReady(false) when state is empty', () => {
@@ -86,6 +94,7 @@ describe('renderSourceStep', () => {
     const state: WizardState = {};
     const onReady = vi.fn();
     renderSourceStep(container, state, onReady);
+    (container.querySelector('.wizard-source-option') as HTMLElement).click();
     const textarea = container.querySelector('.wizard-paste-area') as HTMLTextAreaElement;
     textarea.value = 'name,title\nAlice,CEO';
     textarea.dispatchEvent(new Event('input'));
@@ -97,6 +106,7 @@ describe('renderSourceStep', () => {
     const state: WizardState = { rawText: 'some data' };
     const onReady = vi.fn();
     renderSourceStep(container, state, onReady);
+    (container.querySelector('.wizard-source-option') as HTMLElement).click();
     const textarea = container.querySelector('.wizard-paste-area') as HTMLTextAreaElement;
     textarea.value = '';
     textarea.dispatchEvent(new Event('input'));
@@ -108,6 +118,8 @@ describe('renderSourceStep', () => {
     renderSourceStep(container, state, vi.fn());
     const textarea = container.querySelector('.wizard-paste-area') as HTMLTextAreaElement;
     expect(textarea.value).toBe('restored data');
+    // Paste wrap should be visible when state has rawText
+    expect(textarea.closest('.wizard-paste-wrap')!.getAttribute('style')).not.toContain('display: none');
   });
 
   it('shows filename in dropzone when state has fileName', () => {
@@ -120,6 +132,7 @@ describe('renderSourceStep', () => {
   it('clears filename when pasting text', () => {
     const state: WizardState = { rawText: 'data', fileName: 'old.csv' };
     renderSourceStep(container, state, vi.fn());
+    (container.querySelector('.wizard-source-option') as HTMLElement).click();
     const textarea = container.querySelector('.wizard-paste-area') as HTMLTextAreaElement;
     textarea.value = 'new data';
     textarea.dispatchEvent(new Event('input'));

@@ -109,20 +109,41 @@ export function renderSourceStep(
 
   container.appendChild(dropzone);
 
-  // Paste section
+  // Source options — buttons to show paste textarea
+  const sourceOpts = document.createElement('div');
+  sourceOpts.className = 'wizard-source-options';
+
+  const pasteBtn = document.createElement('button');
+  pasteBtn.className = 'wizard-source-option';
+  pasteBtn.textContent = t('import_wizard.paste_csv_btn');
+  sourceOpts.appendChild(pasteBtn);
+
+  const pasteJsonBtn = document.createElement('button');
+  pasteJsonBtn.className = 'wizard-source-option';
+  pasteJsonBtn.textContent = t('import_wizard.paste_json_btn');
+  sourceOpts.appendChild(pasteJsonBtn);
+
+  container.appendChild(sourceOpts);
+
+  // Paste textarea — hidden until a paste button is clicked
+  const pasteWrap = document.createElement('div');
+  pasteWrap.className = 'wizard-paste-wrap';
+  pasteWrap.style.display = 'none';
+
   const pasteLabel = document.createElement('label');
   pasteLabel.className = 'wizard-paste-label';
   pasteLabel.textContent = t('import_wizard.paste_label');
-  container.appendChild(pasteLabel);
+  pasteWrap.appendChild(pasteLabel);
 
   const textarea = document.createElement('textarea');
   textarea.className = 'wizard-paste-area';
-  textarea.rows = 6;
+  textarea.rows = 8;
   textarea.placeholder = t('import_wizard.paste_placeholder');
   textarea.setAttribute('aria-label', t('import_wizard.paste_aria'));
 
   if (state.rawText && !state.fileName) {
     textarea.value = state.rawText;
+    pasteWrap.style.display = '';
   }
 
   textarea.addEventListener('input', () => {
@@ -138,7 +159,17 @@ export function renderSourceStep(
     }
   });
 
-  container.appendChild(textarea);
+  pasteWrap.appendChild(textarea);
+  container.appendChild(pasteWrap);
+
+  const showPaste = () => {
+    pasteWrap.style.display = '';
+    dropzone.style.display = 'none';
+    sourceOpts.style.display = 'none';
+    textarea.focus();
+  };
+  pasteBtn.addEventListener('click', showPaste);
+  pasteJsonBtn.addEventListener('click', showPaste);
 
   onReady(!!state.rawText);
 }
