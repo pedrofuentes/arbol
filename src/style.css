@@ -1721,6 +1721,7 @@ textarea:focus-visible {
   text-align: center;
   cursor: pointer;
   transition: all var(--transition-fast);
+  margin-bottom: 10px;
 }
 .wizard-dropzone:hover,
 .wizard-dropzone.dragover {
@@ -1734,7 +1735,7 @@ textarea:focus-visible {
 .wizard-paste-label {
   font-size: var(--text-sm);
   color: var(--text-secondary);
-  margin: var(--space-7) 0 var(--space-3);
+  margin: var(--space-4) 0 var(--space-2);
   font-family: var(--font-sans);
 }
 .wizard-paste-area {
@@ -1749,6 +1750,7 @@ textarea:focus-visible {
   resize: vertical;
   outline: none;
   transition: border-color var(--transition-fast);
+  margin-top: 5px;
 }
 .wizard-paste-area:focus {
   border-color: var(--accent);
