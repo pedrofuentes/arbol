@@ -44,6 +44,7 @@ import { CommandPalette, CommandItem } from './ui/command-palette';
 import { PropertyPanel } from './ui/property-panel';
 import { FloatingActions } from './ui/floating-actions';
 import { SettingsModal } from './ui/settings-modal';
+import { ImportWizard } from './ui/import-wizard';
 import type { ComparisonState, VersionRecord } from './types';
 
 async function main(): Promise<void> {
@@ -417,6 +418,30 @@ async function main(): Promise<void> {
   settingsBtn.appendChild(settingsIcon);
   settingsBtn.addEventListener('click', () => { settingsModal.open(); });
   headerRight.insertBefore(settingsBtn, divider);
+
+  // Import wizard (opens via header button)
+  const importWizard = new ImportWizard({
+    steps: [
+      { id: 'source', label: t('import_wizard.step_source') },
+      { id: 'mapping', label: t('import_wizard.step_mapping') },
+      { id: 'preview', label: t('import_wizard.step_preview') },
+      { id: 'import', label: t('import_wizard.step_import') },
+    ],
+    onClose: () => {},
+    onStepChange: () => {},
+    onComplete: () => { importWizard.close(); },
+  });
+
+  const importBtn = document.createElement('button');
+  importBtn.className = 'icon-btn';
+  importBtn.setAttribute('data-tooltip', t('toolbar.import_tooltip'));
+  importBtn.setAttribute('aria-label', t('toolbar.import_aria'));
+  const importIcon = document.createElement('span');
+  importIcon.setAttribute('aria-hidden', 'true');
+  importIcon.textContent = '📂';
+  importBtn.appendChild(importIcon);
+  importBtn.addEventListener('click', () => { importWizard.open(); });
+  headerRight.insertBefore(importBtn, settingsBtn);
 
   const updateUndoRedoState = () => {
     undoBtn.disabled = !store.canUndo();

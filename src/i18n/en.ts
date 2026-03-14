@@ -108,6 +108,22 @@ const en: Record<string, string> = {
   'settings_modal.apply': 'Apply Changes',
   'settings_modal.nav_aria': 'Settings sections',
 
+  // ─── Import Wizard ──────────────────────────────────────────────────
+  'import_wizard.title': '📂 Import Data',
+  'import_wizard.aria_label': 'Import data wizard',
+  'import_wizard.close_aria': 'Close import wizard',
+  'import_wizard.steps_aria': 'Import steps',
+  'import_wizard.back': '← Back',
+  'import_wizard.next': 'Next →',
+  'import_wizard.cancel': 'Cancel',
+  'import_wizard.complete': 'Import',
+  'import_wizard.step_source': 'Source',
+  'import_wizard.step_mapping': 'Mapping',
+  'import_wizard.step_preview': 'Preview',
+  'import_wizard.step_import': 'Import',
+  'toolbar.import_tooltip': 'Import data',
+  'toolbar.import_aria': 'Import data',
+
   // ─── Floating Actions ───────────────────────────────────────────────
   'floating.aria_label': 'Quick actions toolbar',
   'floating.edit': '✏️ Edit',
