@@ -440,6 +440,7 @@ async function main(): Promise<void> {
   importIcon.setAttribute('aria-hidden', 'true');
   importIcon.textContent = '📂';
   importBtn.appendChild(importIcon);
+  importBtn.appendChild(document.createTextNode(' Import'));
   importBtn.addEventListener('click', () => { importWizard.open(); });
   headerRight.insertBefore(importBtn, settingsBtn);
 
