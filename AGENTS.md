@@ -23,7 +23,7 @@ Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 
 
 ## Project Structure
 
-65 TypeScript source files in `src/`, organized by concern:
+70 TypeScript source files in `src/`, organized by concern:
 
 ```
 src/
@@ -69,19 +69,24 @@ src/
 │   ├── category-legend.ts     # SVG overlay legend showing active color categories
 │   ├── chart-name-header.ts   # Header component: editable chart name, dirty indicator, save version button
 │   ├── column-mapper.ts       # Interactive UI for mapping CSV columns to OrgNode fields
+│   ├── command-palette.ts     # Command palette overlay — Ctrl+K fuzzy search for actions
 │   ├── comparison-banner.ts   # Banner for side-by-side version comparison mode
 │   ├── confirm-dialog.ts      # Modal confirmation dialog (title, message, danger flag)
 │   ├── context-menu.ts        # Right-click context menu with keyboard nav (↑↓ Enter Esc)
 │   ├── dialog-utils.ts        # Shared dialog helpers (overlay creation, focus trapping)
 │   ├── dismissible.ts         # Dismiss-on-click-outside and Escape key behavior mixin
 │   ├── export-dialog.ts       # Export options dialog (format selection, settings)
+│   ├── floating-actions.ts    # Bottom toolbar for quick node actions (single/multi-select)
 │   ├── focus-banner.ts        # Focus mode banner — "Viewing [Name]'s org" + "Show full org" exit
 │   ├── help-dialog.ts         # Help/about overlay (sections on interactions, shortcuts, imports)
+│   ├── import-wizard.ts       # Step-by-step import wizard modal container
 │   ├── inline-editor.ts       # Inline card editing — text inputs overlaid on SVG card
 │   ├── input-dialog.ts        # Custom text input dialog replacing native prompt()
 │   ├── manager-picker.ts      # Modal for selecting target node (Move/Reassign operations)
 │   ├── preset-creator.ts      # Modal form for creating/naming CSV column mapping presets
+│   ├── property-panel.ts      # Right-side contextual panel on node click — info, edit, actions
 │   ├── restore-dialog.ts      # Backup restore dialog — replace vs merge strategy selection
+│   ├── settings-modal.ts      # Full-screen tabbed settings modal container
 │   ├── toast.ts               # Toast notification system (success/error/info with auto-dismiss)
 │   ├── version-picker.ts      # Version selection dropdown/modal for comparison
 │   ├── version-viewer.ts      # Read-only version preview overlay with Restore/Close banner
@@ -273,6 +278,7 @@ All public methods on `ChartStore` (defined in `src/store/chart-store.ts`):
 | **Drag** | Canvas | Pan chart (d3-zoom) |
 | **Scroll wheel** | Canvas | Zoom in/out (0.1x–4.0x via d3-zoom) |
 | **Type** | Search bar | Highlights matching nodes; dims non-matches |
+| **Click** | Card | Shows property panel + floating actions |
 
 ### Context Menu Items
 
@@ -317,6 +323,7 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `Ctrl+Y` | Redo (alternative) |
 | `Ctrl+E` | Export to PPTX |
 | `Ctrl+F` | Focus search input |
+| `Ctrl+K` | Command Palette |
 | `Escape` | Priority chain: (1) dismiss version viewer → (2) clear search if focused → (3) exit focus mode → (4) clear multi-selection → (5) deselect node |
 
 ### Internationalization (i18n)
@@ -345,7 +352,7 @@ The app follows WCAG 2.1 AA guidelines:
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **1,540 tests across 62 files** — all must pass before committing
+- **1,656 tests across 67 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
@@ -415,6 +422,11 @@ The app follows WCAG 2.1 AA guidelines:
 | `tests/ui/version-picker.test.ts` | Version selection for comparison |
 | `tests/ui/version-viewer.test.ts` | Version preview, restore/close actions |
 | `tests/ui/welcome-banner.test.ts` | Welcome banner — show/dismiss, localStorage persistence, ARIA attributes |
+| `tests/ui/command-palette.test.ts` | Command palette — fuzzy search, keyboard nav, action execution |
+| `tests/ui/floating-actions.test.ts` | Floating actions toolbar — single/multi-select modes, button actions |
+| `tests/ui/property-panel.test.ts` | Property panel — node info display, edit fields, action buttons |
+| `tests/ui/settings-modal.test.ts` | Settings modal — tab rendering, open/close, container structure |
+| `tests/ui/import-wizard.test.ts` | Import wizard — step navigation, open/close, container structure |
 | `tests/version.test.ts` | APP_VERSION export, semver format validation |
 
 ## Development

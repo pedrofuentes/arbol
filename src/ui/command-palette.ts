@@ -273,7 +273,7 @@ export class CommandPalette {
       const isActive = i === this.activeIndex;
       el.classList.toggle('active', isActive);
       el.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      if (isActive) {
+      if (isActive && typeof el.scrollIntoView === 'function') {
         el.scrollIntoView({ block: 'nearest' });
       }
     });

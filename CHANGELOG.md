@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] — 2026-03-14
+
+### Added
+- **Command Palette**: Ctrl+K opens fuzzy search overlay for quick access to all actions (export, undo, redo, search)
+- **Property Panel**: Right-side contextual panel appears when clicking a node — shows info, edit fields, and action buttons
+- **Floating Actions**: Bottom toolbar with quick action buttons for selected nodes (single and multi-select modes)
+- **Settings Modal**: Full-screen tabbed modal accessible via ⚙️ header button (container — content wiring in future release)
+- **Import Wizard**: Step-by-step import modal accessible via 📂 Import header button (container — content wiring in future release)
+- **Sidebar collapse**: Toggle button (‹/›) to collapse/expand the chart navigator
+- **Ctrl+K Quick actions**: Footer button in sidebar opens command palette
+- **Export in header**: 📤 Export button moved to header toolbar
+
+### Changed
+- Sidebar slimmed from 300px 4-tab editor to 200px chart navigator (chart list + versions only)
+- Header buttons styled with ghost theme (transparent background, hover highlight)
+
+### Testing
+- 1,656 tests across 67 files — all passing
+
 ## [2.9.1] — 2026-03-14
 
 ### Added
