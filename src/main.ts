@@ -40,6 +40,7 @@ import { SelectionManager } from './controllers/selection-manager';
 import { SearchController } from './controllers/search-controller';
 import { announce } from './ui/announcer';
 import { showWelcomeBanner } from './ui/welcome-banner';
+import { CommandPalette, CommandItem } from './ui/command-palette';
 import type { ComparisonState, VersionRecord } from './types';
 
 async function main(): Promise<void> {
@@ -1360,9 +1361,68 @@ async function main(): Promise<void> {
     description: t('shortcut.search'),
   });
 
+  // Command Palette (Ctrl+K)
+  const commandPalette = new CommandPalette({
+    onDismiss: () => {},
+  });
+
+  const buildCommandItems = (): CommandItem[] => [
+    {
+      id: 'export',
+      label: t('command_palette.item_export'),
+      icon: '📊',
+      shortcut: 'Ctrl+E',
+      group: t('command_palette.group_actions'),
+      action: () => { exportBtn.click(); },
+    },
+    {
+      id: 'undo',
+      label: t('command_palette.item_undo'),
+      icon: '↩',
+      shortcut: 'Ctrl+Z',
+      group: t('command_palette.group_actions'),
+      action: () => { if (store.undo()) { announce(t('announce.undo')); } },
+    },
+    {
+      id: 'redo',
+      label: t('command_palette.item_redo'),
+      icon: '↪',
+      shortcut: 'Ctrl+Shift+Z',
+      group: t('command_palette.group_actions'),
+      action: () => { if (store.redo()) { announce(t('announce.redo')); } },
+    },
+    {
+      id: 'search',
+      label: t('command_palette.item_search'),
+      icon: '🔍',
+      shortcut: 'Ctrl+F',
+      group: t('command_palette.group_navigation'),
+      action: () => { search.focus(); },
+    },
+  ];
+
+  shortcuts.register({
+    key: 'k',
+    ctrl: true,
+    handler: () => {
+      if (commandPalette.isOpen()) {
+        commandPalette.close();
+      } else {
+        commandPalette.setItems(buildCommandItems());
+        commandPalette.open();
+      }
+    },
+    description: t('shortcut.command_palette'),
+  });
+
   shortcuts.register({
     key: 'Escape',
     handler: () => {
+      // Dismiss command palette if open
+      if (commandPalette.isOpen()) {
+        commandPalette.close();
+        return;
+      }
       // Dismiss version viewer if active
       if (isVersionViewerActive()) {
         dismissVersionViewer();

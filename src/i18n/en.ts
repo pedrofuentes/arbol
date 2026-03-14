@@ -61,6 +61,21 @@ const en: Record<string, string> = {
   'menu.multi_move': 'Move all ({count} people)',
   'menu.multi_remove': 'Remove all ({count} people)',
 
+  // ─── Command Palette ────────────────────────────────────────────────
+  'command_palette.aria_label': 'Command palette',
+  'command_palette.placeholder': 'Type a command or search...',
+  'command_palette.navigate': '↑↓ Navigate',
+  'command_palette.select': '↵ Select',
+  'command_palette.close': 'Esc Close',
+  'command_palette.no_results': 'No matching commands',
+  'command_palette.group_actions': 'Quick Actions',
+  'command_palette.group_navigation': 'Navigation',
+  'command_palette.item_export': 'Export to PowerPoint',
+  'command_palette.item_undo': 'Undo',
+  'command_palette.item_redo': 'Redo',
+  'command_palette.item_search': 'Search People',
+  'shortcut.command_palette': 'Command palette',
+
   // ─── Focus Mode ────────────────────────────────────────────────────
   'focus.viewing': '🔎 Viewing {name}\'s org',
   'focus.show_full': 'Show full org',
