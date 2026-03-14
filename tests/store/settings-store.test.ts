@@ -294,7 +294,7 @@ describe('SettingsStore', () => {
     });
 
     it('validates textAlign values', () => {
-      for (const valid of ['left', 'center', 'right']) {
+      for (const valid of ['left', 'center', 'right', 'start', 'end']) {
         store.saveImmediate({ textAlign: valid });
         const loaded = store.load(DEFAULTS);
         expect(loaded.textAlign).toBe(valid);

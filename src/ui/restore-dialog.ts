@@ -57,13 +57,13 @@ export function showRestoreStrategyDialog(
     const replaceBtn = document.createElement('button');
     replaceBtn.className = 'btn btn-danger';
     replaceBtn.textContent = '🔄 Replace All — wipe current data and restore from backup';
-    replaceBtn.style.cssText += ';text-align:left;padding:10px 14px;font-size:13px;';
+    replaceBtn.style.cssText += ';text-align:start;padding:10px 14px;font-size:13px;';
     btnGroup.appendChild(replaceBtn);
 
     const mergeBtn = document.createElement('button');
     mergeBtn.className = 'btn btn-primary';
     mergeBtn.textContent = '➕ Merge — add new charts, keep existing ones';
-    mergeBtn.style.cssText += ';text-align:left;padding:10px 14px;font-size:13px;';
+    mergeBtn.style.cssText += ';text-align:start;padding:10px 14px;font-size:13px;';
     btnGroup.appendChild(mergeBtn);
 
     const cancelBtn = document.createElement('button');

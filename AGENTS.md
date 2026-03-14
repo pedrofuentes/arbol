@@ -23,54 +23,81 @@ Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 
 
 ## Project Structure
 
-39 TypeScript source files in `src/`, organized by concern:
+65 TypeScript source files in `src/`, organized by concern:
 
 ```
 src/
+├── controllers/
+│   ├── focus-mode.ts          # Focus mode state management (enter/exit/query focused subtree)
+│   ├── search-controller.ts   # Search state and highlight coordination
+│   └── selection-manager.ts   # Multi-select state (Shift+click toggle, bulk ops)
 ├── data/
 │   └── sample-org.ts          # Sample org data (52 employees, used as default)
+├── i18n/
+│   ├── index.ts               # i18n system — t(), tp(), setLocale(), getLocale(), getDirection()
+│   └── en.ts                  # English translations (400+ strings)
 ├── editor/
 │   ├── chart-editor.ts        # Charts sidebar tab UI (chart list, version list, CRUD)
 │   ├── form-editor.ts         # Add/edit people via form UI (parent dropdown, name/title inputs)
 │   ├── json-editor.ts         # Raw JSON tree editor with Apply/validate
 │   ├── import-editor.ts       # File import (JSON/CSV) + paste + column mapping + presets
 │   ├── settings-editor.ts     # Visual settings panel (sliders, color pickers, presets)
-│   └── tab-switcher.ts        # Sidebar tab management (People / Import / Settings)
+│   ├── tab-switcher.ts        # Sidebar tab management (People / Import / Settings)
+│   └── utilities-editor.ts    # Utilities sidebar section (text normalization, backup/restore)
 ├── export/
+│   ├── chart-exporter.ts      # Chart export orchestration (PPTX + future formats)
 │   └── pptx-exporter.ts       # PowerPoint export — takes LayoutResult, writes .pptx file
 ├── renderer/
 │   ├── chart-renderer.ts      # Main D3 SVG renderer — draws cards, links, IC/Advisor stacks
+│   ├── keyboard-nav.ts        # SVG chart keyboard navigation (arrow keys, Enter, Space, Shift+F10)
 │   ├── layout-engine.ts       # Computes x/y positions, bounding box, IC containers, Advisor assignments
+│   ├── side-by-side-renderer.ts # Side-by-side comparison renderer for version diffs
 │   └── zoom-manager.ts        # d3-zoom integration, fitToContent(), resetZoom(), transform persistence
 ├── store/
+│   ├── backup-manager.ts      # Full backup/restore — exports all charts, versions, settings to JSON
 │   ├── category-store.ts      # ColorCategory CRUD, defaults (Open Position, Offer Pending, Future Start), localStorage
 │   ├── chart-db.ts            # IndexedDB wrapper for charts and versions CRUD
 │   ├── chart-store.ts         # High-level chart management, dirty tracking, version snapshots, events
+│   ├── mapping-store.ts       # CSV column mapping preset storage (localStorage)
 │   ├── org-store.ts           # OrgNode CRUD, undo/redo (50-entry stack), event emitter, validation
 │   ├── settings-store.ts      # Persist/load renderer settings from localStorage
 │   ├── theme-manager.ts       # Dark/light toggle — applies class to <html>, persists to localStorage
-│   ├── theme-presets.ts       # Color + layout preset definitions (Emerald, Corporate Blue, etc.)
-│   └── mapping-store.ts       # CSV column mapping preset storage (localStorage)
+│   └── theme-presets.ts       # Color + layout preset definitions (Emerald, Corporate Blue, etc.)
 ├── ui/
+│   ├── add-popover.ts         # Fixed-position popover for adding child nodes (name/title)
+│   ├── announcer.ts           # Accessible live-region announcements for screen readers
+│   ├── category-legend.ts     # SVG overlay legend showing active color categories
 │   ├── chart-name-header.ts   # Header component: editable chart name, dirty indicator, save version button
 │   ├── column-mapper.ts       # Interactive UI for mapping CSV columns to OrgNode fields
+│   ├── comparison-banner.ts   # Banner for side-by-side version comparison mode
 │   ├── confirm-dialog.ts      # Modal confirmation dialog (title, message, danger flag)
 │   ├── context-menu.ts        # Right-click context menu with keyboard nav (↑↓ Enter Esc)
-│   ├── inline-editor.ts       # Inline card editing — text inputs overlaid on SVG card
-│   ├── add-popover.ts         # Fixed-position popover for adding child nodes (name/title)
-│   ├── manager-picker.ts      # Modal for selecting target node (Move/Reassign operations)
+│   ├── dialog-utils.ts        # Shared dialog helpers (overlay creation, focus trapping)
+│   ├── dismissible.ts         # Dismiss-on-click-outside and Escape key behavior mixin
+│   ├── export-dialog.ts       # Export options dialog (format selection, settings)
 │   ├── focus-banner.ts        # Focus mode banner — "Viewing [Name]'s org" + "Show full org" exit
 │   ├── help-dialog.ts         # Help/about overlay (sections on interactions, shortcuts, imports)
+│   ├── inline-editor.ts       # Inline card editing — text inputs overlaid on SVG card
+│   ├── input-dialog.ts        # Custom text input dialog replacing native prompt()
+│   ├── manager-picker.ts      # Modal for selecting target node (Move/Reassign operations)
 │   ├── preset-creator.ts      # Modal form for creating/naming CSV column mapping presets
-│   └── version-viewer.ts      # Read-only version preview overlay with Restore/Close banner
+│   ├── restore-dialog.ts      # Backup restore dialog — replace vs merge strategy selection
+│   ├── toast.ts               # Toast notification system (success/error/info with auto-dismiss)
+│   ├── version-picker.ts      # Version selection dropdown/modal for comparison
+│   ├── version-viewer.ts      # Read-only version preview overlay with Restore/Close banner
+│   └── welcome-banner.ts      # First-time user welcome banner with localStorage persistence
 ├── utils/
-│   ├── tree.ts                # Tree traversal: findNodeById, findParent, flattenTree, cloneTree, isLeaf, isM1, stripM1Children, countLeaves, managerLevel, countManagersByLevel
-│   ├── search.ts              # Case-insensitive substring search on name/title, returns matching IDs
-│   ├── csv-parser.ts          # CSV parsing (RFC 4180 multi-line quotes, escapes) + tree building from flat CSV, duplicate/cycle/limit validation
-│   ├── shortcuts.ts           # Keyboard shortcut manager (register combos, prevent defaults)
-│   ├── text-normalize.ts      # Text normalization (titleCase, uppercase, lowercase) for names/titles
 │   ├── contrast.ts            # WCAG 2.1 luminance, auto-contrast text color helpers
-│   └── id.ts                  # UUID generation via crypto.randomUUID()
+│   ├── csv-parser.ts          # CSV parsing (RFC 4180 multi-line quotes, escapes) + tree building from flat CSV, duplicate/cycle/limit validation
+│   ├── event-emitter.ts       # Typed event emitter base class
+│   ├── filename.ts            # Safe filename generation for exports
+│   ├── id.ts                  # UUID generation via crypto.randomUUID()
+│   ├── search.ts              # Case-insensitive substring search on name/title, returns matching IDs
+│   ├── shortcuts.ts           # Keyboard shortcut manager (register combos, prevent defaults)
+│   ├── storage.ts             # Storage abstraction (localStorage wrapper + IStorage interface)
+│   ├── text-normalize.ts      # Text normalization (titleCase, uppercase, lowercase) for names/titles
+│   ├── tree-diff.ts           # Tree comparison — detects added, removed, moved, changed nodes
+│   └── tree.ts                # Tree traversal: findNodeById, findParent, flattenTree, cloneTree, isLeaf, isM1, stripM1Children, countLeaves, managerLevel, countManagersByLevel
 ├── types.ts                   # Interfaces: OrgNode, ColumnMapping, MappingPreset, TextNormalization, ChartRecord, VersionRecord
 ├── version.ts                 # App version (injected from package.json at build time)
 ├── main.ts                    # App entry point — wires stores, renderer, editors, menus, shortcuts
@@ -92,6 +119,8 @@ These are **mandatory** for all changes:
 5. **Safe DOM APIs.** Never use `innerHTML` with dynamic data. Use `textContent`, `createElement`, `appendChild`, etc.
 
 6. **Minimize `as any`.** Use proper D3 generics and TypeScript types. Only cast when D3's type system makes it unavoidable, and add a comment explaining why.
+
+7. **i18n-ready strings.** All user-facing text should use `t('key')` from `src/i18n/index.ts`. New strings must be added to `src/i18n/en.ts`.
 
 ## Key Concepts
 
@@ -238,7 +267,7 @@ All public methods on `ChartStore` (defined in `src/store/chart-store.ts`):
 |-------|--------|----------|
 | **Click** | Card | Highlights card (visual only); clears multi-selection |
 | **Click** | Chart name in header | Opens inline editor for chart name |
-| **Double-click** | Card | Opens inline editor for name/title directly on the card |
+| **Double-click** | Card | No action (use right-click → Edit for inline editing) |
 | **Right-click** | Card | Shows context menu (see below) |
 | **Shift+click** | Card | Toggles multi-select; root excluded |
 | **Drag** | Canvas | Pan chart (d3-zoom) |
@@ -255,6 +284,7 @@ All public methods on `ChartStore` (defined in `src/store/chart-store.ts`):
 | Add | ➕ | Never | Opens add-child popover |
 | Focus on sub-org | 🔎 | Node is leaf, or already focused on this node | Enters focus mode — renders only this subtree |
 | Set Category | 🏷️ | Never | Opens submenu listing categories + "None (default)"; calls `setNodeCategory()` |
+| Set as dotted line / Remove dotted line | ┈ | Never | Toggles dotted-line rendering for the node's reporting line |
 | Move | ↗️ | Node is root | Opens manager picker to select new parent |
 | Remove | 🗑️ | Node is root | Leaf: confirm dialog → remove. Manager: picker for reassigning children → remove |
 
@@ -289,18 +319,44 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `Ctrl+F` | Focus search input |
 | `Escape` | Priority chain: (1) dismiss version viewer → (2) clear search if focused → (3) exit focus mode → (4) clear multi-selection → (5) deselect node |
 
+### Internationalization (i18n)
+
+Arbol includes a lightweight i18n system in `src/i18n/`:
+
+- `t(key, params?)` — translate a key with optional `{param}` interpolation
+- `tp(key, count, params?)` — pluralization (looks up `key.one` or `key.other`)
+- `setLocale(locale, messages)` — switch locale, sets `document.dir` and `document.lang`
+- `getLocale()` / `getDirection()` — current locale and text direction (ltr/rtl)
+
+English strings are in `src/i18n/en.ts` using flat dot-notation keys (e.g., `'menu.edit'`, `'dialog.remove.message'`). To add a locale, create a new file exporting `Record<string, string>` and call `setLocale()`.
+
+### Accessibility
+
+The app follows WCAG 2.1 AA guidelines:
+
+- **SVG chart:** `role="tree"` container, `role="treeitem"` cards with `aria-label`, `aria-level`, `aria-expanded`, keyboard navigation via `KeyboardNav` class
+- **Screen reader:** Global `aria-live` announcer (`src/ui/announcer.ts`) for search, undo, save, selection, theme, focus mode
+- **Focus management:** Focus trapping in all dialogs/modals, focus restoration on dismiss, `aria-modal`
+- **Forms:** All labels linked to inputs via `htmlFor`/`id`, `aria-label` on unlabeled controls
+- **ARIA patterns:** Complete tab pattern (`aria-controls`, `role="tabpanel"`, arrow keys), `aria-disabled` on disabled items, `aria-keyshortcuts`, `role="list"`/`role="listitem"` on chart/version lists
+- **Color contrast:** WCAG AA compliant; auto-contrast via `contrastingTextColor()` in `src/utils/contrast.ts`
+- **Responsive:** Mobile-friendly touch targets (44px), CSS logical properties for RTL, `prefers-reduced-motion`, `forced-colors`
+
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **1056 tests across 41 files** — all must pass before committing
+- **1,510 tests across 62 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
 
-### Test Files (all 30+)
+### Test Files (all 62)
 
 | File | Scope |
 |------|-------|
+| `tests/controllers/focus-mode.test.ts` | Focus mode enter/exit, state queries, fallback on deletion |
+| `tests/controllers/search-controller.test.ts` | Search state coordination, highlight triggers |
+| `tests/controllers/selection-manager.test.ts` | Multi-select toggle, bulk selection state, root exclusion |
 | `tests/utils/tree.test.ts` | findNodeById, findParent, flattenTree, cloneTree, isLeaf, isM1, stripM1Children, countLeaves, managerLevel |
 | `tests/utils/search.test.ts` | Name/title substring matching, case insensitivity |
 | `tests/utils/id.test.ts` | UUID generation format |
@@ -308,6 +364,9 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `tests/utils/shortcuts.test.ts` | Shortcut registration, key combos, prevent defaults |
 | `tests/utils/text-normalize.test.ts` | normalizeText (titleCase, uppercase, lowercase, none), normalizeTreeText (recursive, immutable) |
 | `tests/utils/contrast.test.ts` | parseHex, relativeLuminance, contrastingTextColor, contrastingTitleColor |
+| `tests/utils/filename.test.ts` | Safe filename generation, special character handling |
+| `tests/utils/tree-diff.test.ts` | Tree comparison, added/removed/moved/changed node detection |
+| `tests/store/backup-manager.test.ts` | Full backup creation, restore (replace/merge), data integrity |
 | `tests/store/category-store.test.ts` | ColorCategory CRUD, defaults, localStorage persistence, validation, events, text color auto-contrast |
 | `tests/store/chart-db.test.ts` | IndexedDB wrapper CRUD, cascade delete, name uniqueness |
 | `tests/store/chart-store.test.ts` | Chart CRUD, migration, dirty tracking, versions, events |
@@ -319,20 +378,43 @@ All shortcuts are registered in `main.ts` via `ShortcutManager`:
 | `tests/renderer/chart-renderer.test.ts` | SVG output, IC/Advisor stacks, card rendering, spacing regression |
 | `tests/renderer/layout-engine.test.ts` | Position computation, bounding box, IC containers, Advisor assignments |
 | `tests/renderer/integration.test.ts` | End-to-end renderer + layout integration |
+| `tests/renderer/accessibility.test.ts` | SVG ARIA attributes — role="tree", role="treeitem", aria-label, aria-level |
+| `tests/renderer/comparison-integration.test.ts` | Side-by-side version comparison rendering |
+| `tests/renderer/side-by-side-renderer.test.ts` | Dual-tree comparison renderer output |
+| `tests/renderer/keyboard-nav.test.ts` | SVG keyboard navigation — arrow keys, Enter, Space, Home/End, Shift+F10 |
 | `tests/renderer/zoom-manager.test.ts` | Zoom/pan, fitToContent, resetZoom |
+| `tests/export/chart-exporter.test.ts` | Chart export orchestration, format selection |
 | `tests/export/pptx-exporter.test.ts` | PowerPoint slide generation, shapes, positioning |
+| `tests/editor/chart-editor.test.ts` | Chart list rendering, CRUD actions, version management UI |
 | `tests/editor/form-editor.test.ts` | Form inputs, parent dropdown, add/edit workflow |
 | `tests/editor/import-editor.test.ts` | JSON/CSV import, paste, column mapping, file parsing |
 | `tests/editor/json-editor.test.ts` | JSON validation, apply, error display |
 | `tests/editor/settings-editor.test.ts` | Category section rendering, color/label editing, add/delete categories |
 | `tests/editor/tab-switcher.test.ts` | Tab activation, content switching, aria-selected |
-
-| `tests/ui/context-menu.test.ts` | Menu rendering, item actions, keyboard nav, dismiss, viewport clamping |
-| `tests/ui/chart-name-header.test.ts` | Header rendering, edit mode, dirty indicator |
-| `tests/ui/focus-banner.test.ts` | Banner rendering, exit action, dismiss, singleton, theme styling |
-| `tests/ui/inline-editor.test.ts` | Inline editing, save/cancel, validation |
+| `tests/editor/utilities-editor.test.ts` | Text normalization UI, backup/restore buttons |
+| `tests/i18n/i18n.test.ts` | i18n system — t(), tp(), setLocale(), getDirection(), interpolation, plurals |
 | `tests/ui/add-popover.test.ts` | Add-child popover, parent pre-selection, form validation |
+| `tests/ui/category-legend.test.ts` | SVG legend rendering, category color display |
+| `tests/ui/chart-name-header.test.ts` | Header rendering, edit mode, dirty indicator |
+| `tests/ui/column-mapper.test.ts` | Column mapping UI, field selection, preset integration |
+| `tests/ui/comparison-banner.test.ts` | Comparison mode banner rendering and actions |
+| `tests/ui/confirm-dialog.test.ts` | Confirmation dialog rendering, confirm/cancel actions |
+| `tests/ui/context-menu.test.ts` | Menu rendering, item actions, keyboard nav, dismiss, viewport clamping |
+| `tests/ui/dialog-utils.test.ts` | Overlay creation, focus trapping utilities |
+| `tests/ui/dismissible.test.ts` | Click-outside dismiss, Escape key dismiss behavior |
+| `tests/ui/export-dialog.test.ts` | Export dialog rendering, format options |
+| `tests/ui/focus-banner.test.ts` | Banner rendering, exit action, dismiss, singleton, theme styling |
+| `tests/ui/help-dialog.test.ts` | Help dialog sections, rendering, close behavior |
+| `tests/ui/inline-editor.test.ts` | Inline editing, save/cancel, validation |
+| `tests/ui/input-dialog.test.ts` | Custom input dialog — render, submit, cancel, focus, validation |
 | `tests/ui/manager-picker.test.ts` | Manager search, selection, move target filtering |
+| `tests/ui/preset-creator.test.ts` | Preset name input, create/cancel actions |
+| `tests/ui/announcer.test.ts` | Screen reader announcer — region creation, message setting, priority, reuse |
+| `tests/ui/restore-dialog.test.ts` | Backup restore strategy selection (replace/merge) |
+| `tests/ui/toast.test.ts` | Toast notifications — creation, types, auto-dismiss, role="alert" |
+| `tests/ui/version-picker.test.ts` | Version selection for comparison |
+| `tests/ui/version-viewer.test.ts` | Version preview, restore/close actions |
+| `tests/ui/welcome-banner.test.ts` | Welcome banner — show/dismiss, localStorage persistence, ARIA attributes |
 | `tests/version.test.ts` | APP_VERSION export, semver format validation |
 
 ## Development

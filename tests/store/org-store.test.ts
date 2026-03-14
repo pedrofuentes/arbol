@@ -328,6 +328,54 @@ describe('OrgStore', () => {
       store.undo();
       expect(store.getTree().name).toBe('Root');
     });
+
+    it('undo skips corrupted snapshots and restores the next valid one', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      store.updateNode('r', { name: 'Valid' });
+      // Inject corrupted snapshots on top of the valid one
+      (store as any).undoStack.push('NOT_JSON_1', 'NOT_JSON_2', 'NOT_JSON_3');
+
+      expect(store.undo()).toBe(true);
+      expect(store.getTree().name).toBe('Root');
+    });
+
+    it('undo returns false when all snapshots are corrupted', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      (store as any).undoStack.push('BAD1', 'BAD2');
+
+      expect(store.undo()).toBe(false);
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(store.getTree().name).toBe('Root');
+    });
+
+    it('redo skips corrupted snapshots and restores the next valid one', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      store.updateNode('r', { name: 'Updated' });
+      store.undo();
+      // Inject corrupted snapshots on top of the valid redo entry
+      (store as any).redoStack.push('BAD1', 'BAD2');
+
+      expect(store.redo()).toBe(true);
+      expect(store.getTree().name).toBe('Updated');
+    });
+
+    it('redo returns false when all snapshots are corrupted', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      (store as any).redoStack.push('CORRUPT1', 'CORRUPT2');
+
+      expect(store.redo()).toBe(false);
+      expect(store.getRedoStackSize()).toBe(0);
+    });
+
+    it('undo with many corrupted snapshots does not cause stack overflow', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      for (let i = 0; i < 50; i++) {
+        (store as any).undoStack.push('CORRUPT');
+      }
+
+      expect(store.undo()).toBe(false);
+      expect(store.getUndoStackSize()).toBe(0);
+    });
   });
 
   describe('moveNode', () => {

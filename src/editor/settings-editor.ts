@@ -518,8 +518,14 @@ export class SettingsEditor {
     const section = document.createElement('div');
     section.className = 'accordion-section';
 
+    const headerId = `accordion-header-${id}`;
+
+    const heading = document.createElement('h3');
+    heading.style.cssText = 'margin:0;padding:0;font:inherit;';
+
     const header = document.createElement('button');
     header.className = 'accordion-header';
+    header.id = headerId;
     header.setAttribute('aria-expanded', String(this.isExpanded(id)));
     header.setAttribute('aria-controls', `accordion-${id}`);
 
@@ -549,6 +555,8 @@ export class SettingsEditor {
     const contentWrapper = document.createElement('div');
     contentWrapper.className = 'accordion-content';
     contentWrapper.id = `accordion-${id}`;
+    contentWrapper.setAttribute('role', 'region');
+    contentWrapper.setAttribute('aria-labelledby', headerId);
     contentWrapper.setAttribute('data-expanded', String(this.isExpanded(id)));
 
     const inner = document.createElement('div');
@@ -565,7 +573,8 @@ export class SettingsEditor {
       contentWrapper.setAttribute('data-expanded', String(expanded));
     });
 
-    section.appendChild(header);
+    heading.appendChild(header);
+    section.appendChild(heading);
     section.appendChild(contentWrapper);
     return section;
   }
@@ -1088,7 +1097,7 @@ export class SettingsEditor {
       card.style.cssText = `
         display:flex;align-items:center;gap:6px;padding:6px 8px;position:relative;
         border:1px solid var(--border-default);border-radius:var(--radius-md);
-        background:var(--bg-elevated);cursor:pointer;text-align:left;
+        background:var(--bg-elevated);cursor:pointer;text-align:start;
         transition:all 120ms ease;font-family:var(--font-sans);
       `;
 

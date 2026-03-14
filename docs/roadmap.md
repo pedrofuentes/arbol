@@ -1,10 +1,72 @@
 # Arbol — Project Roadmap
 
-> Last updated: 2026-03-13
+> Last updated: 2026-03-14
 
 ## Overview
 
 Arbol is an interactive org chart editor for the browser, built with TypeScript, D3.js, and Vite. This roadmap tracks everything completed, in progress, and planned.
+
+---
+
+## 🚀 v2.8.0 — Accessibility, i18n & Mobile (Unreleased)
+
+### Phase 20 — Comprehensive Accessibility
+- [x] SVG chart ARIA tree semantics (`role="tree"`, `role="treeitem"`, `aria-label`, `aria-level`, `aria-expanded`)
+- [x] Chart keyboard navigation — arrow keys, Enter, Space, Shift+F10, Home/End (`src/renderer/keyboard-nav.ts`)
+- [x] Screen reader announcer — `aria-live` region for search, undo, save, selection, theme, focus mode (`src/ui/announcer.ts`)
+- [x] Context menu submenu keyboard nav (ArrowRight/Left, `aria-haspopup`, `aria-expanded`)
+- [x] Manager picker keyboard nav (ArrowUp/Down, `aria-activedescendant`)
+- [x] Complete ARIA tab pattern (`aria-controls`, `role="tabpanel"`, ArrowLeft/Right)
+- [x] Focus trapping in inline editor, add popover; focus restoration on context menu and help dialog dismiss
+- [x] Confirm dialog focuses Cancel on danger actions
+- [x] All form labels linked to inputs via `htmlFor`/`id` (~30+ controls)
+- [x] `aria-label` on JSON editor textarea, file input, paste textarea
+- [x] Drop zone, chart list items, chart name header, preset delete all keyboard-accessible
+- [x] `aria-disabled` on disabled context menu items
+- [x] `aria-keyshortcuts` on undo/redo/export/search
+- [x] Removed duplicate `role="main"` from `index.html`
+- [x] Footer `aria-label="Status bar"`
+- [x] Focus-visible outlines on search, footer, accordion buttons
+- [x] Icon button touch targets increased (30px → 36px, 44px on mobile)
+- [x] Font sizes converted from `px` to `rem`
+- [x] `color-scheme` CSS property for dark/light
+- [x] `forced-colors` media query support
+- [x] Decorative emoji wrapped in `<span aria-hidden="true">`
+- [x] Color contrast WCAG AA — `DEFAULT_TITLE_DARK` `#64748b` → `#475569`, `--text-tertiary` fixed, Pastel preset title color fixed
+
+### Phase 21 — UX & Error Handling
+- [x] Toast notification system — `showToast()` with error/success/info types, auto-dismiss, stacking (`src/ui/toast.ts`)
+- [x] Custom input dialog — `showInputDialog()` replacing native `prompt()`, with focus trap (`src/ui/input-dialog.ts`)
+- [x] Silent `console.error` failures replaced with visible toast messages
+- [x] Native `alert()` calls replaced with themed `showToast()`
+- [x] Contradictory remove confirmation text fixed
+- [x] Inline validation messages — "Name is required" on inline editor, add popover, chart name
+- [x] `beforeunload` guard — warns before closing with unsaved changes
+- [x] Recursive undo/redo crash fixed — iterative loop, corrupted snapshots skipped
+- [x] Loading indicators — spinners for PPTX export, chart switching, file import, app init
+- [x] Welcome banner — first-time user guidance with localStorage persistence (`src/ui/welcome-banner.ts`)
+- [x] Search "no results" visual indicator
+
+### Phase 22 — Documentation & Help
+- [x] Help dialog: 4 new sections (How the Chart Works, Color Categories, Focus Mode, Headcount Badges)
+- [x] Help dialog: updated context menu description (all 7 items), Escape priority chain, Backup/Restore docs
+- [x] README: fixed incorrect double-click editing claim
+- [x] AGENTS.md: updated file count, directory structure, test count, interactions table
+
+### Phase 23 — Internationalization & Mobile
+- [x] i18n system — `t()`, `tp()`, `setLocale()`, `getLocale()`, `getDirection()` (`src/i18n/index.ts`)
+- [x] English translations — 400+ strings extracted to `src/i18n/en.ts`
+- [x] 15 source files wired to use `t()` calls
+- [x] RTL readiness — CSS logical properties, dynamic `dir`/`lang` attributes, RTL sidebar animation
+- [x] Text expansion accommodation — tooltip `max-width`, flexible sidebar width, banner wrapping
+- [x] `textAlign` option extended with `'start'`/`'end'` aliases
+- [x] Mobile responsive layout — collapsible sidebar overlay (≤768px), full-width (≤480px), hamburger menu
+- [x] 44px touch targets on mobile, adaptive header layout
+
+### Testing
+- [x] **1,510 tests across 62 files** — all passing
+- [x] 7 new test files: keyboard-nav, accessibility, announcer, toast, input-dialog, welcome-banner, i18n
+- [x] 153 new tests added (1,357 → 1,510)
 
 ---
 
@@ -227,26 +289,17 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ## 🔲 Planned / Ideas
 
-### v1.3.0 — Drag-and-Drop Reorganization
-- [ ] Drag-and-drop node reorganization with visual feedback
-- [ ] Confirmation dialog for large moves (>5 reports)
-- [ ] Full test coverage for drag interactions
-- [ ] Drag-and-drop file import refinement
-
-### v1.4.0 — Collapsible Subtrees
-- [ ] Collapse/expand subtrees with toggle indicators
-- [ ] Persist collapse state across re-renders
-- [ ] Full test coverage for collapse/expand behavior
-- [ ] Large hierarchy support (1000+ people)
-
 ### Short-term
 - [ ] Increase test coverage on `chart-renderer` (currently ~52%) and `column-mapper` (low branch coverage)
 - [ ] Animation/transitions on tree layout changes
 - [ ] PNG/SVG export option alongside PPTX
-- [ ] Mobile/responsive layout improvements
+- [ ] Complete i18n string extraction (remaining ~200 strings in settings-editor, import-editor, help-dialog)
+- [ ] Add a second locale to validate the i18n system end-to-end
 
 ### Medium-term
-- [ ] Multiple org chart tabs / workspaces
+- [ ] Drag-and-drop node reorganization with visual feedback
+- [ ] Collapsible subtrees with persist state
+- [ ] Full RTL layout engine mirroring (currently CSS-only; tree layout still LTR)
 - [ ] Undo/redo for settings changes (not just tree mutations)
 - [ ] Shareable URL with encoded org data
 - [ ] Custom node templates (different card styles per role/level)
@@ -257,7 +310,6 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [ ] Backend/API for persistence (optional — currently browser-only)
 - [ ] Plugin system for custom renderers or exporters
 - [ ] Integration with HR systems (Workday, BambooHR, etc.)
-- [ ] Accessibility audit and full WCAG compliance
 
 ---
 
@@ -295,11 +347,13 @@ Editor (People / Import) → OrgStore (data + events) → Renderer (D3 + SVG)
 
 ```
 src/
-├── editor/        # Sidebar tab editors (People, Import, Settings)
+├── controllers/   # Focus mode, search, selection state management
+├── editor/        # Sidebar tab editors (People, Import, Settings, Charts)
+├── i18n/          # Internationalization (translation system, locale files)
 ├── export/        # PowerPoint export
-├── renderer/      # D3-based chart rendering, layout engine, zoom
+├── renderer/      # D3-based chart rendering, layout engine, keyboard nav, zoom
 ├── store/         # State management (org data, settings, themes, mappings)
-├── ui/            # Dialogs, context menu, inline editor, popovers, pickers
+├── ui/            # Dialogs, context menu, inline editor, popovers, pickers, a11y
 ├── utils/         # Shared helpers (tree, search, CSV parser, shortcuts, ID)
 ├── types.ts       # Shared type definitions
 ├── main.ts        # Application entry point and wiring

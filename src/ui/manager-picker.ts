@@ -132,7 +132,7 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<Manage
           width:100%;box-sizing:border-box;
           padding:10px 12px;border:none;
           background:transparent;cursor:pointer;
-          text-align:left;font-family:var(--font-sans);
+          text-align:start;font-family:var(--font-sans);
           border-bottom:1px solid var(--border-subtle);
         `;
         item.addEventListener('mouseenter', () => {

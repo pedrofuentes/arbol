@@ -24,6 +24,26 @@ const HELP_SECTIONS = [
     ],
   },
   {
+    title: 'How the Chart Works',
+    items: [
+      [
+        { tag: 'strong', text: 'Managers' },
+        ' \u2014 People with direct reports. Connected by tree lines.',
+      ],
+      [
+        { tag: 'strong', text: 'ICs (Individual Contributors)' },
+        ' \u2014 Employees without direct reports. Shown in compact vertical stacks under their manager.',
+      ],
+      [
+        { tag: 'strong', text: 'Advisors' },
+        ' \u2014 Staff who report directly to a senior manager (one who manages other managers). Shown in a special 2-column layout beside the manager\u2019s card.',
+      ],
+      [
+        'The chart automatically detects these roles based on the hierarchy \u2014 no manual configuration needed.',
+      ],
+    ],
+  },
+  {
     title: 'Sidebar Tabs',
     items: [
       [
@@ -106,13 +126,16 @@ const HELP_SECTIONS = [
       [{ tag: 'strong', text: 'Click' }, ' — Select and highlight a card.'],
       [
         { tag: 'strong', text: 'Right-click' },
-        ' — Context menu with Edit, Add, Move, and Remove options.',
+        ' \u2014 Context menu with Edit, Add, Focus on sub-org, Set Category, Set as dotted line, Move, and Remove.',
       ],
       [
         { tag: 'strong', text: 'Shift+click' },
-        ' — Multi-select cards, then right-click for bulk Move or Remove.',
+        ' \u2014 Multi-select cards, then right-click for bulk Set Category, Move, or Remove.',
       ],
-      [{ tag: 'strong', text: 'Escape' }, ' — Clear selection.'],
+      [
+        { tag: 'strong', text: 'Escape' },
+        ' \u2014 Dismiss version viewer, clear search, exit focus mode, clear multi-selection, or deselect (in that priority order).',
+      ],
       [
         { tag: 'strong', text: 'Inline editing' },
         ' — Right-click a card and choose Edit to edit directly on the card.',
@@ -124,6 +147,68 @@ const HELP_SECTIONS = [
       [
         { tag: 'strong', text: 'Search' },
         ' — Type in the search bar to highlight matching people. Non-matches are dimmed.',
+      ],
+    ],
+  },
+  {
+    title: 'Color Categories',
+    items: [
+      [
+        'Assign a color category to any person by right-clicking their card and choosing ',
+        { tag: 'strong', text: 'Set Category' },
+        '.',
+      ],
+      [
+        'Each chart has its own set of categories. Default categories: ',
+        { tag: 'strong', text: 'Open Position' },
+        ', ',
+        { tag: 'strong', text: 'Offer Pending' },
+        ', and ',
+        { tag: 'strong', text: 'Future Start' },
+        '.',
+      ],
+      [
+        'Add, edit, or delete categories in the ',
+        { tag: 'strong', text: 'Settings' },
+        ' tab under the Color Categories section.',
+      ],
+      [
+        'A color legend appears on the chart when categories are in use and is included in PowerPoint exports.',
+      ],
+    ],
+  },
+  {
+    title: 'Focus Mode',
+    items: [
+      [
+        'Right-click any manager and choose ',
+        { tag: 'strong', text: 'Focus on sub-org' },
+        ' to view only that person\u2019s team as a standalone chart.',
+      ],
+      [
+        'Press ',
+        { tag: 'kbd', text: 'Escape' },
+        ' or click ',
+        { tag: 'strong', text: 'Show full org' },
+        ' in the banner to return to the full chart.',
+      ],
+      [
+        'PowerPoint export and status bar stats automatically reflect the focused sub-org.',
+      ],
+    ],
+  },
+  {
+    title: 'Headcount Badges',
+    items: [
+      [
+        'Managers can display a badge showing their total headcount (number of people in their org). Enable this in ',
+        { tag: 'strong', text: 'Settings' },
+        ' \u2192 ',
+        { tag: 'strong', text: 'Show Headcount' },
+        '.',
+      ],
+      [
+        'Badge appearance (color, size, radius) can be customized in the Settings tab.',
       ],
     ],
   },
@@ -149,6 +234,16 @@ const HELP_SECTIONS = [
       ],
       ['Use ', { tag: 'strong', text: 'Import Settings' }, ' to load a saved configuration.'],
       ['Theme presets apply a full color scheme in one click.'],
+      [
+        'Use ',
+        { tag: 'strong', text: 'Create Backup' },
+        ' in Settings to save all your charts, versions, and settings as a single file.',
+      ],
+      [
+        'Use ',
+        { tag: 'strong', text: 'Restore' },
+        ' to load a backup. You can choose to replace all data or merge with your existing charts.',
+      ],
     ],
   },
   {
@@ -197,6 +292,7 @@ function buildHelpItem(fragments: HelpFragment[]): DocumentFragment {
 }
 
 export function showHelpDialog(storage: IStorage = browserStorage): void {
+  const previouslyFocused = document.activeElement;
   const overlay = createOverlay();
   overlay.style.background = 'rgba(0,0,0,0.6)';
   overlay.style.backdropFilter = 'blur(3px)';
@@ -364,6 +460,9 @@ export function showHelpDialog(storage: IStorage = browserStorage): void {
       document.body.removeChild(overlay);
     }
     document.removeEventListener('keydown', escHandler);
+    if (previouslyFocused && previouslyFocused instanceof HTMLElement) {
+      previouslyFocused.focus();
+    }
   };
 
   closeBtn.addEventListener('click', close);
@@ -377,4 +476,5 @@ export function showHelpDialog(storage: IStorage = browserStorage): void {
   document.addEventListener('keydown', escHandler);
 
   document.body.appendChild(overlay);
+  closeBtn.focus();
 }

@@ -7,10 +7,22 @@ type Translations = Record<string, string>;
 let translations: Translations = en;
 let currentLocale = 'en';
 
-/** Load a locale's translations */
+const RTL_LOCALES = new Set(['ar', 'he', 'fa', 'ur']);
+
+/** Returns 'rtl' for RTL locales (Arabic, Hebrew, Farsi, Urdu), 'ltr' otherwise. */
+export function getDirection(locale?: string): 'ltr' | 'rtl' {
+  const l = (locale ?? currentLocale).split('-')[0];
+  return RTL_LOCALES.has(l) ? 'rtl' : 'ltr';
+}
+
+/** Load a locale's translations and update document direction + lang. */
 export function setLocale(locale: string, messages: Translations): void {
   currentLocale = locale;
   translations = messages;
+  if (typeof document !== 'undefined') {
+    document.documentElement.dir = getDirection(locale);
+    document.documentElement.lang = locale;
+  }
 }
 
 /** Get the current locale */

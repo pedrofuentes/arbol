@@ -1148,7 +1148,7 @@ async function main(): Promise<void> {
   // Zoom indicator (will be appended to footer right, after Reset button)
   const zoomIndicator = document.createElement('span');
   zoomIndicator.style.cssText =
-    'font-size:11px;color:var(--text-tertiary);font-family:var(--font-mono);min-width:36px;text-align:right;';
+    'font-size:11px;color:var(--text-tertiary);font-family:var(--font-mono);min-width:36px;text-align:end;';
 
   const zoomManager = renderer.getZoomManager();
   const updateZoomIndicator = () => {

@@ -71,7 +71,7 @@ describe('CHART_THEME_PRESETS', () => {
   });
 
   it('all presets have a valid textAlign value', () => {
-    const validAligns = ['left', 'center', 'right'];
+    const validAligns = ['left', 'center', 'right', 'start', 'end'];
     for (const preset of CHART_THEME_PRESETS) {
       expect(validAligns).toContain(preset.colors.textAlign);
     }

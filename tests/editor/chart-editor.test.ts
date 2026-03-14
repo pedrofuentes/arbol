@@ -312,17 +312,17 @@ describe('ChartEditor – chart item keyboard accessibility', () => {
     document.body.removeChild(container);
   });
 
-  it('inactive chart item has role="button" and tabindex="0"', () => {
+  it('inactive chart item has role="listitem" and tabindex="0"', () => {
     const inactiveItem = container.querySelector('[data-chart-id="chart-2"]') as HTMLElement;
     expect(inactiveItem).not.toBeNull();
-    expect(inactiveItem.getAttribute('role')).toBe('button');
+    expect(inactiveItem.getAttribute('role')).toBe('listitem');
     expect(inactiveItem.getAttribute('tabindex')).toBe('0');
   });
 
   it('active chart item does not have role="button"', () => {
     const activeItem = container.querySelector('[data-chart-id="chart-1"]') as HTMLElement;
     expect(activeItem).not.toBeNull();
-    expect(activeItem.hasAttribute('role')).toBe(false);
+    expect(activeItem.getAttribute('role')).toBe('listitem');
   });
 
   it('Enter key on inactive chart item switches chart', async () => {

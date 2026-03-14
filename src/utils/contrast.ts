@@ -54,7 +54,7 @@ export function contrastingTextColor(
   return relativeLuminance(bgHex) > 0.179 ? darkColor : lightColor;
 }
 
-const DEFAULT_TITLE_DARK = '#64748b';
+const DEFAULT_TITLE_DARK = '#475569';
 const DEFAULT_TITLE_LIGHT = '#cbd5e1';
 
 /**

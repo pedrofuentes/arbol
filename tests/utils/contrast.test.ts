@@ -102,7 +102,7 @@ describe('contrastingTextColor', () => {
 
 describe('contrastingTitleColor', () => {
   it('returns muted dark for light backgrounds', () => {
-    expect(contrastingTitleColor('#ffffff')).toBe('#64748b');
+    expect(contrastingTitleColor('#ffffff')).toBe('#475569');
   });
 
   it('returns muted light for dark backgrounds', () => {
@@ -110,7 +110,7 @@ describe('contrastingTitleColor', () => {
   });
 
   it('returns muted dark for medium-light backgrounds', () => {
-    expect(contrastingTitleColor('#fbbf24')).toBe('#64748b');
+    expect(contrastingTitleColor('#fbbf24')).toBe('#475569');
   });
 
   it('accepts custom colors', () => {

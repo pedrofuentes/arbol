@@ -93,7 +93,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
         width:100%;box-sizing:border-box;
         padding:10px 12px;border:none;
         background:transparent;cursor:pointer;
-        text-align:left;font-family:var(--font-sans);
+        text-align:start;font-family:var(--font-sans);
         border-bottom:2px solid var(--border-default);
       `;
       item.addEventListener('mouseenter', () => {
@@ -151,7 +151,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
           width:100%;box-sizing:border-box;
           padding:10px 12px;border:none;
           background:transparent;cursor:pointer;
-          text-align:left;font-family:var(--font-sans);
+          text-align:start;font-family:var(--font-sans);
           border-bottom:1px solid var(--border-subtle);
         `;
         item.addEventListener('mouseenter', () => {

@@ -27,33 +27,37 @@ export class OrgStore extends EventEmitter {
   }
 
   undo(): boolean {
-    if (this.undoStack.length === 0) return false;
-    const snapshot = this.undoStack.pop()!;
-    try {
-      const parsed = JSON.parse(snapshot);
-      this.redoStack.push(JSON.stringify(this.root));
-      this.root = parsed;
-    } catch (e) {
-      console.error('Failed to parse undo snapshot, skipping:', e);
-      return this.undo();
+    while (this.undoStack.length > 0) {
+      const snapshot = this.undoStack.pop()!;
+      try {
+        const parsed = JSON.parse(snapshot);
+        this.redoStack.push(JSON.stringify(this.root));
+        this.root = parsed;
+        this.emit();
+        return true;
+      } catch (e) {
+        console.error('Failed to parse undo snapshot, skipping:', e);
+        continue;
+      }
     }
-    this.emit();
-    return true;
+    return false;
   }
 
   redo(): boolean {
-    if (this.redoStack.length === 0) return false;
-    const snapshot = this.redoStack.pop()!;
-    try {
-      const parsed = JSON.parse(snapshot);
-      this.undoStack.push(JSON.stringify(this.root));
-      this.root = parsed;
-    } catch (e) {
-      console.error('Failed to parse redo snapshot, skipping:', e);
-      return this.redo();
+    while (this.redoStack.length > 0) {
+      const snapshot = this.redoStack.pop()!;
+      try {
+        const parsed = JSON.parse(snapshot);
+        this.undoStack.push(JSON.stringify(this.root));
+        this.root = parsed;
+        this.emit();
+        return true;
+      } catch (e) {
+        console.error('Failed to parse redo snapshot, skipping:', e);
+        continue;
+      }
     }
-    this.emit();
-    return true;
+    return false;
   }
 
   canUndo(): boolean {

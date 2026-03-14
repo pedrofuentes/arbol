@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.0] — 2026-03-14
+
+### Added
+- **Accessibility: SVG chart ARIA tree semantics** — org chart cards now have `role="treeitem"`, `aria-label`, `aria-level`, `aria-expanded`; SVG container has `role="tree"`
+- **Accessibility: Chart keyboard navigation** — Arrow keys navigate the org tree (↑ parent, ↓ child, ←→ siblings), Enter to select, Space for multi-select, Shift+F10 for context menu, Home/End (`src/renderer/keyboard-nav.ts`)
+- **Accessibility: Screen reader announcer** — global `aria-live` region announces search results, undo/redo, chart switching, save, selection changes, theme toggle, focus mode (`src/ui/announcer.ts`)
+- **Accessibility: Context menu submenu keyboard navigation** — ArrowRight/Left opens/closes submenus, `aria-haspopup`/`aria-expanded` attributes
+- **Accessibility: Manager picker keyboard navigation** — ArrowUp/Down with `aria-activedescendant` pattern
+- **Accessibility: Complete ARIA tab pattern** — `aria-controls`, `role="tabpanel"`, `aria-labelledby`, ArrowLeft/Right between tabs
+- **Accessibility: Keyboard-accessible components** — drop zone, chart list items, chart name header, preset delete button all now reachable via keyboard
+- **Accessibility: Focus trapping** — inline editor, add popover now trap focus; confirm dialog focuses Cancel on danger actions; context menu and help dialog restore focus on close
+- **Accessibility: `forced-colors` media query** — high contrast mode support for card strokes, focus outlines, toasts
+- **Accessibility: `aria-keyshortcuts`** — on undo, redo, export, and search elements
+- **Toast notification system** — `showToast()` for success/error/info feedback with auto-dismiss, stacking, `role="alert"` (`src/ui/toast.ts`)
+- **Custom input dialog** — `showInputDialog()` replacing native `prompt()`, with focus trap, Enter/Escape, theming (`src/ui/input-dialog.ts`)
+- **Welcome banner** — dismissible first-time user guidance with localStorage persistence (`src/ui/welcome-banner.ts`)
+- **Search "no results" indicator** — visual hint shown when search matches zero nodes
+- **Loading indicators** — spinner states for PPTX export, chart switching, file import, and app initialization
+- **Mobile responsive layout** — collapsible sidebar overlay at ≤768px, full-width at ≤480px, hamburger menu toggle, 44px touch targets on mobile
+- **i18n infrastructure** — `t()`, `tp()`, `setLocale()`, `getLocale()`, `getDirection()` translation system with 400+ English strings extracted (`src/i18n/`)
+- **RTL readiness** — CSS logical properties, dynamic `dir`/`lang` attributes, RTL sidebar animation, text expansion accommodation
+- **`beforeunload` guard** — warns before closing tab with unsaved changes
+- **Decorative emoji `aria-hidden`** — toolbar button emoji wrapped in `<span aria-hidden="true">`
+
+### Fixed
+- **Recursive undo/redo crash** — replaced recursive calls with iterative loop; corrupted snapshots are now skipped gracefully
+- **Color contrast WCAG AA** — `DEFAULT_TITLE_DARK` changed from `#64748b` to `#475569`; `--text-tertiary` updated for both themes; Pastel preset title color fixed
+- **Form labels not linked to inputs** — ~30+ controls now have `htmlFor`/`id` associations; JSON editor textarea, file input, paste textarea have `aria-label`
+- **Silent failures on context menu operations** — `console.error` replaced with visible `showToast()` error messages
+- **Native `prompt()` and `alert()` replaced** — version naming and new chart naming use custom `showInputDialog()`; settings errors use `showToast()` instead of `alert()`
+- **Contradictory remove confirmation** — "This cannot be undone (but you can use Ctrl+Z)" → "You can undo this with Ctrl+Z."
+- **Silent validation failures** — inline editor, add popover, chart name header now show "Name is required" error text
+- **Confirm dialog focuses Cancel on danger actions** — previously always focused the destructive Confirm button
+- **Disabled context menu items** — now have `aria-disabled="true"` alongside visual disabled style
+- **Duplicate `role="main"`** removed from `index.html`
+- **Tooltips not keyboard-accessible** — now visible on `:focus-visible` as well as `:hover`
+- **Icon button touch targets** — increased from 30px to 36px (44px on mobile)
+- **Font sizes converted from `px` to `rem`** — scales with user font size preferences
+- **`color-scheme` CSS property** — set for dark/light themes so native controls (scrollbars, form elements) match
+- **`textAlign` option extended** — now accepts `'start'` and `'end'` in addition to `'left'`/`'center'`/`'right'`
+
+### Changed
+- **Help dialog expanded** — added 4 new sections: How the Chart Works (IC/Advisor/Manager terminology), Color Categories, Focus Mode, Headcount Badges; updated context menu description, Escape priority chain, Backup/Restore docs
+- **README.md** — fixed incorrect double-click editing claim
+- **AGENTS.md** — updated file count (39→59), added `src/controllers/` directory, updated test count, fixed interactions table
+- **Settings accordions** — headers now wrapped in `<h3>` elements with `role="region"` content panels
+- **Chart/version lists** — now have `role="list"`/`role="listitem"` semantics
+- **Footer** — added `aria-label="Status bar"`
+
+### Tests
+- Added 153 new tests (1,357 → 1,510) across 7 new test files
+- New: `announcer.test.ts` (10), `toast.test.ts` (9), `input-dialog.test.ts` (10), `welcome-banner.test.ts` (11), `keyboard-nav.test.ts` (26), `accessibility.test.ts` (24), `i18n.test.ts` (26)
+- Updated: `org-store.test.ts` (+6 corrupted snapshot tests), `contrast.test.ts`, `category-store.test.ts`, `chart-editor.test.ts`, `settings-store.test.ts`, `theme-presets.test.ts`
+- Total: 1,510 tests across 62 files
+
 ## [2.7.0] — 2026-03-13
 
 ### Refactored

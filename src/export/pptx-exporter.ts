@@ -52,7 +52,7 @@ export interface PptxExportOptions {
   headcountBadgePadding?: number;
   headcountBadgeHeight?: number;
   legendRows?: number;
-  textAlign?: 'left' | 'center' | 'right';
+  textAlign?: 'left' | 'center' | 'right' | 'start' | 'end';
   cardBorderRadius?: number;
   fontFamily?: string;
 }
@@ -108,7 +108,7 @@ export function resolveStyles(options?: PptxExportOptions): ResolvedStyles {
     headcountBadgeHeight: options?.headcountBadgeHeight ?? 22,
     headcountBadgePadding: options?.headcountBadgePadding ?? 8,
     headcountBadgeRadius: options?.headcountBadgeRadius ?? 4,
-    textAlign: options?.textAlign ?? 'center',
+    textAlign: options?.textAlign === 'start' ? 'left' : options?.textAlign === 'end' ? 'right' : options?.textAlign ?? 'center',
     cardBorderRadius: options?.cardBorderRadius ?? 0,
     fontFamily: options?.fontFamily ?? 'Calibri',
   };

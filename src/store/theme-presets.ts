@@ -14,7 +14,7 @@ export interface ChartThemePreset {
     icContainerBorderRadius?: number;
     nameColor: string;
     titleColor: string;
-    textAlign?: 'left' | 'center' | 'right';
+    textAlign?: 'left' | 'center' | 'right' | 'start' | 'end';
     cardBorderRadius?: number;
     fontFamily?: string;
   };

@@ -101,7 +101,7 @@ const DASH_PATTERN_KEYS: ReadonlySet<string> = new Set<string>(['dottedLineDash'
 const BOOLEAN_KEYS: ReadonlySet<string> = new Set<string>(['showHeadcount']);
 
 const ENUM_KEYS: ReadonlyMap<string, readonly string[]> = new Map([
-  ['textAlign', ['left', 'center', 'right']],
+  ['textAlign', ['left', 'center', 'right', 'start', 'end']],
   ['fontFamily', ['Calibri', 'Arial', 'Verdana', 'Georgia', 'Tahoma', 'Trebuchet MS', 'Segoe UI', 'Microsoft Sans Serif']],
 ]);
 

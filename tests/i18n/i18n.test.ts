@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { t, tp, setLocale, getLocale } from '../../src/i18n';
+import { t, tp, setLocale, getLocale, getDirection } from '../../src/i18n';
 import en from '../../src/i18n/en';
 
 describe('i18n', () => {
@@ -82,6 +82,52 @@ describe('i18n', () => {
     it('switching locale clears previous translations', () => {
       setLocale('fr', { 'app.title': 'Arbre' });
       expect(t('toolbar.undo_aria')).toBe('toolbar.undo_aria');
+    });
+
+    it('sets document.documentElement.dir to ltr for LTR locale', () => {
+      setLocale('en', en);
+      expect(document.documentElement.dir).toBe('ltr');
+    });
+
+    it('sets document.documentElement.dir to rtl for RTL locale', () => {
+      setLocale('ar', {});
+      expect(document.documentElement.dir).toBe('rtl');
+    });
+
+    it('sets document.documentElement.lang', () => {
+      setLocale('fr', {});
+      expect(document.documentElement.lang).toBe('fr');
+    });
+  });
+
+  describe('getDirection()', () => {
+    it('returns ltr for English', () => {
+      expect(getDirection('en')).toBe('ltr');
+    });
+
+    it('returns rtl for Arabic', () => {
+      expect(getDirection('ar')).toBe('rtl');
+    });
+
+    it('returns rtl for Hebrew with subtag', () => {
+      expect(getDirection('he-IL')).toBe('rtl');
+    });
+
+    it('returns rtl for Farsi', () => {
+      expect(getDirection('fa')).toBe('rtl');
+    });
+
+    it('returns rtl for Urdu', () => {
+      expect(getDirection('ur')).toBe('rtl');
+    });
+
+    it('returns ltr for unknown locale', () => {
+      expect(getDirection('de')).toBe('ltr');
+    });
+
+    it('uses current locale when no argument provided', () => {
+      setLocale('ar', {});
+      expect(getDirection()).toBe('rtl');
     });
   });
 

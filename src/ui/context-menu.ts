@@ -89,9 +89,10 @@ export function showContextMenu(options: ContextMenuOptions): void {
       color:var(--text-primary);
       font-size:13px;
       font-family:inherit;
-      text-align:left;
+      text-align:start;
       cursor:pointer;
       white-space:nowrap;
+      max-width:300px;overflow:hidden;text-overflow:ellipsis;
       transition:background var(--transition-fast, 100ms ease);
     `;
 
@@ -120,6 +121,7 @@ export function showContextMenu(options: ContextMenuOptions): void {
 
     if (item.disabled) {
       btn.disabled = true;
+      btn.setAttribute('aria-disabled', 'true');
       btn.style.opacity = '0.4';
       btn.style.cursor = 'default';
     }
@@ -172,7 +174,8 @@ export function showContextMenu(options: ContextMenuOptions): void {
             display:flex;align-items:center;gap:var(--space-2);width:100%;
             padding:var(--space-2) var(--space-3);border:none;background:transparent;
             color:var(--text-primary);font-size:13px;font-family:inherit;
-            text-align:left;cursor:pointer;white-space:nowrap;
+            text-align:start;cursor:pointer;white-space:nowrap;
+            max-width:300px;overflow:hidden;text-overflow:ellipsis;
             transition:background var(--transition-fast, 100ms ease);
           `;
 

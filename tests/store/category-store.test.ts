@@ -334,7 +334,7 @@ describe('CategoryStore', () => {
     it('add() gives dark text for light backgrounds', () => {
       const cat = store.add('Light', '#ffffff');
       expect(cat.nameColor).toBe('#1e293b');
-      expect(cat.titleColor).toBe('#64748b');
+      expect(cat.titleColor).toBe('#475569');
     });
 
     it('update color recomputes text colors', () => {

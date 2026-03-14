@@ -54,7 +54,7 @@ export interface RendererOptions {
   icContainerFill?: string;
   icContainerBorderRadius?: number;
   // Text alignment
-  textAlign?: 'left' | 'center' | 'right';
+  textAlign?: 'left' | 'center' | 'right' | 'start' | 'end';
   textPaddingHorizontal?: number;
   // Headcount badge
   showHeadcount?: boolean;
@@ -457,11 +457,11 @@ export class ChartRenderer {
     const self = this;
     const titleY = textPaddingTop + nameFontSize + textGap;
 
-    const svgAnchor = textAlign === 'left' ? 'start' : textAlign === 'right' ? 'end' : 'middle';
+    const svgAnchor = textAlign === 'left' || textAlign === 'start' ? 'start' : textAlign === 'right' || textAlign === 'end' ? 'end' : 'middle';
     const textX =
-      textAlign === 'left'
+      textAlign === 'left' || textAlign === 'start'
         ? textPaddingHorizontal
-        : textAlign === 'right'
+        : textAlign === 'right' || textAlign === 'end'
           ? width - textPaddingHorizontal
           : width / 2;
     const fontStack = `${fontFamily}, sans-serif`;
