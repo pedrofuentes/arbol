@@ -779,6 +779,79 @@ describe('ChartRenderer', () => {
     });
   });
 
+  describe('search highlighting', () => {
+    it('dims non-matching nodes to 0.2 opacity', () => {
+      renderer.render(simpleTree());
+      renderer.setHighlightedNodes(new Set(['root']));
+      const rootNode = container.querySelector('.node[data-id="root"]') as SVGGElement;
+      const bobNode = container.querySelector('.node[data-id="b"]') as SVGGElement;
+      expect(rootNode.style.opacity).toBe('1');
+      expect(bobNode.style.opacity).toBe('0.2');
+    });
+
+    it('dims tree links when search is active', () => {
+      renderer.render(simpleTree());
+      renderer.setHighlightedNodes(new Set(['root']));
+      const linksGroup = container.querySelector('.links') as SVGGElement;
+      expect(linksGroup.style.opacity).toBe('0.3');
+    });
+
+    it('dims advisor links when search is active', () => {
+      renderer.render(managerWithPALs());
+      renderer.setHighlightedNodes(new Set(['root']));
+      const palLinks = container.querySelectorAll('.pal-stacks .link');
+      for (const link of palLinks) {
+        expect((link as SVGElement).style.opacity).toBe('0.3');
+      }
+    });
+
+    it('dims IC containers when search is active', () => {
+      renderer.render(m1WithICs());
+      renderer.setHighlightedNodes(new Set(['root']));
+      const icContainer = container.querySelector('.ic-container') as SVGRectElement;
+      expect(icContainer.style.opacity).toBe('0.2');
+    });
+
+    it('clears all highlighting when called with null', () => {
+      renderer.render(simpleTree());
+      renderer.setHighlightedNodes(new Set(['root']));
+      renderer.setHighlightedNodes(null);
+
+      const nodes = container.querySelectorAll('.node');
+      for (const node of nodes) {
+        expect((node as SVGGElement).style.opacity).toBe('');
+      }
+      const linksGroup = container.querySelector('.links') as SVGGElement;
+      expect(linksGroup.style.opacity).toBe('');
+    });
+
+    it('clears IC container opacity when highlighting is cleared', () => {
+      renderer.render(m1WithICs());
+      renderer.setHighlightedNodes(new Set(['root']));
+      renderer.setHighlightedNodes(null);
+      const icContainer = container.querySelector('.ic-container') as SVGRectElement;
+      expect(icContainer.style.opacity).toBe('');
+    });
+
+    it('highlights matching IC nodes at full opacity', () => {
+      renderer.render(m1WithICs());
+      renderer.setHighlightedNodes(new Set(['ic1']));
+      const ic1 = container.querySelector('.ic-node[data-id="ic1"]') as SVGGElement;
+      const ic2 = container.querySelector('.ic-node[data-id="ic2"]') as SVGGElement;
+      expect(ic1.style.opacity).toBe('1');
+      expect(ic2.style.opacity).toBe('0.2');
+    });
+
+    it('highlights matching advisor nodes at full opacity', () => {
+      renderer.render(managerWithPALs());
+      renderer.setHighlightedNodes(new Set(['pal1']));
+      const pal1 = container.querySelector('.pal-node[data-id="pal1"]') as SVGGElement;
+      const pal2 = container.querySelector('.pal-node[data-id="pal2"]') as SVGGElement;
+      expect(pal1.style.opacity).toBe('1');
+      expect(pal2.style.opacity).toBe('0.2');
+    });
+  });
+
   describe('per-node category colors', () => {
     const categories: ColorCategory[] = [
       { id: 'eng', label: 'Engineering', color: '#3b82f6' },

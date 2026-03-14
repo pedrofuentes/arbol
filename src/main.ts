@@ -516,6 +516,7 @@ async function main(): Promise<void> {
   importContainer.appendChild(importEditorWrapper);
   new ImportEditor(importEditorWrapper, store, async (tree, name) => {
     const chart = await chartStore.createChartFromTree(name, tree);
+    await chartStore.saveVersion(t('import.original_version_name'), chart.workingTree);
     focusMode.clear();
     dismissVersionViewer();
     clearMultiSelection();
@@ -866,20 +867,43 @@ async function main(): Promise<void> {
                   announce(t('announce.removed', { name: node.name }));
                 }
               } else {
-                const allNodes = flattenTree(tree);
                 const descendants = flattenTree(node);
-                const descendantIds = new Set(descendants.map((n) => n.id));
-                const managers = allNodes
-                  .filter((n) => !descendantIds.has(n.id))
-                  .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+                const descendantCount = descendants.length - 1;
 
-                const result = await showManagerPicker({
-                  title: t('picker.reassign_to', { name: node.name }),
-                  managers,
+                const reassign = await showConfirmDialog({
+                  title: t('dialog.remove_manager.title'),
+                  message: t('dialog.remove_manager.message', { name: node.name, count: String(descendantCount) }),
+                  confirmLabel: t('dialog.remove_manager.reassign'),
+                  cancelLabel: t('dialog.remove_manager.remove_all', { count: String(descendantCount) }),
+                  danger: false,
                 });
-                if (result) {
-                  store.removeNodeWithReassign(nodeId, result.managerId);
-                  announce(t('announce.removed', { name: node.name }));
+
+                if (reassign) {
+                  const allNodes = flattenTree(tree);
+                  const descendantIds = new Set(descendants.map((n) => n.id));
+                  const managers = allNodes
+                    .filter((n) => !descendantIds.has(n.id))
+                    .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+
+                  const result = await showManagerPicker({
+                    title: t('picker.reassign_to', { name: node.name }),
+                    managers,
+                  });
+                  if (result) {
+                    store.removeNodeWithReassign(nodeId, result.managerId);
+                    announce(t('announce.removed', { name: node.name }));
+                  }
+                } else {
+                  const confirmed = await showConfirmDialog({
+                    title: t('dialog.remove_manager.remove_all_confirm_title'),
+                    message: t('dialog.remove_manager.remove_all_confirm_message', { name: node.name, count: String(descendantCount) }),
+                    confirmLabel: t('dialog.remove_manager.remove_all_confirm'),
+                    danger: true,
+                  });
+                  if (confirmed) {
+                    store.removeNode(nodeId);
+                    announce(t('announce.removed_with_org', { name: node.name, count: String(descendantCount) }));
+                  }
                 }
               }
             } catch (e) {
@@ -1261,7 +1285,11 @@ async function main(): Promise<void> {
   footerRight.appendChild(fitBtn);
 
   fitBtn.addEventListener('click', () => {
-    renderer.getZoomManager()?.fitToContent();
+    if (sideBySideRenderer) {
+      sideBySideRenderer.fitToContent();
+    } else {
+      renderer.getZoomManager()?.fitToContent();
+    }
   });
 
   const resetZoomBtn = document.createElement('button');
@@ -1277,7 +1305,11 @@ async function main(): Promise<void> {
   footerRight.appendChild(resetZoomBtn);
 
   resetZoomBtn.addEventListener('click', () => {
-    renderer.getZoomManager()?.centerAtRealSize();
+    if (sideBySideRenderer) {
+      sideBySideRenderer.centerAtRealSize();
+    } else {
+      renderer.getZoomManager()?.centerAtRealSize();
+    }
   });
 
   // Zoom level indicator (right side, after Reset)

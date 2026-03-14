@@ -55,6 +55,21 @@ export class SideBySideRenderer {
     this.rightRenderer.getZoomManager().fitToContent();
   }
 
+  fitToContent(): void {
+    this.leftRenderer.getZoomManager()?.fitToContent();
+    this.rightRenderer.getZoomManager()?.fitToContent();
+  }
+
+  resetZoom(): void {
+    this.leftRenderer.getZoomManager()?.resetZoom();
+    this.rightRenderer.getZoomManager()?.resetZoom();
+  }
+
+  centerAtRealSize(): void {
+    this.leftRenderer.getZoomManager()?.centerAtRealSize();
+    this.rightRenderer.getZoomManager()?.centerAtRealSize();
+  }
+
   destroy(): void {
     this.leftRenderer.destroy();
     this.rightRenderer.destroy();

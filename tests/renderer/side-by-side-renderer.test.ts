@@ -194,4 +194,59 @@ describe('SideBySideRenderer', () => {
 
     renderer = null as unknown as SideBySideRenderer;
   });
+
+  describe('zoom delegation', () => {
+    it('fitToContent does not throw before render', () => {
+      renderer = new SideBySideRenderer({
+        container,
+        rendererOptions: makeBaseOptions(),
+        oldLabel: 'Old',
+        newLabel: 'New',
+      });
+      expect(() => renderer.fitToContent()).not.toThrow();
+    });
+
+    it('fitToContent calls both renderers after render', () => {
+      renderer = new SideBySideRenderer({
+        container,
+        rendererOptions: makeBaseOptions(),
+        oldLabel: 'Old',
+        newLabel: 'New',
+      });
+      renderer.render(oldTree(), newTree(), makeDiff());
+      // Should not throw — both zoom managers exist after render
+      expect(() => renderer.fitToContent()).not.toThrow();
+    });
+
+    it('resetZoom does not throw before render', () => {
+      renderer = new SideBySideRenderer({
+        container,
+        rendererOptions: makeBaseOptions(),
+        oldLabel: 'Old',
+        newLabel: 'New',
+      });
+      expect(() => renderer.resetZoom()).not.toThrow();
+    });
+
+    it('centerAtRealSize does not throw before render', () => {
+      renderer = new SideBySideRenderer({
+        container,
+        rendererOptions: makeBaseOptions(),
+        oldLabel: 'Old',
+        newLabel: 'New',
+      });
+      expect(() => renderer.centerAtRealSize()).not.toThrow();
+    });
+
+    it('centerAtRealSize calls both renderers after render', () => {
+      renderer = new SideBySideRenderer({
+        container,
+        rendererOptions: makeBaseOptions(),
+        oldLabel: 'Old',
+        newLabel: 'New',
+      });
+      renderer.render(oldTree(), newTree(), makeDiff());
+      expect(() => renderer.centerAtRealSize()).not.toThrow();
+    });
+  });
 });
