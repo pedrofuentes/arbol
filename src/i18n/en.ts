@@ -27,6 +27,7 @@ const en: Record<string, string> = {
   'toolbar.hamburger_icon': '☰',
   'toolbar.settings_tooltip': 'Settings',
   'toolbar.settings_aria': 'Open settings',
+  'toolbar.quick_actions': 'Ctrl+K Quick actions',
 
   // ─── Search ────────────────────────────────────────────────────────
   'search.aria': 'Search people by name or title',
@@ -808,7 +809,6 @@ const en: Record<string, string> = {
   // ─── Toolbar (Step 6) ──────────────────────────────────────────────
   'toolbar.export_tooltip': 'Export to PowerPoint (Ctrl+E)',
   'toolbar.export_aria': 'Export chart to PowerPoint',
-  'toolbar.quick_actions': '⌘K Quick actions',
 };
 
 export default en;
