@@ -34,9 +34,9 @@ describe('ColumnMapper', () => {
     expect(options).toContain('manager_id');
   });
 
-  it('calls onApply with mapping when Apply is clicked with valid selections', () => {
+  it('calls onApply with mapping when handleApply is called with valid selections', () => {
     const onApply = vi.fn();
-    new ColumnMapper(container, headers, onApply, vi.fn(), vi.fn());
+    const mapper = new ColumnMapper(container, headers, onApply, vi.fn(), vi.fn());
     const selects = container.querySelectorAll('select');
 
     // Name, Title, Reports To, ID (first 4 selects are column mapping dropdowns)
@@ -44,10 +44,7 @@ describe('ColumnMapper', () => {
     selects[1].value = 'job_title';
     selects[2].value = 'manager_id';
 
-    const applyBtn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Apply Mapping',
-    );
-    applyBtn!.click();
+    mapper.handleApply();
 
     expect(onApply).toHaveBeenCalledTimes(1);
     const mapping = onApply.mock.calls[0][0];
@@ -59,12 +56,9 @@ describe('ColumnMapper', () => {
 
   it('shows error when required fields are not selected', () => {
     const onApply = vi.fn();
-    new ColumnMapper(container, headers, onApply, vi.fn(), vi.fn());
+    const mapper = new ColumnMapper(container, headers, onApply, vi.fn(), vi.fn());
 
-    const applyBtn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Apply Mapping',
-    );
-    applyBtn!.click();
+    mapper.handleApply();
 
     expect(onApply).not.toHaveBeenCalled();
     expect(container.textContent).toContain(
@@ -74,7 +68,7 @@ describe('ColumnMapper', () => {
 
   it('shows error for duplicate column selections', () => {
     const onApply = vi.fn();
-    new ColumnMapper(container, headers, onApply, vi.fn(), vi.fn());
+    const mapper = new ColumnMapper(container, headers, onApply, vi.fn(), vi.fn());
     const selects = container.querySelectorAll('select');
 
     // Set same column for name and title
@@ -82,25 +76,10 @@ describe('ColumnMapper', () => {
     selects[1].value = 'full_name';
     selects[2].value = 'manager_id';
 
-    const applyBtn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Apply Mapping',
-    );
-    applyBtn!.click();
+    mapper.handleApply();
 
     expect(onApply).not.toHaveBeenCalled();
     expect(container.textContent).toContain('Each column can only be mapped to one field');
-  });
-
-  it('calls onCancel when cancel is clicked', () => {
-    const onCancel = vi.fn();
-    new ColumnMapper(container, headers, vi.fn(), vi.fn(), onCancel);
-
-    const cancelBtn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Cancel',
-    );
-    cancelBtn!.click();
-
-    expect(onCancel).toHaveBeenCalled();
   });
 
   it('cleans up on destroy', () => {

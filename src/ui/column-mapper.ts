@@ -95,24 +95,6 @@ export class ColumnMapper {
     this.errorArea.style.cssText = 'min-height:0;';
     this.container.appendChild(this.errorArea);
 
-    // Button group
-    const btnGroup = document.createElement('div');
-    btnGroup.className = 'btn-group';
-    btnGroup.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;margin-top:8px;';
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'btn btn-secondary';
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.addEventListener('click', () => this.onCancel());
-
-    const applyBtn = document.createElement('button');
-    applyBtn.className = 'btn btn-primary';
-    applyBtn.textContent = 'Apply Mapping';
-    applyBtn.addEventListener('click', () => this.handleApply());
-
-    btnGroup.appendChild(cancelBtn);
-    btnGroup.appendChild(applyBtn);
-    this.container.appendChild(btnGroup);
 
     // Wire up change listeners
     this.idSelect.addEventListener('change', () => this.onIdFieldChanged());
@@ -330,7 +312,7 @@ export class ColumnMapper {
     };
   }
 
-  private handleApply(): void {
+  handleApply(): void {
     this.errorArea.textContent = '';
 
     const name = this.nameSelect.value;

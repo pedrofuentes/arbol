@@ -174,7 +174,7 @@ export function renderMappingStep(
     mapperContainer.className = 'wizard-mapper-wrap';
     container.appendChild(mapperContainer);
 
-    new ColumnMapper(
+    const mapper = new ColumnMapper(
       mapperContainer,
       state.headers,
       (mapping) => { state.mapping = mapping; onReady(true); },
@@ -182,19 +182,12 @@ export function renderMappingStep(
       () => {},
     );
 
-    // Auto-trigger apply when any dropdown changes (so Next button works without clicking Apply)
+    // Auto-validate mapping when dropdowns change so Next is enabled without extra clicks
     mapperContainer.querySelectorAll('select').forEach((sel) => {
-      sel.addEventListener('change', () => {
-        const applyBtn = mapperContainer.querySelector('.btn-primary') as HTMLButtonElement | null;
-        if (applyBtn) applyBtn.click();
-      });
+      sel.addEventListener('change', () => mapper.handleApply());
     });
-    // Also auto-trigger on radio button change
     mapperContainer.querySelectorAll('input[type="radio"]').forEach((radio) => {
-      radio.addEventListener('change', () => {
-        const applyBtn = mapperContainer.querySelector('.btn-primary') as HTMLButtonElement | null;
-        if (applyBtn) applyBtn.click();
-      });
+      radio.addEventListener('change', () => mapper.handleApply());
     });
 
     onReady(false);
