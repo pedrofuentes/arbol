@@ -247,6 +247,30 @@ body {
   flex-shrink: 0;
 }
 
+/* Header toolbar buttons — ghost style, transparent bg */
+.header-right .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+  line-height: 1;
+}
+.header-right .icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
 /* Divider between undo/redo and theme toggle */
 .header-divider {
   width: 1px;
