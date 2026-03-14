@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.0] — 2026-03-14
+
+### Added
+- **"Remove entire org" option** — when removing a manager, a choice dialog offers "Reassign reports" (existing flow) or "Remove entire org (N people)" with a danger confirmation before deleting the manager and all their descendants
+- **Side-by-side comparison zoom** — Fit and Reset zoom buttons now work on both panels in version comparison mode via new `SideBySideRenderer.fitToContent()`, `resetZoom()`, and `centerAtRealSize()` methods
+- **Auto-create "Original" version on import** — importing a new chart from JSON or CSV automatically saves an "Original" version snapshot; skipped for bundle imports that already carry their own versions
+
+### Fixed
+- **Search highlighting visual bug** — IC container backgrounds and advisor links were not dimmed during search, causing an uneven appearance; now all four rendering layers (tree links, IC containers, advisor links, nodes) are dimmed consistently
+- **Search highlighting SVG compositing artifact** — applying opacity to `<g>` group elements created compositing layers causing visible color banding; now targets individual `path.link` elements instead
+
+### Tests
+- Added 13 new tests (1,510 → 1,523): search highlighting (8), side-by-side zoom delegation (5)
+
 ## [2.8.0] — 2026-03-14
 
 ### Added

@@ -8,7 +8,21 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
-## 🚀 v2.8.0 — Accessibility, i18n & Mobile (Unreleased)
+## 🚀 v2.9.0 — UX Improvements & Bug Fixes
+
+### Phase 24 — Manager Removal & Comparison Improvements
+- [x] "Remove entire org" option — choice dialog when removing a manager: reassign reports or delete entire subtree
+- [x] Side-by-side comparison zoom — Fit/Reset buttons now work on both panels
+- [x] Auto-create "Original" version on import — new chart imports auto-save initial version snapshot
+- [x] Search highlighting fix — all four rendering layers dimmed consistently; SVG compositing artifact resolved
+
+### Testing
+- [x] **1,523 tests across 62 files** — all passing
+- [x] 13 new tests: search highlighting (8), side-by-side zoom (5)
+
+---
+
+## 🚀 v2.8.0 — Accessibility, i18n & Mobile
 
 ### Phase 20 — Comprehensive Accessibility
 - [x] SVG chart ARIA tree semantics (`role="tree"`, `role="treeitem"`, `aria-label`, `aria-level`, `aria-expanded`)
