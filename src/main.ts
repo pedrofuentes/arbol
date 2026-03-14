@@ -41,6 +41,8 @@ import { SearchController } from './controllers/search-controller';
 import { announce } from './ui/announcer';
 import { showWelcomeBanner } from './ui/welcome-banner';
 import { CommandPalette, CommandItem } from './ui/command-palette';
+import { PropertyPanel } from './ui/property-panel';
+import { FloatingActions } from './ui/floating-actions';
 import type { ComparisonState, VersionRecord } from './types';
 
 async function main(): Promise<void> {
@@ -696,11 +698,208 @@ async function main(): Promise<void> {
     updateSelectionIndicator();
   };
 
+  // ─── Property Panel (right-side contextual panel) ───────────────────
+  const propertyPanel = new PropertyPanel({
+    container: chartArea,
+    onEdit: (nodeId, name, title) => {
+      store.updateNode(nodeId, { name, title });
+    },
+    onAddChild: (nodeId) => {
+      const rect = renderer.getNodeScreenRect(nodeId);
+      const node = findNodeById(store.getTree(), nodeId);
+      if (!rect || !node) return;
+      showAddPopover({
+        anchor: rect,
+        parentName: node.name,
+        onAdd: (name, title) => { store.addChild(nodeId, { name, title }); },
+        onCancel: () => {},
+      });
+    },
+    onMove: (nodeId) => {
+      const tree = store.getTree();
+      const node = findNodeById(tree, nodeId);
+      if (!node) return;
+      const allNodes = flattenTree(tree);
+      const descendants = flattenTree(node);
+      const descendantIds = new Set(descendants.map((n) => n.id));
+      const managers = allNodes
+        .filter((n) => !descendantIds.has(n.id))
+        .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+      showManagerPicker({
+        title: t('picker.move_to', { name: node.name }),
+        managers,
+        showDottedLineOption: true,
+      }).then((result) => {
+        if (result) {
+          store.moveNode(nodeId, result.managerId, result.dottedLine);
+          const targetNode = findNodeById(tree, result.managerId);
+          announce(t('announce.moved', { name: node.name, target: targetNode?.name ?? t('announce.move_fallback_target') }));
+        }
+      }).catch((e) => {
+        showToast(e instanceof Error ? e.message : String(e), 'error');
+      });
+    },
+    onRemove: (nodeId) => {
+      const tree = store.getTree();
+      const node = findNodeById(tree, nodeId);
+      if (!node) return;
+      if (isLeaf(node)) {
+        showConfirmDialog({
+          title: t('dialog.remove_person.title'),
+          message: t('dialog.remove_person.message', { name: node.name }),
+          confirmLabel: t('dialog.remove_person.confirm'),
+          danger: true,
+        }).then((confirmed) => {
+          if (confirmed) {
+            store.removeNode(nodeId);
+            propertyPanel.hide();
+            floatingActions.hide();
+            announce(t('announce.removed', { name: node.name }));
+          }
+        });
+      } else {
+        const descendants = flattenTree(node);
+        const descendantCount = descendants.length - 1;
+        showConfirmDialog({
+          title: t('dialog.remove_manager.title'),
+          message: t('dialog.remove_manager.message', { name: node.name, count: String(descendantCount) }),
+          confirmLabel: t('dialog.remove_manager.reassign'),
+          cancelLabel: t('dialog.remove_manager.remove_all', { count: String(descendantCount) }),
+          danger: false,
+        }).then((reassign) => {
+          if (reassign) {
+            const allNodes = flattenTree(tree);
+            const descendantIds = new Set(descendants.map((n) => n.id));
+            const managers = allNodes
+              .filter((n) => !descendantIds.has(n.id))
+              .map((n) => ({ id: n.id, name: n.name, title: n.title }));
+            showManagerPicker({
+              title: t('picker.reassign_to', { name: node.name }),
+              managers,
+            }).then((result) => {
+              if (result) {
+                store.removeNodeWithReassign(nodeId, result.managerId);
+                propertyPanel.hide();
+                floatingActions.hide();
+                announce(t('announce.removed', { name: node.name }));
+              }
+            });
+          }
+        });
+      }
+    },
+    onFocus: (nodeId) => {
+      const node = findNodeById(store.getTree(), nodeId);
+      if (!node) return;
+      focusMode.enter(nodeId);
+      announce(t('focus.entered', { name: node.name }));
+    },
+    onCategoryChange: (nodeId, categoryId) => {
+      store.setNodeCategory(nodeId, categoryId);
+    },
+    onClose: () => {
+      propertyPanel.hide();
+      floatingActions.hide();
+      renderer.setSelectedNode(null);
+      announce(t('announce.panel_closed'));
+    },
+  });
+
+  const showPropertyPanel = (nodeId: string) => {
+    const tree = store.getTree();
+    const node = findNodeById(tree, nodeId);
+    if (!node) return;
+    const parent = findParent(tree, nodeId);
+    const directReports = node.children?.length ?? 0;
+    const totalOrg = store.getDescendantCount(nodeId);
+    const categories = categoryStore.getAll().map((c) => ({ id: c.id, label: c.label, color: c.color }));
+    propertyPanel.show(node, parent?.name ?? null, directReports, totalOrg, categories);
+  };
+
+  // ─── Floating Actions (bottom toolbar) ──────────────────────────────
+  const floatingActions = new FloatingActions({
+    container: chartArea,
+    onEdit: () => {
+      const nodeId = propertyPanel.getNodeId();
+      if (!nodeId) return;
+      const rect = renderer.getNodeScreenRect(nodeId);
+      const node = findNodeById(store.getTree(), nodeId);
+      if (!rect || !node) return;
+      showInlineEditor({
+        rect, name: node.name, title: node.title,
+        onSave: (name, title) => { store.updateNode(nodeId, { name, title }); },
+        onCancel: () => {},
+      });
+    },
+    onAdd: () => {
+      const nodeId = propertyPanel.getNodeId();
+      if (!nodeId) return;
+      const rect = renderer.getNodeScreenRect(nodeId);
+      const node = findNodeById(store.getTree(), nodeId);
+      if (!rect || !node) return;
+      showAddPopover({
+        anchor: rect, parentName: node.name,
+        onAdd: (name, title) => { store.addChild(nodeId, { name, title }); },
+        onCancel: () => {},
+      });
+    },
+    onFocus: () => {
+      const nodeId = propertyPanel.getNodeId();
+      if (!nodeId) return;
+      propertyPanel['options'].onFocus(nodeId);
+    },
+    onMove: () => {
+      const nodeId = propertyPanel.getNodeId();
+      if (!nodeId) return;
+      propertyPanel['options'].onMove(nodeId);
+    },
+    onCategory: () => {
+      const nodeId = propertyPanel.getNodeId();
+      if (!nodeId) return;
+      const node = findNodeById(store.getTree(), nodeId);
+      if (!node) return;
+      showContextMenu({
+        x: window.innerWidth / 2,
+        y: window.innerHeight - 80,
+        items: [
+          { label: t('menu.category_none'), icon: node.categoryId ? ' ' : t('menu.category_check'),
+            action: () => { store.setNodeCategory(nodeId, null); } },
+          ...categoryStore.getAll().map((cat): ContextMenuItem => ({
+            label: cat.label,
+            icon: node.categoryId === cat.id ? t('menu.category_check') : ' ',
+            swatch: cat.color,
+            action: () => { store.setNodeCategory(nodeId, cat.id); },
+          })),
+        ],
+      });
+    },
+    onRemove: () => {
+      const nodeId = propertyPanel.getNodeId();
+      if (!nodeId) return;
+      propertyPanel['options'].onRemove(nodeId);
+    },
+  });
+
   store.onChange(() => {
     rerender();
     formEditor.refresh();
     jsonEditor.refresh();
     clearMultiSelection();
+    // Refresh property panel if visible
+    const panelNodeId = propertyPanel.getNodeId();
+    if (panelNodeId && propertyPanel.isVisible()) {
+      const tree = store.getTree();
+      const node = findNodeById(tree, panelNodeId);
+      if (node) {
+        const parent = findParent(tree, panelNodeId);
+        const categories = categoryStore.getAll().map((c) => ({ id: c.id, label: c.label, color: c.color }));
+        propertyPanel.update(node, parent?.name ?? null, node.children?.length ?? 0, store.getDescendantCount(panelNodeId), categories);
+      } else {
+        propertyPanel.hide();
+        floatingActions.hide();
+        renderer.setSelectedNode(null);
+      }
+    }
   });
 
   categoryStore.onChange(() => {
@@ -709,20 +908,30 @@ async function main(): Promise<void> {
 
   renderer.setNodeClickHandler((nodeId: string, event: MouseEvent) => {
     if (event.shiftKey) {
-      // Shift+click: toggle multi-selection (root excluded)
       const tree = store.getTree();
       if (tree.id === nodeId) return;
-
       selection.toggle(nodeId);
       syncSelectionToRenderer();
       updateSelectionIndicator();
       announce(t('announce.multi_selected', { count: selection.count }));
+      if (selection.hasSelection) {
+        propertyPanel.hide();
+        floatingActions.showMulti(selection.count);
+      } else {
+        floatingActions.hide();
+      }
     } else {
-      // Regular click: clear multi-selection, highlight card only (no sidebar form)
       clearMultiSelection();
       renderer.setSelectedNode(nodeId);
       const node = findNodeById(store.getTree(), nodeId);
-      if (node) announce(t('announce.selected', { name: node.name, title: node.title }));
+      if (node) {
+        announce(t('announce.selected', { name: node.name, title: node.title }));
+        showPropertyPanel(nodeId);
+        floatingActions.showSingle({
+          isRoot: store.getTree().id === nodeId,
+          isLeaf: isLeaf(node),
+        });
+      }
     }
   });
 
@@ -731,6 +940,8 @@ async function main(): Promise<void> {
     dismissContextMenu();
     dismissInlineEditor();
     dismissAddPopover();
+    propertyPanel.hide();
+    floatingActions.hide();
   };
   renderer.getZoomManager().onZoom(dismissAllOverlays);
 
@@ -1447,6 +1658,13 @@ async function main(): Promise<void> {
       }
       // Clear multi-selection
       clearMultiSelection();
+      // Close property panel + floating actions
+      if (propertyPanel.isVisible()) {
+        propertyPanel.hide();
+        floatingActions.hide();
+        renderer.setSelectedNode(null);
+        return;
+      }
       // Deselect node
       formEditor.selectNode(null);
       renderer.setSelectedNode(null);
