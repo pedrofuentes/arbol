@@ -202,6 +202,12 @@ export function renderMappingStep(
       () => {},
     );
 
+    // Pre-fill dropdowns if preset matched
+    if (matchedPreset) {
+      mapper.prefill(matchedPreset.mapping);
+      mapper.handleApply();
+    }
+
     // Auto-validate on dropdown/radio change
     mapperContainer.querySelectorAll('select').forEach((sel) => {
       sel.addEventListener('change', () => mapper.handleApply());

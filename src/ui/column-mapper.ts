@@ -222,6 +222,25 @@ export class ColumnMapper {
     };
   }
 
+  /** Pre-fill dropdowns from a saved mapping */
+  prefill(mapping: ColumnMapping): void {
+    this.nameSelect.value = mapping.name;
+    this.titleSelect.value = mapping.title;
+    this.parentRefSelect.value = mapping.parentRef;
+    if (mapping.id) this.idSelect.value = mapping.id;
+    if (mapping.parentRefType === 'id') {
+      this.byIdRadio.checked = true;
+      this.byNameRadio.checked = false;
+    } else {
+      this.byNameRadio.checked = true;
+      this.byIdRadio.checked = false;
+    }
+    this.updateParentRefLabel();
+    if (mapping.caseInsensitive !== undefined) {
+      this.caseInsensitiveCheckbox.checked = mapping.caseInsensitive;
+    }
+  }
+
   handleApply(): void {
     this.errorArea.textContent = '';
 

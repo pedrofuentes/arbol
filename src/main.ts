@@ -439,10 +439,15 @@ async function main(): Promise<void> {
 
       // Prompt to save preset when leaving mapping step with a new mapping
       if (stepId === 'preview' && wizardState.format === 'CSV' && wizardState.mapping && !wizardState.matchedPresetName) {
+        // Suggest name from filename (e.g. "hr-export.csv" → "hr-export")
+        const suggestedName = wizardState.fileName
+          ? wizardState.fileName.replace(/\.[^.]+$/, '')
+          : '';
         const presetName = await showInputDialog({
           title: t('import_wizard.save_preset_prompt'),
           label: t('import_wizard.save_preset_label'),
           placeholder: t('import_wizard.save_preset_placeholder'),
+          initialValue: suggestedName,
           confirmLabel: t('dialog.ok'),
         });
         if (presetName) {
