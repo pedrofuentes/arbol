@@ -839,6 +839,20 @@ textarea:focus-visible {
   filter: drop-shadow(0 0 4px var(--accent-glow));
 }
 
+/* Cross-highlight for side-by-side comparison hover */
+.cross-highlight > rect {
+  stroke: #f59e0b !important;
+  stroke-width: 2 !important;
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.4));
+}
+
+/* Persistent cross-selection for side-by-side Shift+click */
+.cross-selected > rect {
+  stroke: #f59e0b !important;
+  stroke-width: 2.5 !important;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
+}
+
 /* ── Utility classes ─────────────────────────────────────────────── */
 .flex-row { display: flex; align-items: center; }
 .flex-col { display: flex; flex-direction: column; }

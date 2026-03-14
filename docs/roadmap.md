@@ -8,6 +8,19 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
+## 🚀 v2.9.1 — Side-by-Side Comparison Enhancements
+
+### Phase 25 — Comparison Interactivity & Bug Fix
+- [x] Cross-highlight on hover — hovering a node highlights its match in the other pane (amber glow)
+- [x] Click-to-select — click nodes to persistently highlight across both panes; click again to deselect
+- [x] Dim toggle fix — "Dim: Off" now correctly propagates to both side-by-side panes
+
+### Testing
+- [x] **1,540 tests across 62 files** — all passing
+- [x] 17 new tests: cross-highlight hover (7), click-to-select (7), dim toggle (3)
+
+---
+
 ## 🚀 v2.9.0 — UX Improvements & Bug Fixes
 
 ### Phase 24 — Manager Removal & Comparison Improvements

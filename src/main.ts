@@ -193,6 +193,7 @@ async function main(): Promise<void> {
       oldLabel: state.oldLabel,
       newLabel: state.newLabel,
     });
+    sideBySideRenderer.setDimUnchanged(dimUnchanged);
     sideBySideRenderer.render(state.oldTree, state.newTree, state.diff);
   };
 

@@ -12,6 +12,11 @@ export class SideBySideRenderer {
   private wrapper: HTMLDivElement;
   private leftRenderer: ChartRenderer;
   private rightRenderer: ChartRenderer;
+  private leftChart!: HTMLDivElement;
+  private rightChart!: HTMLDivElement;
+  private hoverCleanup: (() => void) | null = null;
+  private selectedIds = new Set<string>();
+  private dimUnchanged = true;
 
   constructor(options: SideBySideRendererOptions) {
     this.wrapper = document.createElement('div');
@@ -38,6 +43,15 @@ export class SideBySideRenderer {
       ...options.rendererOptions,
       container: rightPane.chart,
     });
+
+    this.leftChart = leftPane.chart;
+    this.rightChart = rightPane.chart;
+  }
+
+  setDimUnchanged(enabled: boolean): void {
+    this.dimUnchanged = enabled;
+    this.leftRenderer.setDimUnchanged(enabled);
+    this.rightRenderer.setDimUnchanged(enabled);
   }
 
   render(
@@ -47,12 +61,112 @@ export class SideBySideRenderer {
   ): void {
     this.leftRenderer.setDiffMap(diff);
     this.rightRenderer.setDiffMap(diff);
+    this.leftRenderer.setDimUnchanged(this.dimUnchanged);
+    this.rightRenderer.setDimUnchanged(this.dimUnchanged);
 
     this.leftRenderer.render(oldTree);
     this.rightRenderer.render(newTree);
 
     this.leftRenderer.getZoomManager().fitToContent();
     this.rightRenderer.getZoomManager().fitToContent();
+
+    this.wireHoverHighlight();
+  }
+
+  private wireHoverHighlight(): void {
+    this.cleanupHoverListeners();
+
+    const nodeSelector = '.node, .ic-node, .pal-node';
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
+    const wirePane = (
+      sourceContainer: HTMLDivElement,
+      targetContainer: HTMLDivElement
+    ): void => {
+      sourceContainer.querySelectorAll(nodeSelector).forEach((el) => {
+        el.addEventListener(
+          'mouseenter',
+          () => {
+            const nodeId = el.getAttribute('data-id');
+            if (!nodeId) return;
+
+            el.classList.add('cross-highlight');
+
+            const match = targetContainer.querySelector(
+              `[data-id="${nodeId}"]`
+            );
+            if (match) match.classList.add('cross-highlight');
+          },
+          { signal }
+        );
+
+        el.addEventListener(
+          'mouseleave',
+          () => {
+            sourceContainer
+              .querySelectorAll('.cross-highlight')
+              .forEach((n) => n.classList.remove('cross-highlight'));
+            targetContainer
+              .querySelectorAll('.cross-highlight')
+              .forEach((n) => n.classList.remove('cross-highlight'));
+          },
+          { signal }
+        );
+      });
+    };
+
+    wirePane(this.leftChart, this.rightChart);
+    wirePane(this.rightChart, this.leftChart);
+
+    // Click handling for toggle selection
+    const wireClickPane = (
+      sourceContainer: HTMLDivElement,
+      targetContainer: HTMLDivElement
+    ): void => {
+      sourceContainer.querySelectorAll(`${nodeSelector} rect`).forEach((rect) => {
+        rect.addEventListener(
+          'click',
+          (e) => {
+            const group = rect.closest(nodeSelector);
+            const nodeId = group?.getAttribute('data-id');
+            if (!nodeId) return;
+
+            if (this.selectedIds.has(nodeId)) {
+              this.selectedIds.delete(nodeId);
+            } else {
+              this.selectedIds.add(nodeId);
+            }
+
+            this.syncSelection();
+          },
+          { signal }
+        );
+      });
+    };
+
+    wireClickPane(this.leftChart, this.rightChart);
+    wireClickPane(this.rightChart, this.leftChart);
+
+    this.hoverCleanup = () => abortController.abort();
+  }
+
+  private cleanupHoverListeners(): void {
+    if (this.hoverCleanup) {
+      this.hoverCleanup();
+      this.hoverCleanup = null;
+    }
+    this.selectedIds.clear();
+  }
+
+  private syncSelection(): void {
+    const nodeSelector = '.node, .ic-node, .pal-node';
+    [this.leftChart, this.rightChart].forEach((pane) => {
+      pane.querySelectorAll(nodeSelector).forEach((el) => {
+        const id = el.getAttribute('data-id');
+        el.classList.toggle('cross-selected', id !== null && this.selectedIds.has(id));
+      });
+    });
   }
 
   fitToContent(): void {
@@ -71,6 +185,7 @@ export class SideBySideRenderer {
   }
 
   destroy(): void {
+    this.cleanupHoverListeners();
     this.leftRenderer.destroy();
     this.rightRenderer.destroy();
     this.wrapper.remove();

@@ -8,6 +8,7 @@ An interactive org chart editor for the browser — manage multiple org charts w
 
 - **Multiple org charts** — create, rename, switch between, and delete independent org charts
 - **Version snapshots** — save named point-in-time snapshots; view read-only, restore, or delete
+- **Version comparison** — side-by-side or merged diff view with diff badges (added/removed/moved/modified), click-to-select cross-highlighting, and hover cross-pane tracking
 - **Per-chart color categories** — each chart has its own set of color categories
 - **Chart name in header** — editable name with dirty-state indicator (●) and quick save button (💾)
 - **IndexedDB storage** — org data stored in IndexedDB for capacity across multiple charts and versions

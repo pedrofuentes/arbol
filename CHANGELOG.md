@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.9.1] — 2026-03-14
+
+### Added
+- **Cross-highlight on hover in side-by-side comparison** — hovering a node in one pane highlights the matching node in the other pane with an amber glow, making it easy to track people across versions
+- **Click-to-select in side-by-side comparison** — click nodes to persistently highlight them across both panes; click again to deselect
+
+### Fixed
+- **"Dim: Off" toggle not working in side-by-side comparison** — toggling dim unchanged had no effect because the internal renderers always used the default `dimUnchanged = true`; now `SideBySideRenderer` exposes `setDimUnchanged()` and propagates the state to both panes
+
 ## [2.9.0] — 2026-03-14
 
 ### Added
