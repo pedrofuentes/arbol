@@ -20,8 +20,6 @@ export class ColumnMapper {
   private byNameRadio!: HTMLInputElement;
   private caseInsensitiveCheckbox!: HTMLInputElement;
   private parentRefLabel!: HTMLLabelElement;
-  private presetNameInput!: HTMLInputElement;
-  private savePresetBtn!: HTMLButtonElement;
   private errorArea!: HTMLDivElement;
 
   constructor(
@@ -74,9 +72,6 @@ export class ColumnMapper {
     // Case-insensitive checkbox
     this.buildCaseInsensitiveOption();
 
-    // Save as Preset section
-    this.buildPresetSection();
-
     // Error area
     this.errorArea = document.createElement('div');
     this.errorArea.className = 'error-msg';
@@ -86,9 +81,6 @@ export class ColumnMapper {
 
     // Wire up change listeners
     this.idSelect.addEventListener('change', () => this.onIdFieldChanged());
-    this.nameSelect.addEventListener('change', () => this.updatePresetBtnState());
-    this.titleSelect.addEventListener('change', () => this.updatePresetBtnState());
-    this.parentRefSelect.addEventListener('change', () => this.updatePresetBtnState());
   }
 
   private createDropdown(labelText: string, required: boolean): HTMLSelectElement {
@@ -150,11 +142,9 @@ export class ColumnMapper {
     // Update Reports To label when toggle changes
     this.byNameRadio.addEventListener('change', () => {
       this.updateParentRefLabel();
-      this.updatePresetBtnState();
     });
     this.byIdRadio.addEventListener('change', () => {
       this.updateParentRefLabel();
-      this.updatePresetBtnState();
     });
   }
 
@@ -198,53 +188,14 @@ export class ColumnMapper {
     return label;
   }
 
-  private buildPresetSection(): void {
-    const heading = document.createElement('h4');
-    heading.textContent = 'Save as Preset';
-    heading.style.cssText =
-      'margin:12px 0 4px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
-    this.container.appendChild(heading);
-
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:8px;align-items:flex-end;margin-bottom:12px;';
-
-    const presetId = uniqueId('mapper-preset-name');
-    const inputGroup = this.createFormGroup('Preset Name', presetId);
-    inputGroup.style.cssText = 'flex:1;margin-bottom:0;';
-    this.presetNameInput = document.createElement('input');
-    this.presetNameInput.id = presetId;
-    this.presetNameInput.type = 'text';
-    this.presetNameInput.placeholder = 'My preset';
-    inputGroup.appendChild(this.presetNameInput);
-
-    this.savePresetBtn = document.createElement('button');
-    this.savePresetBtn.className = 'btn btn-secondary';
-    this.savePresetBtn.textContent = 'Save Preset';
-    this.savePresetBtn.disabled = true;
-    this.savePresetBtn.addEventListener('click', () => this.handleSavePreset());
-
-    this.presetNameInput.addEventListener('input', () => this.updatePresetBtnState());
-
-    row.appendChild(inputGroup);
-    row.appendChild(this.savePresetBtn);
-    this.container.appendChild(row);
-  }
-
   private onIdFieldChanged(): void {
     this.updateParentRefLabel();
-    this.updatePresetBtnState();
   }
 
   private updateParentRefLabel(): void {
     this.parentRefLabel.textContent = this.byIdRadio.checked
       ? 'Reports To (ID)'
       : 'Reports To (Name)';
-  }
-
-  private updatePresetBtnState(): void {
-    const mapping = this.tryBuildMapping();
-    const hasPresetName = this.presetNameInput.value.trim() !== '';
-    this.savePresetBtn.disabled = mapping === null || !hasPresetName;
   }
 
   private tryBuildMapping(): ColumnMapping | null {
@@ -308,13 +259,5 @@ export class ColumnMapper {
       parentRefType,
       caseInsensitive: this.caseInsensitiveCheckbox.checked,
     });
-  }
-
-  private handleSavePreset(): void {
-    const mapping = this.tryBuildMapping();
-    const presetName = this.presetNameInput.value.trim();
-    if (mapping && presetName) {
-      this.onSavePreset(mapping, presetName);
-    }
   }
 }

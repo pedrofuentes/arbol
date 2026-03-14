@@ -7,6 +7,7 @@ import { JsonEditor } from './editor/json-editor';
 import { exportToPptx } from './export/pptx-exporter';
 import { ThemeManager, Theme } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
+import { MappingStore } from './store/mapping-store';
 import { CategoryStore } from './store/category-store';
 import { flattenTree, findNodeById, findParent, isLeaf, isM1, countLeaves, countManagersByLevel } from './utils/tree';
 import { showHelpDialog } from './ui/help-dialog';
@@ -80,6 +81,7 @@ async function main(): Promise<void> {
 
   // Settings persistence
   const settingsStore = new SettingsStore();
+  const mappingStore = new MappingStore();
   const defaultSettings: PersistableSettings = {
     nodeWidth: 160,
     nodeHeight: 34,
@@ -431,12 +433,27 @@ async function main(): Promise<void> {
       { id: 'import', label: t('import_wizard.step_import') },
     ],
     onClose: () => { wizardState = {}; },
-    onStepChange: (stepId) => {
+    onStepChange: async (stepId) => {
       const content = importWizard.getStepContentArea();
       const setNext = (ready: boolean) => importWizard.setNextEnabled(ready);
+
+      // Prompt to save preset when leaving mapping step with a new mapping
+      if (stepId === 'preview' && wizardState.format === 'CSV' && wizardState.mapping && !wizardState.matchedPresetName) {
+        const presetName = await showInputDialog({
+          title: t('import_wizard.save_preset_prompt'),
+          label: t('import_wizard.save_preset_label'),
+          placeholder: t('import_wizard.save_preset_placeholder'),
+          confirmLabel: t('dialog.ok'),
+        });
+        if (presetName) {
+          mappingStore.savePreset({ name: presetName, mapping: wizardState.mapping });
+          showToast(`✓ Preset "${presetName}" saved`, 'success');
+        }
+      }
+
       switch (stepId) {
         case 'source': renderSourceStep(content, wizardState, setNext); break;
-        case 'mapping': renderMappingStep(content, wizardState, setNext); break;
+        case 'mapping': renderMappingStep(content, wizardState, setNext, mappingStore.getPresets()); break;
         case 'preview': renderPreviewStep(content, wizardState, setNext); break;
         case 'import': renderImportStep(content, wizardState, setNext); break;
       }

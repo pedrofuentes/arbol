@@ -98,20 +98,6 @@ describe('ColumnMapper', () => {
     expect(caseCheckbox!.checked).toBe(true);
   });
 
-  it('renders save as preset section', () => {
-    new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
-    expect(container.textContent).toContain('Save as Preset');
-    expect(container.textContent).toContain('Save Preset');
-  });
-
-  it('save preset button is disabled by default', () => {
-    new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
-    const savePresetBtn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Save Preset',
-    ) as HTMLButtonElement;
-    expect(savePresetBtn.disabled).toBe(true);
-  });
-
   it('has radio buttons for parent reference type', () => {
     new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
     const radios = container.querySelectorAll<HTMLInputElement>('input[type="radio"]');

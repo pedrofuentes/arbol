@@ -1,4 +1,4 @@
-import type { ColumnMapping, OrgNode, TextNormalization } from '../types';
+import type { ColumnMapping, MappingPreset, OrgNode, TextNormalization } from '../types';
 import { t } from '../i18n';
 import { extractHeaders, parseCsvToTree } from '../utils/csv-parser';
 import { ColumnMapper } from './column-mapper';
@@ -9,6 +9,7 @@ export interface WizardState {
   format?: 'JSON' | 'CSV';
   headers?: string[];
   mapping?: ColumnMapping;
+  matchedPresetName?: string;
   tree?: OrgNode;
   nodeCount?: number;
   warning?: string;
@@ -149,6 +150,7 @@ export function renderMappingStep(
   container: HTMLElement,
   state: WizardState,
   onReady: (ready: boolean) => void,
+  presets?: MappingPreset[],
 ): void {
   container.textContent = '';
 
@@ -163,12 +165,25 @@ export function renderMappingStep(
     container.appendChild(msg);
     onReady(true);
   } else {
+    state.headers = extractHeaders(state.rawText!);
+
+    // Auto-match saved presets against CSV headers
+    const matchedPreset = findMatchingPreset(state.headers, presets ?? []);
+    if (matchedPreset) {
+      state.mapping = matchedPreset.mapping;
+      state.matchedPresetName = matchedPreset.name;
+      const msg = document.createElement('p');
+      msg.className = 'wizard-success';
+      msg.textContent = t('import_wizard.preset_matched', { name: matchedPreset.name });
+      container.appendChild(msg);
+    }
+
     const desc = document.createElement('p');
     desc.className = 'wizard-info';
-    desc.textContent = t('import_wizard.mapping_csv');
+    desc.textContent = matchedPreset
+      ? t('import_wizard.mapping_verify')
+      : t('import_wizard.mapping_csv');
     container.appendChild(desc);
-
-    state.headers = extractHeaders(state.rawText!);
 
     const mapperContainer = document.createElement('div');
     mapperContainer.className = 'wizard-mapper-wrap';
@@ -177,12 +192,17 @@ export function renderMappingStep(
     const mapper = new ColumnMapper(
       mapperContainer,
       state.headers,
-      (mapping) => { state.mapping = mapping; onReady(true); },
+      (mapping) => {
+        state.mapping = mapping;
+        // Clear matched preset name if user changed the mapping
+        if (matchedPreset) state.matchedPresetName = undefined;
+        onReady(true);
+      },
       () => {},
       () => {},
     );
 
-    // Auto-validate mapping when dropdowns change so Next is enabled without extra clicks
+    // Auto-validate on dropdown/radio change
     mapperContainer.querySelectorAll('select').forEach((sel) => {
       sel.addEventListener('change', () => mapper.handleApply());
     });
@@ -190,8 +210,21 @@ export function renderMappingStep(
       radio.addEventListener('change', () => mapper.handleApply());
     });
 
-    onReady(false);
+    onReady(!!matchedPreset);
   }
+}
+
+function findMatchingPreset(headers: string[], presets: MappingPreset[]): MappingPreset | undefined {
+  const headerSet = new Set(headers.map((h) => h.toLowerCase()));
+  for (const preset of presets) {
+    const m = preset.mapping;
+    const cols = [m.name, m.title, m.parentRef];
+    if (m.id) cols.push(m.id);
+    if (cols.every((col) => headerSet.has(col.toLowerCase()))) {
+      return preset;
+    }
+  }
+  return undefined;
 }
 
 // ─── Step 3: Preview ─────────────────────────────────────────────────
