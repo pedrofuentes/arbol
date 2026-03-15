@@ -50,6 +50,7 @@ function defaultOpts(): ResolvedOptions {
     cardBorderRadius: 0,
     icContainerBorderRadius: 0,
     categories: [],
+    preview: false,
   };
 }
 

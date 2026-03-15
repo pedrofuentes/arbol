@@ -1,4 +1,4 @@
-import { ChartRenderer, RendererOptions, type ResolvedOptions } from '../renderer/chart-renderer';
+import { ChartRenderer, RendererOptions } from '../renderer/chart-renderer';
 import { CHART_THEME_PRESETS, ChartThemePreset, addCustomPreset } from '../store/theme-presets';
 import { SettingsStore, type PersistableSettings } from '../store/settings-store';
 import { CategoryStore } from '../store/category-store';
@@ -1467,7 +1467,7 @@ export class SettingsEditor {
     const opts = this.renderer.getOptions();
     const categories = this.categoryStore?.getAll() ?? [];
     const svg = renderPreview({
-      rendererOptions: { ...opts, categories } as Partial<ResolvedOptions>,
+      rendererOptions: { ...opts, categories } as Partial<RendererOptions>,
     });
     this.previewArea.appendChild(svg);
   }

@@ -68,6 +68,7 @@ const DEFAULT_OPTS: ResolvedOptions = {
   cardBorderRadius: 0,
   icContainerBorderRadius: 0,
   categories: [],
+  preview: false,
 } as ResolvedOptions;
 
 function createMockRenderer(): ChartRenderer {

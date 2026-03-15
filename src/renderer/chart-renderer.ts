@@ -66,6 +66,8 @@ export interface RendererOptions {
   headcountBadgeHeight?: number;
   categories?: ColorCategory[];
   legendRows?: number;
+  /** When true, disables zoom/keyboard/interactivity for static preview use. */
+  preview?: boolean;
 }
 
 export type ResolvedOptions = Required<RendererOptions>;
@@ -80,13 +82,13 @@ export class ChartRenderer {
   private onNodeClick: NodeClickHandler | null = null;
   private onNodeRightClick: NodeRightClickHandler | null = null;
   private lastLayout: LayoutResult | null = null;
-  private zoomManager: ZoomManager;
+  private zoomManager: ZoomManager | null;
   private hasRendered = false;
   private highlightedNodes: Set<string> | null = null;
   private diffMap: Map<string, DiffEntry> | null = null;
   private dimUnchanged = true;
   private categoryMap: Map<string, ColorCategory> = new Map();
-  private keyboardNav: KeyboardNav;
+  private keyboardNav: KeyboardNav | null;
 
   constructor(options: RendererOptions) {
     this.opts = {
@@ -128,18 +130,33 @@ export class ChartRenderer {
       headcountBadgeHeight: 22,
       categories: [] as ColorCategory[],
       legendRows: 0,
+      preview: false,
       ...options,
     };
+
+    const isPreview = this.opts.preview;
+
     this.svg = select(options.container)
       .append('svg')
       .attr('width', '100%')
-      .attr('height', '100%')
-      .attr('role', 'tree')
-      .attr('aria-label', 'Organization chart');
-    this.svg.append('title').text('Organization chart');
+      .attr('height', '100%');
+
+    if (isPreview) {
+      this.svg.attr('aria-hidden', 'true').attr('class', 'preview-svg');
+    } else {
+      this.svg.attr('role', 'tree').attr('aria-label', 'Organization chart');
+      this.svg.append('title').text('Organization chart');
+    }
+
     this.g = this.svg.append('g').attr('class', 'chart-group');
-    this.zoomManager = new ZoomManager(this.svg.node()!, this.g.node()!);
-    this.keyboardNav = new KeyboardNav(this.svg.node()!);
+
+    if (isPreview) {
+      this.zoomManager = null;
+      this.keyboardNav = null;
+    } else {
+      this.zoomManager = new ZoomManager(this.svg.node()!, this.g.node()!);
+      this.keyboardNav = new KeyboardNav(this.svg.node()!);
+    }
   }
 
   setNodeClickHandler(handler: NodeClickHandler): void {
@@ -351,23 +368,25 @@ export class ChartRenderer {
       this.renderDiffBadges();
     }
 
-    this.applyAriaAttributes(root);
-    this.keyboardNav.setTree(root);
+    if (!this.opts.preview) {
+      this.applyAriaAttributes(root);
+      this.keyboardNav?.setTree(root);
 
-    if (this.hasRendered) {
-      this.zoomManager.applyTransform(this.zoomManager.getCurrentTransform());
-    } else {
-      this.zoomManager.centerAtRealSize();
-      this.hasRendered = true;
-    }
+      if (this.hasRendered) {
+        this.zoomManager?.applyTransform(this.zoomManager.getCurrentTransform());
+      } else {
+        this.zoomManager?.centerAtRealSize();
+        this.hasRendered = true;
+      }
 
-    this.applyHighlighting();
-    if (this.diffMap) {
-      this.applyDiffDimming();
-    }
-    this.renderLegend(layout);
-    if (this.diffMap) {
-      this.renderDiffLegend(layout);
+      this.applyHighlighting();
+      if (this.diffMap) {
+        this.applyDiffDimming();
+      }
+      this.renderLegend(layout);
+      if (this.diffMap) {
+        this.renderDiffLegend(layout);
+      }
     }
   }
 
@@ -375,8 +394,12 @@ export class ChartRenderer {
     return this.lastLayout;
   }
 
-  getZoomManager(): ZoomManager {
+  getZoomManager(): ZoomManager | null {
     return this.zoomManager;
+  }
+
+  getSvgElement(): SVGSVGElement {
+    return this.svg.node()!;
   }
 
   // --- Rendering helpers ---
@@ -485,16 +508,20 @@ export class ChartRenderer {
         return cardFill;
       })
       .attr('stroke', cardStroke)
-      .attr('stroke-width', cardStrokeWidth)
-      .on('click', function (_event, d) {
-        if (self.onNodeClick) self.onNodeClick(getId(d), _event as MouseEvent);
-      })
-      .on('contextmenu', function (event, d) {
-        if (self.onNodeRightClick) {
-          event.preventDefault();
-          self.onNodeRightClick(getId(d), event as MouseEvent);
-        }
-      });
+      .attr('stroke-width', cardStrokeWidth);
+
+    if (!this.opts.preview) {
+      selection.select('rect')
+        .on('click', function (_event, d) {
+          if (self.onNodeClick) self.onNodeClick(getId(d), _event as MouseEvent);
+        })
+        .on('contextmenu', function (event, d) {
+          if (self.onNodeRightClick) {
+            event.preventDefault();
+            self.onNodeRightClick(getId(d), event as MouseEvent);
+          }
+        });
+    }
 
     // Text elements pass pointer events through to the rect beneath
     selection
@@ -939,12 +966,12 @@ export class ChartRenderer {
     return node.node()!.getBoundingClientRect();
   }
 
-  getKeyboardNav(): KeyboardNav {
+  getKeyboardNav(): KeyboardNav | null {
     return this.keyboardNav;
   }
 
   destroy(): void {
-    this.keyboardNav.destroy();
+    this.keyboardNav?.destroy();
     this.svg.remove();
   }
 }

@@ -1156,7 +1156,7 @@ async function main(): Promise<void> {
     propertyPanel.hide();
     floatingActions.hide();
   };
-  renderer.getZoomManager().onZoom(dismissAllOverlays);
+  renderer.getZoomManager()?.onZoom(dismissAllOverlays);
 
   // Helper: show single-card context menu
   const showSingleCardMenu = (nodeId: string, event: MouseEvent) => {

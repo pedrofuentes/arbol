@@ -67,8 +67,8 @@ export class SideBySideRenderer {
     this.leftRenderer.render(oldTree);
     this.rightRenderer.render(newTree);
 
-    this.leftRenderer.getZoomManager().fitToContent();
-    this.rightRenderer.getZoomManager().fitToContent();
+    this.leftRenderer.getZoomManager()?.fitToContent();
+    this.rightRenderer.getZoomManager()?.fitToContent();
 
     this.wireHoverHighlight();
   }

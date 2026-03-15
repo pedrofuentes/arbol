@@ -1592,4 +1592,143 @@ describe('ChartRenderer', () => {
       expect(container.querySelector('.node-name')!.getAttribute('font-family')).toBe('Verdana, sans-serif');
     });
   });
+
+  describe('preview mode', () => {
+    it('SVG has aria-hidden and class preview-svg', () => {
+      const previewContainer = document.createElement('div');
+      document.body.appendChild(previewContainer);
+      const previewRenderer = new ChartRenderer({
+        container: previewContainer,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
+        preview: true,
+      });
+      const svg = previewContainer.querySelector('svg')!;
+      expect(svg.getAttribute('aria-hidden')).toBe('true');
+      expect(svg.getAttribute('class')).toBe('preview-svg');
+      previewRenderer.destroy();
+      previewContainer.remove();
+    });
+
+    it('SVG does NOT have role="tree" in preview mode', () => {
+      const previewContainer = document.createElement('div');
+      document.body.appendChild(previewContainer);
+      const previewRenderer = new ChartRenderer({
+        container: previewContainer,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
+        preview: true,
+      });
+      const svg = previewContainer.querySelector('svg')!;
+      expect(svg.getAttribute('role')).toBeNull();
+      previewRenderer.destroy();
+      previewContainer.remove();
+    });
+
+    it('no title element in preview SVG', () => {
+      const previewContainer = document.createElement('div');
+      document.body.appendChild(previewContainer);
+      const previewRenderer = new ChartRenderer({
+        container: previewContainer,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
+        preview: true,
+      });
+      const title = previewContainer.querySelector('svg > title');
+      expect(title).toBeNull();
+      previewRenderer.destroy();
+      previewContainer.remove();
+    });
+
+    it('getZoomManager() returns null in preview mode', () => {
+      const previewContainer = document.createElement('div');
+      document.body.appendChild(previewContainer);
+      const previewRenderer = new ChartRenderer({
+        container: previewContainer,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
+        preview: true,
+      });
+      expect(previewRenderer.getZoomManager()).toBeNull();
+      previewRenderer.destroy();
+      previewContainer.remove();
+    });
+
+    it('getKeyboardNav() returns null in preview mode', () => {
+      const previewContainer = document.createElement('div');
+      document.body.appendChild(previewContainer);
+      const previewRenderer = new ChartRenderer({
+        container: previewContainer,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
+        preview: true,
+      });
+      expect(previewRenderer.getKeyboardNav()).toBeNull();
+      previewRenderer.destroy();
+      previewContainer.remove();
+    });
+
+    it('renders nodes without click handlers in preview mode', () => {
+      const previewContainer = document.createElement('div');
+      document.body.appendChild(previewContainer);
+      const previewRenderer = new ChartRenderer({
+        container: previewContainer,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
+        preview: true,
+      });
+      const clickSpy = vi.fn();
+      previewRenderer.setNodeClickHandler(clickSpy);
+      previewRenderer.render(simpleTree());
+      const rect = previewContainer.querySelector('rect');
+      expect(rect).not.toBeNull();
+      rect!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      expect(clickSpy).not.toHaveBeenCalled();
+      previewRenderer.destroy();
+      previewContainer.remove();
+    });
+
+    it('does not render legend in preview mode', () => {
+      const previewContainer = document.createElement('div');
+      document.body.appendChild(previewContainer);
+      const previewRenderer = new ChartRenderer({
+        container: previewContainer,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
+        preview: true,
+        categories: [{ id: 'cat1', label: 'Test', color: '#ff0000' }],
+      });
+      previewRenderer.render(simpleTree());
+      const legend = previewContainer.querySelector('.legend');
+      expect(legend).toBeNull();
+      previewRenderer.destroy();
+      previewContainer.remove();
+    });
+
+    it('renders nodes correctly in preview mode', () => {
+      const previewContainer = document.createElement('div');
+      document.body.appendChild(previewContainer);
+      const previewRenderer = new ChartRenderer({
+        container: previewContainer,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
+        preview: true,
+      });
+      previewRenderer.render(simpleTree());
+      const names = Array.from(previewContainer.querySelectorAll('.node-name'));
+      const nameTexts = names.map((n) => n.textContent);
+      expect(nameTexts).toContain('Alice');
+      expect(nameTexts).toContain('Bob');
+      previewRenderer.destroy();
+      previewContainer.remove();
+    });
+  });
 });

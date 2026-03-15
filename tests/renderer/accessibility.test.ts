@@ -239,7 +239,7 @@ describe('ARIA tree semantics', () => {
 
     it('keyboard nav tree is updated on render', () => {
       renderer.render(simpleTree());
-      const nav = renderer.getKeyboardNav();
+      const nav = renderer.getKeyboardNav()!;
       nav.focusNode('root');
       const svg = container.querySelector('svg')!;
       pressKey(svg, 'ArrowDown');
@@ -248,7 +248,7 @@ describe('ARIA tree semantics', () => {
 
     it('ArrowUp navigates to parent', () => {
       renderer.render(simpleTree());
-      const nav = renderer.getKeyboardNav();
+      const nav = renderer.getKeyboardNav()!;
       nav.focusNode('b');
       pressKey(container.querySelector('svg')!, 'ArrowUp');
       expect(nav.getFocusedNodeId()).toBe('root');
@@ -256,7 +256,7 @@ describe('ARIA tree semantics', () => {
 
     it('ArrowRight navigates to next sibling', () => {
       renderer.render(simpleTree());
-      const nav = renderer.getKeyboardNav();
+      const nav = renderer.getKeyboardNav()!;
       nav.focusNode('b');
       pressKey(container.querySelector('svg')!, 'ArrowRight');
       expect(nav.getFocusedNodeId()).toBe('c');
@@ -264,7 +264,7 @@ describe('ARIA tree semantics', () => {
 
     it('Home navigates to root', () => {
       renderer.render(simpleTree());
-      const nav = renderer.getKeyboardNav();
+      const nav = renderer.getKeyboardNav()!;
       nav.focusNode('d');
       pressKey(container.querySelector('svg')!, 'Home');
       expect(nav.getFocusedNodeId()).toBe('root');
