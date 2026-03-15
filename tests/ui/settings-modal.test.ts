@@ -279,4 +279,129 @@ describe('SettingsModal', () => {
       modal.destroy();
     });
   });
+
+  describe('live preview strip', () => {
+    it('renders preview strip with header, title, hint, and area', () => {
+      const { modal } = createModal();
+      modal.open();
+      const strip = document.querySelector('.preview-strip');
+      expect(strip).not.toBeNull();
+      expect(strip!.querySelector('.preview-header')).not.toBeNull();
+      expect(strip!.querySelector('.preview-title')).not.toBeNull();
+      expect(strip!.querySelector('.preview-hint')).not.toBeNull();
+      expect(strip!.querySelector('.preview-area')).not.toBeNull();
+      modal.destroy();
+    });
+
+    it('preview title shows "Live Preview"', () => {
+      const { modal } = createModal();
+      modal.open();
+      const title = document.querySelector('.preview-title')!;
+      expect(title.textContent).toBe('Live Preview');
+      modal.destroy();
+    });
+
+    it('preview hint shows default presets hint', () => {
+      const { modal } = createModal();
+      modal.open();
+      const hint = document.querySelector('.preview-hint')!;
+      expect(hint.textContent).toBe('Updates as you change settings');
+      modal.destroy();
+    });
+
+    it('preview strip is visible by default (presets tab)', () => {
+      const { modal } = createModal();
+      modal.open();
+      const strip = document.querySelector('.preview-strip') as HTMLElement;
+      expect(strip.classList.contains('hidden')).toBe(false);
+      modal.destroy();
+    });
+
+    it('preview strip is hidden when switching to backup tab', () => {
+      const { modal } = createModal();
+      modal.open();
+      modal.setActiveTab('backup');
+      const strip = document.querySelector('.preview-strip') as HTMLElement;
+      expect(strip.classList.contains('hidden')).toBe(true);
+      modal.destroy();
+    });
+
+    it('preview strip reappears when switching away from backup', () => {
+      const { modal } = createModal();
+      modal.open();
+      modal.setActiveTab('backup');
+      modal.setActiveTab('layout');
+      const strip = document.querySelector('.preview-strip') as HTMLElement;
+      expect(strip.classList.contains('hidden')).toBe(false);
+      modal.destroy();
+    });
+
+    it('hint text updates per tab', () => {
+      const { modal } = createModal();
+      modal.open();
+      const hint = document.querySelector('.preview-hint') as HTMLElement;
+
+      modal.setActiveTab('layout');
+      expect(hint.textContent).toBe('Spacing regions highlighted');
+
+      modal.setActiveTab('typography');
+      expect(hint.textContent).toBe('Text styling highlighted');
+
+      modal.setActiveTab('cards');
+      expect(hint.textContent).toBe('Card appearance highlighted');
+
+      modal.setActiveTab('connectors');
+      expect(hint.textContent).toBe('Line styles highlighted');
+
+      modal.setActiveTab('ic');
+      expect(hint.textContent).toBe('Individual contributor layout');
+
+      modal.setActiveTab('advisors');
+      expect(hint.textContent).toBe('Advisor spacing highlighted');
+
+      modal.setActiveTab('badges');
+      expect(hint.textContent).toBe('Badge styling shown on cards');
+
+      modal.setActiveTab('categories');
+      expect(hint.textContent).toBe('How categories appear on cards');
+
+      modal.destroy();
+    });
+
+    it('getPreviewArea() returns the .preview-area element', () => {
+      const { modal } = createModal();
+      modal.open();
+      const area = modal.getPreviewArea();
+      expect(area).not.toBeNull();
+      expect(area.classList.contains('preview-area')).toBe(true);
+      modal.destroy();
+    });
+
+    it('setPreviewHint() updates hint text', () => {
+      const { modal } = createModal();
+      modal.open();
+      modal.setPreviewHint('Custom hint text');
+      const hint = document.querySelector('.preview-hint') as HTMLElement;
+      expect(hint.textContent).toBe('Custom hint text');
+      modal.destroy();
+    });
+
+    it('preview strip is inside .settings-content-column wrapper', () => {
+      const { modal } = createModal();
+      modal.open();
+      const column = document.querySelector('.settings-content-column');
+      expect(column).not.toBeNull();
+      expect(column!.querySelector('.preview-strip')).not.toBeNull();
+      expect(column!.querySelector('.settings-content')).not.toBeNull();
+      modal.destroy();
+    });
+
+    it('preview area is initially empty', () => {
+      const { modal } = createModal();
+      modal.open();
+      const area = modal.getPreviewArea();
+      expect(area.children.length).toBe(0);
+      modal.destroy();
+    });
+  });
 });

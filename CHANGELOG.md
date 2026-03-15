@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] — 2026-03-15
+
+### Added
+- **Live preview strip** — shared preview area at the top of the settings modal content, visible on all tabs except Backup; per-tab contextual hint text updates automatically on tab switch
+- New `getPreviewArea()` and `setPreviewHint()` APIs on `SettingsModal` for future org chart preview rendering
+- 10 new i18n strings for preview hints across all settings tabs
+
+### Changed
+- Settings modal content area wrapped in `.settings-content-column` flex container to support the fixed preview strip above scrollable settings
+
+### Testing
+- 1,755 tests across 69 files — all passing
+
 ## [3.1.1] — 2026-03-15
 
 ### Added

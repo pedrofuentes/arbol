@@ -1,5 +1,19 @@
 import { t } from '../i18n';
 
+const PREVIEW_HINT_KEYS: Record<string, string> = {
+  presets: 'settings_modal.preview_hint.presets',
+  layout: 'settings_modal.preview_hint.layout',
+  typography: 'settings_modal.preview_hint.typography',
+  cards: 'settings_modal.preview_hint.cards',
+  connectors: 'settings_modal.preview_hint.connectors',
+  ic: 'settings_modal.preview_hint.ic',
+  advisors: 'settings_modal.preview_hint.advisors',
+  badges: 'settings_modal.preview_hint.badges',
+  categories: 'settings_modal.preview_hint.categories',
+};
+
+const TABS_WITHOUT_PREVIEW = new Set(['backup']);
+
 export interface SettingsTab {
   id: string;
   label: string;
@@ -38,6 +52,9 @@ export class SettingsModal {
   private mounted = false;
   private keyHandler: (e: KeyboardEvent) => void;
   private footerLeft: HTMLDivElement = null!;
+  private previewStrip: HTMLDivElement = null!;
+  private previewArea: HTMLDivElement = null!;
+  private previewHint: HTMLSpanElement = null!;
 
   constructor(options: SettingsModalOptions, tabs?: SettingsTab[]) {
     this.options = options;
@@ -121,6 +138,40 @@ export class SettingsModal {
       }
     });
 
+    // Content column wrapper (preview strip + scrollable content)
+    const contentColumn = document.createElement('div');
+    contentColumn.className = 'settings-content-column';
+
+    // Preview strip
+    this.previewStrip = document.createElement('div');
+    this.previewStrip.className = 'preview-strip';
+
+    const previewHeader = document.createElement('div');
+    previewHeader.className = 'preview-header';
+
+    const previewTitle = document.createElement('span');
+    previewTitle.className = 'preview-title';
+    previewTitle.textContent = t('settings_modal.preview_title');
+
+    this.previewHint = document.createElement('span');
+    this.previewHint.className = 'preview-hint';
+    this.previewHint.textContent = t(PREVIEW_HINT_KEYS[this.activeTab] ?? 'settings_modal.preview_hint.presets');
+
+    previewHeader.appendChild(previewTitle);
+    previewHeader.appendChild(this.previewHint);
+    this.previewStrip.appendChild(previewHeader);
+
+    this.previewArea = document.createElement('div');
+    this.previewArea.className = 'preview-area';
+    this.previewStrip.appendChild(this.previewArea);
+
+    // Hide preview on tabs that don't need it
+    if (TABS_WITHOUT_PREVIEW.has(this.activeTab)) {
+      this.previewStrip.classList.add('hidden');
+    }
+
+    contentColumn.appendChild(this.previewStrip);
+
     // Content area
     this.contentArea = document.createElement('div');
     this.contentArea.className = 'settings-content';
@@ -129,8 +180,10 @@ export class SettingsModal {
     this.contentArea.setAttribute('aria-labelledby', `settings-tab-${this.activeTab}`);
     this.contentArea.setAttribute('data-active-tab', this.activeTab);
 
+    contentColumn.appendChild(this.contentArea);
+
     body.appendChild(nav);
-    body.appendChild(this.contentArea);
+    body.appendChild(contentColumn);
 
     // Footer
     const footer = document.createElement('div');
@@ -221,6 +274,18 @@ export class SettingsModal {
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     }
+
+    // Update preview strip visibility and hint
+    if (TABS_WITHOUT_PREVIEW.has(tabId)) {
+      this.previewStrip.classList.add('hidden');
+    } else {
+      this.previewStrip.classList.remove('hidden');
+      const hintKey = PREVIEW_HINT_KEYS[tabId];
+      if (hintKey) {
+        this.previewHint.textContent = t(hintKey);
+      }
+    }
+
     this.options.onTabChange?.(tabId);
   }
 
@@ -249,6 +314,14 @@ export class SettingsModal {
 
   getFooterLeft(): HTMLElement {
     return this.footerLeft;
+  }
+
+  getPreviewArea(): HTMLElement {
+    return this.previewArea;
+  }
+
+  setPreviewHint(text: string): void {
+    this.previewHint.textContent = text;
   }
 
   destroy(): void {

@@ -354,7 +354,7 @@ The app follows WCAG 2.1 AA guidelines:
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **1,744 tests across 69 files** — all must pass before committing
+- **1,755 tests across 69 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure

@@ -111,6 +111,16 @@ const en: Record<string, string> = {
   'settings_modal.cancel': 'Cancel',
   'settings_modal.apply': 'Done',
   'settings_modal.nav_aria': 'Settings sections',
+  'settings_modal.preview_title': 'Live Preview',
+  'settings_modal.preview_hint.presets': 'Updates as you change settings',
+  'settings_modal.preview_hint.layout': 'Spacing regions highlighted',
+  'settings_modal.preview_hint.typography': 'Text styling highlighted',
+  'settings_modal.preview_hint.cards': 'Card appearance highlighted',
+  'settings_modal.preview_hint.connectors': 'Line styles highlighted',
+  'settings_modal.preview_hint.ic': 'Individual contributor layout',
+  'settings_modal.preview_hint.advisors': 'Advisor spacing highlighted',
+  'settings_modal.preview_hint.badges': 'Badge styling shown on cards',
+  'settings_modal.preview_hint.categories': 'How categories appear on cards',
 
   // ─── Import Wizard ──────────────────────────────────────────────────
   'import_wizard.title': '📂 Import Data',
