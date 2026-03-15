@@ -78,6 +78,11 @@ const en: Record<string, string> = {
   'command_palette.item_redo': 'Redo',
   'command_palette.item_search': 'Search People',
   'command_palette.item_settings': 'Settings',
+  'command_palette.item_help': 'Help & Shortcuts',
+  'command_palette.item_theme': 'Toggle Theme',
+  'command_palette.item_new_chart': 'New Chart',
+  'command_palette.item_save_version': 'Save Version',
+  'command_palette.item_import': 'Import Data',
   'command_palette.group_charts': 'Switch Chart',
   'shortcut.command_palette': 'Command palette',
 
@@ -468,6 +473,8 @@ const en: Record<string, string> = {
   'shortcut.export': 'Export PPTX',
   'shortcut.search': 'Search',
   'shortcut.escape': 'Deselect / Clear search',
+  'shortcut.settings': 'Settings',
+  'shortcut.help': 'Help',
 
   // ─── Settings Editor ──────────────────────────────────────────────
   'settings.filter_placeholder': '🔍  Filter settings…',
@@ -675,6 +682,7 @@ const en: Record<string, string> = {
   'help.dialog_aria': 'Keyboard shortcuts and help',
   'help.clear_data_button': '🗑 Clear All Data',
   'help.clear_data_aria': 'Clear all local data',
+  'help.section_toggle_aria': 'Toggle {section} section',
 
   // Help: Getting Started
   'help.getting_started.title': 'Getting Started',
@@ -824,7 +832,15 @@ const en: Record<string, string> = {
   'help.shortcuts.redo': ' — Redo',
   'help.shortcuts.search': ' — Focus search bar',
   'help.shortcuts.export': ' — Export to PowerPoint',
-  'help.shortcuts.escape': ' — Dismiss version viewer, clear search, exit focus mode, or deselect',
+  'help.shortcuts.escape': ' — Dismiss / clear / deselect',
+  'help.shortcuts.command_palette': ' — Open command palette',
+  'help.shortcuts.settings': ' — Open settings',
+  'help.shortcuts.help': ' — Show this help',
+  'help.shortcuts.nav_arrows': ' — Navigate org chart',
+  'help.shortcuts.nav_select': ' — Select card',
+  'help.shortcuts.nav_multiselect': ' — Toggle multi-select',
+  'help.shortcuts.nav_home_end': ' — First / last sibling',
+  'help.shortcuts.nav_context_menu': ' — Open context menu',
 
   // Help: Exporting
   'help.exporting.title': 'Exporting',
