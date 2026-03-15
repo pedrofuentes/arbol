@@ -517,6 +517,7 @@ export class SettingsEditor {
   ): HTMLElement {
     const section = document.createElement('div');
     section.className = 'accordion-section';
+    section.setAttribute('data-section-id', id);
 
     const headerId = `accordion-header-${id}`;
 

@@ -9,6 +9,7 @@ export interface SettingsTab {
 export interface SettingsModalOptions {
   onClose: () => void;
   onApply: () => void;
+  onTabChange?: (tabId: string) => void;
 }
 
 const DEFAULT_TABS: SettingsTab[] = [
@@ -208,6 +209,7 @@ export class SettingsModal {
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     }
+    this.options.onTabChange?.(tabId);
   }
 
   destroy(): void {

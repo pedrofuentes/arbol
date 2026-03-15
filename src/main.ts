@@ -40,6 +40,7 @@ import { CommandPalette, CommandItem } from './ui/command-palette';
 import { PropertyPanel } from './ui/property-panel';
 import { FloatingActions } from './ui/floating-actions';
 import { SettingsModal } from './ui/settings-modal';
+import { SettingsEditor } from './editor/settings-editor';
 import { ImportWizard } from './ui/import-wizard';
 import { WizardState, renderSourceStep, renderMappingStep, renderPreviewStep, renderImportStep } from './ui/import-wizard-steps';
 import type { ComparisonState, VersionRecord } from './types';
@@ -405,9 +406,38 @@ async function main(): Promise<void> {
   headerRight.insertBefore(divider, themeBtn);
 
   // Settings modal (opens via header button)
+  const SECTION_TAB_MAP: Record<string, string> = {
+    'presets': 'presets',
+    'categories': 'categories',
+    'card-dimensions': 'layout',
+    'tree-spacing': 'layout',
+    'ic-options': 'ic',
+    'advisor-options': 'advisors',
+    'typography': 'typography',
+    'link-style': 'connectors',
+    'card-style': 'cards',
+    'headcount-badge': 'badges',
+    'categories-legend': 'categories',
+    'settings-io': 'backup',
+    'backup-restore': 'backup',
+  };
+
+  function filterSettingsSections(tabId: string): void {
+    const contentArea = settingsModal.getContentArea();
+    const sections = contentArea.querySelectorAll('[data-section-id]');
+    sections.forEach((section) => {
+      const sectionId = section.getAttribute('data-section-id')!;
+      const sectionTab = SECTION_TAB_MAP[sectionId];
+      (section as HTMLElement).style.display = sectionTab === tabId ? '' : 'none';
+    });
+  }
+
+  let settingsEditorMounted = false;
+
   const settingsModal = new SettingsModal({
     onClose: () => {},
     onApply: () => { rerender(); },
+    onTabChange: (tabId) => { filterSettingsSections(tabId); },
   });
 
   const settingsBtn = document.createElement('button');
@@ -419,7 +449,21 @@ async function main(): Promise<void> {
   settingsIcon.setAttribute('aria-hidden', 'true');
   settingsIcon.textContent = '⚙️';
   settingsBtn.appendChild(settingsIcon);
-  settingsBtn.addEventListener('click', () => { settingsModal.open(); });
+  settingsBtn.addEventListener('click', () => {
+    settingsModal.open();
+    if (!settingsEditorMounted) {
+      new SettingsEditor(
+        settingsModal.getContentArea(),
+        renderer,
+        rerender,
+        settingsStore,
+        categoryStore,
+        chartDB,
+      );
+      settingsEditorMounted = true;
+    }
+    filterSettingsSections(settingsModal.getActiveTab());
+  });
   headerRight.insertBefore(settingsBtn, divider);
 
   // Import wizard (opens via header button)
