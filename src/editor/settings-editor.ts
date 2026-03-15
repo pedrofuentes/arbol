@@ -16,6 +16,7 @@ import {
 } from '../store/backup-manager';
 import { showRestoreStrategyDialog } from '../ui/restore-dialog';
 import { type IStorage, browserStorage } from '../utils/storage';
+import { t } from '../i18n';
 
 const ARBOL_STORAGE_KEYS = [
   'arbol-org-data',
@@ -35,11 +36,13 @@ interface SettingDef {
   min?: number;
   max?: number;
   step?: number;
+  unit?: string;
   options?: string[];
 }
 
 interface SettingGroup {
   title: string;
+  description?: string;
   settings: SettingDef[];
 }
 
@@ -54,13 +57,15 @@ export interface CombinedPreset {
 const SETTING_GROUPS: SettingGroup[] = [
   {
     title: 'Card Dimensions',
+    description: 'settings.section_desc.card_dimensions',
     settings: [
-      { key: 'nodeWidth', label: 'Node Width', description: 'Width of each card in pixels', type: 'range', min: 50, max: 250, step: 1 },
-      { key: 'nodeHeight', label: 'Node Height', description: 'Height of each card in pixels', type: 'range', min: 16, max: 60, step: 1 },
+      { key: 'nodeWidth', label: 'Node Width', description: 'Width of each card in pixels', type: 'range', min: 50, max: 250, step: 1, unit: 'px' },
+      { key: 'nodeHeight', label: 'Node Height', description: 'Height of each card in pixels', type: 'range', min: 16, max: 60, step: 1, unit: 'px' },
     ],
   },
   {
     title: 'Tree Spacing',
+    description: 'settings.section_desc.tree_spacing',
     settings: [
       {
         key: 'horizontalSpacing',
@@ -70,8 +75,9 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 5,
         max: 100,
         step: 1,
+        unit: 'px',
       },
-      { key: 'branchSpacing', label: 'Branch Spacing', description: 'Gap between sibling subtrees', type: 'range', min: 0, max: 60, step: 1 },
+      { key: 'branchSpacing', label: 'Branch Spacing', description: 'Gap between sibling subtrees', type: 'range', min: 0, max: 60, step: 1, unit: 'px' },
       {
         key: 'topVerticalSpacing',
         label: 'Top Vertical Spacing',
@@ -80,6 +86,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 50,
         step: 1,
+        unit: 'px',
       },
       {
         key: 'bottomVerticalSpacing',
@@ -89,14 +96,16 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 50,
         step: 1,
+        unit: 'px',
       },
     ],
   },
   {
     title: 'IC Options',
+    description: 'settings.section_desc.ic_options',
     settings: [
-      { key: 'icNodeWidth', label: 'IC Node Width', description: 'Width of IC cards', type: 'range', min: 40, max: 220, step: 1 },
-      { key: 'icGap', label: 'IC Gap', description: 'Spacing between stacked ICs', type: 'range', min: 0, max: 20, step: 1 },
+      { key: 'icNodeWidth', label: 'IC Node Width', description: 'Width of IC cards', type: 'range', min: 40, max: 220, step: 1, unit: 'px' },
+      { key: 'icGap', label: 'IC Gap', description: 'Spacing between stacked ICs', type: 'range', min: 0, max: 20, step: 1, unit: 'px' },
       {
         key: 'icContainerPadding',
         label: 'IC Container Padding',
@@ -104,6 +113,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 20,
         step: 1,
+        unit: 'px',
       },
       { key: 'icContainerFill', label: 'IC Container Fill', description: 'Background of IC group box', type: 'color' },
       {
@@ -113,15 +123,17 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 15,
         step: 1,
+        unit: 'px',
       },
     ],
   },
   {
     title: 'Advisor Options',
+    description: 'settings.section_desc.advisor_options',
     settings: [
-      { key: 'palTopGap', label: 'Advisor Top Gap', type: 'range', min: 0, max: 40, step: 1 },
-      { key: 'palBottomGap', label: 'Advisor Bottom Gap', type: 'range', min: 0, max: 40, step: 1 },
-      { key: 'palRowGap', label: 'Advisor Row Gap', type: 'range', min: 0, max: 20, step: 1 },
+      { key: 'palTopGap', label: 'Advisor Top Gap', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
+      { key: 'palBottomGap', label: 'Advisor Bottom Gap', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
+      { key: 'palRowGap', label: 'Advisor Row Gap', type: 'range', min: 0, max: 20, step: 1, unit: 'px' },
       {
         key: 'palCenterGap',
         label: 'Advisor Center Gap',
@@ -130,16 +142,18 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 10,
         max: 100,
         step: 1,
+        unit: 'px',
       },
     ],
   },
   {
     title: 'Typography',
+    description: 'settings.section_desc.typography',
     settings: [
-      { key: 'nameFontSize', label: 'Name Font Size', description: 'Font size for person names', type: 'range', min: 5, max: 20, step: 1 },
-      { key: 'titleFontSize', label: 'Title Font Size', description: 'Font size for job titles', type: 'range', min: 5, max: 20, step: 1 },
-      { key: 'textPaddingTop', label: 'Text Padding Top', type: 'range', min: 0, max: 15, step: 1 },
-      { key: 'textGap', label: 'Text Gap', description: 'Space between name and title', type: 'range', min: 0, max: 10, step: 1 },
+      { key: 'nameFontSize', label: 'Name Font Size', description: 'Font size for person names', type: 'range', min: 5, max: 20, step: 1, unit: 'px' },
+      { key: 'titleFontSize', label: 'Title Font Size', description: 'Font size for job titles', type: 'range', min: 5, max: 20, step: 1, unit: 'px' },
+      { key: 'textPaddingTop', label: 'Text Padding Top', type: 'range', min: 0, max: 15, step: 1, unit: 'px' },
+      { key: 'textGap', label: 'Text Gap', description: 'Space between name and title', type: 'range', min: 0, max: 10, step: 1, unit: 'px' },
       {
         key: 'textAlign',
         label: 'Text Alignment',
@@ -160,6 +174,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 20,
         step: 1,
+        unit: 'px',
       },
       { key: 'nameColor', label: 'Name Color', description: 'Color for person names', type: 'color' },
       { key: 'titleColor', label: 'Title Color', description: 'Color for job titles', type: 'color' },
@@ -167,14 +182,16 @@ const SETTING_GROUPS: SettingGroup[] = [
   },
   {
     title: 'Link Style',
+    description: 'settings.section_desc.link_style',
     settings: [
-      { key: 'linkWidth', label: 'Link Width', type: 'range', min: 0.5, max: 5, step: 0.5 },
+      { key: 'linkWidth', label: 'Link Width', type: 'range', min: 0.5, max: 5, step: 0.5, unit: 'px' },
       { key: 'linkColor', label: 'Link Color', description: 'Color of connector lines', type: 'color' },
       { key: 'dottedLineDash', label: 'Dotted Line Pattern', description: 'Dash pattern e.g. "6,4"', type: 'text' },
     ],
   },
   {
     title: 'Card Style',
+    description: 'settings.section_desc.card_style',
     settings: [
       {
         key: 'cardStrokeWidth',
@@ -183,6 +200,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0.5,
         max: 5,
         step: 0.5,
+        unit: 'px',
       },
       { key: 'cardStroke', label: 'Card Stroke', description: 'Card border color', type: 'color' },
       { key: 'cardFill', label: 'Card Fill', description: 'Background color of cards', type: 'color' },
@@ -194,11 +212,13 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 15,
         step: 1,
+        unit: 'px',
       },
     ],
   },
   {
     title: 'Headcount Badge',
+    description: 'settings.section_desc.headcount_badge',
     settings: [
       { key: 'showHeadcount', label: 'Show Headcount', description: 'Show badges on manager cards', type: 'checkbox' },
       {
@@ -208,6 +228,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 5,
         max: 16,
         step: 1,
+        unit: 'px',
       },
       {
         key: 'headcountBadgeHeight',
@@ -216,6 +237,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 10,
         max: 30,
         step: 1,
+        unit: 'px',
       },
       {
         key: 'headcountBadgeRadius',
@@ -224,6 +246,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 15,
         step: 1,
+        unit: 'px',
       },
       {
         key: 'headcountBadgePadding',
@@ -232,6 +255,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 2,
         max: 16,
         step: 1,
+        unit: 'px',
       },
       { key: 'headcountBadgeColor', label: 'Badge Color', type: 'color' },
       { key: 'headcountBadgeTextColor', label: 'Badge Text Color', type: 'color' },
@@ -239,6 +263,7 @@ const SETTING_GROUPS: SettingGroup[] = [
   },
   {
     title: 'Categories Legend',
+    description: 'settings.section_desc.categories_legend',
     settings: [
       {
         key: 'legendRows',
@@ -248,6 +273,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 20,
         step: 1,
+        unit: 'rows',
       },
     ],
   },
@@ -658,6 +684,12 @@ export class SettingsEditor {
       );
     }
 
+    // Preview strips for each tab
+    const previewTabs = ['layout', 'typography', 'cards', 'connectors', 'ic', 'advisors', 'badges', 'categories'];
+    for (const tabId of previewTabs) {
+      this.container.appendChild(this.buildPreviewStrip(tabId));
+    }
+
     // Setting groups — flat sections (no accordion)
     for (const group of SETTING_GROUPS) {
       const groupId = sectionIdFromTitle(group.title);
@@ -669,6 +701,13 @@ export class SettingsEditor {
       title.className = 'setting-section-title';
       title.textContent = group.title;
       section.appendChild(title);
+
+      if (group.description) {
+        const desc = document.createElement('div');
+        desc.className = 'section-intro';
+        desc.textContent = t(group.description);
+        section.appendChild(desc);
+      }
 
       for (const setting of group.settings) {
         const value = opts[setting.key] as number | string | boolean;
@@ -972,27 +1011,29 @@ export class SettingsEditor {
     for (const cat of categories) {
       const container = document.createElement('div');
       container.className = 'mb-2';
+      container.style.cssText = 'padding:8px 0;border-bottom:1px solid var(--border-subtle);';
 
       const row = document.createElement('div');
       row.className = 'flex-row';
-      row.style.cssText = 'gap:6px;margin-bottom:4px;';
+      row.style.cssText = 'gap:8px;margin-bottom:4px;';
 
       const colorInput = document.createElement('input');
       colorInput.type = 'color';
       colorInput.value = cat.color;
       colorInput.style.cssText =
-        'width:28px;height:22px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
-      colorInput.setAttribute('aria-label', `Color for ${cat.label}`);
+        'width:32px;height:32px;border:2px solid var(--border-default);padding:0;cursor:pointer;flex-shrink:0;border-radius:var(--radius-sm);-webkit-appearance:none;appearance:none;background:none;';
+      colorInput.setAttribute('aria-label', t('settings.category_color_aria', { label: cat.label }));
 
-      // Name and title color pickers (created before colorInput listener so they can be referenced)
       const nameColorInput = document.createElement('input');
       nameColorInput.type = 'color';
       nameColorInput.value = cat.nameColor ?? '#1e293b';
+      nameColorInput.className = 'category-text-color-group';
       nameColorInput.style.cssText =
-        'width:22px;height:18px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
-      nameColorInput.setAttribute('aria-label', `Name color for ${cat.label}`);
+        'width:22px;height:18px;border:1px solid var(--border-default);padding:0;cursor:pointer;flex-shrink:0;border-radius:3px;-webkit-appearance:none;appearance:none;background:none;';
+      nameColorInput.setAttribute('aria-label', t('settings.category_name_color_aria', { label: cat.label }));
       nameColorInput.addEventListener('input', () => {
         this.categoryStore!.update(cat.id, { nameColor: nameColorInput.value });
+        updatePreview();
         this.rerenderCallback();
       });
 
@@ -1000,19 +1041,46 @@ export class SettingsEditor {
       titleColorInput.type = 'color';
       titleColorInput.value = cat.titleColor ?? '#64748b';
       titleColorInput.style.cssText =
-        'width:22px;height:18px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
-      titleColorInput.setAttribute('aria-label', `Title color for ${cat.label}`);
+        'width:22px;height:18px;border:1px solid var(--border-default);padding:0;cursor:pointer;flex-shrink:0;border-radius:3px;-webkit-appearance:none;appearance:none;background:none;';
+      titleColorInput.setAttribute('aria-label', t('settings.category_title_color_aria', { label: cat.label }));
       titleColorInput.addEventListener('input', () => {
         this.categoryStore!.update(cat.id, { titleColor: titleColorInput.value });
+        updatePreview();
         this.rerenderCallback();
       });
 
+      // Card preview
+      const preview = document.createElement('div');
+      preview.className = 'category-preview-card';
+      preview.style.background = cat.color;
+
+      const previewName = document.createElement('span');
+      previewName.className = 'cat-preview-name';
+      previewName.textContent = t('settings.category_preview_name');
+      previewName.style.color = cat.nameColor ?? '#1e293b';
+      preview.appendChild(previewName);
+
+      const previewTitle = document.createElement('span');
+      previewTitle.className = 'cat-preview-title';
+      previewTitle.textContent = t('settings.category_preview_title');
+      previewTitle.style.color = cat.titleColor ?? '#64748b';
+      preview.appendChild(previewTitle);
+
+      const updatePreview = () => {
+        const updated = this.categoryStore!.getById(cat.id);
+        if (updated) {
+          preview.style.background = updated.color;
+          previewName.style.color = updated.nameColor ?? '#1e293b';
+          previewTitle.style.color = updated.titleColor ?? '#64748b';
+        }
+      };
+
       colorInput.addEventListener('input', () => {
         this.categoryStore!.update(cat.id, { color: colorInput.value });
-        // Sync text color pickers with auto-computed values
         const updated = this.categoryStore!.getById(cat.id);
         if (updated?.nameColor) nameColorInput.value = updated.nameColor;
         if (updated?.titleColor) titleColorInput.value = updated.titleColor;
+        updatePreview();
         this.rerenderCallback();
       });
       row.appendChild(colorInput);
@@ -1021,8 +1089,8 @@ export class SettingsEditor {
       labelInput.type = 'text';
       labelInput.value = cat.label;
       labelInput.style.cssText =
-        'flex:1;padding:3px 6px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font-size:11px;font-family:var(--font-sans);min-width:0;';
-      labelInput.setAttribute('aria-label', 'Category label');
+        'flex:1;padding:4px 8px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font-size:11px;font-family:var(--font-sans);min-width:0;';
+      labelInput.setAttribute('aria-label', t('settings.category_label_aria'));
       labelInput.addEventListener('change', () => {
         const newLabel = labelInput.value.trim();
         if (newLabel) {
@@ -1034,43 +1102,81 @@ export class SettingsEditor {
       });
       row.appendChild(labelInput);
 
+      row.appendChild(preview);
+
+      // Delete button with confirmation
       const deleteBtn = document.createElement('button');
       deleteBtn.textContent = '×';
       deleteBtn.style.cssText =
-        'width:22px;height:22px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;';
-      deleteBtn.setAttribute('aria-label', `Remove ${cat.label}`);
+        'width:24px;height:24px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;opacity:0.4;';
+      deleteBtn.setAttribute('aria-label', t('settings.category_remove_aria', { label: cat.label }));
+
+      let confirmTimeout: ReturnType<typeof setTimeout> | null = null;
+      let isConfirming = false;
+
       deleteBtn.addEventListener('mouseenter', () => {
-        deleteBtn.style.color = 'var(--danger)';
-        deleteBtn.style.borderColor = 'var(--danger)';
+        if (!isConfirming) {
+          deleteBtn.style.color = 'var(--danger)';
+          deleteBtn.style.borderColor = 'var(--danger)';
+          deleteBtn.style.opacity = '1';
+        }
       });
       deleteBtn.addEventListener('mouseleave', () => {
-        deleteBtn.style.color = 'var(--text-tertiary)';
-        deleteBtn.style.borderColor = 'var(--border-default)';
+        if (!isConfirming) {
+          deleteBtn.style.color = 'var(--text-tertiary)';
+          deleteBtn.style.borderColor = 'var(--border-default)';
+          deleteBtn.style.opacity = '0.4';
+        }
       });
       deleteBtn.addEventListener('click', () => {
-        this.categoryStore!.remove(cat.id);
-        this.rerenderCallback();
-        this.build();
+        if (isConfirming) {
+          if (confirmTimeout) clearTimeout(confirmTimeout);
+          this.categoryStore!.remove(cat.id);
+          this.rerenderCallback();
+          this.build();
+        } else {
+          isConfirming = true;
+          deleteBtn.textContent = '?';
+          deleteBtn.className = 'category-delete-confirm';
+          deleteBtn.style.cssText =
+            'padding:2px 8px;cursor:pointer;flex-shrink:0;';
+          confirmTimeout = setTimeout(() => {
+            isConfirming = false;
+            deleteBtn.textContent = '×';
+            deleteBtn.className = '';
+            deleteBtn.style.cssText =
+              'width:24px;height:24px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;opacity:0.4;';
+          }, 3000);
+        }
       });
       row.appendChild(deleteBtn);
 
       container.appendChild(row);
 
-      // Text color sub-row
+      // Text color sub-row (improved layout)
       const textRow = document.createElement('div');
-      textRow.className = 'flex-row text-xs text-tertiary';
-      textRow.style.cssText = 'gap:6px;padding-left:34px;';
+      textRow.className = 'category-text-colors';
 
-      const nameLabel = document.createElement('span');
-      nameLabel.textContent = 'Name';
-      textRow.appendChild(nameLabel);
-      textRow.appendChild(nameColorInput);
+      const textColorsLabel = document.createElement('span');
+      textColorsLabel.className = 'category-text-colors-label';
+      textColorsLabel.textContent = t('settings.category_text_colors');
+      textRow.appendChild(textColorsLabel);
 
-      const titleLabel = document.createElement('span');
-      titleLabel.textContent = 'Title';
-      titleLabel.style.cssText = 'margin-left:4px;';
-      textRow.appendChild(titleLabel);
-      textRow.appendChild(titleColorInput);
+      const nameGroup = document.createElement('div');
+      nameGroup.className = 'category-text-color-group';
+      const nameLabel = document.createElement('label');
+      nameLabel.textContent = t('settings.category_name');
+      nameGroup.appendChild(nameLabel);
+      nameGroup.appendChild(nameColorInput);
+      textRow.appendChild(nameGroup);
+
+      const titleGroup = document.createElement('div');
+      titleGroup.className = 'category-text-color-group';
+      const titleLabel = document.createElement('label');
+      titleLabel.textContent = t('settings.category_title');
+      titleGroup.appendChild(titleLabel);
+      titleGroup.appendChild(titleColorInput);
+      textRow.appendChild(titleGroup);
 
       container.appendChild(textRow);
       wrapper.appendChild(container);
@@ -1078,8 +1184,8 @@ export class SettingsEditor {
 
     const addBtn = document.createElement('button');
     addBtn.className = 'btn btn-secondary w-full';
-    addBtn.textContent = '+ Add Category';
-    addBtn.style.cssText = 'font-size:11px;padding:4px 8px;';
+    addBtn.textContent = t('settings.add_category');
+    addBtn.style.cssText = 'font-size:11px;padding:6px 8px;margin-top:8px;width:100%;display:flex;align-items:center;justify-content:center;gap:4px;border-style:dashed;';
     addBtn.addEventListener('click', () => {
       this.categoryStore!.add('New Category', '#94a3b8');
       this.rerenderCallback();
@@ -1088,6 +1194,295 @@ export class SettingsEditor {
     wrapper.appendChild(addBtn);
 
     return wrapper;
+  }
+
+  private buildPreviewStrip(tabId: string): HTMLElement {
+    const strip = document.createElement('div');
+    strip.className = 'preview-strip';
+    strip.setAttribute('data-section-id', `preview-${tabId}`);
+
+    const header = document.createElement('div');
+    header.className = 'preview-strip-header';
+    const title = document.createElement('span');
+    title.className = 'preview-strip-title';
+    title.textContent = 'Live Preview';
+    const hint = document.createElement('span');
+    hint.className = 'preview-strip-hint';
+    hint.textContent = 'Updates as you change settings';
+    header.appendChild(title);
+    header.appendChild(hint);
+    strip.appendChild(header);
+
+    const area = document.createElement('div');
+    area.className = 'preview-area';
+
+    const ns = 'http://www.w3.org/2000/svg';
+    const svgEl = (tag: string, attrs: Record<string, string | number>): SVGElement => {
+      const el = document.createElementNS(ns, tag);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+      return el;
+    };
+
+    const svg = svgEl('svg', { viewBox: '0 0 440 120', width: '100%', height: '120' }) as SVGSVGElement;
+    svg.style.display = 'block';
+
+    const opts = this.renderer.getOptions();
+
+    switch (tabId) {
+      case 'layout': {
+        const s = 0.5;
+        const cw = opts.nodeWidth * s;
+        const ch = opts.nodeHeight * s;
+        const rootX = 220 - cw / 2;
+        const rootY = 8;
+        const childY = rootY + ch + (opts.topVerticalSpacing ?? 10) * s + (opts.bottomVerticalSpacing ?? 20) * s;
+        const gap = (opts.horizontalSpacing ?? 50) * s;
+        const child1X = 220 - gap / 2 - cw;
+        const child2X = 220 + gap / 2;
+
+        // Root card
+        svg.appendChild(svgEl('rect', { x: rootX, y: rootY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: rootX + cw / 2, y: rootY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Manager';
+
+        // Connectors
+        const midY = rootY + ch + (opts.topVerticalSpacing ?? 10) * s;
+        svg.appendChild(svgEl('line', { x1: 220, y1: rootY + ch, x2: 220, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+        svg.appendChild(svgEl('line', { x1: child1X + cw / 2, y1: midY, x2: child2X + cw / 2, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+        svg.appendChild(svgEl('line', { x1: child1X + cw / 2, y1: midY, x2: child1X + cw / 2, y2: childY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+        svg.appendChild(svgEl('line', { x1: child2X + cw / 2, y1: midY, x2: child2X + cw / 2, y2: childY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+
+        // Child cards
+        svg.appendChild(svgEl('rect', { x: child1X, y: childY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: child1X + cw / 2, y: childY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Report A';
+        svg.appendChild(svgEl('rect', { x: child2X, y: childY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: child2X + cw / 2, y: childY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Report B';
+
+        // Spacing indicators
+        const dashStyle = 'stroke:#94a3b8;stroke-width:0.5;stroke-dasharray:2,2';
+        // Horizontal spacing indicator
+        const indY = childY + ch + 8;
+        svg.appendChild(svgEl('line', { x1: child1X + cw, y1: indY, x2: child2X, y2: indY, style: dashStyle }));
+        const spacingLabel = svgEl('text', { x: 220, y: indY + 8, 'text-anchor': 'middle', 'font-size': '6', fill: '#94a3b8' });
+        spacingLabel.textContent = `${opts.horizontalSpacing ?? 50}px`;
+        svg.appendChild(spacingLabel);
+        break;
+      }
+
+      case 'typography': {
+        const cw = Math.min(opts.nodeWidth * 1.4, 200);
+        const ch = Math.max(opts.nodeHeight * 1.8, 50);
+        const cx = 220 - cw / 2;
+        const cy = 10;
+        svg.appendChild(svgEl('rect', { x: cx, y: cy, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+
+        const align = opts.textAlign ?? 'center';
+        let textX = cx + cw / 2;
+        let anchor = 'middle';
+        if (align === 'left' || align === 'start') { textX = cx + (opts.textPaddingHorizontal ?? 8); anchor = 'start'; }
+        else if (align === 'right' || align === 'end') { textX = cx + cw - (opts.textPaddingHorizontal ?? 8); anchor = 'end'; }
+
+        const nameY = cy + (opts.textPaddingTop ?? 6) + (opts.nameFontSize ?? 11);
+        const titleY = nameY + (opts.textGap ?? 2) + (opts.titleFontSize ?? 9);
+
+        svg.appendChild(svgEl('text', { x: textX, y: nameY, 'text-anchor': anchor, 'font-size': opts.nameFontSize ?? 11, 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Sarah Chen';
+        svg.appendChild(svgEl('text', { x: textX, y: titleY, 'text-anchor': anchor, 'font-size': opts.titleFontSize ?? 9, 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.titleColor ?? '#64748b' })).textContent = 'Chief Executive Officer';
+
+        // Font label
+        svg.appendChild(svgEl('text', { x: cx + cw + 10, y: nameY, 'font-size': '6', fill: '#94a3b8' })).textContent = `${opts.nameFontSize ?? 11}px`;
+        svg.appendChild(svgEl('text', { x: cx + cw + 10, y: titleY, 'font-size': '6', fill: '#94a3b8' })).textContent = `${opts.titleFontSize ?? 9}px`;
+        svg.appendChild(svgEl('text', { x: 220, y: cy + ch + 14, 'text-anchor': 'middle', 'font-size': '7', fill: '#94a3b8' })).textContent = opts.fontFamily ?? 'Calibri';
+        break;
+      }
+
+      case 'cards': {
+        const cw = 100;
+        const ch = 36;
+        const gap = 20;
+        const startX = 220 - (3 * cw + 2 * gap) / 2;
+        for (let i = 0; i < 3; i++) {
+          const x = startX + i * (cw + gap);
+          const y = 20;
+          svg.appendChild(svgEl('rect', { x, y, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+          svg.appendChild(svgEl('text', { x: x + cw / 2, y: y + 14, 'text-anchor': 'middle', 'font-size': '8', 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.nameColor ?? '#1e293b' })).textContent = ['Alice', 'Bob', 'Carol'][i];
+          svg.appendChild(svgEl('text', { x: x + cw / 2, y: y + 26, 'text-anchor': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.titleColor ?? '#64748b' })).textContent = ['Engineer', 'Designer', 'Manager'][i];
+        }
+        // Labels
+        svg.appendChild(svgEl('text', { x: 220, y: 72, 'text-anchor': 'middle', 'font-size': '7', fill: '#94a3b8' })).textContent = `fill: ${opts.cardFill ?? '#fff'}  stroke: ${opts.cardStroke ?? '#22c55e'}  radius: ${opts.cardBorderRadius ?? 0}px`;
+        break;
+      }
+
+      case 'connectors': {
+        const cw = 70;
+        const ch = 24;
+        const rootX = 220 - cw / 2;
+        const rootY = 8;
+        const childY = 68;
+        const positions = [80, 185, 290];
+
+        svg.appendChild(svgEl('rect', { x: rootX, y: rootY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: 220, y: rootY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Manager';
+
+        const midY = rootY + ch + 12;
+        svg.appendChild(svgEl('line', { x1: 220, y1: rootY + ch, x2: 220, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+        svg.appendChild(svgEl('line', { x1: positions[0] + cw / 2, y1: midY, x2: positions[2] + cw / 2, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+
+        for (let i = 0; i < 3; i++) {
+          const x = positions[i];
+          const isDotted = i === 2;
+          svg.appendChild(svgEl('line', {
+            x1: x + cw / 2, y1: midY, x2: x + cw / 2, y2: childY,
+            stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5,
+            ...(isDotted ? { 'stroke-dasharray': opts.dottedLineDash ?? '6,4' } : {}),
+          }));
+          svg.appendChild(svgEl('rect', { x, y: childY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+          const labels = ['Solid', 'Solid', 'Dotted'];
+          svg.appendChild(svgEl('text', { x: x + cw / 2, y: childY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = labels[i];
+        }
+        // Label
+        svg.appendChild(svgEl('text', { x: 220, y: 110, 'text-anchor': 'middle', 'font-size': '7', fill: '#94a3b8' })).textContent = `width: ${opts.linkWidth ?? 1.5}px  dash: ${opts.dottedLineDash ?? '6,4'}`;
+        break;
+      }
+
+      case 'ic': {
+        const cw = 80;
+        const ch = 22;
+        const icW = Math.min((opts.icNodeWidth ?? 141) * 0.5, 70);
+        const icH = 16;
+        const icGap = opts.icGap ?? 6;
+        const pad = opts.icContainerPadding ?? 10;
+
+        // Manager card
+        const mgrX = 220 - cw / 2;
+        const mgrY = 6;
+        svg.appendChild(svgEl('rect', { x: mgrX, y: mgrY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: 220, y: mgrY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'M1 Manager';
+
+        // Connector
+        const containerTop = mgrY + ch + 10;
+        svg.appendChild(svgEl('line', { x1: 220, y1: mgrY + ch, x2: 220, y2: containerTop, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+
+        // IC container
+        const containerH = pad * 2 + 3 * icH + 2 * icGap;
+        const containerW = icW + pad * 2;
+        const containerX = 220 - containerW / 2;
+        svg.appendChild(svgEl('rect', { x: containerX, y: containerTop, width: containerW, height: containerH, rx: opts.icContainerBorderRadius ?? 0, fill: opts.icContainerFill ?? '#e5e7eb' }));
+
+        // IC cards
+        for (let i = 0; i < 3; i++) {
+          const icX = 220 - icW / 2;
+          const icY = containerTop + pad + i * (icH + icGap);
+          svg.appendChild(svgEl('rect', { x: icX, y: icY, width: icW, height: icH, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+          svg.appendChild(svgEl('text', { x: 220, y: icY + icH / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = `IC ${i + 1}`;
+        }
+        break;
+      }
+
+      case 'advisors': {
+        const cw = 70;
+        const ch = 22;
+        const advW = 60;
+        const advH = 18;
+        const centerGap = (opts.palCenterGap ?? 70) * 0.5;
+        const topGap = (opts.palTopGap ?? 12) * 0.5;
+        const rowGap = (opts.palRowGap ?? 6) * 0.5;
+
+        // Manager card
+        const mgrX = 220 - cw / 2;
+        const mgrY = 8;
+        svg.appendChild(svgEl('rect', { x: mgrX, y: mgrY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: 220, y: mgrY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Director';
+
+        // Advisors
+        const advY1 = mgrY + ch + topGap;
+        const advY2 = advY1 + advH + rowGap;
+
+        // Left advisor
+        const leftX = 220 - centerGap / 2 - advW;
+        svg.appendChild(svgEl('rect', { x: leftX, y: advY1, width: advW, height: advH, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: leftX + advW / 2, y: advY1 + advH / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Advisor L1';
+        // Left elbow connector
+        svg.appendChild(svgEl('line', { x1: leftX + advW, y1: advY1 + advH / 2, x2: 220, y2: advY1 + advH / 2, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+        svg.appendChild(svgEl('line', { x1: 220, y1: mgrY + ch, x2: 220, y2: advY1 + advH / 2, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+
+        // Right advisor
+        const rightX = 220 + centerGap / 2;
+        svg.appendChild(svgEl('rect', { x: rightX, y: advY1, width: advW, height: advH, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: rightX + advW / 2, y: advY1 + advH / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Advisor R1';
+        svg.appendChild(svgEl('line', { x1: rightX, y1: advY1 + advH / 2, x2: 220, y2: advY1 + advH / 2, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+
+        // Second row
+        svg.appendChild(svgEl('rect', { x: leftX, y: advY2, width: advW, height: advH, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: leftX + advW / 2, y: advY2 + advH / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Advisor L2';
+        svg.appendChild(svgEl('line', { x1: leftX + advW, y1: advY2 + advH / 2, x2: 220, y2: advY2 + advH / 2, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+        svg.appendChild(svgEl('line', { x1: 220, y1: advY1 + advH / 2, x2: 220, y2: advY2 + advH / 2, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+        break;
+      }
+
+      case 'badges': {
+        const cw = 110;
+        const ch = 34;
+        const gap = 40;
+
+        // Card without badge
+        const x1 = 220 - gap / 2 - cw;
+        svg.appendChild(svgEl('rect', { x: x1, y: 20, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: x1 + cw / 2, y: 34, 'text-anchor': 'middle', 'font-size': '8', 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.nameColor ?? '#1e293b' })).textContent = 'No Badge';
+        svg.appendChild(svgEl('text', { x: x1 + cw / 2, y: 46, 'text-anchor': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.titleColor ?? '#64748b' })).textContent = 'Leaf node';
+
+        // Card with badge
+        const x2 = 220 + gap / 2;
+        svg.appendChild(svgEl('rect', { x: x2, y: 20, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: x2 + cw / 2, y: 34, 'text-anchor': 'middle', 'font-size': '8', 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Manager';
+        svg.appendChild(svgEl('text', { x: x2 + cw / 2, y: 46, 'text-anchor': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.titleColor ?? '#64748b' })).textContent = 'VP Eng';
+
+        // Badge
+        const badgeH = Math.min((opts.headcountBadgeHeight ?? 22) * 0.8, 18);
+        const badgeR = opts.headcountBadgeRadius ?? 4;
+        const badgeFS = Math.min((opts.headcountBadgeFontSize ?? 11) * 0.9, 10);
+        const badgeW = 28;
+        const badgeX = x2 + cw / 2 - badgeW / 2;
+        const badgeY = 20 + ch + 2;
+        svg.appendChild(svgEl('rect', { x: badgeX, y: badgeY, width: badgeW, height: badgeH, rx: badgeR, fill: opts.headcountBadgeColor ?? '#9ca3af' }));
+        svg.appendChild(svgEl('text', { x: badgeX + badgeW / 2, y: badgeY + badgeH / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': badgeFS, 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.headcountBadgeTextColor ?? '#1e293b' })).textContent = '12';
+        break;
+      }
+
+      case 'categories': {
+        const cw = 80;
+        const ch = 30;
+        const gap = 12;
+        const cats = this.categoryStore ? this.categoryStore.getAll() : [];
+        const colors = [
+          { fill: opts.cardFill ?? '#ffffff', nameColor: opts.nameColor ?? '#1e293b', titleColor: opts.titleColor ?? '#64748b', label: 'Default' },
+          ...cats.slice(0, 3).map(c => ({ fill: c.color, nameColor: c.nameColor ?? '#1e293b', titleColor: c.titleColor ?? '#64748b', label: c.label })),
+        ];
+        const total = colors.length;
+        const totalW = total * cw + (total - 1) * gap;
+        const startX = 220 - totalW / 2;
+        for (let i = 0; i < total; i++) {
+          const x = startX + i * (cw + gap);
+          const y = 20;
+          const c = colors[i];
+          svg.appendChild(svgEl('rect', { x, y, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: c.fill, stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+          svg.appendChild(svgEl('text', { x: x + cw / 2, y: y + 12, 'text-anchor': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: c.nameColor })).textContent = 'Name';
+          svg.appendChild(svgEl('text', { x: x + cw / 2, y: y + 22, 'text-anchor': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: c.titleColor })).textContent = c.label;
+        }
+        break;
+      }
+
+      default: {
+        // Fallback: show a single card
+        const cw = 120;
+        const ch = 36;
+        svg.appendChild(svgEl('rect', { x: 220 - cw / 2, y: 42, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: 220, y: 62, 'text-anchor': 'middle', 'font-size': '8', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Preview';
+        break;
+      }
+    }
+
+    area.appendChild(svg);
+    strip.appendChild(area);
+    return strip;
   }
 
   private buildPresetsContent(): HTMLElement {
@@ -1175,6 +1570,21 @@ export class SettingsEditor {
         this.build();
       });
 
+      // Check if this preset matches current settings
+      const currentOpts = this.renderer.getOptions();
+      const isActive =
+        currentOpts.cardFill === preset.colors.cardFill &&
+        currentOpts.cardStroke === preset.colors.cardStroke &&
+        currentOpts.linkColor === preset.colors.linkColor;
+
+      if (isActive) {
+        card.classList.add('preset-active');
+        const badge = document.createElement('span');
+        badge.className = 'preset-active-badge';
+        badge.textContent = t('settings.preset_active');
+        card.appendChild(badge);
+      }
+
       presetGrid.appendChild(card);
     }
 
@@ -1193,6 +1603,7 @@ export class SettingsEditor {
 
     for (const lp of LAYOUT_PRESETS) {
       const btn = document.createElement('button');
+      btn.className = 'layout-preset-card';
       btn.style.cssText = `
         display:flex;flex-direction:column;align-items:center;gap:2px;
         padding:6px 4px;border:1px solid var(--border-default);
@@ -1212,12 +1623,33 @@ export class SettingsEditor {
       label.style.cssText = 'font-size:9px;font-weight:600;';
       btn.appendChild(label);
 
+      const dims = document.createElement('span');
+      dims.className = 'layout-preset-dims';
+      dims.textContent = `${lp.sizes.nodeWidth} × ${lp.sizes.nodeHeight}`;
+      btn.appendChild(dims);
+
+      const descKey = `settings.layout_${lp.name.toLowerCase()}_desc`;
+      const descEl = document.createElement('span');
+      descEl.className = 'layout-preset-desc';
+      descEl.textContent = t(descKey);
+      btn.appendChild(descEl);
+
+      // Check if this layout preset matches current settings
+      const curOpts = this.renderer.getOptions();
+      const layoutActive =
+        curOpts.nodeWidth === lp.sizes.nodeWidth &&
+        curOpts.nodeHeight === lp.sizes.nodeHeight;
+
+      if (layoutActive) {
+        btn.classList.add('preset-active');
+      }
+
       btn.addEventListener('mouseenter', () => {
         btn.style.borderColor = 'var(--accent)';
         btn.style.background = 'var(--bg-hover)';
       });
       btn.addEventListener('mouseleave', () => {
-        btn.style.borderColor = 'var(--border-default)';
+        btn.style.borderColor = layoutActive ? 'var(--accent)' : 'var(--border-default)';
         btn.style.background = 'var(--bg-elevated)';
       });
 
@@ -1327,19 +1759,32 @@ export class SettingsEditor {
     wrapper.className = 'setting-row';
     const inputId = `setting-${setting.key}`;
 
+    const defaultValue = DEFAULT_SETTINGS[setting.key];
+    const isModified = defaultValue !== undefined && currentValue !== defaultValue;
+
     const info = document.createElement('div');
     info.className = 'setting-info';
 
     const label = document.createElement('label');
     label.className = 'setting-label';
     label.htmlFor = inputId;
-    label.textContent = setting.label;
+
+    if (isModified) {
+      const dot = document.createElement('span');
+      dot.className = 'setting-modified-dot';
+      label.appendChild(dot);
+    }
+
+    label.appendChild(document.createTextNode(setting.label));
     info.appendChild(label);
 
-    if (setting.description) {
+    // Description from i18n if available, fallback to inline description
+    const descKey = `settings.desc.${setting.key.replace(/([A-Z])/g, '_$1').toLowerCase()}` as string;
+    const descText = setting.description || '';
+    if (descText) {
       const desc = document.createElement('div');
       desc.className = 'setting-desc';
-      desc.textContent = setting.description;
+      desc.textContent = descText;
       info.appendChild(desc);
     }
 
@@ -1371,9 +1816,28 @@ export class SettingsEditor {
       valueSpan.className = 'setting-value';
       valueSpan.textContent = String(currentValue);
 
+      if (setting.unit) {
+        const unitSpan = document.createElement('span');
+        unitSpan.className = 'setting-unit';
+        unitSpan.textContent = setting.unit;
+        valueSpan.appendChild(document.createTextNode(' '));
+        valueSpan.textContent = String(currentValue);
+        valueSpan.appendChild(document.createTextNode(' '));
+        valueSpan.appendChild(unitSpan);
+      }
+
       input.addEventListener('input', () => {
         const val = parseFloat(input.value);
-        valueSpan.textContent = String(val);
+        if (setting.unit) {
+          valueSpan.textContent = '';
+          valueSpan.appendChild(document.createTextNode(String(val) + ' '));
+          const unitSpan = document.createElement('span');
+          unitSpan.className = 'setting-unit';
+          unitSpan.textContent = setting.unit;
+          valueSpan.appendChild(unitSpan);
+        } else {
+          valueSpan.textContent = String(val);
+        }
         this.renderer.updateOptions({ [setting.key]: val } as Partial<RendererOptions>);
         this.rerenderCallback();
       });
@@ -1423,6 +1887,22 @@ export class SettingsEditor {
       });
 
       control.appendChild(input);
+    }
+
+    // Per-setting reset button
+    if (defaultValue !== undefined) {
+      const resetBtn = document.createElement('button');
+      resetBtn.className = 'setting-reset-btn';
+      if (isModified) resetBtn.classList.add('visible');
+      resetBtn.textContent = '↺';
+      resetBtn.setAttribute('aria-label', `Reset ${setting.label} to default (${defaultValue})`);
+      resetBtn.setAttribute('data-tooltip', `Default: ${defaultValue}${setting.unit ? ' ' + setting.unit : ''}`);
+      resetBtn.addEventListener('click', () => {
+        this.renderer.updateOptions({ [setting.key]: defaultValue } as Partial<RendererOptions>);
+        this.rerenderCallback();
+        this.build();
+      });
+      control.appendChild(resetBtn);
     }
 
     wrapper.appendChild(info);

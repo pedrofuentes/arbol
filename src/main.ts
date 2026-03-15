@@ -1,7 +1,7 @@
 import { setLocale, t } from './i18n';
 import en from './i18n/en';
 import { OrgStore } from './store/org-store';
-import { ChartRenderer } from './renderer/chart-renderer';
+import { ChartRenderer, type RendererOptions } from './renderer/chart-renderer';
 import { FormEditor } from './editor/form-editor';
 import { JsonEditor } from './editor/json-editor';
 import { exportToPptx } from './export/pptx-exporter';
@@ -420,6 +420,14 @@ async function main(): Promise<void> {
     'categories-legend': 'categories',
     'settings-io': 'backup',
     'backup-restore': 'backup',
+    'preview-layout': 'layout',
+    'preview-typography': 'typography',
+    'preview-cards': 'cards',
+    'preview-connectors': 'connectors',
+    'preview-ic': 'ic',
+    'preview-advisors': 'advisors',
+    'preview-badges': 'badges',
+    'preview-categories': 'categories',
   };
 
   function filterSettingsSections(tabId: string): void {
@@ -434,9 +442,19 @@ async function main(): Promise<void> {
 
   let settingsEditorMounted = false;
 
+  let settingsSnapshot: Partial<RendererOptions> | null = null;
+
   const settingsModal = new SettingsModal({
     onClose: () => {},
     onApply: () => { rerender(); },
+    onCancel: () => {
+      // Revert to snapshot taken when modal was opened
+      if (settingsSnapshot) {
+        renderer.updateOptions(settingsSnapshot);
+        rerender();
+        settingsSnapshot = null;
+      }
+    },
     onTabChange: (tabId) => { filterSettingsSections(tabId); },
   });
 
@@ -450,6 +468,8 @@ async function main(): Promise<void> {
   settingsIcon.textContent = '⚙️';
   settingsBtn.appendChild(settingsIcon);
   settingsBtn.addEventListener('click', () => {
+    // Snapshot current settings so Cancel can revert
+    settingsSnapshot = { ...renderer.getOptions() };
     settingsModal.open();
     if (!settingsEditorMounted) {
       new SettingsEditor(

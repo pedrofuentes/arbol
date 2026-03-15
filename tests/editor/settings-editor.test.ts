@@ -138,8 +138,8 @@ describe('SettingsEditor', () => {
   it('renders setting groups as flat sections with data-section-id', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const allSections = container.querySelectorAll('[data-section-id]');
-    // presets(accordion) + 9 flat groups + settings-io(accordion) = 11 (no categories without store)
-    expect(allSections.length).toBe(11);
+    // presets(accordion) + 9 flat groups + settings-io(accordion) + 8 preview strips = 19 (no categories without store)
+    expect(allSections.length).toBe(19);
     // 9 flat setting sections
     const flatSections = container.querySelectorAll('.setting-section');
     expect(flatSections.length).toBe(9);
@@ -322,7 +322,8 @@ describe('SettingsEditor', () => {
       const deleteBtn = container.querySelector<HTMLButtonElement>(
         `button[aria-label="Remove ${categories[0].label}"]`,
       )!;
-      deleteBtn.click();
+      deleteBtn.click(); // first click enters confirm mode
+      deleteBtn.click(); // second click confirms deletion
       expect(removeSpy).toHaveBeenCalledWith(categories[0].id);
       expect(rerenderCb).toHaveBeenCalled();
     });
@@ -979,6 +980,283 @@ describe('SettingsEditor', () => {
       const customCard = container.querySelector('[data-preset-id="custom-aria-test"]')!;
       const deleteBtn = customCard.querySelector('.preset-delete')!;
       expect(deleteBtn.getAttribute('aria-label')).toContain('Delete preset');
+    });
+  });
+
+  describe('setting descriptions', () => {
+    it('setting rows contain .setting-desc elements', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const descs = container.querySelectorAll('.setting-desc');
+      expect(descs.length).toBeGreaterThan(0);
+    });
+
+    it('descriptions are non-empty text', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const descs = container.querySelectorAll('.setting-desc');
+      for (const desc of Array.from(descs)) {
+        expect(desc.textContent!.trim().length).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  describe('value units', () => {
+    it('range setting values contain .setting-unit span with "px" text', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const units = container.querySelectorAll('.setting-unit');
+      expect(units.length).toBeGreaterThan(0);
+      const pxUnits = Array.from(units).filter((u) => u.textContent === 'px');
+      expect(pxUnits.length).toBeGreaterThan(0);
+    });
+
+    it('legendRows setting shows "rows" unit', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const legendSection = findSectionByTitle(container, 'Categories Legend')!;
+      expect(legendSection).toBeDefined();
+      const unit = legendSection.querySelector('.setting-unit');
+      expect(unit).not.toBeNull();
+      expect(unit!.textContent).toBe('rows');
+    });
+  });
+
+  describe('modified indicators', () => {
+    it('no .setting-modified-dot when all values match defaults', () => {
+      // Create a renderer returning exact DEFAULT_SETTINGS values for fields
+      // that differ between DEFAULT_OPTS and source DEFAULT_SETTINGS
+      const exactDefaultRenderer = {
+        getOptions: vi.fn(() => ({
+          ...DEFAULT_OPTS,
+          linkColor: '#94a3b8',
+          linkWidth: 1.5,
+          cardStroke: '#22c55e',
+          icContainerFill: '#e5e7eb',
+        })),
+        updateOptions: vi.fn(),
+      } as unknown as ChartRenderer;
+      new SettingsEditor(container, exactDefaultRenderer, rerenderCb);
+      const dots = container.querySelectorAll('.setting-modified-dot');
+      expect(dots.length).toBe(0);
+    });
+
+    it('.setting-modified-dot appears when renderer returns non-default value', () => {
+      const modifiedRenderer = {
+        getOptions: vi.fn(() => ({
+          ...DEFAULT_OPTS,
+          nodeWidth: 999,
+        })),
+        updateOptions: vi.fn(),
+      } as unknown as ChartRenderer;
+      new SettingsEditor(container, modifiedRenderer, rerenderCb);
+      const dots = container.querySelectorAll('.setting-modified-dot');
+      expect(dots.length).toBeGreaterThan(0);
+      // The dot should be inside a label
+      const dot = dots[0];
+      expect(dot.closest('.setting-label')).not.toBeNull();
+    });
+  });
+
+  describe('per-setting reset buttons', () => {
+    it('.setting-reset-btn exists on setting rows', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const resetBtns = container.querySelectorAll('.setting-reset-btn');
+      expect(resetBtns.length).toBeGreaterThan(0);
+    });
+
+    it('reset button has .visible class when value differs from default', () => {
+      const modifiedRenderer = {
+        getOptions: vi.fn(() => ({
+          ...DEFAULT_OPTS,
+          nodeWidth: 999,
+        })),
+        updateOptions: vi.fn(),
+      } as unknown as ChartRenderer;
+      new SettingsEditor(container, modifiedRenderer, rerenderCb);
+      const visibleResets = container.querySelectorAll('.setting-reset-btn.visible');
+      expect(visibleResets.length).toBeGreaterThan(0);
+    });
+
+    it('reset button does not have .visible class when all values match defaults', () => {
+      const exactDefaultRenderer = {
+        getOptions: vi.fn(() => ({
+          ...DEFAULT_OPTS,
+          linkColor: '#94a3b8',
+          linkWidth: 1.5,
+          cardStroke: '#22c55e',
+          icContainerFill: '#e5e7eb',
+        })),
+        updateOptions: vi.fn(),
+      } as unknown as ChartRenderer;
+      new SettingsEditor(container, exactDefaultRenderer, rerenderCb);
+      const visibleResets = container.querySelectorAll('.setting-reset-btn.visible');
+      expect(visibleResets.length).toBe(0);
+    });
+
+    it('clicking reset button calls renderer.updateOptions with default value and triggers rerender', () => {
+      const modifiedRenderer = {
+        getOptions: vi.fn(() => ({
+          ...DEFAULT_OPTS,
+          nodeWidth: 999,
+        })),
+        updateOptions: vi.fn(),
+      } as unknown as ChartRenderer;
+      new SettingsEditor(container, modifiedRenderer, rerenderCb);
+      const visibleReset = container.querySelector<HTMLButtonElement>('.setting-reset-btn.visible')!;
+      expect(visibleReset).not.toBeNull();
+      visibleReset.click();
+      expect(modifiedRenderer.updateOptions).toHaveBeenCalled();
+      expect(rerenderCb).toHaveBeenCalled();
+    });
+  });
+
+  describe('section descriptions', () => {
+    it('.section-intro elements exist for setting groups that have descriptions', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const intros = container.querySelectorAll('.section-intro');
+      expect(intros.length).toBeGreaterThan(0);
+    });
+
+    it('section-intro text is non-empty', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const intros = container.querySelectorAll('.section-intro');
+      for (const intro of Array.from(intros)) {
+        expect(intro.textContent!.trim().length).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  describe('category card preview', () => {
+    it('.category-preview-card elements are rendered when categoryStore has categories', () => {
+      const catStore = new CategoryStore();
+      new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
+      const previews = container.querySelectorAll('.category-preview-card');
+      expect(previews.length).toBe(catStore.getAll().length);
+    });
+
+    it('preview shows .cat-preview-name and .cat-preview-title spans', () => {
+      const catStore = new CategoryStore();
+      new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
+      const preview = container.querySelector('.category-preview-card')!;
+      expect(preview).not.toBeNull();
+      const nameSpan = preview.querySelector('.cat-preview-name');
+      const titleSpan = preview.querySelector('.cat-preview-title');
+      expect(nameSpan).not.toBeNull();
+      expect(titleSpan).not.toBeNull();
+      expect(nameSpan!.textContent!.length).toBeGreaterThan(0);
+      expect(titleSpan!.textContent!.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('category delete confirmation', () => {
+    it('first click on delete button changes its text/class to confirm state', () => {
+      const catStore = new CategoryStore();
+      new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
+      const categories = catStore.getAll();
+      const deleteBtn = container.querySelector<HTMLButtonElement>(
+        `button[aria-label="Remove ${categories[0].label}"]`,
+      )!;
+      expect(deleteBtn.textContent).toBe('×');
+      deleteBtn.click();
+      expect(deleteBtn.textContent).toBe('?');
+      expect(deleteBtn.classList.contains('category-delete-confirm')).toBe(true);
+    });
+
+    it('second click within timeout actually removes the category', () => {
+      const catStore = new CategoryStore();
+      const removeSpy = vi.spyOn(catStore, 'remove');
+      new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
+      const categories = catStore.getAll();
+      const deleteBtn = container.querySelector<HTMLButtonElement>(
+        `button[aria-label="Remove ${categories[0].label}"]`,
+      )!;
+      deleteBtn.click(); // first click — enters confirm state
+      deleteBtn.click(); // second click — confirms deletion
+      expect(removeSpy).toHaveBeenCalledWith(categories[0].id);
+      expect(rerenderCb).toHaveBeenCalled();
+    });
+  });
+
+  describe('layout preset descriptions', () => {
+    it('layout preset buttons contain .layout-preset-dims elements with dimension text', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const dims = container.querySelectorAll('.layout-preset-dims');
+      expect(dims.length).toBe(4); // Compact, Default, Spacious, Presentation
+      for (const dim of Array.from(dims)) {
+        expect(dim.textContent).toMatch(/\d+ × \d+/);
+      }
+    });
+
+    it('layout preset buttons contain .layout-preset-desc elements', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const descs = container.querySelectorAll('.layout-preset-desc');
+      expect(descs.length).toBe(4);
+      for (const desc of Array.from(descs)) {
+        expect(desc.textContent!.trim().length).toBeGreaterThan(0);
+      }
+    });
+  });
+
+  describe('active preset indicator', () => {
+    it('preset card has .preset-active class when renderer options match preset colors', () => {
+      // Default opts match the first preset if colors align — use a renderer
+      // whose cardFill/cardStroke/linkColor match the first combined preset
+      const firstPreset = COMBINED_PRESETS[0];
+      const matchingRenderer = {
+        getOptions: vi.fn(() => ({
+          ...DEFAULT_OPTS,
+          cardFill: firstPreset.colors.cardFill,
+          cardStroke: firstPreset.colors.cardStroke,
+          linkColor: firstPreset.colors.linkColor,
+        })),
+        updateOptions: vi.fn(),
+      } as unknown as ChartRenderer;
+      new SettingsEditor(container, matchingRenderer, rerenderCb);
+      const activeCards = container.querySelectorAll('.preset-card.preset-active');
+      expect(activeCards.length).toBeGreaterThan(0);
+    });
+
+    it('.preset-active-badge element exists on active preset', () => {
+      const firstPreset = COMBINED_PRESETS[0];
+      const matchingRenderer = {
+        getOptions: vi.fn(() => ({
+          ...DEFAULT_OPTS,
+          cardFill: firstPreset.colors.cardFill,
+          cardStroke: firstPreset.colors.cardStroke,
+          linkColor: firstPreset.colors.linkColor,
+        })),
+        updateOptions: vi.fn(),
+      } as unknown as ChartRenderer;
+      new SettingsEditor(container, matchingRenderer, rerenderCb);
+      const activeCard = container.querySelector('.preset-card.preset-active')!;
+      expect(activeCard).not.toBeNull();
+      const badge = activeCard.querySelector('.preset-active-badge');
+      expect(badge).not.toBeNull();
+      expect(badge!.textContent!.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('preview strips', () => {
+    it('[data-section-id^="preview-"] elements exist', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const previews = container.querySelectorAll('[data-section-id^="preview-"]');
+      expect(previews.length).toBeGreaterThan(0);
+    });
+
+    it('preview strips contain .preview-strip class', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const strips = container.querySelectorAll('.preview-strip');
+      expect(strips.length).toBeGreaterThan(0);
+      // All preview-strip elements should have data-section-id starting with "preview-"
+      for (const strip of Array.from(strips)) {
+        expect(strip.getAttribute('data-section-id')?.startsWith('preview-')).toBe(true);
+      }
+    });
+
+    it('preview strips contain SVG elements', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const strips = container.querySelectorAll('.preview-strip');
+      for (const strip of Array.from(strips)) {
+        const svg = strip.querySelector('svg');
+        expect(svg).not.toBeNull();
+      }
     });
   });
 });

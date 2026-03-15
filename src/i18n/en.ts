@@ -861,6 +861,90 @@ const en: Record<string, string> = {
   // ─── Toolbar (Step 6) ──────────────────────────────────────────────
   'toolbar.export_tooltip': 'Export to PowerPoint (Ctrl+E)',
   'toolbar.export_aria': 'Export chart to PowerPoint',
+
+  // ─── Settings: Descriptions ─────────────────────────────────────────
+  'settings.desc.node_width': 'Width of each person\'s card in the chart',
+  'settings.desc.node_height': 'Height of each person\'s card',
+  'settings.desc.horizontal_spacing': 'Minimum gap between cards at the same level',
+  'settings.desc.branch_spacing': 'Gap between separate branches of the tree',
+  'settings.desc.top_vertical_spacing': 'Space from a manager card to the connector line below',
+  'settings.desc.bottom_vertical_spacing': 'Space from the connector line to the child cards below',
+  'settings.desc.ic_node_width': 'Width of individual contributor cards in the stacked view',
+  'settings.desc.ic_gap': 'Vertical gap between stacked IC cards',
+  'settings.desc.ic_container_padding': 'Padding around the IC card group container',
+  'settings.desc.ic_container_fill': 'Background color of the IC card group',
+  'settings.desc.ic_container_border_radius': 'Corner rounding of the IC group container',
+  'settings.desc.advisor_top_gap': 'Space above advisor cards',
+  'settings.desc.advisor_bottom_gap': 'Space below advisor cards',
+  'settings.desc.advisor_row_gap': 'Vertical gap between advisor card rows',
+  'settings.desc.advisor_center_gap': 'Horizontal gap between left and right advisor columns',
+  'settings.desc.name_font_size': 'Font size for the person\'s name on each card',
+  'settings.desc.title_font_size': 'Font size for the job title on each card',
+  'settings.desc.text_padding_top': 'Space from the top of the card to the first line of text',
+  'settings.desc.text_gap': 'Space between the name and title text lines',
+  'settings.desc.text_alignment': 'How text is aligned within each card',
+  'settings.desc.font_family': 'Font used for all text in the chart (PowerPoint-safe)',
+  'settings.desc.text_padding_horizontal': 'Left/right padding for text when aligned left or right',
+  'settings.desc.name_color': 'Text color for names on cards',
+  'settings.desc.title_color': 'Text color for job titles on cards',
+  'settings.desc.link_width': 'Thickness of the connector lines between cards',
+  'settings.desc.link_color': 'Color of the connector lines',
+  'settings.desc.dotted_line_pattern': 'Dash pattern for dotted reporting lines (e.g., "6,4")',
+  'settings.desc.card_stroke_width': 'Thickness of the card border',
+  'settings.desc.card_stroke': 'Color of the card border',
+  'settings.desc.card_fill': 'Background color of the cards',
+  'settings.desc.card_border_radius': 'Corner rounding of the cards',
+  'settings.desc.show_headcount': 'Show a badge on manager cards with their total report count',
+  'settings.desc.badge_font_size': 'Font size of the headcount badge number',
+  'settings.desc.badge_height': 'Height of the headcount badge pill',
+  'settings.desc.badge_radius': 'Corner rounding of the headcount badge',
+  'settings.desc.badge_padding': 'Horizontal padding inside the headcount badge',
+  'settings.desc.badge_color': 'Background color of the headcount badge',
+  'settings.desc.badge_text_color': 'Text color of the headcount badge number',
+  'settings.desc.legend_rows': 'Number of rows for the category legend (0 = auto-fit)',
+
+  // ─── Settings: Section Descriptions ─────────────────────────────────
+  'settings.section_desc.presets': 'Choose a visual theme or save your current settings as a custom preset.',
+  'settings.section_desc.categories': 'Define color categories to highlight special roles like open positions or pending offers.',
+  'settings.section_desc.card_dimensions': 'Control the size of each person\'s card in the org chart.',
+  'settings.section_desc.tree_spacing': 'Adjust the gaps between cards and branches in the tree.',
+  'settings.section_desc.ic_options': 'Configure how individual contributors are displayed in stacked groups.',
+  'settings.section_desc.advisor_options': 'Control spacing for advisor nodes shown alongside managers.',
+  'settings.section_desc.typography': 'Customize fonts, sizes, colors, and text alignment for card text.',
+  'settings.section_desc.link_style': 'Style the connector lines between cards in the org tree.',
+  'settings.section_desc.card_style': 'Customize card borders, background color, and corner rounding.',
+  'settings.section_desc.headcount_badge': 'Show and style a headcount badge on manager cards.',
+  'settings.section_desc.categories_legend': 'Configure how the category color legend appears on the chart.',
+  'settings.section_desc.settings_io': 'Export or import your settings configuration as a file.',
+  'settings.section_desc.backup_restore': 'Create full backups of all charts, versions, and settings.',
+
+  // ─── Settings: Layout Preset Descriptions ───────────────────────────
+  'settings.layout_compact_desc': 'Tight spacing for large orgs',
+  'settings.layout_default_desc': 'Balanced default sizing',
+  'settings.layout_spacious_desc': 'Extra room between cards',
+  'settings.layout_presentation_desc': 'Large cards for slides and screens',
+
+  // ─── Settings: Preview ──────────────────────────────────────────────
+  'settings.preview_title': 'Live Preview',
+  'settings.preview_hint': 'Updates as you change settings',
+
+  // ─── Settings: Modified Indicators ──────────────────────────────────
+  'settings.modified_tooltip': 'Modified from default ({default})',
+  'settings.reset_setting_aria': 'Reset {label} to default ({default})',
+  'settings.reset_setting_tooltip': 'Default: {default}',
+  'settings.tab_modified_count': '{count} modified',
+  'settings.modified_count': '{count} settings modified',
+
+  // ─── Settings: Category Enhancements ────────────────────────────────
+  'settings.category_text_colors': 'Text colors:',
+  'settings.category_confirm_delete': 'Delete "{label}"?',
+  'settings.category_confirm_delete_message': 'Nodes using this category will revert to the default card color.',
+  'settings.category_preview_name': 'Name',
+  'settings.category_preview_title': 'Title',
+
+  // ─── Settings: Preset Indicators ────────────────────────────────────
+  'settings.preset_active': 'Active',
+  'settings.preset_active_aria': '{name} (currently applied)',
 };
 
 export default en;
