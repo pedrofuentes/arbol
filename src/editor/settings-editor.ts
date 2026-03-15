@@ -655,10 +655,11 @@ export class SettingsEditor {
 
     // Settings Import/Export section
     const ioBtnGroup = document.createElement('div');
-    ioBtnGroup.className = 'btn-group';
+    ioBtnGroup.style.cssText = 'display:flex;gap:8px;';
 
     const exportSettingsBtn = document.createElement('button');
     exportSettingsBtn.className = 'btn btn-secondary';
+    exportSettingsBtn.style.cssText = 'flex:1;';
     exportSettingsBtn.textContent = '💾 Export';
     exportSettingsBtn.addEventListener('click', () => {
       if (this.settingsStore) {
@@ -671,6 +672,7 @@ export class SettingsEditor {
 
     const importSettingsBtn = document.createElement('button');
     importSettingsBtn.className = 'btn btn-secondary';
+    importSettingsBtn.style.cssText = 'flex:1;';
     importSettingsBtn.textContent = '📂 Import';
     importSettingsBtn.addEventListener('click', () => {
       const input = document.createElement('input');
@@ -728,7 +730,7 @@ export class SettingsEditor {
     // Backup & Restore section
     if (this.chartDB) {
       const backupBtnGroup = document.createElement('div');
-      backupBtnGroup.className = 'btn-group';
+      backupBtnGroup.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
 
       const backupBtn = document.createElement('button');
       backupBtn.className = 'btn btn-secondary';
@@ -812,27 +814,18 @@ export class SettingsEditor {
       });
       backupBtnGroup.appendChild(restoreBtn);
 
-      // Clear All Data button — inside the backup section
+      // Separator before destructive action
+      const separator = document.createElement('hr');
+      separator.className = 'separator';
+      backupBtnGroup.appendChild(separator);
+
+      // Clear All Data button — danger styling matching the mock
       const clearDataBtn = document.createElement('button');
+      clearDataBtn.className = 'btn';
       clearDataBtn.textContent = '🗑 Clear All Data';
       clearDataBtn.setAttribute('aria-label', 'Clear all local data');
-      clearDataBtn.style.cssText = `
-        width:100%;margin-top:12px;padding:8px 14px;font-size:12px;
-        font-family:var(--font-sans);cursor:pointer;
-        background:transparent;color:var(--text-tertiary);
-        border:1px solid var(--border-default);border-radius:var(--radius-md);
-        transition:background var(--transition-fast),color var(--transition-fast),border-color var(--transition-fast);
-      `;
-      clearDataBtn.addEventListener('mouseenter', () => {
-        clearDataBtn.style.background = 'var(--bg-danger, #fef2f2)';
-        clearDataBtn.style.color = 'var(--text-danger, #dc2626)';
-        clearDataBtn.style.borderColor = 'var(--text-danger, #dc2626)';
-      });
-      clearDataBtn.addEventListener('mouseleave', () => {
-        clearDataBtn.style.background = 'transparent';
-        clearDataBtn.style.color = 'var(--text-tertiary)';
-        clearDataBtn.style.borderColor = 'var(--border-default)';
-      });
+      clearDataBtn.style.cssText =
+        'background:rgba(244,63,94,0.1);color:var(--danger);border:1px solid rgba(244,63,94,0.2);';
       clearDataBtn.addEventListener('click', async () => {
         // Auto-backup before destructive clear
         if (this.chartDB) {
