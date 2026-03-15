@@ -23,7 +23,7 @@ Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 
 
 ## Project Structure
 
-70 TypeScript source files in `src/`, organized by concern:
+72 TypeScript source files in `src/`, organized by concern:
 
 ```
 src/
@@ -80,6 +80,7 @@ src/
 │   ├── focus-banner.ts        # Focus mode banner — "Viewing [Name]'s org" + "Show full org" exit
 │   ├── help-dialog.ts         # Help/about overlay (sections on interactions, shortcuts, imports)
 │   ├── import-wizard.ts       # Step-by-step import wizard modal container
+│   ├── import-wizard-steps.ts # Individual step content renderers for the import wizard
 │   ├── inline-editor.ts       # Inline card editing — text inputs overlaid on SVG card
 │   ├── input-dialog.ts        # Custom text input dialog replacing native prompt()
 │   ├── manager-picker.ts      # Modal for selecting target node (Move/Reassign operations)
@@ -358,7 +359,7 @@ The app follows WCAG 2.1 AA guidelines:
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
 
-### Test Files (all 63)
+### Test Files (all 69)
 
 | File | Scope |
 |------|-------|
@@ -429,6 +430,7 @@ The app follows WCAG 2.1 AA guidelines:
 | `tests/ui/property-panel.test.ts` | Property panel — node info display, edit fields, action buttons |
 | `tests/ui/settings-modal.test.ts` | Settings modal — tab rendering, open/close, container structure |
 | `tests/ui/import-wizard.test.ts` | Import wizard — step navigation, open/close, container structure |
+| `tests/ui/import-wizard-steps.test.ts` | Import wizard step content renderers, step transitions |
 | `tests/version.test.ts` | APP_VERSION export, semver format validation |
 
 ## Development

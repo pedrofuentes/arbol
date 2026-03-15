@@ -5,11 +5,11 @@ Thank you for your interest in contributing to Arbol! This guide covers everythi
 ## Quick Start
 
 ```bash
-git clone https://github.com/pedro/arbol.git
+git clone https://github.com/pedrofuentes/arbol.git
 cd arbol
 npm install
 npm run dev     # http://localhost:5173/
-npm run test    # 1707 tests, all must pass
+npm run test    # 1744 tests, all must pass
 ```
 
 ## Development Workflow
