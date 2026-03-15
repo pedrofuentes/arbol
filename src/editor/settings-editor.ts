@@ -478,6 +478,33 @@ export class SettingsEditor {
     this.previewRenderer.render();
   }
 
+  wirePreviewControls(
+    fitBtn: HTMLButtonElement,
+    resetBtn: HTMLButtonElement,
+    zoomPct: HTMLElement,
+  ): void {
+    if (!this.previewRenderer) return;
+    const zm = this.previewRenderer.getZoomManager();
+    if (!zm) return;
+
+    const updatePct = () => {
+      zoomPct.textContent = `${zm.getRelativeZoomPercent()}%`;
+    };
+
+    fitBtn.addEventListener('click', () => {
+      zm.fitToContent(8);
+      updatePct();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      zm.centerAtRealSize(8);
+      updatePct();
+    });
+
+    zm.onZoom(updatePct);
+    updatePct();
+  }
+
   onBuild(callback: () => void): void {
     this.onBuildCallback = callback;
   }

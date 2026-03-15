@@ -496,6 +496,11 @@ async function main(): Promise<void> {
         chartDB,
       );
       settingsEditorInstance.setPreviewArea(settingsModal.getPreviewArea());
+      settingsEditorInstance.wirePreviewControls(
+        settingsModal.getPreviewFitBtn(),
+        settingsModal.getPreviewResetBtn(),
+        settingsModal.getPreviewZoomPct(),
+      );
       settingsEditorInstance.onBuild(() => {
         filterSettingsSections(settingsModal.getActiveTab());
       });

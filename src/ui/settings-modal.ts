@@ -55,6 +55,10 @@ export class SettingsModal {
   private previewStrip: HTMLDivElement = null!;
   private previewArea: HTMLDivElement = null!;
   private previewHint: HTMLSpanElement = null!;
+  private previewControls: HTMLDivElement = null!;
+  private previewZoomPct: HTMLSpanElement = null!;
+  private previewFitBtn: HTMLButtonElement = null!;
+  private previewResetBtn: HTMLButtonElement = null!;
 
   constructor(options: SettingsModalOptions, tabs?: SettingsTab[]) {
     this.options = options;
@@ -159,6 +163,31 @@ export class SettingsModal {
 
     previewHeader.appendChild(previewTitle);
     previewHeader.appendChild(this.previewHint);
+
+    // Zoom controls
+    this.previewControls = document.createElement('div');
+    this.previewControls.className = 'preview-controls';
+
+    this.previewFitBtn = document.createElement('button');
+    this.previewFitBtn.className = 'preview-zoom-btn';
+    this.previewFitBtn.setAttribute('aria-label', t('settings_modal.preview_fit'));
+    this.previewFitBtn.setAttribute('data-tooltip', t('settings_modal.preview_fit'));
+    this.previewFitBtn.textContent = '⊞';
+    this.previewControls.appendChild(this.previewFitBtn);
+
+    this.previewResetBtn = document.createElement('button');
+    this.previewResetBtn.className = 'preview-zoom-btn';
+    this.previewResetBtn.setAttribute('aria-label', t('settings_modal.preview_reset'));
+    this.previewResetBtn.setAttribute('data-tooltip', t('settings_modal.preview_reset'));
+    this.previewResetBtn.textContent = '↺';
+    this.previewControls.appendChild(this.previewResetBtn);
+
+    this.previewZoomPct = document.createElement('span');
+    this.previewZoomPct.className = 'preview-zoom-pct';
+    this.previewZoomPct.textContent = '100%';
+    this.previewControls.appendChild(this.previewZoomPct);
+
+    previewHeader.appendChild(this.previewControls);
     this.previewStrip.appendChild(previewHeader);
 
     this.previewArea = document.createElement('div');
@@ -318,6 +347,18 @@ export class SettingsModal {
 
   getPreviewArea(): HTMLElement {
     return this.previewArea;
+  }
+
+  getPreviewFitBtn(): HTMLButtonElement {
+    return this.previewFitBtn;
+  }
+
+  getPreviewResetBtn(): HTMLButtonElement {
+    return this.previewResetBtn;
+  }
+
+  getPreviewZoomPct(): HTMLElement {
+    return this.previewZoomPct;
   }
 
   setPreviewHint(text: string): void {

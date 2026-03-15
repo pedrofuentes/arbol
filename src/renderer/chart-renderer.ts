@@ -388,8 +388,8 @@ export class ChartRenderer {
         this.renderDiffLegend(layout);
       }
     } else {
-      // Preview mode: fit chart to visible area
-      this.zoomManager?.fitToContent();
+      // Preview mode: render at 100% (real size), centered with minimal padding
+      this.zoomManager?.centerAtRealSize(8);
     }
   }
 

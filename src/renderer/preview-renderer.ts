@@ -99,6 +99,10 @@ export class PreviewRenderer {
     this.renderer.updateOptions(stripPreviewKeys(opts));
   }
 
+  getZoomManager(): import('./zoom-manager').ZoomManager | null {
+    return this.renderer.getZoomManager();
+  }
+
   destroy(): void {
     this.renderer.destroy();
   }

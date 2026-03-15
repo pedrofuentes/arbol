@@ -121,6 +121,8 @@ const en: Record<string, string> = {
   'settings_modal.preview_hint.advisors': 'Advisor spacing highlighted',
   'settings_modal.preview_hint.badges': 'Badge styling shown on cards',
   'settings_modal.preview_hint.categories': 'How categories appear on cards',
+  'settings_modal.preview_fit': 'Fit to view',
+  'settings_modal.preview_reset': 'Reset to 100%',
 
   // ─── Import Wizard ──────────────────────────────────────────────────
   'import_wizard.title': '📂 Import Data',

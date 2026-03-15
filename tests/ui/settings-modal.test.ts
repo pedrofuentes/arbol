@@ -403,5 +403,42 @@ describe('SettingsModal', () => {
       expect(area.children.length).toBe(0);
       modal.destroy();
     });
+
+    it('renders zoom controls in preview header', () => {
+      const { modal } = createModal();
+      modal.open();
+      const controls = document.querySelector('.preview-controls');
+      expect(controls).not.toBeNull();
+      expect(controls!.querySelectorAll('.preview-zoom-btn').length).toBe(2);
+      expect(controls!.querySelector('.preview-zoom-pct')).not.toBeNull();
+      modal.destroy();
+    });
+
+    it('getPreviewFitBtn() returns fit button', () => {
+      const { modal } = createModal();
+      modal.open();
+      const btn = modal.getPreviewFitBtn();
+      expect(btn).not.toBeNull();
+      expect(btn.classList.contains('preview-zoom-btn')).toBe(true);
+      modal.destroy();
+    });
+
+    it('getPreviewResetBtn() returns reset button', () => {
+      const { modal } = createModal();
+      modal.open();
+      const btn = modal.getPreviewResetBtn();
+      expect(btn).not.toBeNull();
+      expect(btn.classList.contains('preview-zoom-btn')).toBe(true);
+      modal.destroy();
+    });
+
+    it('getPreviewZoomPct() returns percentage element', () => {
+      const { modal } = createModal();
+      modal.open();
+      const pct = modal.getPreviewZoomPct();
+      expect(pct).not.toBeNull();
+      expect(pct.textContent).toBe('100%');
+      modal.destroy();
+    });
   });
 });
