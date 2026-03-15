@@ -166,14 +166,17 @@ describe('showHelpDialog', () => {
     }
   });
 
-  it('clicking a collapsed section header expands it', () => {
+  it('clicking a collapsed section header expands it and closes others', () => {
     showHelpDialog();
     const sections = document.querySelectorAll('.help-section');
+    const firstSection = sections[0];
     const secondSection = sections[1];
+    expect(firstSection.classList.contains('open')).toBe(true);
     expect(secondSection.classList.contains('open')).toBe(false);
     const header = secondSection.querySelector('.help-section-header') as HTMLButtonElement;
     header.click();
     expect(secondSection.classList.contains('open')).toBe(true);
+    expect(firstSection.classList.contains('open')).toBe(false);
   });
 
   it('clicking an expanded section header collapses it', () => {

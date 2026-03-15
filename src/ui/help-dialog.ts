@@ -436,8 +436,19 @@ export function showHelpDialog(storage: IStorage = browserStorage): void {
     headerBtn.appendChild(titleSpan);
 
     headerBtn.addEventListener('click', () => {
-      const isOpen = sectionEl.classList.toggle('open');
-      headerBtn.setAttribute('aria-expanded', String(isOpen));
+      const wasOpen = sectionEl.classList.contains('open');
+      // Close all other sections (exclusive accordion)
+      const allSections = content.querySelectorAll('.help-section.open');
+      allSections.forEach((s) => {
+        s.classList.remove('open');
+        const btn = s.querySelector('.help-section-header');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      });
+      // Toggle the clicked section
+      if (!wasOpen) {
+        sectionEl.classList.add('open');
+        headerBtn.setAttribute('aria-expanded', 'true');
+      }
     });
 
     sectionEl.appendChild(headerBtn);

@@ -274,7 +274,7 @@ const en: Record<string, string> = {
   'version_viewer.close': '✕ Close',
 
   // ─── Welcome Banner ────────────────────────────────────────────────
-  'welcome.message': 'Welcome to Arbol! Right-click any card to edit, add, or move people. Click ❓ for help.',
+  'welcome.message': 'Welcome to Arbol! Tap, click, or right-click any card to edit, add, or move people. Click ❓ for help.',
   'welcome.dismiss': 'Got it',
   'welcome.aria': 'Welcome guide',
 
