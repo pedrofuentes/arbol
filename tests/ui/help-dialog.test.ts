@@ -100,13 +100,13 @@ describe('showHelpDialog', () => {
     expect(kbdElements.length).toBeGreaterThan(0);
   });
 
-  it('renders section headings as h3 elements', () => {
+  it('renders section headings as accordion headers', () => {
     showHelpDialog();
-    const headings = document.querySelectorAll('h3');
-    expect(headings.length).toBeGreaterThan(0);
-    const headingTexts = Array.from(headings).map((h) => h.textContent);
-    expect(headingTexts).toContain('Getting Started');
-    expect(headingTexts).toContain('Keyboard Shortcuts');
+    const headers = document.querySelectorAll('.help-section-header');
+    expect(headers.length).toBeGreaterThan(0);
+    const headerTexts = Array.from(headers).map((h) => h.textContent);
+    expect(headerTexts.some(t => t!.includes('Getting Started'))).toBe(true);
+    expect(headerTexts.some(t => t!.includes('Keyboard Shortcuts'))).toBe(true);
   });
 
   it('contains Your Data section with privacy message', () => {
@@ -132,5 +132,108 @@ describe('showHelpDialog', () => {
     await vi.waitFor(() => {
       expect(document.body.textContent).toContain('Delete everything');
     });
+  });
+
+  // ─── Accordion Tests ─────────────────────────────────────────────
+
+  it('renders sections as collapsible accordions', () => {
+    showHelpDialog();
+    const sections = document.querySelectorAll('.help-section');
+    expect(sections.length).toBeGreaterThan(0);
+    const firstSection = sections[0];
+    expect(firstSection.querySelector('.help-section-header')).not.toBeNull();
+    expect(firstSection.querySelector('.help-section-body')).not.toBeNull();
+  });
+
+  it('Keyboard Shortcuts is the first section', () => {
+    showHelpDialog();
+    const sections = document.querySelectorAll('.help-section');
+    const firstHeader = sections[0].querySelector('.help-section-header');
+    expect(firstHeader!.textContent).toContain('Keyboard Shortcuts');
+  });
+
+  it('Keyboard Shortcuts section is expanded by default', () => {
+    showHelpDialog();
+    const sections = document.querySelectorAll('.help-section');
+    expect(sections[0].classList.contains('open')).toBe(true);
+  });
+
+  it('other sections are collapsed by default', () => {
+    showHelpDialog();
+    const sections = document.querySelectorAll('.help-section');
+    for (let i = 1; i < sections.length; i++) {
+      expect(sections[i].classList.contains('open')).toBe(false);
+    }
+  });
+
+  it('clicking a collapsed section header expands it', () => {
+    showHelpDialog();
+    const sections = document.querySelectorAll('.help-section');
+    const secondSection = sections[1];
+    expect(secondSection.classList.contains('open')).toBe(false);
+    const header = secondSection.querySelector('.help-section-header') as HTMLButtonElement;
+    header.click();
+    expect(secondSection.classList.contains('open')).toBe(true);
+  });
+
+  it('clicking an expanded section header collapses it', () => {
+    showHelpDialog();
+    const sections = document.querySelectorAll('.help-section');
+    const firstSection = sections[0];
+    expect(firstSection.classList.contains('open')).toBe(true);
+    const header = firstSection.querySelector('.help-section-header') as HTMLButtonElement;
+    header.click();
+    expect(firstSection.classList.contains('open')).toBe(false);
+  });
+
+  it('section headers have aria-expanded attribute', () => {
+    showHelpDialog();
+    const headers = document.querySelectorAll('.help-section-header');
+    expect(headers[0].getAttribute('aria-expanded')).toBe('true');
+    expect(headers[1].getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('section headers are buttons for keyboard accessibility', () => {
+    showHelpDialog();
+    const headers = document.querySelectorAll('.help-section-header');
+    headers.forEach((h) => {
+      expect(h.tagName).toBe('BUTTON');
+    });
+  });
+
+  it('renders shortcuts in a grid layout', () => {
+    showHelpDialog();
+    const grid = document.querySelector('.help-shortcuts-grid');
+    expect(grid).not.toBeNull();
+  });
+
+  it('shortcuts grid contains Ctrl+K', () => {
+    showHelpDialog();
+    const grid = document.querySelector('.help-shortcuts-grid');
+    expect(grid!.textContent).toContain('Ctrl+K');
+  });
+
+  it('shortcuts grid contains Ctrl+,', () => {
+    showHelpDialog();
+    const grid = document.querySelector('.help-shortcuts-grid');
+    expect(grid!.textContent).toContain('Ctrl+,');
+  });
+
+  it('shortcuts grid contains ? for help', () => {
+    showHelpDialog();
+    const grid = document.querySelector('.help-shortcuts-grid');
+    expect(grid!.textContent).toContain('?');
+  });
+
+  it('shortcuts grid contains arrow key navigation', () => {
+    showHelpDialog();
+    const grid = document.querySelector('.help-shortcuts-grid');
+    expect(grid!.textContent).toContain('↑ ↓ ← →');
+  });
+
+  it('uses chevron indicators on section headers', () => {
+    showHelpDialog();
+    const chevrons = document.querySelectorAll('.help-chevron');
+    expect(chevrons.length).toBeGreaterThan(0);
   });
 });

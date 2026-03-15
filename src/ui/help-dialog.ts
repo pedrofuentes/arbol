@@ -1,5 +1,6 @@
 import { createOverlay, trapFocus } from './dialog-utils';
 import { showConfirmDialog } from './confirm-dialog';
+import { t } from '../i18n';
 import { type IStorage, browserStorage } from '../utils/storage';
 
 const ARBOL_STORAGE_KEYS = [
@@ -12,270 +13,288 @@ const ARBOL_STORAGE_KEYS = [
   'arbol-theme',
 ];
 
-const HELP_SECTIONS = [
-  {
-    title: 'Getting Started',
-    items: [
-      [
-        'The chart displays your organization hierarchy. Pan by dragging the canvas, zoom with scroll wheel.',
-      ],
-      ['Right-click any card for edit, add, move, or remove options.'],
-      ['Use the sidebar tabs to manage your data.'],
-    ],
-  },
-  {
-    title: 'How the Chart Works',
-    items: [
-      [
-        { tag: 'strong', text: 'Managers' },
-        ' \u2014 People with direct reports. Connected by tree lines.',
-      ],
-      [
-        { tag: 'strong', text: 'ICs (Individual Contributors)' },
-        ' \u2014 Employees without direct reports. Shown in compact vertical stacks under their manager.',
-      ],
-      [
-        { tag: 'strong', text: 'Advisors' },
-        ' \u2014 Staff who report directly to a senior manager (one who manages other managers). Shown in a special 2-column layout beside the manager\u2019s card.',
-      ],
-      [
-        'The chart automatically detects these roles based on the hierarchy \u2014 no manual configuration needed.',
-      ],
-    ],
-  },
-  {
-    title: 'Sidebar Tabs',
-    items: [
-      [
-        { tag: 'strong', text: 'People' },
-        ' — Add new people under a selected parent, or edit the selected person.',
-      ],
-      [
-        { tag: 'strong', text: 'Import' },
-        ' — Import an org chart from JSON, CSV, or XLSX files. Paste data, normalize text, or edit the raw JSON tree.',
-      ],
-      [
-        { tag: 'strong', text: 'Settings' },
-        ' — Adjust card sizes, spacing, colors, and typography. Choose a preset theme or fine-tune individual values. Use the filter to find specific settings.',
-      ],
-      [
-        { tag: 'strong', text: 'Charts' },
-        ' \u2014 Manage multiple org charts and version snapshots. Create, switch, rename, or delete charts. Save and restore named versions.',
-      ],
-    ],
-  },
-  {
-    title: 'Charts & Versions',
-    items: [
-      [
-        'Arbol supports ',
-        { tag: 'strong', text: 'multiple org charts' },
-        '. Create, rename, and switch between charts using the ',
-        { tag: 'strong', text: 'Charts' },
-        ' sidebar tab.',
-      ],
-      [
-        'The active chart name appears in the header next to the logo. Click it to rename.',
-      ],
-      [
-        { tag: 'strong', text: 'Save a version' },
-        ' \u2014 Take a named snapshot of the current chart. Use the \ud83d\udcbe button in the header or the Charts tab.',
-      ],
-      [
-        { tag: 'strong', text: 'View a version' },
-        ' \u2014 Opens a read-only preview. Click Restore to make it the working chart, or Close to return.',
-      ],
-      [
-        'If you have unsaved changes when switching charts or restoring a version, you\u2019ll be warned first.',
-      ],
-    ],
-  },
-  {
-    title: 'Importing Data',
-    items: [
-      [
-        { tag: 'strong', text: 'JSON' },
-        ' — Nested tree with ',
-        { tag: 'code', text: 'id' },
-        ', ',
-        { tag: 'code', text: 'name' },
-        ', ',
-        { tag: 'code', text: 'title' },
-        ', and optional ',
-        { tag: 'code', text: 'children' },
-        ' array.',
-      ],
-      [
-        { tag: 'strong', text: 'CSV with IDs' },
-        ' — Columns: ',
-        { tag: 'code', text: 'id, name, title, parent_id' },
-        ' (root has empty parent).',
-      ],
-      [
-        { tag: 'strong', text: 'CSV by name' },
-        ' — Columns: ',
-        { tag: 'code', text: 'name, title, manager_name' },
-        ' (matched by name).',
-      ],
-      ['Drop a file on the drop zone, or paste text and click Parse & Preview.'],
-    ],
-  },
-  {
-    title: 'Chart Interactions',
-    items: [
-      [{ tag: 'strong', text: 'Click' }, ' — Select and highlight a card.'],
-      [
-        { tag: 'strong', text: 'Right-click' },
-        ' \u2014 Context menu with Edit, Add, Focus on sub-org, Set Category, Set as dotted line, Move, and Remove.',
-      ],
-      [
-        { tag: 'strong', text: 'Shift+click' },
-        ' \u2014 Multi-select cards, then right-click for bulk Set Category, Move, or Remove.',
-      ],
-      [
-        { tag: 'strong', text: 'Escape' },
-        ' \u2014 Dismiss version viewer, clear search, exit focus mode, clear multi-selection, or deselect (in that priority order).',
-      ],
-      [
-        { tag: 'strong', text: 'Inline editing' },
-        ' — Right-click a card and choose Edit to edit directly on the card.',
-      ],
-      [
-        { tag: 'strong', text: 'Collapse/Expand' },
-        ' — Click the ▾/▸ indicator below a manager to toggle their subtree.',
-      ],
-      [
-        { tag: 'strong', text: 'Search' },
-        ' — Type in the search bar to highlight matching people. Non-matches are dimmed.',
-      ],
-    ],
-  },
-  {
-    title: 'Color Categories',
-    items: [
-      [
-        'Assign a color category to any person by right-clicking their card and choosing ',
-        { tag: 'strong', text: 'Set Category' },
-        '.',
-      ],
-      [
-        'Each chart has its own set of categories. Default categories: ',
-        { tag: 'strong', text: 'Open Position' },
-        ', ',
-        { tag: 'strong', text: 'Offer Pending' },
-        ', and ',
-        { tag: 'strong', text: 'Future Start' },
-        '.',
-      ],
-      [
-        'Add, edit, or delete categories in the ',
-        { tag: 'strong', text: 'Settings' },
-        ' tab under the Color Categories section.',
-      ],
-      [
-        'A color legend appears on the chart when categories are in use and is included in PowerPoint exports.',
-      ],
-    ],
-  },
-  {
-    title: 'Focus Mode',
-    items: [
-      [
-        'Right-click any manager and choose ',
-        { tag: 'strong', text: 'Focus on sub-org' },
-        ' to view only that person\u2019s team as a standalone chart.',
-      ],
-      [
-        'Press ',
-        { tag: 'kbd', text: 'Escape' },
-        ' or click ',
-        { tag: 'strong', text: 'Show full org' },
-        ' in the banner to return to the full chart.',
-      ],
-      [
-        'PowerPoint export and status bar stats automatically reflect the focused sub-org.',
-      ],
-    ],
-  },
-  {
-    title: 'Headcount Badges',
-    items: [
-      [
-        'Managers can display a badge showing their total headcount (number of people in their org). Enable this in ',
-        { tag: 'strong', text: 'Settings' },
-        ' \u2192 ',
-        { tag: 'strong', text: 'Show Headcount' },
-        '.',
-      ],
-      [
-        'Badge appearance (color, size, radius) can be customized in the Settings tab.',
-      ],
-    ],
-  },
-  {
-    title: 'Your Data',
-    items: [
-      [
-        'Arbol runs entirely in your browser. Your org charts, versions, and preferences are stored in your browser\u2019s storage (IndexedDB and localStorage) and ',
-        { tag: 'strong', text: 'never leave your device' },
-        '.',
-      ],
-      ['There is no server, no database, no tracking, and no account required. Your data stays on your machine\u200A\u2014\u200Anobody else can see it.'],
-    ],
-  },
-  {
-    title: 'Settings & Persistence',
-    items: [
-      ['All visual settings auto-save to your browser and restore on next visit.'],
-      [
-        'Use ',
-        { tag: 'strong', text: 'Export Settings' },
-        ' to download your configuration as a file.',
-      ],
-      ['Use ', { tag: 'strong', text: 'Import Settings' }, ' to load a saved configuration.'],
-      ['Theme presets apply a full color scheme in one click.'],
-      [
-        'Use ',
-        { tag: 'strong', text: 'Create Backup' },
-        ' in Settings to save all your charts, versions, and settings as a single file.',
-      ],
-      [
-        'Use ',
-        { tag: 'strong', text: 'Restore' },
-        ' to load a backup. You can choose to replace all data or merge with your existing charts.',
-      ],
-    ],
-  },
-  {
-    title: 'Keyboard Shortcuts',
-    items: [
-      [{ tag: 'kbd', text: 'Ctrl+Z' }, ' — Undo'],
-      [{ tag: 'kbd', text: 'Ctrl+Shift+Z' }, ' or ', { tag: 'kbd', text: 'Ctrl+Y' }, ' — Redo'],
-      [{ tag: 'kbd', text: 'Ctrl+F' }, ' — Focus search bar'],
-      [{ tag: 'kbd', text: 'Ctrl+E' }, ' — Export to PowerPoint'],
-      [{ tag: 'kbd', text: 'Escape' }, ' — Dismiss version viewer, clear search, exit focus mode, or deselect'],
-    ],
-  },
-  {
-    title: 'Exporting',
-    items: [
-      [
-        { tag: 'strong', text: 'Export PPTX' },
-        ' — Downloads the chart as an editable PowerPoint file with native shapes and text.',
-      ],
-      ['The export auto-scales to fit a widescreen slide.'],
-    ],
-  },
-  {
-    title: 'Links',
-    items: [
-      ['✦ Built with Arbol — https://github.com/pedrofuentes/arbol'],
-      ['Report bugs & request features — https://github.com/pedrofuentes/arbol/issues'],
-    ],
-  },
-];
-
 type HelpFragment = string | { tag: string; text: string };
+
+interface ShortcutEntry {
+  keys: string[];
+  desc: string;
+}
+
+interface HelpSection {
+  titleKey: string;
+  type?: 'shortcuts-grid';
+  shortcuts?: ShortcutEntry[];
+  items?: HelpFragment[][];
+  hasClearData?: boolean;
+}
+
+function getHelpSections(): HelpSection[] {
+  return [
+    {
+      titleKey: 'help.shortcuts.title',
+      type: 'shortcuts-grid',
+      shortcuts: [
+        { keys: ['Ctrl+Z'], desc: t('help.shortcuts.undo') },
+        { keys: ['Ctrl+Shift+Z', 'Ctrl+Y'], desc: t('help.shortcuts.redo') },
+        { keys: ['Ctrl+E'], desc: t('help.shortcuts.export') },
+        { keys: ['Ctrl+F'], desc: t('help.shortcuts.search') },
+        { keys: ['Ctrl+K'], desc: t('help.shortcuts.command_palette') },
+        { keys: ['Ctrl+,'], desc: t('help.shortcuts.settings') },
+        { keys: ['?'], desc: t('help.shortcuts.help') },
+        { keys: ['Escape'], desc: t('help.shortcuts.escape') },
+        { keys: ['↑ ↓ ← →'], desc: t('help.shortcuts.nav_arrows') },
+        { keys: ['Enter'], desc: t('help.shortcuts.nav_select') },
+        { keys: ['Space'], desc: t('help.shortcuts.nav_multiselect') },
+        { keys: ['Home', 'End'], desc: t('help.shortcuts.nav_home_end') },
+        { keys: ['Shift+F10'], desc: t('help.shortcuts.nav_context_menu') },
+      ],
+    },
+    {
+      titleKey: 'help.getting_started.title',
+      items: [
+        [t('help.getting_started.pan_zoom')],
+        [t('help.getting_started.right_click')],
+        [t('help.getting_started.sidebar')],
+      ],
+    },
+    {
+      titleKey: 'help.chart_works.title',
+      items: [
+        [
+          { tag: 'strong', text: t('help.chart_works.managers_label') },
+          t('help.chart_works.managers_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.chart_works.ics_label') },
+          t('help.chart_works.ics_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.chart_works.advisors_label') },
+          t('help.chart_works.advisors_desc'),
+        ],
+        [t('help.chart_works.auto_detect')],
+      ],
+    },
+    {
+      titleKey: 'help.sidebar_tabs.title',
+      items: [
+        [
+          { tag: 'strong', text: t('help.sidebar_tabs.people_label') },
+          t('help.sidebar_tabs.people_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.sidebar_tabs.import_label') },
+          t('help.sidebar_tabs.import_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.sidebar_tabs.settings_label') },
+          t('help.sidebar_tabs.settings_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.sidebar_tabs.charts_label') },
+          t('help.sidebar_tabs.charts_desc'),
+        ],
+      ],
+    },
+    {
+      titleKey: 'help.charts_versions.title',
+      items: [
+        [
+          t('help.charts_versions.multiple_1'),
+          { tag: 'strong', text: t('help.charts_versions.multiple_strong') },
+          t('help.charts_versions.multiple_2'),
+          { tag: 'strong', text: t('help.charts_versions.multiple_tab') },
+          t('help.charts_versions.multiple_3'),
+        ],
+        [t('help.charts_versions.header')],
+        [
+          { tag: 'strong', text: t('help.charts_versions.save_label') },
+          t('help.charts_versions.save_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.charts_versions.view_label') },
+          t('help.charts_versions.view_desc'),
+        ],
+        [t('help.charts_versions.unsaved')],
+      ],
+    },
+    {
+      titleKey: 'help.importing.title',
+      items: [
+        [
+          { tag: 'strong', text: t('help.importing.json_label') },
+          t('help.importing.json_desc_1'),
+          { tag: 'code', text: t('help.importing.json_code_id') },
+          t('help.importing.json_desc_2'),
+          { tag: 'code', text: t('help.importing.json_code_name') },
+          t('help.importing.json_desc_3'),
+          { tag: 'code', text: t('help.importing.json_code_title') },
+          t('help.importing.json_desc_4'),
+          { tag: 'code', text: t('help.importing.json_code_children') },
+          t('help.importing.json_desc_5'),
+        ],
+        [
+          { tag: 'strong', text: t('help.importing.csv_id_label') },
+          t('help.importing.csv_id_desc_1'),
+          { tag: 'code', text: t('help.importing.csv_id_code') },
+          t('help.importing.csv_id_desc_2'),
+        ],
+        [
+          { tag: 'strong', text: t('help.importing.csv_name_label') },
+          t('help.importing.csv_name_desc_1'),
+          { tag: 'code', text: t('help.importing.csv_name_code') },
+          t('help.importing.csv_name_desc_2'),
+        ],
+        [t('help.importing.drop_hint')],
+      ],
+    },
+    {
+      titleKey: 'help.interactions.title',
+      items: [
+        [
+          { tag: 'strong', text: t('help.interactions.click_label') },
+          t('help.interactions.click_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.interactions.right_click_label') },
+          t('help.interactions.right_click_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.interactions.shift_click_label') },
+          t('help.interactions.shift_click_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.interactions.escape_label') },
+          t('help.interactions.escape_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.interactions.inline_label') },
+          t('help.interactions.inline_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.interactions.collapse_label') },
+          t('help.interactions.collapse_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.interactions.search_label') },
+          t('help.interactions.search_desc'),
+        ],
+      ],
+    },
+    {
+      titleKey: 'help.categories.title',
+      items: [
+        [
+          t('help.categories.assign_1'),
+          { tag: 'strong', text: t('help.categories.assign_strong') },
+          t('help.categories.assign_2'),
+        ],
+        [
+          t('help.categories.defaults_1'),
+          { tag: 'strong', text: t('help.categories.defaults_open') },
+          t('help.categories.defaults_2'),
+          { tag: 'strong', text: t('help.categories.defaults_offer') },
+          t('help.categories.defaults_3'),
+          { tag: 'strong', text: t('help.categories.defaults_future') },
+          t('help.categories.defaults_4'),
+        ],
+        [
+          t('help.categories.manage_1'),
+          { tag: 'strong', text: t('help.categories.manage_strong') },
+          t('help.categories.manage_2'),
+        ],
+        [t('help.categories.legend')],
+      ],
+    },
+    {
+      titleKey: 'help.focus_mode.title',
+      items: [
+        [
+          t('help.focus_mode.enter_1'),
+          { tag: 'strong', text: t('help.focus_mode.enter_strong') },
+          t('help.focus_mode.enter_2'),
+        ],
+        [
+          t('help.focus_mode.exit_1'),
+          { tag: 'kbd', text: t('help.focus_mode.exit_kbd') },
+          t('help.focus_mode.exit_2'),
+          { tag: 'strong', text: t('help.focus_mode.exit_strong') },
+          t('help.focus_mode.exit_3'),
+        ],
+        [t('help.focus_mode.export')],
+      ],
+    },
+    {
+      titleKey: 'help.headcount.title',
+      items: [
+        [
+          t('help.headcount.enable_1'),
+          { tag: 'strong', text: t('help.headcount.enable_settings') },
+          t('help.headcount.enable_2'),
+          { tag: 'strong', text: t('help.headcount.enable_strong') },
+          t('help.headcount.enable_3'),
+        ],
+        [t('help.headcount.customize')],
+      ],
+    },
+    {
+      titleKey: 'help.your_data.title',
+      hasClearData: true,
+      items: [
+        [
+          t('help.your_data.privacy_1'),
+          { tag: 'strong', text: t('help.your_data.privacy_strong') },
+          t('help.your_data.privacy_2'),
+        ],
+        [t('help.your_data.no_server')],
+      ],
+    },
+    {
+      titleKey: 'help.settings.title',
+      items: [
+        [t('help.settings.auto_save')],
+        [
+          t('help.settings.export_1'),
+          { tag: 'strong', text: t('help.settings.export_strong') },
+          t('help.settings.export_2'),
+        ],
+        [
+          t('help.settings.import_1'),
+          { tag: 'strong', text: t('help.settings.import_strong') },
+          t('help.settings.import_2'),
+        ],
+        [t('help.settings.presets')],
+        [
+          t('help.settings.backup_1'),
+          { tag: 'strong', text: t('help.settings.backup_strong') },
+          t('help.settings.backup_2'),
+        ],
+        [
+          t('help.settings.restore_1'),
+          { tag: 'strong', text: t('help.settings.restore_strong') },
+          t('help.settings.restore_2'),
+        ],
+      ],
+    },
+    {
+      titleKey: 'help.exporting.title',
+      items: [
+        [
+          { tag: 'strong', text: t('help.exporting.pptx_label') },
+          t('help.exporting.pptx_desc'),
+        ],
+        [t('help.exporting.scale')],
+      ],
+    },
+    {
+      titleKey: 'help.links.title',
+      items: [
+        [t('help.links.built_with')],
+        [t('help.links.report_bugs')],
+      ],
+    },
+  ];
+}
 
 function buildHelpItem(fragments: HelpFragment[]): DocumentFragment {
   const frag = document.createDocumentFragment();
@@ -291,6 +310,73 @@ function buildHelpItem(fragments: HelpFragment[]): DocumentFragment {
   return frag;
 }
 
+function buildShortcutsGrid(shortcuts: ShortcutEntry[]): HTMLDivElement {
+  const grid = document.createElement('div');
+  grid.className = 'help-shortcuts-grid';
+
+  for (const entry of shortcuts) {
+    const keyCell = document.createElement('div');
+    keyCell.className = 'help-shortcut-key';
+    for (let i = 0; i < entry.keys.length; i++) {
+      if (i > 0) {
+        keyCell.appendChild(document.createTextNode(' / '));
+      }
+      const kbd = document.createElement('kbd');
+      kbd.textContent = entry.keys[i];
+      keyCell.appendChild(kbd);
+    }
+    grid.appendChild(keyCell);
+
+    const descCell = document.createElement('div');
+    descCell.className = 'help-shortcut-desc';
+    descCell.textContent = entry.desc;
+    grid.appendChild(descCell);
+  }
+
+  return grid;
+}
+
+function buildClearDataButton(storage: IStorage): HTMLButtonElement {
+  const clearBtn = document.createElement('button');
+  clearBtn.textContent = t('help.clear_data_button');
+  clearBtn.setAttribute('aria-label', t('help.clear_data_aria'));
+  clearBtn.style.cssText = `
+    margin-top:10px;padding:5px 14px;font-size:12px;
+    font-family:var(--font-sans);cursor:pointer;
+    background:transparent;color:var(--text-tertiary);
+    border:1px solid var(--border-default);border-radius:var(--radius-md);
+    transition:background var(--transition-fast),color var(--transition-fast),border-color var(--transition-fast);
+  `;
+  clearBtn.addEventListener('mouseenter', () => {
+    clearBtn.style.background = 'var(--bg-danger, #fef2f2)';
+    clearBtn.style.color = 'var(--text-danger, #dc2626)';
+    clearBtn.style.borderColor = 'var(--text-danger, #dc2626)';
+  });
+  clearBtn.addEventListener('mouseleave', () => {
+    clearBtn.style.background = 'transparent';
+    clearBtn.style.color = 'var(--text-tertiary)';
+    clearBtn.style.borderColor = 'var(--border-default)';
+  });
+  clearBtn.addEventListener('click', async () => {
+    const confirmed = await showConfirmDialog({
+      title: 'Clear All Data',
+      message:
+        'This will permanently delete all your org charts, versions, settings, themes, and preferences. ' +
+        'This cannot be undone.\n\nAre you sure?',
+      confirmLabel: 'Delete everything',
+      danger: true,
+    });
+    if (confirmed) {
+      for (const key of ARBOL_STORAGE_KEYS) {
+        storage.removeItem(key);
+      }
+      indexedDB.deleteDatabase('arbol-db');
+      window.location.reload();
+    }
+  });
+  return clearBtn;
+}
+
 export function showHelpDialog(storage: IStorage = browserStorage): void {
   const previouslyFocused = document.activeElement;
   const overlay = createOverlay();
@@ -300,7 +386,7 @@ export function showHelpDialog(storage: IStorage = browserStorage): void {
   const dialog = document.createElement('div');
   dialog.setAttribute('role', 'dialog');
   dialog.setAttribute('aria-modal', 'true');
-  dialog.setAttribute('aria-label', 'Keyboard shortcuts and help');
+  dialog.setAttribute('aria-label', t('help.dialog_aria'));
   dialog.style.cssText = `
     background:var(--bg-surface);
     border:1px solid var(--border-default);
@@ -323,17 +409,17 @@ export function showHelpDialog(storage: IStorage = browserStorage): void {
     padding:16px 20px;border-bottom:1px solid var(--border-subtle);
     flex-shrink:0;
   `;
-  const title = document.createElement('h2');
-  title.textContent = 'Help & Reference';
-  title.style.cssText = `
+  const titleEl = document.createElement('h2');
+  titleEl.textContent = t('help.title');
+  titleEl.style.cssText = `
     font-size:16px;font-weight:700;color:var(--text-primary);
     font-family:var(--font-sans);margin:0;
   `;
-  header.appendChild(title);
+  header.appendChild(titleEl);
 
   const closeBtn = document.createElement('button');
   closeBtn.className = 'icon-btn';
-  closeBtn.setAttribute('aria-label', 'Close help dialog');
+  closeBtn.setAttribute('aria-label', t('help.close_aria'));
   closeBtn.textContent = '✕';
   closeBtn.style.cssText += 'font-size:14px;width:28px;height:28px;';
   header.appendChild(closeBtn);
@@ -341,99 +427,77 @@ export function showHelpDialog(storage: IStorage = browserStorage): void {
 
   // Content
   const content = document.createElement('div');
-  content.style.cssText = `
-    overflow-y:auto;padding:16px 20px;flex:1;
-  `;
-  // Scrollbar styling
+  content.style.cssText = 'overflow-y:auto;padding:16px 20px;flex:1;';
   content.style.scrollbarWidth = 'thin';
 
-  for (const section of HELP_SECTIONS) {
+  const sections = getHelpSections();
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i];
+    const isFirst = i === 0;
+
     const sectionEl = document.createElement('div');
-    sectionEl.style.cssText = 'margin-bottom:16px;';
+    sectionEl.className = isFirst ? 'help-section open' : 'help-section';
 
-    const heading = document.createElement('h3');
-    heading.textContent = section.title;
-    heading.style.cssText = `
-      font-size:12px;font-weight:700;text-transform:uppercase;
-      letter-spacing:0.08em;color:var(--accent);
-      font-family:var(--font-sans);margin:0 0 8px;
-    `;
-    sectionEl.appendChild(heading);
+    // Accordion header (button for keyboard accessibility)
+    const headerBtn = document.createElement('button');
+    headerBtn.className = 'help-section-header';
+    headerBtn.setAttribute('aria-expanded', String(isFirst));
+    const sectionTitle = t(section.titleKey);
+    headerBtn.setAttribute('aria-label', t('help.section_toggle_aria', { section: sectionTitle }));
 
-    const list = document.createElement('ul');
-    list.style.cssText = `
-      list-style:none;padding:0;margin:0;
-      display:flex;flex-direction:column;gap:5px;
-    `;
+    const chevron = document.createElement('span');
+    chevron.className = 'help-chevron';
+    chevron.setAttribute('aria-hidden', 'true');
+    chevron.textContent = '▸';
+    headerBtn.appendChild(chevron);
 
-    for (const item of section.items) {
-      const li = document.createElement('li');
-      li.appendChild(buildHelpItem(item));
-      li.style.cssText = `
-        font-size:13px;line-height:1.5;color:var(--text-secondary);
-        font-family:var(--font-sans);padding-left:12px;position:relative;
-      `;
-      // Bullet
-      const bullet = document.createElement('span');
-      bullet.style.cssText = `
-        position:absolute;left:0;top:7px;width:4px;height:4px;
-        border-radius:50%;background:var(--border-strong);
-      `;
-      li.prepend(bullet);
-      list.appendChild(li);
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = sectionTitle;
+    headerBtn.appendChild(titleSpan);
+
+    headerBtn.addEventListener('click', () => {
+      const isOpen = sectionEl.classList.toggle('open');
+      headerBtn.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    sectionEl.appendChild(headerBtn);
+
+    // Accordion body
+    const body = document.createElement('div');
+    body.className = 'help-section-body';
+
+    if (section.type === 'shortcuts-grid' && section.shortcuts) {
+      body.appendChild(buildShortcutsGrid(section.shortcuts));
+    } else if (section.items) {
+      const list = document.createElement('ul');
+      list.className = 'help-section-list';
+
+      for (const item of section.items) {
+        const li = document.createElement('li');
+        li.className = 'help-section-item';
+        li.appendChild(buildHelpItem(item));
+
+        const bullet = document.createElement('span');
+        bullet.className = 'help-item-bullet';
+        li.prepend(bullet);
+        list.appendChild(li);
+      }
+
+      body.appendChild(list);
     }
 
-    sectionEl.appendChild(list);
-
-    // Add "Clear All Data" button after the "Your Data" section
-    if (section.title === 'Your Data') {
-      const clearBtn = document.createElement('button');
-      clearBtn.textContent = '🗑 Clear All Data';
-      clearBtn.setAttribute('aria-label', 'Clear all local data');
-      clearBtn.style.cssText = `
-        margin-top:10px;margin-left:12px;padding:5px 14px;font-size:12px;
-        font-family:var(--font-sans);cursor:pointer;
-        background:transparent;color:var(--text-tertiary);
-        border:1px solid var(--border-default);border-radius:var(--radius-md);
-        transition:background var(--transition-fast),color var(--transition-fast),border-color var(--transition-fast);
-      `;
-      clearBtn.addEventListener('mouseenter', () => {
-        clearBtn.style.background = 'var(--bg-danger, #fef2f2)';
-        clearBtn.style.color = 'var(--text-danger, #dc2626)';
-        clearBtn.style.borderColor = 'var(--text-danger, #dc2626)';
-      });
-      clearBtn.addEventListener('mouseleave', () => {
-        clearBtn.style.background = 'transparent';
-        clearBtn.style.color = 'var(--text-tertiary)';
-        clearBtn.style.borderColor = 'var(--border-default)';
-      });
-      clearBtn.addEventListener('click', async () => {
-        const confirmed = await showConfirmDialog({
-          title: 'Clear All Data',
-          message:
-            'This will permanently delete all your org charts, versions, settings, themes, and preferences. ' +
-            'This cannot be undone.\n\nAre you sure?',
-          confirmLabel: 'Delete everything',
-          danger: true,
-        });
-        if (confirmed) {
-          for (const key of ARBOL_STORAGE_KEYS) {
-            storage.removeItem(key);
-          }
-          indexedDB.deleteDatabase('arbol-db');
-          window.location.reload();
-        }
-      });
-      sectionEl.appendChild(clearBtn);
+    if (section.hasClearData) {
+      body.appendChild(buildClearDataButton(storage));
     }
 
+    sectionEl.appendChild(body);
     content.appendChild(sectionEl);
   }
 
   dialog.appendChild(content);
   overlay.appendChild(dialog);
 
-  // Style kbd elements
+  // Scoped styles for kbd and code elements
   const styleTag = document.createElement('style');
   styleTag.textContent = `
     .help-dialog kbd {
@@ -453,7 +517,6 @@ export function showHelpDialog(storage: IStorage = browserStorage): void {
 
   const removeTrap = trapFocus(dialog);
 
-  // Close handlers
   const close = () => {
     removeTrap();
     if (document.body.contains(overlay)) {
