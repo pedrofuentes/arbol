@@ -495,6 +495,9 @@ async function main(): Promise<void> {
         categoryStore,
         chartDB,
       );
+      settingsEditorInstance.onBuild(() => {
+        filterSettingsSections(settingsModal.getActiveTab());
+      });
     }
     filterSettingsSections(settingsModal.getActiveTab());
   });

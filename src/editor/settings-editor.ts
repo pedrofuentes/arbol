@@ -440,6 +440,7 @@ export class SettingsEditor {
   private categoryStore: CategoryStore | null;
   private chartDB: ChartDB | null;
   private storage: IStorage;
+  private onBuildCallback: (() => void) | null = null;
 
   private static CUSTOM_PRESETS_KEY= 'arbol-custom-presets';
 
@@ -460,6 +461,10 @@ export class SettingsEditor {
     this.chartDB = chartDB ?? null;
     this.storage = storage;
     this.build();
+  }
+
+  onBuild(callback: () => void): void {
+    this.onBuildCallback = callback;
   }
 
   private loadCustomPresets(): CombinedPreset[] {
@@ -848,6 +853,7 @@ export class SettingsEditor {
       );
     }
 
+    this.onBuildCallback?.();
   }
 
   private buildCategoriesContent(): HTMLElement {
