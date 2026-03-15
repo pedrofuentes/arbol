@@ -1781,6 +1781,14 @@ textarea:focus-visible {
 .setting-section-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
 .setting-section-desc { font-size: 12px; color: var(--text-tertiary); margin-bottom: 20px; }
 
+/* Accordion titles inside settings modal match flat section titles */
+.settings-content .accordion-title {
+  font-size: 15px;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-primary);
+}
+
 .setting-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 0; border-bottom: 1px solid var(--border-subtle);
