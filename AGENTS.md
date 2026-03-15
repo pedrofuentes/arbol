@@ -445,6 +445,14 @@ npm run test:watch   # Watch mode
 npm run build        # Production build (tsc + vite build)
 ```
 
+## Deployment
+
+Arbol deploys via **GitHub Pages** triggered by pushing to `main`. Do **NOT** use Netlify, Vercel, or any other deployment platform.
+
+```bash
+git push origin main --tags   # Push to GitHub — Actions handles the rest
+```
+
 ## Agent Workflow (Mandatory)
 
 Every code change **must** follow this sequence — no exceptions:
