@@ -109,7 +109,7 @@ const en: Record<string, string> = {
   'settings_modal.aria_label': 'Settings dialog',
   'settings_modal.close_aria': 'Close settings',
   'settings_modal.cancel': 'Cancel',
-  'settings_modal.apply': 'Apply Changes',
+  'settings_modal.apply': 'Done',
   'settings_modal.nav_aria': 'Settings sections',
 
   // ─── Import Wizard ──────────────────────────────────────────────────

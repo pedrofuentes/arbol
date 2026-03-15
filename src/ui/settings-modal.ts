@@ -70,7 +70,7 @@ export class SettingsModal {
     closeBtn.className = 'settings-modal-close';
     closeBtn.setAttribute('aria-label', t('settings_modal.close_aria'));
     closeBtn.textContent = '✕';
-    closeBtn.addEventListener('click', () => this.close());
+    closeBtn.addEventListener('click', () => this.cancel());
 
     header.appendChild(title);
     header.appendChild(closeBtn);
@@ -151,7 +151,6 @@ export class SettingsModal {
     applyBtn.className = 'settings-apply-btn';
     applyBtn.textContent = t('settings_modal.apply');
     applyBtn.addEventListener('click', () => {
-      options.onApply();
       this.close();
     });
 

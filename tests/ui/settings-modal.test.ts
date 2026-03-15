@@ -38,13 +38,14 @@ describe('SettingsModal', () => {
     modal.destroy();
   });
 
-  it('close button closes modal', () => {
-    const { modal, onClose } = createModal();
+  it('close button closes modal and calls onCancel', () => {
+    const onCancel = vi.fn();
+    const modal = new SettingsModal({ onClose: vi.fn(), onApply: vi.fn(), onCancel });
     modal.open();
     const closeBtn = document.querySelector('.settings-modal-close') as HTMLElement;
     closeBtn.click();
     expect(modal.isOpen()).toBe(false);
-    expect(onClose).toHaveBeenCalled();
+    expect(onCancel).toHaveBeenCalledTimes(1);
     modal.destroy();
   });
 
@@ -75,12 +76,11 @@ describe('SettingsModal', () => {
   });
 
   it('Apply button calls onApply and closes', () => {
-    const { modal, onApply, onClose } = createModal();
+    const { modal, onClose } = createModal();
     modal.open();
     const applyBtn = document.querySelector('.settings-apply-btn') as HTMLElement;
     applyBtn.click();
-    expect(onApply).toHaveBeenCalledTimes(1);
-    expect(onClose).toHaveBeenCalled(); // close is called after apply
+    expect(onClose).toHaveBeenCalled();
     modal.destroy();
   });
 

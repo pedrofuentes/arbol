@@ -446,7 +446,7 @@ async function main(): Promise<void> {
 
   const settingsModal = new SettingsModal({
     onClose: () => {},
-    onApply: () => { rerender(); },
+    onApply: () => {},
     onCancel: () => {
       // Revert to snapshot taken when modal was opened
       if (settingsSnapshot) {
