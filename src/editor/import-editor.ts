@@ -259,7 +259,7 @@ export class ImportEditor {
           textarea.value = reader.result as string;
         };
         reader.onerror = () => {
-          importMsg.textContent = 'Failed to read file';
+          importMsg.textContent = t('error.file_read_failed');
           importMsg.style.color = 'var(--danger)';
         };
         reader.readAsText(file);
@@ -622,7 +622,7 @@ export class ImportEditor {
           }
         }
       };
-      reader.onerror = () => this.showError('Failed to read file');
+      reader.onerror = () => this.showError(t('error.file_read_failed'));
       reader.readAsArrayBuffer(file);
       return;
     }
@@ -638,7 +638,7 @@ export class ImportEditor {
         this.showError(e instanceof Error ? e.message : String(e));
       }
     };
-    reader.onerror = () => this.showError('Failed to read file');
+    reader.onerror = () => this.showError(t('error.file_read_failed'));
     reader.readAsText(file);
   }
 

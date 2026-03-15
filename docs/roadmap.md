@@ -1,10 +1,29 @@
 # Arbol — Project Roadmap
 
-> Last updated: 2026-03-14
+> Last updated: 2026-03-15
 
 ## Overview
 
 Arbol is an interactive org chart editor for the browser, built with TypeScript, D3.js, and Vite. This roadmap tracks everything completed, in progress, and planned.
+
+---
+
+## 🚀 v3.3.1 — Code Review Quick Wins
+
+### Phase 31 — Resilience & Error Handling Fixes
+- [x] Silent data loss prevention — `.catch()` on fire-and-forget `saveWorkingTree()`
+- [x] Crash guard — optional chaining on `focusMode` before initialization
+- [x] Memory leak fix — bounded redo stack to `MAX_HISTORY` (50)
+- [x] Selection ordering — clear multi-selection before rerender
+- [x] HTTP compatibility — `generateId()` fallback in CSV parser
+- [x] Error boundary — fatal error UI on `main()` initialization failure
+- [x] File read errors — `FileReader.onerror` handlers on import wizard and settings
+- [x] Multi-tab safety — `IndexedDB.onblocked` and `onversionchange` handlers
+- [x] i18n compliance — replaced hardcoded error strings in import-editor
+
+### Testing
+- [x] **1,809 tests across 70 files** — all passing
+- [x] 8 new tests: redo stack limits (3), IndexedDB lifecycle (3), save catch (3) (note: 1 test file added with 3 tests)
 
 ---
 

@@ -463,6 +463,7 @@ const en: Record<string, string> = {
   'footer.reset_label': 'Reset',
   'footer.reset_aria': 'Reset zoom',
   'footer.reset_tooltip': 'Reset zoom',
+  'footer.save_failed': 'Failed to save changes',
   'footer.operation_failed': 'Operation failed',
   'footer.imported': 'Imported successfully',
 
@@ -966,6 +967,9 @@ const en: Record<string, string> = {
   // ─── Settings: Preset Indicators ────────────────────────────────────
   'settings.preset_active': 'Active',
   'settings.preset_active_aria': '{name} (currently applied)',
+
+  // ─── Errors ────────────────────────────────────────────────────────
+  'error.file_read_failed': 'Failed to read file',
 };
 
 export default en;

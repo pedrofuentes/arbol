@@ -32,6 +32,9 @@ export class OrgStore extends EventEmitter {
       try {
         const parsed = JSON.parse(snapshot);
         this.redoStack.push(JSON.stringify(this.root));
+        if (this.redoStack.length > OrgStore.MAX_HISTORY) {
+          this.redoStack.splice(0, this.redoStack.length - OrgStore.MAX_HISTORY);
+        }
         this.root = parsed;
         this.emit();
         return true;

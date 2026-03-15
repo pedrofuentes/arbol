@@ -247,7 +247,7 @@ async function main(): Promise<void> {
 
   const enterComparisonMode = async (baseVersion: VersionRecord) => {
     // Exit any active modes first
-    if (focusMode.isFocused) { focusMode.clear(); }
+    if (focusMode?.isFocused) { focusMode.clear(); }
     if (isVersionViewerActive()) { dismissVersionViewer(); }
     if (comparisonState) {
       renderer.setDiffMap(null);
@@ -309,18 +309,20 @@ async function main(): Promise<void> {
     const fullTree = store.getTree();
 
     // Validate focus target still exists
-    focusMode.validate();
+    focusMode?.validate();
 
-    const treeToRender = focusMode.getVisibleTree();
+    const treeToRender = focusMode?.getVisibleTree() ?? store.getTree();
 
     // Refresh categories so renderer picks up any changes
     renderer.updateOptions({ categories: categoryStore.getAll() });
     renderer.render(treeToRender);
     const opts = renderer.getOptions();
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
-    chartStore.saveWorkingTree(fullTree, categoryStore.getAll());
+    chartStore.saveWorkingTree(fullTree, categoryStore.getAll()).catch(() => {
+      showToast(t('footer.save_failed'), 'error');
+    });
 
-    focusMode.showBanner(chartArea);
+    focusMode?.showBanner(chartArea);
 
     onSettingsSaved?.();
 
@@ -1035,10 +1037,10 @@ async function main(): Promise<void> {
   };
 
   store.onChange(() => {
+    clearMultiSelection();
     rerender();
     formEditor.refresh();
     jsonEditor.refresh();
-    clearMultiSelection();
     // Refresh property panel if visible
     const panelNodeId = propertyPanel.getNodeId();
     if (panelNodeId && propertyPanel.isVisible()) {
@@ -1904,4 +1906,25 @@ async function main(): Promise<void> {
   showWelcomeBanner(chartArea);
 }
 
-document.addEventListener('DOMContentLoaded', main);
+document.addEventListener('DOMContentLoaded', () => {
+  main().catch((e) => {
+    console.error('Fatal initialization error:', e);
+    const app = document.getElementById('app');
+    if (app) {
+      app.innerHTML = '';
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'fatal-error';
+      errorDiv.setAttribute('role', 'alert');
+      const heading = document.createElement('h2');
+      heading.textContent = 'Failed to start Arbol';
+      const message = document.createElement('p');
+      message.textContent = e instanceof Error ? e.message : 'An unexpected error occurred';
+      const hint = document.createElement('p');
+      hint.textContent = 'Try refreshing the page. If the issue persists, clear your browser data for this site.';
+      errorDiv.appendChild(heading);
+      errorDiv.appendChild(message);
+      errorDiv.appendChild(hint);
+      app.appendChild(errorDiv);
+    }
+  });
+});

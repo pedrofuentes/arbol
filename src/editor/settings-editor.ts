@@ -774,6 +774,9 @@ export class SettingsEditor {
             showToast(`Import failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
           }
         };
+        reader.onerror = () => {
+          showToast(t('error.file_read_failed'), 'error');
+        };
         reader.readAsText(file);
       });
       document.body.appendChild(input);
