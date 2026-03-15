@@ -8,6 +8,19 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
+## 🚀 v3.4.1 — Preview Zoom Regression Fix
+
+### Phase 34 — Bug Fix
+- [x] Restore preview zoom controls in settings modal (Fit, Reset, zoom %, drag-to-pan)
+- [x] Fix SettingsEditor.destroy() to clean up preview renderer
+- [x] Add ZoomManager `programmaticOnly` option for future use
+
+### Testing
+- [x] **1,945 tests across 74 files** — all passing
+- [x] 14 new tests: zoom-manager, chart-renderer, settings-editor
+
+---
+
 ## 🚀 v3.4.0 — Code Review Remediation (All Critical + High)
 
 ### Phase 32 — Security, Performance & Architecture
