@@ -1078,6 +1078,42 @@ textarea:focus-visible {
   pointer-events: none;
 }
 
+/* ── Chart Navigator header ───────────────────────────── */
+
+.chart-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 8px;
+}
+.chart-nav-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  font-family: var(--font-sans);
+}
+
+/* ── Version section header ──────────────────────────── */
+
+.version-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 6px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+.version-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  font-family: var(--font-sans);
+}
+
 .chart-item-loading {
   opacity: 0.5;
   pointer-events: none;

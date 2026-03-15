@@ -1,6 +1,7 @@
 import type { ChartRecord, VersionRecord, OrgNode, ColorCategory } from '../types';
 import type { ChartStore } from '../store/chart-store';
 import { showConfirmDialog } from '../ui/confirm-dialog';
+import { showInputDialog } from '../ui/input-dialog';
 import { showExportDialog } from '../ui/export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../export/chart-exporter';
 import { flattenTree } from '../utils/tree';
@@ -17,10 +18,6 @@ export interface ChartEditorOptions {
   getCurrentCategories: () => ColorCategory[];
   onBeforeSwitch: () => Promise<boolean>;
 }
-
-const HEADING_STYLE =
-  'margin:0 0 8px;font-size:11px;text-transform:uppercase;' +
-  'color:var(--text-tertiary);letter-spacing:0.08em;font-family:var(--font-sans);font-weight:700;';
 
 const INLINE_BTN_EXTRA = 'font-size:10px;padding:3px 8px;';
 
@@ -39,9 +36,7 @@ export class ChartEditor {
 
   private chartListEl!: HTMLDivElement;
   private versionListEl!: HTMLDivElement;
-  private chartNameInput!: HTMLInputElement;
   private chartSearchInput!: HTMLInputElement;
-  private versionNameInput!: HTMLInputElement;
   private chartErrorEl!: HTMLDivElement;
   private versionErrorEl!: HTMLDivElement;
   private chartSearchTerm = '';
@@ -98,9 +93,26 @@ export class ChartEditor {
   private build(): void {
     this.container.innerHTML = '';
 
-    // Charts section
-    this.container.appendChild(this.createHeading('Charts'));
-    this.container.appendChild(this.buildChartInputRow());
+    // Charts header with + button
+    const chartHeader = document.createElement('div');
+    chartHeader.className = 'chart-nav-header';
+
+    const chartTitle = document.createElement('span');
+    chartTitle.className = 'chart-nav-title';
+    chartTitle.textContent = t('chart_editor.charts_heading');
+    chartHeader.appendChild(chartTitle);
+
+    const addChartBtn = document.createElement('button');
+    addChartBtn.className = 'btn btn-icon btn-ghost';
+    addChartBtn.style.cssText = 'width:24px;height:24px;font-size:16px;';
+    addChartBtn.title = t('chart_editor.new_chart_tooltip');
+    addChartBtn.textContent = '+';
+    addChartBtn.addEventListener('click', () => this.handleCreateChart());
+    chartHeader.appendChild(addChartBtn);
+
+    this.container.appendChild(chartHeader);
+
+    // Search input
     this.chartSearchInput = document.createElement('input');
     this.chartSearchInput.type = 'text';
     this.chartSearchInput.className = 'chart-search';
@@ -110,6 +122,7 @@ export class ChartEditor {
       this.renderChartList();
     });
     this.container.appendChild(this.chartSearchInput);
+
     this.chartErrorEl = this.createErrorArea();
     this.container.appendChild(this.chartErrorEl);
     this.chartListEl = document.createElement('div');
@@ -117,11 +130,25 @@ export class ChartEditor {
     this.chartListEl.setAttribute('role', 'list');
     this.container.appendChild(this.chartListEl);
 
-    // Versions section
-    const versionHeading = this.createHeading('Versions');
-    versionHeading.style.marginTop = '20px';
-    this.container.appendChild(versionHeading);
-    this.container.appendChild(this.buildVersionInputRow());
+    // Versions section header with + Save button
+    const versionHeader = document.createElement('div');
+    versionHeader.className = 'version-section-header';
+
+    const versionTitle = document.createElement('span');
+    versionTitle.className = 'version-section-title';
+    versionTitle.textContent = t('chart_editor.versions_heading');
+    versionHeader.appendChild(versionTitle);
+
+    const saveVersionBtn = document.createElement('button');
+    saveVersionBtn.className = 'btn btn-ghost';
+    saveVersionBtn.style.cssText = 'padding:2px 6px;font-size:10px;';
+    saveVersionBtn.title = t('chart_editor.save_version_tooltip');
+    saveVersionBtn.textContent = t('chart_editor.save_version');
+    saveVersionBtn.addEventListener('click', () => this.handleSaveVersion());
+    versionHeader.appendChild(saveVersionBtn);
+
+    this.container.appendChild(versionHeader);
+
     this.versionErrorEl = this.createErrorArea();
     this.container.appendChild(this.versionErrorEl);
     this.versionListEl = document.createElement('div');
@@ -133,13 +160,6 @@ export class ChartEditor {
   }
 
   // ── Heading & Error helpers ────────────────────────────
-
-  private createHeading(text: string): HTMLHeadingElement {
-    const h = document.createElement('h4');
-    h.textContent = text;
-    h.style.cssText = HEADING_STYLE;
-    return h;
-  }
 
   private createErrorArea(): HTMLDivElement {
     const el = document.createElement('div');
@@ -156,65 +176,7 @@ export class ChartEditor {
     this.errorTimers.push(timer);
   }
 
-  // ── Charts input row ──────────────────────────────────
-
-  private buildChartInputRow(): HTMLDivElement {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:6px;margin-bottom:4px;align-items:flex-end;';
-
-    const inputGroup = document.createElement('div');
-    inputGroup.className = 'form-group';
-    inputGroup.style.cssText = 'flex:1;min-width:0;margin-bottom:0;';
-
-    this.chartNameInput = document.createElement('input');
-    this.chartNameInput.type = 'text';
-    this.chartNameInput.placeholder = t('chart_editor.new_chart_placeholder');
-    this.chartNameInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this.handleCreateChart();
-    });
-
-    inputGroup.appendChild(this.chartNameInput);
-    row.appendChild(inputGroup);
-
-    const addBtn = document.createElement('button');
-    addBtn.className = 'btn btn-primary';
-    addBtn.textContent = t('chart_editor.add_chart');
-    addBtn.style.cssText = 'padding:4px 10px;flex-shrink:0;';
-    addBtn.addEventListener('click', () => this.handleCreateChart());
-
-    row.appendChild(addBtn);
-    return row;
-  }
-
-  // ── Versions input row ─────────────────────────────────
-
-  private buildVersionInputRow(): HTMLDivElement {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:6px;margin-bottom:4px;align-items:flex-end;';
-
-    const inputGroup = document.createElement('div');
-    inputGroup.className = 'form-group';
-    inputGroup.style.cssText = 'flex:1;min-width:0;margin-bottom:0;';
-
-    this.versionNameInput = document.createElement('input');
-    this.versionNameInput.type = 'text';
-    this.versionNameInput.placeholder = t('chart_editor.version_placeholder');
-    this.versionNameInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this.handleSaveVersion();
-    });
-
-    inputGroup.appendChild(this.versionNameInput);
-    row.appendChild(inputGroup);
-
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'btn btn-primary';
-    saveBtn.textContent = t('chart_editor.save_version');
-    saveBtn.style.cssText = 'flex-shrink:0;';
-    saveBtn.addEventListener('click', () => this.handleSaveVersion());
-
-    row.appendChild(saveBtn);
-    return row;
-  }
+  // (Chart and version input rows removed — replaced by compact headers with dialog prompts)
 
   // ── Render chart list ──────────────────────────────────
 
@@ -237,13 +199,22 @@ export class ChartEditor {
       return;
     }
 
+    // Pre-fetch version counts
+    const versionCounts = new Map<string, number>();
+    for (const chart of filtered) {
+      const versions = await this.chartStore.getVersions(chart.id);
+      versionCounts.set(chart.id, versions.length);
+    }
+
     for (const chart of filtered) {
       const isActive = chart.id === activeId;
-      this.chartListEl.appendChild(this.createChartItem(chart, isActive));
+      this.chartListEl.appendChild(
+        this.createChartItem(chart, isActive, versionCounts.get(chart.id) ?? 0),
+      );
     }
   }
 
-  private createChartItem(chart: ChartRecord, isActive: boolean): HTMLDivElement {
+  private createChartItem(chart: ChartRecord, isActive: boolean, versionCount: number): HTMLDivElement {
     const item = document.createElement('div');
     item.className = 'chart-item' + (isActive ? ' active' : '');
     item.setAttribute('role', 'listitem');
@@ -289,7 +260,10 @@ export class ChartEditor {
     const metaEl = document.createElement('div');
     metaEl.className = 'chart-item-meta';
     const peopleCount = flattenTree(chart.workingTree).length;
-    metaEl.textContent = `${peopleCount} ${t('chart_editor.people_suffix')}`;
+    const vSuffix = versionCount === 1
+      ? t('chart_editor.version_suffix')
+      : t('chart_editor.versions_suffix');
+    metaEl.textContent = `${peopleCount} ${t('chart_editor.people_suffix')} · ${versionCount} ${vSuffix}`;
     infoEl.appendChild(metaEl);
 
     item.appendChild(infoEl);
@@ -335,16 +309,37 @@ export class ChartEditor {
   private async renderVersionList(): Promise<void> {
     this.versionListEl.innerHTML = '';
 
-    const versions = await this.chartStore.getVersions();
+    // Working tree entry (always shown)
+    const workingItem = document.createElement('div');
+    workingItem.className = 'version-item';
+    workingItem.setAttribute('role', 'listitem');
 
-    if (versions.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'text-sm text-tertiary';
-      empty.style.cssText = 'padding:8px 0;font-family:var(--font-sans);';
-      empty.textContent = t('chart_editor.no_versions');
-      this.versionListEl.appendChild(empty);
-      return;
-    }
+    const workingIcon = document.createElement('span');
+    workingIcon.className = 'version-item-icon';
+    workingIcon.textContent = '✏️';
+    workingItem.appendChild(workingIcon);
+
+    const workingInfo = document.createElement('div');
+    workingInfo.className = 'version-item-info';
+
+    const workingName = document.createElement('div');
+    workingName.className = 'version-item-name';
+    workingName.textContent = t('chart_editor.working_tree');
+    workingInfo.appendChild(workingName);
+
+    const workingDate = document.createElement('div');
+    workingDate.className = 'version-item-date';
+    const isDirty = this.chartStore.isDirty(this.getCurrentTree());
+    workingDate.textContent = isDirty
+      ? t('chart_editor.working_tree_dirty')
+      : t('chart_editor.working_tree_saved');
+    workingInfo.appendChild(workingDate);
+
+    workingItem.appendChild(workingInfo);
+    this.versionListEl.appendChild(workingItem);
+
+    // Saved versions
+    const versions = await this.chartStore.getVersions();
 
     for (const version of versions) {
       this.versionListEl.appendChild(this.createVersionItem(version));
@@ -416,11 +411,12 @@ export class ChartEditor {
   // ── Handlers: Charts ───────────────────────────────────
 
   private async handleCreateChart(): Promise<void> {
-    const name = this.chartNameInput.value.trim();
-    if (!name) {
-      this.showError(this.chartErrorEl, t('chart_editor.name_required'));
-      return;
-    }
+    const name = await showInputDialog({
+      title: t('chart_editor.new_chart_dialog_title'),
+      label: t('chart_editor.new_chart_dialog_label'),
+      placeholder: t('chart_editor.new_chart_placeholder'),
+    });
+    if (!name) return;
 
     const proceed = await this.onBeforeSwitch();
     if (!proceed) return;
@@ -428,7 +424,6 @@ export class ChartEditor {
     try {
       const chart = await this.chartStore.createChart(name);
       this.onChartSwitch(chart);
-      this.chartNameInput.value = '';
       this.chartErrorEl.textContent = '';
       await this.refresh();
     } catch (err) {
@@ -553,18 +548,18 @@ export class ChartEditor {
   // ── Handlers: Versions ─────────────────────────────────
 
   private async handleSaveVersion(): Promise<void> {
-    const name = this.versionNameInput.value.trim();
-    if (!name) {
-      this.showError(this.versionErrorEl, t('chart_editor.version_name_required'));
-      return;
-    }
+    const name = await showInputDialog({
+      title: t('dialog.save_version.title'),
+      label: t('dialog.save_version.label'),
+      placeholder: t('dialog.save_version.placeholder'),
+    });
+    if (!name) return;
 
     try {
       const tree = this.getCurrentTree();
       const categories = this.getCurrentCategories();
       await this.chartStore.saveVersion(name, tree);
       await this.chartStore.saveWorkingTree(tree, categories);
-      this.versionNameInput.value = '';
       this.versionErrorEl.textContent = '';
       await this.refresh();
     } catch (err) {
