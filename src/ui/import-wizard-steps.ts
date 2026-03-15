@@ -189,13 +189,14 @@ export function renderMappingStep(
     mapperContainer.className = 'wizard-mapper-wrap';
     container.appendChild(mapperContainer);
 
+    let userChanged = false;
+
     const mapper = new ColumnMapper(
       mapperContainer,
       state.headers,
       (mapping) => {
         state.mapping = mapping;
-        // Clear matched preset name if user changed the mapping
-        if (matchedPreset) state.matchedPresetName = undefined;
+        if (userChanged) state.matchedPresetName = undefined;
         onReady(true);
       },
       () => {},
@@ -207,6 +208,9 @@ export function renderMappingStep(
       mapper.prefill(matchedPreset.mapping);
       mapper.handleApply();
     }
+
+    // After prefill, any further changes are user-initiated
+    userChanged = true;
 
     // Auto-validate on dropdown/radio change
     mapperContainer.querySelectorAll('select').forEach((sel) => {
