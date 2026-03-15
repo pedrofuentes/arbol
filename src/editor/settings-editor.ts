@@ -30,6 +30,7 @@ const ARBOL_STORAGE_KEYS = [
 interface SettingDef {
   key: keyof RendererOptions;
   label: string;
+  description?: string;
   type: 'range' | 'color' | 'text' | 'checkbox' | 'select';
   min?: number;
   max?: number;
@@ -54,8 +55,8 @@ const SETTING_GROUPS: SettingGroup[] = [
   {
     title: 'Card Dimensions',
     settings: [
-      { key: 'nodeWidth', label: 'Node Width', type: 'range', min: 50, max: 250, step: 1 },
-      { key: 'nodeHeight', label: 'Node Height', type: 'range', min: 16, max: 60, step: 1 },
+      { key: 'nodeWidth', label: 'Node Width', description: 'Width of each card in pixels', type: 'range', min: 50, max: 250, step: 1 },
+      { key: 'nodeHeight', label: 'Node Height', description: 'Height of each card in pixels', type: 'range', min: 16, max: 60, step: 1 },
     ],
   },
   {
@@ -64,15 +65,17 @@ const SETTING_GROUPS: SettingGroup[] = [
       {
         key: 'horizontalSpacing',
         label: 'Horizontal Spacing',
+        description: 'Minimum gap between adjacent cards',
         type: 'range',
         min: 5,
         max: 100,
         step: 1,
       },
-      { key: 'branchSpacing', label: 'Branch Spacing', type: 'range', min: 0, max: 60, step: 1 },
+      { key: 'branchSpacing', label: 'Branch Spacing', description: 'Gap between sibling subtrees', type: 'range', min: 0, max: 60, step: 1 },
       {
         key: 'topVerticalSpacing',
         label: 'Top Vertical Spacing',
+        description: 'Manager to connector line gap',
         type: 'range',
         min: 0,
         max: 50,
@@ -81,6 +84,7 @@ const SETTING_GROUPS: SettingGroup[] = [
       {
         key: 'bottomVerticalSpacing',
         label: 'Bottom Vertical Spacing',
+        description: 'Connector line to child gap',
         type: 'range',
         min: 0,
         max: 50,
@@ -91,8 +95,8 @@ const SETTING_GROUPS: SettingGroup[] = [
   {
     title: 'IC Options',
     settings: [
-      { key: 'icNodeWidth', label: 'IC Node Width', type: 'range', min: 40, max: 220, step: 1 },
-      { key: 'icGap', label: 'IC Gap', type: 'range', min: 0, max: 20, step: 1 },
+      { key: 'icNodeWidth', label: 'IC Node Width', description: 'Width of IC cards', type: 'range', min: 40, max: 220, step: 1 },
+      { key: 'icGap', label: 'IC Gap', description: 'Spacing between stacked ICs', type: 'range', min: 0, max: 20, step: 1 },
       {
         key: 'icContainerPadding',
         label: 'IC Container Padding',
@@ -101,7 +105,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         max: 20,
         step: 1,
       },
-      { key: 'icContainerFill', label: 'IC Container Fill', type: 'color' },
+      { key: 'icContainerFill', label: 'IC Container Fill', description: 'Background of IC group box', type: 'color' },
       {
         key: 'icContainerBorderRadius',
         label: 'IC Container Border Radius',
@@ -121,6 +125,7 @@ const SETTING_GROUPS: SettingGroup[] = [
       {
         key: 'palCenterGap',
         label: 'Advisor Center Gap',
+        description: 'Gap between left/right columns',
         type: 'range',
         min: 10,
         max: 100,
@@ -131,13 +136,14 @@ const SETTING_GROUPS: SettingGroup[] = [
   {
     title: 'Typography',
     settings: [
-      { key: 'nameFontSize', label: 'Name Font Size', type: 'range', min: 5, max: 20, step: 1 },
-      { key: 'titleFontSize', label: 'Title Font Size', type: 'range', min: 5, max: 20, step: 1 },
+      { key: 'nameFontSize', label: 'Name Font Size', description: 'Font size for person names', type: 'range', min: 5, max: 20, step: 1 },
+      { key: 'titleFontSize', label: 'Title Font Size', description: 'Font size for job titles', type: 'range', min: 5, max: 20, step: 1 },
       { key: 'textPaddingTop', label: 'Text Padding Top', type: 'range', min: 0, max: 15, step: 1 },
-      { key: 'textGap', label: 'Text Gap', type: 'range', min: 0, max: 10, step: 1 },
+      { key: 'textGap', label: 'Text Gap', description: 'Space between name and title', type: 'range', min: 0, max: 10, step: 1 },
       {
         key: 'textAlign',
         label: 'Text Alignment',
+        description: 'Text alignment within cards',
         type: 'select',
         options: ['left', 'center', 'right'],
       },
@@ -155,16 +161,16 @@ const SETTING_GROUPS: SettingGroup[] = [
         max: 20,
         step: 1,
       },
-      { key: 'nameColor', label: 'Name Color', type: 'color' },
-      { key: 'titleColor', label: 'Title Color', type: 'color' },
+      { key: 'nameColor', label: 'Name Color', description: 'Color for person names', type: 'color' },
+      { key: 'titleColor', label: 'Title Color', description: 'Color for job titles', type: 'color' },
     ],
   },
   {
     title: 'Link Style',
     settings: [
       { key: 'linkWidth', label: 'Link Width', type: 'range', min: 0.5, max: 5, step: 0.5 },
-      { key: 'linkColor', label: 'Link Color', type: 'color' },
-      { key: 'dottedLineDash', label: 'Dotted Line Pattern', type: 'text' },
+      { key: 'linkColor', label: 'Link Color', description: 'Color of connector lines', type: 'color' },
+      { key: 'dottedLineDash', label: 'Dotted Line Pattern', description: 'Dash pattern e.g. "6,4"', type: 'text' },
     ],
   },
   {
@@ -178,11 +184,12 @@ const SETTING_GROUPS: SettingGroup[] = [
         max: 5,
         step: 0.5,
       },
-      { key: 'cardStroke', label: 'Card Stroke', type: 'color' },
-      { key: 'cardFill', label: 'Card Fill', type: 'color' },
+      { key: 'cardStroke', label: 'Card Stroke', description: 'Card border color', type: 'color' },
+      { key: 'cardFill', label: 'Card Fill', description: 'Background color of cards', type: 'color' },
       {
         key: 'cardBorderRadius',
         label: 'Card Border Radius',
+        description: 'Rounded corner radius',
         type: 'range',
         min: 0,
         max: 15,
@@ -193,7 +200,7 @@ const SETTING_GROUPS: SettingGroup[] = [
   {
     title: 'Headcount Badge',
     settings: [
-      { key: 'showHeadcount', label: 'Show Headcount', type: 'checkbox' },
+      { key: 'showHeadcount', label: 'Show Headcount', description: 'Show badges on manager cards', type: 'checkbox' },
       {
         key: 'headcountBadgeFontSize',
         label: 'Badge Font Size',
@@ -236,6 +243,7 @@ const SETTING_GROUPS: SettingGroup[] = [
       {
         key: 'legendRows',
         label: 'Legend Rows (0 = auto)',
+        description: 'Number of rows in the legend',
         type: 'range',
         min: 0,
         max: 20,
@@ -402,7 +410,6 @@ function sectionIdFromTitle(title: string): string {
 const ALL_SECTION_IDS = [
   'presets',
   'categories',
-  ...SETTING_GROUPS.map((g) => sectionIdFromTitle(g.title)),
   'settings-io',
   'backup-restore',
 ];
@@ -651,31 +658,24 @@ export class SettingsEditor {
       );
     }
 
-    // Setting groups
+    // Setting groups — flat sections (no accordion)
     for (const group of SETTING_GROUPS) {
       const groupId = sectionIdFromTitle(group.title);
-      const controlsContainer = document.createElement('div');
+      const section = document.createElement('div');
+      section.className = 'setting-section';
+      section.setAttribute('data-section-id', groupId);
+
+      const title = document.createElement('div');
+      title.className = 'setting-section-title';
+      title.textContent = group.title;
+      section.appendChild(title);
+
       for (const setting of group.settings) {
         const value = opts[setting.key] as number | string | boolean;
-        controlsContainer.appendChild(this.createControl(setting, value));
+        section.appendChild(this.createControl(setting, value));
       }
 
-      const resetCallback = () => {
-        const updates: Partial<RendererOptions> = {};
-        for (const setting of group.settings) {
-          const defaultVal = DEFAULT_SETTINGS[setting.key];
-          if (defaultVal !== undefined) {
-            (updates as Record<string, unknown>)[setting.key] = defaultVal;
-          }
-        }
-        this.renderer.updateOptions(updates);
-        this.rerenderCallback();
-        this.build();
-      };
-
-      this.container.appendChild(
-        this.createAccordionSection(groupId, group.title, controlsContainer, { resetCallback }),
-      );
+      this.container.appendChild(section);
     }
 
     // Settings Import/Export section
@@ -901,12 +901,13 @@ export class SettingsEditor {
         const query = filterInput.value.trim().toLowerCase();
         clearBtn.style.display = query ? 'block' : 'none';
 
-        const sections = this.container.querySelectorAll('.accordion-section');
+        const sections = this.container.querySelectorAll('[data-section-id]');
 
         if (!query) {
           sections.forEach((section) => {
             (section as HTMLElement).style.opacity = '1';
             (section as HTMLElement).style.pointerEvents = '';
+            // Restore accordion state for accordion sections
             const header = section.querySelector('.accordion-header') as HTMLElement;
             const content = section.querySelector('.accordion-content') as HTMLElement;
             if (header && content) {
@@ -920,11 +921,11 @@ export class SettingsEditor {
         }
 
         sections.forEach((section) => {
-          const titleEl = section.querySelector('.accordion-title');
+          const titleEl = section.querySelector('.accordion-title') ?? section.querySelector('.setting-section-title');
           const titleText = titleEl?.textContent?.toLowerCase() ?? '';
 
           let labelMatch = false;
-          const labels = section.querySelectorAll('label');
+          const labels = section.querySelectorAll('label, .setting-label');
           labels.forEach((label) => {
             if (label.textContent?.toLowerCase().includes(query)) {
               labelMatch = true;
@@ -938,11 +939,20 @@ export class SettingsEditor {
             }
           });
 
+          // Also match setting descriptions
+          const descs = section.querySelectorAll('.setting-desc');
+          descs.forEach((el) => {
+            if (el.textContent?.toLowerCase().includes(query)) {
+              labelMatch = true;
+            }
+          });
+
           const matches = titleText.includes(query) || labelMatch;
 
           (section as HTMLElement).style.opacity = matches ? '1' : '0.3';
           (section as HTMLElement).style.pointerEvents = matches ? '' : 'none';
 
+          // Auto-expand matching accordion sections
           const header = section.querySelector('.accordion-header') as HTMLElement;
           const content = section.querySelector('.accordion-content') as HTMLElement;
           if (header && content && matches) {
@@ -1314,39 +1324,41 @@ export class SettingsEditor {
 
   private createControl(setting: SettingDef, currentValue: number | string | boolean): HTMLDivElement {
     const wrapper = document.createElement('div');
-    wrapper.className = 'form-group';
+    wrapper.className = 'setting-row';
     const inputId = `setting-${setting.key}`;
 
-    if (setting.type === 'checkbox') {
-      const label = document.createElement('label');
-      label.className = 'flex-row gap-2';
-      label.style.cssText = 'cursor:pointer;';
+    const info = document.createElement('div');
+    info.className = 'setting-info';
 
+    const label = document.createElement('label');
+    label.className = 'setting-label';
+    label.htmlFor = inputId;
+    label.textContent = setting.label;
+    info.appendChild(label);
+
+    if (setting.description) {
+      const desc = document.createElement('div');
+      desc.className = 'setting-desc';
+      desc.textContent = setting.description;
+      info.appendChild(desc);
+    }
+
+    const control = document.createElement('div');
+    control.className = 'setting-control';
+
+    if (setting.type === 'checkbox') {
       const input = document.createElement('input');
+      input.id = inputId;
       input.type = 'checkbox';
       input.checked = Boolean(currentValue);
-      input.style.cssText = 'cursor:pointer;width:16px;height:16px;';
 
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.checked } as Partial<RendererOptions>);
         this.rerenderCallback();
       });
 
-      const span = document.createElement('span');
-      span.textContent = setting.label;
-
-      label.appendChild(input);
-      label.appendChild(span);
-      wrapper.appendChild(label);
+      control.appendChild(input);
     } else if (setting.type === 'range') {
-      const label = document.createElement('label');
-      label.htmlFor = inputId;
-      label.textContent = `${setting.label} `;
-      const valueSpan = document.createElement('span');
-      valueSpan.className = 'setting-value';
-      valueSpan.textContent = String(currentValue);
-      label.appendChild(valueSpan);
-
       const input = document.createElement('input');
       input.id = inputId;
       input.type = 'range';
@@ -1355,6 +1367,10 @@ export class SettingsEditor {
       input.step = String(setting.step);
       input.value = String(currentValue);
 
+      const valueSpan = document.createElement('span');
+      valueSpan.className = 'setting-value';
+      valueSpan.textContent = String(currentValue);
+
       input.addEventListener('input', () => {
         const val = parseFloat(input.value);
         valueSpan.textContent = String(val);
@@ -1362,24 +1378,11 @@ export class SettingsEditor {
         this.rerenderCallback();
       });
 
-      wrapper.appendChild(label);
-      wrapper.appendChild(input);
+      control.appendChild(input);
+      control.appendChild(valueSpan);
     } else if (setting.type === 'select') {
-      const label = document.createElement('label');
-      label.htmlFor = inputId;
-      label.textContent = setting.label;
-
       const select = document.createElement('select');
       select.id = inputId;
-      select.style.cssText = `
-        width:100%;box-sizing:border-box;
-        padding:4px 8px;font-size:13px;
-        font-family:var(--font-sans);
-        border:1px solid var(--border-default);
-        border-radius:var(--radius-md);
-        background:var(--bg-base);
-        color:var(--text-primary);
-      `;
 
       for (const opt of setting.options ?? []) {
         const option = document.createElement('option');
@@ -1394,42 +1397,24 @@ export class SettingsEditor {
         this.rerenderCallback();
       });
 
-      wrapper.appendChild(label);
-      wrapper.appendChild(select);
+      control.appendChild(select);
     } else if (setting.type === 'text') {
-      const label = document.createElement('label');
-      label.htmlFor = inputId;
-      label.textContent = setting.label;
-
       const input = document.createElement('input');
       input.id = inputId;
       input.type = 'text';
       input.value = String(currentValue);
-      input.style.cssText = `
-        width:100%;box-sizing:border-box;
-        padding:4px 8px;font-size:13px;
-        font-family:var(--font-sans);
-        border:1px solid var(--border-default);
-        border-radius:var(--radius-md);
-        background:var(--bg-base);
-        color:var(--text-primary);
-      `;
 
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
       });
 
-      wrapper.appendChild(label);
-      wrapper.appendChild(input);
+      control.appendChild(input);
     } else {
-      const label = document.createElement('label');
-      label.htmlFor = inputId;
-      label.textContent = setting.label;
-
       const input = document.createElement('input');
       input.id = inputId;
       input.type = 'color';
+      input.className = 'color-swatch-input';
       input.value = String(currentValue);
 
       input.addEventListener('input', () => {
@@ -1437,9 +1422,11 @@ export class SettingsEditor {
         this.rerenderCallback();
       });
 
-      wrapper.appendChild(label);
-      wrapper.appendChild(input);
+      control.appendChild(input);
     }
+
+    wrapper.appendChild(info);
+    wrapper.appendChild(control);
 
     return wrapper;
   }

@@ -84,6 +84,21 @@ function getAccordionTitles(container: HTMLElement): string[] {
   );
 }
 
+/** Helper: get all section titles (accordion + flat) */
+function getSectionTitles(container: HTMLElement): string[] {
+  return Array.from(container.querySelectorAll('.accordion-title, .setting-section-title')).map(
+    (el) => el.textContent ?? '',
+  );
+}
+
+/** Helper: find a section (accordion or flat) by its title text */
+function findSectionByTitle(container: HTMLElement, title: string): Element | undefined {
+  return Array.from(container.querySelectorAll('[data-section-id]')).find((s) => {
+    const titleEl = s.querySelector('.accordion-title') ?? s.querySelector('.setting-section-title');
+    return titleEl?.textContent === title;
+  });
+}
+
 describe('SettingsEditor', () => {
   let container: HTMLElement;
   let renderer: ChartRenderer;
@@ -102,9 +117,9 @@ describe('SettingsEditor', () => {
     container.remove();
   });
 
-  it('builds settings panel with accordion sections', () => {
+  it('builds settings panel with accordion and flat sections', () => {
     new SettingsEditor(container, renderer, rerenderCb);
-    const titles = getAccordionTitles(container);
+    const titles = getSectionTitles(container);
     expect(titles.length).toBeGreaterThan(0);
     expect(titles).toContain('Presets');
     expect(titles).not.toContain('Theme Presets');
@@ -120,43 +135,40 @@ describe('SettingsEditor', () => {
     expect(btn!.textContent).toBe('Expand all');
   });
 
-  it('wraps each setting group in an accordion section', () => {
+  it('renders setting groups as flat sections with data-section-id', () => {
     new SettingsEditor(container, renderer, rerenderCb);
-    const sections = container.querySelectorAll('.accordion-section');
-    // presets + 9 groups + settings-io = 11 (no categories without store)
-    expect(sections.length).toBe(11);
+    const allSections = container.querySelectorAll('[data-section-id]');
+    // presets(accordion) + 9 flat groups + settings-io(accordion) = 11 (no categories without store)
+    expect(allSections.length).toBe(11);
+    // 9 flat setting sections
+    const flatSections = container.querySelectorAll('.setting-section');
+    expect(flatSections.length).toBe(9);
   });
 
-  it('setting group accordions have reset buttons', () => {
+  it('flat setting sections have setting-section-title', () => {
     new SettingsEditor(container, renderer, rerenderCb);
-    const resetBtns = container.querySelectorAll('.accordion-reset');
-    // 9 setting groups have reset buttons
-    expect(resetBtns.length).toBe(9);
-  });
-
-  it('reset button calls updateOptions with defaults and rerenders', () => {
-    new SettingsEditor(container, renderer, rerenderCb);
-    const resetBtn = container.querySelector<HTMLButtonElement>('.accordion-reset');
-    expect(resetBtn).not.toBeNull();
-    resetBtn!.click();
-    expect(renderer.updateOptions as ReturnType<typeof vi.fn>).toHaveBeenCalled();
-    expect(rerenderCb).toHaveBeenCalled();
+    const flatTitles = Array.from(container.querySelectorAll('.setting-section-title')).map(
+      (el) => el.textContent ?? '',
+    );
+    expect(flatTitles).toContain('Card Dimensions');
+    expect(flatTitles).toContain('Typography');
+    expect(flatTitles).toContain('Card Style');
   });
 
   it('accordion header toggles expanded state', () => {
     new SettingsEditor(container, renderer, rerenderCb);
-    // Card Dimensions is collapsed by default (not in DEFAULT_EXPANDED)
+    // Settings IO is collapsed by default (not in DEFAULT_EXPANDED)
     const headers = container.querySelectorAll<HTMLButtonElement>('.accordion-header');
-    const cardDimHeader = Array.from(headers).find(
-      (h) => h.querySelector('.accordion-title')?.textContent === 'Card Dimensions',
+    const settingsIOHeader = Array.from(headers).find(
+      (h) => h.querySelector('.accordion-title')?.textContent === 'Settings',
     )!;
-    expect(cardDimHeader.getAttribute('aria-expanded')).toBe('false');
+    expect(settingsIOHeader.getAttribute('aria-expanded')).toBe('false');
 
-    cardDimHeader.click();
-    expect(cardDimHeader.getAttribute('aria-expanded')).toBe('true');
+    settingsIOHeader.click();
+    expect(settingsIOHeader.getAttribute('aria-expanded')).toBe('true');
 
-    cardDimHeader.click();
-    expect(cardDimHeader.getAttribute('aria-expanded')).toBe('false');
+    settingsIOHeader.click();
+    expect(settingsIOHeader.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('default-expanded sections start expanded', () => {
@@ -185,15 +197,15 @@ describe('SettingsEditor', () => {
   it('loads accordion state from localStorage', () => {
     localStorageMock.setItem(
       'arbol-accordion-state',
-      JSON.stringify({ presets: false, 'card-dimensions': true }),
+      JSON.stringify({ presets: false, 'settings-io': true }),
     );
     new SettingsEditor(container, renderer, rerenderCb);
 
     const presetsContent = container.querySelector('#accordion-presets');
     expect(presetsContent!.getAttribute('data-expanded')).toBe('false');
 
-    const cardDimContent = container.querySelector('#accordion-card-dimensions');
-    expect(cardDimContent!.getAttribute('data-expanded')).toBe('true');
+    const settingsIOContent = container.querySelector('#accordion-settings-io');
+    expect(settingsIOContent!.getAttribute('data-expanded')).toBe('true');
   });
 
   describe('Node Categories section', () => {
@@ -569,11 +581,11 @@ describe('SettingsEditor', () => {
       )!;
       triggerFilter(input, 'typography');
 
-      const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
-      const nonMatching = Array.from(sections).filter(
-        (s) =>
-          !s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
-      );
+      const sections = container.querySelectorAll<HTMLElement>('[data-section-id]');
+      const nonMatching = Array.from(sections).filter((s) => {
+        const titleEl = s.querySelector('.accordion-title') ?? s.querySelector('.setting-section-title');
+        return !titleEl?.textContent?.toLowerCase().includes('typography');
+      });
       for (const section of nonMatching) {
         expect(section.style.opacity).toBe('0.3');
       }
@@ -586,10 +598,11 @@ describe('SettingsEditor', () => {
       )!;
       triggerFilter(input, 'typography');
 
-      const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
-      const matching = Array.from(sections).find((s) =>
-        s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
-      );
+      const sections = container.querySelectorAll<HTMLElement>('[data-section-id]');
+      const matching = Array.from(sections).find((s) => {
+        const titleEl = s.querySelector('.accordion-title') ?? s.querySelector('.setting-section-title');
+        return titleEl?.textContent?.toLowerCase().includes('typography');
+      });
       expect(matching).toBeDefined();
       expect(matching!.style.opacity).toBe('1');
     });
@@ -603,7 +616,7 @@ describe('SettingsEditor', () => {
       triggerFilter(input, 'typography');
       triggerFilter(input, '');
 
-      const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
+      const sections = container.querySelectorAll<HTMLElement>('[data-section-id]');
       for (const section of sections) {
         expect(section.style.opacity).toBe('1');
       }
@@ -640,23 +653,21 @@ describe('SettingsEditor', () => {
       expect(input.value).toBe('');
       expect(clearButton.style.display).toBe('none');
 
-      const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
+      const sections = container.querySelectorAll<HTMLElement>('[data-section-id]');
       for (const section of sections) {
         expect(section.style.opacity).toBe('1');
       }
     });
 
-    it('auto-expands matching sections during filter', () => {
+    it('auto-expands matching accordion sections during filter', () => {
       new SettingsEditor(container, renderer, rerenderCb);
       const input = container.querySelector<HTMLInputElement>(
         'input[aria-label="Filter settings"]',
       )!;
-      triggerFilter(input, 'typography');
+      triggerFilter(input, 'presets');
 
-      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
-        s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
-      )!;
-      const content = typoSection.querySelector('.accordion-content')!;
+      const presetsSection = findSectionByTitle(container, 'Presets')!;
+      const content = presetsSection.querySelector('.accordion-content')!;
       expect(content.getAttribute('data-expanded')).toBe('true');
     });
 
@@ -667,9 +678,7 @@ describe('SettingsEditor', () => {
       )!;
       triggerFilter(input, 'node width');
 
-      const cardDimSection = Array.from(
-        container.querySelectorAll<HTMLElement>('.accordion-section'),
-      ).find((s) => s.querySelector('.accordion-title')?.textContent === 'Card Dimensions');
+      const cardDimSection = findSectionByTitle(container, 'Card Dimensions') as HTMLElement;
       expect(cardDimSection).toBeDefined();
       expect(cardDimSection!.style.opacity).toBe('1');
     });
@@ -681,11 +690,11 @@ describe('SettingsEditor', () => {
       )!;
       triggerFilter(input, 'typography');
 
-      const sections = container.querySelectorAll<HTMLElement>('.accordion-section');
-      const nonMatching = Array.from(sections).filter(
-        (s) =>
-          !s.querySelector('.accordion-title')?.textContent?.toLowerCase().includes('typography'),
-      );
+      const sections = container.querySelectorAll<HTMLElement>('[data-section-id]');
+      const nonMatching = Array.from(sections).filter((s) => {
+        const titleEl = s.querySelector('.accordion-title') ?? s.querySelector('.setting-section-title');
+        return !titleEl?.textContent?.toLowerCase().includes('typography');
+      });
       for (const section of nonMatching) {
         expect(section.style.pointerEvents).toBe('none');
       }
@@ -695,9 +704,7 @@ describe('SettingsEditor', () => {
   describe('headcount badge settings', () => {
     it('renders checkbox for showHeadcount', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const badgeSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
-        s.querySelector('.accordion-title')?.textContent === 'Headcount Badge',
-      )!;
+      const badgeSection = findSectionByTitle(container, 'Headcount Badge')!;
       expect(badgeSection).toBeDefined();
       const checkbox = badgeSection.querySelector<HTMLInputElement>('input[type="checkbox"]');
       expect(checkbox).not.toBeNull();
@@ -706,9 +713,7 @@ describe('SettingsEditor', () => {
 
     it('toggling checkbox updates renderer', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const badgeSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
-        s.querySelector('.accordion-title')?.textContent === 'Headcount Badge',
-      )!;
+      const badgeSection = findSectionByTitle(container, 'Headcount Badge')!;
       const checkbox = badgeSection.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
       checkbox.checked = true;
       checkbox.dispatchEvent(new Event('change'));
@@ -720,9 +725,7 @@ describe('SettingsEditor', () => {
 
     it('renders badge styling controls', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const badgeSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
-        s.querySelector('.accordion-title')?.textContent === 'Headcount Badge',
-      )!;
+      const badgeSection = findSectionByTitle(container, 'Headcount Badge')!;
       const rangeInputs = badgeSection.querySelectorAll('input[type="range"]');
       const colorInputs = badgeSection.querySelectorAll('input[type="color"]');
       // 4 range inputs: font size, height, radius, padding
@@ -733,11 +736,9 @@ describe('SettingsEditor', () => {
   });
 
   describe('export settings', () => {
-    it('renders Categories Legend accordion section with Legend Rows control', () => {
+    it('renders Categories Legend section with Legend Rows control', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const exportSection = Array.from(container.querySelectorAll('.accordion-section')).find(
-        (s) => s.querySelector('.accordion-title')?.textContent === 'Categories Legend',
-      )!;
+      const exportSection = findSectionByTitle(container, 'Categories Legend')!;
       expect(exportSection).toBeDefined();
       const rangeInput = exportSection.querySelector<HTMLInputElement>('input[type="range"]');
       expect(rangeInput).not.toBeNull();
@@ -747,9 +748,7 @@ describe('SettingsEditor', () => {
 
     it('changing Legend Rows slider updates renderer', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const exportSection = Array.from(container.querySelectorAll('.accordion-section')).find(
-        (s) => s.querySelector('.accordion-title')?.textContent === 'Categories Legend',
-      )!;
+      const exportSection = findSectionByTitle(container, 'Categories Legend')!;
       const rangeInput = exportSection.querySelector<HTMLInputElement>('input[type="range"]')!;
       rangeInput.value = '3';
       rangeInput.dispatchEvent(new Event('input'));
@@ -791,7 +790,7 @@ describe('SettingsEditor', () => {
 
     it('section count increases by 1 when chartDB is provided', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const sectionsWithout = container.querySelectorAll('.accordion-section').length;
+      const sectionsWithout = container.querySelectorAll('[data-section-id]').length;
 
       container.remove();
       container = document.createElement('div');
@@ -799,7 +798,7 @@ describe('SettingsEditor', () => {
 
       const db = createMockChartDB();
       new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
-      const sectionsWith = container.querySelectorAll('.accordion-section').length;
+      const sectionsWith = container.querySelectorAll('[data-section-id]').length;
 
       expect(sectionsWith).toBe(sectionsWithout + 1);
     });
@@ -808,10 +807,11 @@ describe('SettingsEditor', () => {
       const db = createMockChartDB();
       new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
 
-      const sections = Array.from(container.querySelectorAll('.accordion-section'));
-      const backupSection = sections.find(
-        (s) => s.querySelector('.accordion-title')?.textContent === 'Backup & Restore',
-      );
+      const sections = Array.from(container.querySelectorAll('[data-section-id]'));
+      const backupSection = sections.find((s) => {
+        const titleEl = s.querySelector('.accordion-title') ?? s.querySelector('.setting-section-title');
+        return titleEl?.textContent === 'Backup & Restore';
+      });
       expect(backupSection).toBeDefined();
 
       const clearBtn = container.querySelector('button[aria-label="Clear all local data"]');
@@ -869,9 +869,7 @@ describe('SettingsEditor', () => {
   describe('text alignment select control', () => {
     it('renders a select element for textAlign in Typography group', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
-        s.querySelector('.accordion-title')?.textContent === 'Typography',
-      )!;
+      const typoSection = findSectionByTitle(container, 'Typography')!;
       expect(typoSection).toBeDefined();
       const selects = typoSection.querySelectorAll('select');
       expect(selects.length).toBeGreaterThanOrEqual(1);
@@ -886,9 +884,7 @@ describe('SettingsEditor', () => {
 
     it('has center selected by default', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
-        s.querySelector('.accordion-title')?.textContent === 'Typography',
-      )!;
+      const typoSection = findSectionByTitle(container, 'Typography')!;
       const selects = typoSection.querySelectorAll('select');
       const textAlignSelect = Array.from(selects).find((s) => {
         const options = Array.from(s.querySelectorAll('option'));
@@ -902,9 +898,7 @@ describe('SettingsEditor', () => {
 
     it('renders textPaddingHorizontal range input', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
-        s.querySelector('.accordion-title')?.textContent === 'Typography',
-      )!;
+      const typoSection = findSectionByTitle(container, 'Typography')!;
       const rangeInputs = typoSection.querySelectorAll('input[type="range"]');
       // Should have range inputs including textPaddingHorizontal
       expect(rangeInputs.length).toBeGreaterThanOrEqual(5);
@@ -912,9 +906,7 @@ describe('SettingsEditor', () => {
 
     it('renders fontFamily select in Typography group', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const typoSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
-        s.querySelector('.accordion-title')?.textContent === 'Typography',
-      )!;
+      const typoSection = findSectionByTitle(container, 'Typography')!;
       const selects = typoSection.querySelectorAll('select');
       // Should have 2 selects: textAlign and fontFamily
       expect(selects.length).toBe(2);
@@ -930,9 +922,7 @@ describe('SettingsEditor', () => {
   describe('card border radius control', () => {
     it('renders cardBorderRadius range in Card Style group', () => {
       new SettingsEditor(container, renderer, rerenderCb);
-      const cardSection = Array.from(container.querySelectorAll('.accordion-section')).find((s) =>
-        s.querySelector('.accordion-title')?.textContent === 'Card Style',
-      )!;
+      const cardSection = findSectionByTitle(container, 'Card Style')!;
       expect(cardSection).toBeDefined();
       const rangeInputs = cardSection.querySelectorAll('input[type="range"]');
       // cardStrokeWidth + cardBorderRadius = 2 range inputs
