@@ -9,13 +9,13 @@ import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { MappingStore } from './store/mapping-store';
 import { CategoryStore } from './store/category-store';
-import { flattenTree, findNodeById, findParent, isLeaf, isM1, countLeaves, countManagersByLevel, avgSpanOfControl } from './utils/tree';
+import { flattenTree, findNodeById, findParent, isLeaf, countLeaves, countManagersByLevel, avgSpanOfControl } from './utils/tree';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
 import { timestampedFilename } from './utils/filename';
 import { APP_VERSION } from './version';
-import { showContextMenu, dismissContextMenu, ContextMenuItem } from './ui/context-menu';
-import { showInlineEditor, dismissInlineEditor } from './ui/inline-editor';
+import { dismissContextMenu } from './ui/context-menu';
+import { dismissInlineEditor } from './ui/inline-editor';
 import { showAddPopover, dismissAddPopover } from './ui/add-popover';
 import { showManagerPicker } from './ui/manager-picker';
 import { showConfirmDialog } from './ui/confirm-dialog';
@@ -35,6 +35,8 @@ import { FocusModeController } from './controllers/focus-mode';
 import { SelectionManager } from './controllers/selection-manager';
 import { SearchController } from './controllers/search-controller';
 import { announce } from './ui/announcer';
+import { createShowSingleCardMenu, createShowMultiSelectMenu, type ContextMenuDeps } from './init/context-menu-handler';
+import { buildToolbar, type ToolbarElements } from './init/toolbar-builder';
 import { showWelcomeBanner } from './ui/welcome-banner';
 import { CommandPalette, CommandItem } from './ui/command-palette';
 import { PropertyPanel } from './ui/property-panel';
@@ -339,73 +341,9 @@ async function main(): Promise<void> {
   focusMode = new FocusModeController(store, renderer, rerender);
   focusMode.onExit(() => announce(t('focus.exited')));
 
-  // Theme toggle
+  // Theme manager + header references
   const themeManager = new ThemeManager();
   const headerRight = document.getElementById('header-right')!;
-
-  const themeBtn = document.createElement('button');
-  themeBtn.className = 'icon-btn';
-  themeBtn.setAttribute('data-tooltip', t('toolbar.toggle_theme'));
-  themeBtn.setAttribute('aria-label', t('toolbar.toggle_theme_aria'));
-  const themeIcon = document.createElement('span');
-  themeIcon.setAttribute('aria-hidden', 'true');
-  themeIcon.textContent = themeManager.getTheme() === 'dark' ? t('toolbar.theme_icon_dark') : t('toolbar.theme_icon_light');
-  themeBtn.appendChild(themeIcon);
-  themeBtn.addEventListener('click', () => {
-    themeManager.toggle();
-  });
-  themeManager.onChange(() => {
-    const theme = themeManager.getTheme();
-    themeIcon.textContent = theme === 'dark' ? t('toolbar.theme_icon_dark') : t('toolbar.theme_icon_light');
-    announce(t('toolbar.theme_switched', { theme }));
-  });
-  headerRight.appendChild(themeBtn);
-
-  // Help button
-  const helpBtn = document.createElement('button');
-  helpBtn.className = 'icon-btn';
-  helpBtn.setAttribute('data-tooltip', t('toolbar.help_tooltip'));
-  helpBtn.setAttribute('aria-label', t('toolbar.help_aria'));
-  helpBtn.textContent = t('toolbar.help_text');
-  helpBtn.style.fontWeight = '700';
-  helpBtn.addEventListener('click', () => showHelpDialog());
-  headerRight.appendChild(helpBtn);
-
-  // Undo/Redo buttons (inserted before theme button)
-  const undoBtn = document.createElement('button');
-  undoBtn.className = 'icon-btn';
-  undoBtn.setAttribute('data-tooltip', t('toolbar.undo_tooltip'));
-  undoBtn.setAttribute('aria-label', t('toolbar.undo_aria'));
-  undoBtn.setAttribute('aria-keyshortcuts', 'Control+Z');
-  const undoIcon = document.createElement('span');
-  undoIcon.setAttribute('aria-hidden', 'true');
-  undoIcon.textContent = t('toolbar.undo_icon');
-  undoBtn.appendChild(undoIcon);
-  undoBtn.disabled = true;
-  undoBtn.addEventListener('click', () => {
-    if (store.undo()) announce(t('announce.undo'));
-  });
-  headerRight.insertBefore(undoBtn, themeBtn);
-
-  const redoBtn= document.createElement('button');
-  redoBtn.className = 'icon-btn';
-  redoBtn.setAttribute('data-tooltip', t('toolbar.redo_tooltip'));
-  redoBtn.setAttribute('aria-label', t('toolbar.redo_aria'));
-  redoBtn.setAttribute('aria-keyshortcuts', 'Control+Shift+Z');
-  const redoIcon = document.createElement('span');
-  redoIcon.setAttribute('aria-hidden', 'true');
-  redoIcon.textContent = t('toolbar.redo_icon');
-  redoBtn.appendChild(redoIcon);
-  redoBtn.disabled = true;
-  redoBtn.addEventListener('click', () => {
-    if (store.redo()) announce(t('announce.redo'));
-  });
-  headerRight.insertBefore(redoBtn, themeBtn);
-
-  // Visual divider between undo/redo and theme toggle
-  const divider = document.createElement('span');
-  divider.className = 'header-divider';
-  headerRight.insertBefore(divider, themeBtn);
 
   // Settings modal (opens via header button)
   const SECTION_TAB_MAP: Record<string, string> = {
@@ -474,42 +412,6 @@ async function main(): Promise<void> {
     },
     onTabChange: (tabId) => { filterSettingsSections(tabId); },
   });
-
-  const settingsBtn = document.createElement('button');
-  settingsBtn.className = 'icon-btn';
-  settingsBtn.setAttribute('data-tooltip', t('toolbar.settings_tooltip'));
-  settingsBtn.setAttribute('aria-label', t('toolbar.settings_aria'));
-  settingsBtn.setAttribute('aria-keyshortcuts', 'Control+,');
-  const settingsIcon = document.createElement('span');
-  settingsIcon.setAttribute('aria-hidden', 'true');
-  settingsIcon.textContent = '⚙️';
-  settingsBtn.appendChild(settingsIcon);
-  settingsBtn.addEventListener('click', () => {
-    // Snapshot current settings so Cancel can revert
-    settingsSnapshot = { ...renderer.getOptions() };
-    settingsModal.open();
-    if (!settingsEditorInstance) {
-      settingsEditorInstance = new SettingsEditor(
-        settingsModal.getContentArea(),
-        renderer,
-        rerender,
-        settingsStore,
-        categoryStore,
-        chartDB,
-      );
-      settingsEditorInstance.setPreviewArea(settingsModal.getPreviewArea());
-      settingsEditorInstance.wirePreviewControls(
-        settingsModal.getPreviewFitBtn(),
-        settingsModal.getPreviewResetBtn(),
-        settingsModal.getPreviewZoomPct(),
-      );
-      settingsEditorInstance.onBuild(() => {
-        filterSettingsSections(settingsModal.getActiveTab());
-      });
-    }
-    filterSettingsSections(settingsModal.getActiveTab());
-  });
-  headerRight.insertBefore(settingsBtn, divider);
 
   // Import wizard (opens via header button)
   let wizardState: WizardState = {};
@@ -586,54 +488,49 @@ async function main(): Promise<void> {
     },
   });
 
-  const importBtn = document.createElement('button');
-  importBtn.className = 'icon-btn';
-  importBtn.setAttribute('data-tooltip', t('toolbar.import_tooltip'));
-  importBtn.setAttribute('aria-label', t('toolbar.import_aria'));
-  const importIcon = document.createElement('span');
-  importIcon.setAttribute('aria-hidden', 'true');
-  importIcon.textContent = '📂';
-  importBtn.appendChild(importIcon);
-  importBtn.appendChild(document.createTextNode(' Import'));
-  importBtn.addEventListener('click', () => {
-    wizardState = {};
-    importWizard.open();
-    const content = importWizard.getStepContentArea();
-    renderSourceStep(content, wizardState, (ready) => importWizard.setNextEnabled(ready));
+  // Build all toolbar buttons (theme, help, undo, redo, settings, import, export, mobile menu)
+  const toolbar = buildToolbar({
+    store,
+    themeManager,
+    headerRight,
+    headerLeft: document.querySelector('.header-left')!,
+    sidebar,
+    onSettingsClick: () => {
+      // Snapshot current settings so Cancel can revert
+      settingsSnapshot = { ...renderer.getOptions() };
+      settingsModal.open();
+      if (!settingsEditorInstance) {
+        settingsEditorInstance = new SettingsEditor(
+          settingsModal.getContentArea(),
+          renderer,
+          rerender,
+          settingsStore,
+          categoryStore,
+          chartDB,
+        );
+        settingsEditorInstance.setPreviewArea(settingsModal.getPreviewArea());
+        settingsEditorInstance.wirePreviewControls(
+          settingsModal.getPreviewFitBtn(),
+          settingsModal.getPreviewResetBtn(),
+          settingsModal.getPreviewZoomPct(),
+        );
+        settingsEditorInstance.onBuild(() => {
+          filterSettingsSections(settingsModal.getActiveTab());
+        });
+      }
+      filterSettingsSections(settingsModal.getActiveTab());
+    },
+    onImportClick: () => {
+      wizardState = {};
+      importWizard.open();
+      const content = importWizard.getStepContentArea();
+      renderSourceStep(content, wizardState, (ready) => importWizard.setNextEnabled(ready));
+    },
+    onExportClick: () => { exportCurrentChart(); },
   });
-  headerRight.insertBefore(importBtn, settingsBtn);
-
-  const exportHeaderBtn = document.createElement('button');
-  exportHeaderBtn.className = 'icon-btn';
-  exportHeaderBtn.setAttribute('data-tooltip', t('toolbar.export_tooltip'));
-  exportHeaderBtn.setAttribute('aria-label', t('toolbar.export_aria'));
-  exportHeaderBtn.setAttribute('aria-keyshortcuts', 'Control+e');
-  const exportHeaderIcon = document.createElement('span');
-  exportHeaderIcon.setAttribute('aria-hidden', 'true');
-  exportHeaderIcon.textContent = '📤';
-  exportHeaderBtn.appendChild(exportHeaderIcon);
-  exportHeaderBtn.appendChild(document.createTextNode(' Export'));
-  exportHeaderBtn.addEventListener('click', () => { exportCurrentChart(); });
-  headerRight.insertBefore(exportHeaderBtn, settingsBtn);
-
-  // Reposition divider: between Export and Settings (was between Settings and Theme)
-  headerRight.insertBefore(divider, settingsBtn);
-  // Add second divider between Redo and Import
-  const divider2 = document.createElement('span');
-  divider2.className = 'header-divider';
-  headerRight.insertBefore(divider2, importBtn);
-
-  const updateUndoRedoState= () => {
-    undoBtn.disabled = !store.canUndo();
-    redoBtn.disabled = !store.canRedo();
-    undoBtn.style.opacity = store.canUndo() ? '1' : '0.4';
-    redoBtn.style.opacity = store.canRedo() ? '1' : '0.4';
-  };
-  store.onChange(updateUndoRedoState);
-  updateUndoRedoState();
+  const { undoBtn, redoBtn, settingsBtn, importBtn } = toolbar;
 
   // Chart name header (moved offscreen — name shown in sidebar)
-  const headerLeft = document.querySelector('.header-left')!;
   const chartNameContainer = document.createElement('div');
   chartNameContainer.style.cssText = 'display:flex;align-items:center;margin-left:12px;';
   offscreenHost.appendChild(chartNameContainer);
@@ -663,35 +560,6 @@ async function main(): Promise<void> {
   store.onChange(() => {
     chartNameHeader.setDirty(chartStore.isDirty(store.getTree(), store.mutationVersion));
   });
-
-  // Mobile sidebar toggle (hamburger menu)
-  const menuToggle = document.createElement('button');
-  menuToggle.className = 'menu-toggle icon-btn';
-  menuToggle.setAttribute('aria-label', t('toolbar.toggle_sidebar'));
-  menuToggle.setAttribute('aria-expanded', 'false');
-  const menuIcon = document.createElement('span');
-  menuIcon.setAttribute('aria-hidden', 'true');
-  menuIcon.textContent = t('toolbar.hamburger_icon');
-  menuToggle.appendChild(menuIcon);
-  headerLeft.insertBefore(menuToggle, headerLeft.firstChild);
-
-  const sidebarBackdrop = document.createElement('div');
-  sidebarBackdrop.className = 'sidebar-backdrop';
-  document.body.appendChild(sidebarBackdrop);
-
-  const closeSidebar = () => {
-    sidebar.classList.remove('sidebar-open');
-    menuToggle.setAttribute('aria-expanded', 'false');
-    sidebarBackdrop.classList.remove('visible');
-  };
-
-  menuToggle.addEventListener('click', () => {
-    const isOpen = sidebar.classList.toggle('sidebar-open');
-    menuToggle.setAttribute('aria-expanded', String(isOpen));
-    sidebarBackdrop.classList.toggle('visible', isOpen);
-  });
-
-  sidebarBackdrop.addEventListener('click', closeSidebar);
 
   // Search UI — floating over the chart canvas
   const searchWrapper = document.createElement('div');
@@ -1093,312 +961,9 @@ async function main(): Promise<void> {
   };
   renderer.getZoomManager()?.onZoom(dismissAllOverlays);
 
-  // Helper: show single-card context menu
-  const showSingleCardMenu = (nodeId: string, event: MouseEvent) => {
-    const tree = store.getTree();
-    const node = findNodeById(tree, nodeId);
-    if (!node) return;
-
-    const isRoot = tree.id === nodeId;
-    const nodeIsLeaf = isLeaf(node);
-    const parent = findParent(tree, nodeId);
-    const nodeIsIC = nodeIsLeaf && parent !== null && isM1(parent);
-
-    showContextMenu({
-      x: event.clientX,
-      y: event.clientY,
-      items: [
-        {
-          label: t('menu.edit'),
-          icon: t('menu.edit_icon'),
-          action: () => {
-            const rect = renderer.getNodeScreenRect(nodeId);
-            if (!rect) return;
-            showInlineEditor({
-              rect,
-              name: node.name,
-              title: node.title,
-              onSave: (name, title) => {
-                store.updateNode(nodeId, { name, title });
-              },
-              onCancel: () => {},
-            });
-          },
-        },
-        {
-          label: t('menu.add'),
-          icon: t('menu.add_icon'),
-          action: () => {
-            const rect = renderer.getNodeScreenRect(nodeId);
-            if (!rect) return;
-            showAddPopover({
-              anchor: rect,
-              parentName: node.name,
-              onAdd: (name, title) => {
-                store.addChild(nodeId, { name, title });
-              },
-              onCancel: () => {},
-            });
-          },
-        },
-        {
-          label: t('menu.focus'),
-          icon: t('menu.focus_icon'),
-          disabled: nodeIsLeaf || focusMode.focusedId === nodeId,
-          action: () => {
-            focusMode.enter(nodeId);
-            announce(t('focus.entered', { name: node.name }));
-          },
-        },
-        {
-          label: t('menu.category'),
-          icon: t('menu.category_icon'),
-          submenu: [
-            {
-              label: t('menu.category_none'),
-              icon: node.categoryId ? ' ' : t('menu.category_check'),
-              action: () => {
-                store.setNodeCategory(nodeId, null);
-              },
-            },
-            ...categoryStore.getAll().map(
-              (cat): ContextMenuItem => ({
-                label: cat.label,
-                icon: node.categoryId === cat.id ? t('menu.category_check') : ' ',
-                swatch: cat.color,
-                action: () => {
-                  store.setNodeCategory(nodeId, cat.id);
-                },
-              }),
-            ),
-          ],
-        },
-        {
-          label: node.dottedLine ? t('menu.dotted_line_remove') : t('menu.dotted_line_set'),
-          icon: t('menu.dotted_line_icon'),
-          disabled: isRoot || nodeIsIC,
-          action: () => {
-            store.setDottedLine(nodeId, !node.dottedLine);
-          },
-        },
-        {
-          label: t('menu.move'),
-          icon: t('menu.move_icon'),
-          disabled: isRoot,
-          action: async () => {
-            try {
-              const allNodes = flattenTree(tree);
-              const descendants = flattenTree(node);
-              const descendantIds = new Set(descendants.map((n) => n.id));
-              const managers = allNodes
-                .filter((n) => !descendantIds.has(n.id))
-                .map((n) => ({ id: n.id, name: n.name, title: n.title }));
-
-              const result = await showManagerPicker({
-                title: t('picker.move_to', { name: node.name }),
-                managers,
-                showDottedLineOption: true,
-              });
-              if (result) {
-                const targetNode = findNodeById(tree, result.managerId);
-                store.moveNode(nodeId, result.managerId, result.dottedLine);
-                announce(t('announce.moved', { name: node.name, target: targetNode?.name ?? t('announce.move_fallback_target') }));
-              }
-            } catch (e) {
-              showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
-            }
-          },
-        },
-        {
-          label: t('menu.remove'),
-          icon: t('menu.remove_icon'),
-          danger: true,
-          disabled: isRoot,
-          action: async () => {
-            try {
-              if (nodeIsLeaf) {
-                const confirmed = await showConfirmDialog({
-                  title: t('dialog.remove_person.title'),
-                  message: t('dialog.remove_person.message', { name: node.name }),
-                  confirmLabel: t('dialog.remove_person.confirm'),
-                  danger: true,
-                });
-                if (confirmed) {
-                  store.removeNode(nodeId);
-                  announce(t('announce.removed', { name: node.name }));
-                }
-              } else {
-                const descendants = flattenTree(node);
-                const descendantCount = descendants.length - 1;
-
-                const reassign = await showConfirmDialog({
-                  title: t('dialog.remove_manager.title'),
-                  message: t('dialog.remove_manager.message', { name: node.name, count: String(descendantCount) }),
-                  confirmLabel: t('dialog.remove_manager.reassign'),
-                  cancelLabel: t('dialog.remove_manager.remove_all', { count: String(descendantCount) }),
-                  danger: false,
-                });
-
-                if (reassign) {
-                  const allNodes = flattenTree(tree);
-                  const descendantIds = new Set(descendants.map((n) => n.id));
-                  const managers = allNodes
-                    .filter((n) => !descendantIds.has(n.id))
-                    .map((n) => ({ id: n.id, name: n.name, title: n.title }));
-
-                  const result = await showManagerPicker({
-                    title: t('picker.reassign_to', { name: node.name }),
-                    managers,
-                  });
-                  if (result) {
-                    store.removeNodeWithReassign(nodeId, result.managerId);
-                    announce(t('announce.removed', { name: node.name }));
-                  }
-                } else {
-                  const confirmed = await showConfirmDialog({
-                    title: t('dialog.remove_manager.remove_all_confirm_title'),
-                    message: t('dialog.remove_manager.remove_all_confirm_message', { name: node.name, count: String(descendantCount) }),
-                    confirmLabel: t('dialog.remove_manager.remove_all_confirm'),
-                    danger: true,
-                  });
-                  if (confirmed) {
-                    store.removeNode(nodeId);
-                    announce(t('announce.removed_with_org', { name: node.name, count: String(descendantCount) }));
-                  }
-                }
-              }
-            } catch (e) {
-              showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
-            }
-          },
-        },
-      ],
-    });
-  };
-
-  // Helper: show multi-select context menu
-  const showMultiSelectMenu = (event: MouseEvent) => {
-    const count = selection.count;
-    const selectedArray = selection.toArray();
-
-    showContextMenu({
-      x: event.clientX,
-      y: event.clientY,
-      items: [
-        {
-          label: t('menu.multi_category', { count }),
-          icon: '🏷️',
-          submenu: [
-            {
-              label: t('menu.category_none'),
-              action: () => {
-                store.bulkSetCategory(selectedArray, null);
-              },
-            },
-            ...categoryStore.getAll().map(
-              (cat): ContextMenuItem => ({
-                label: cat.label,
-                swatch: cat.color,
-                action: () => {
-                  store.bulkSetCategory(selectedArray, cat.id);
-                },
-              }),
-            ),
-          ],
-        },
-        {
-          label: t('menu.multi_move', { count }),
-          icon: '↗️',
-          action: async () => {
-            try {
-              const tree = store.getTree();
-              const allNodes = flattenTree(tree);
-              // Exclude selected nodes and their descendants
-              const excludeIds = new Set<string>();
-              for (const id of selectedArray) {
-                const n = findNodeById(tree, id);
-                if (n) flattenTree(n).forEach((d) => excludeIds.add(d.id));
-              }
-              const managers = allNodes
-                .filter((n) => !excludeIds.has(n.id))
-                .map((n) => ({ id: n.id, name: n.name, title: n.title }));
-
-              const result = await showManagerPicker({
-                title: t('picker.multi_move_to', { count }),
-                managers,
-              });
-              if (result) {
-                store.bulkMoveNodes(selectedArray, result.managerId);
-                const targetNode = findNodeById(store.getTree(), result.managerId);
-                announce(t('announce.multi_moved', { count, target: targetNode?.name ?? t('announce.move_fallback_target') }));
-              }
-            } catch (e) {
-              showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
-            }
-          },
-        },
-        {
-          label: t('menu.multi_remove', { count }),
-          icon: '🗑️',
-          danger: true,
-          action: async () => {
-            try {
-              const tree = store.getTree();
-              // Check if any selected nodes have children
-              const hasManagers = selectedArray.some((id) => {
-                const n = findNodeById(tree, id);
-                return n && !isLeaf(n);
-              });
-
-              if (hasManagers) {
-                // Some are managers — ask where to reassign children
-                const allNodes = flattenTree(tree);
-                const excludeIds = new Set<string>();
-                for (const id of selectedArray) {
-                  const n = findNodeById(tree, id);
-                  if (n) flattenTree(n).forEach((d) => excludeIds.add(d.id));
-                }
-                const managers = allNodes
-                  .filter((n) => !excludeIds.has(n.id))
-                  .map((n) => ({ id: n.id, name: n.name, title: n.title }));
-
-                const result = await showManagerPicker({
-                  title: t('picker.reassign_managers'),
-                  managers,
-                });
-                if (result) {
-                  // Reassign children of managers first, then remove all
-                  for (const id of selectedArray) {
-                    const n = findNodeById(store.getTree(), id);
-                    if (n && !isLeaf(n)) {
-                      store.removeNodeWithReassign(id, result.managerId);
-                    } else if (n) {
-                      store.removeNode(id);
-                    }
-                  }
-                  announce(t('announce.multi_removed', { count }));
-                }
-              } else {
-                // All leaves — simple confirm and bulk remove
-                const confirmed = await showConfirmDialog({
-                  title: t('dialog.remove_selected.title'),
-                  message: t('dialog.remove_selected.message', { count }),
-                  confirmLabel: t('dialog.remove_selected.confirm'),
-                  danger: true,
-                });
-                if (confirmed) {
-                  store.bulkRemoveNodes(selectedArray);
-                  announce(t('announce.multi_removed', { count }));
-                }
-              }
-            } catch (e) {
-              showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
-            }
-          },
-        },
-      ],
-    });
-  };
+  const contextMenuDeps: ContextMenuDeps = { store, categoryStore, renderer, focusMode, selection };
+  const showSingleCardMenu = createShowSingleCardMenu(contextMenuDeps);
+  const showMultiSelectMenu = createShowMultiSelectMenu(contextMenuDeps);
 
   // Right-click context menu
   renderer.setNodeRightClickHandler((nodeId: string, event: MouseEvent) => {
