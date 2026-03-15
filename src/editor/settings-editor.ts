@@ -1054,6 +1054,7 @@ export class SettingsEditor {
 
     // Combined preset grid
     const allPresets = [...COMBINED_PRESETS, ...this.loadCustomPresets()];
+    let activePresetFound = false;
 
     const presetGrid = document.createElement('div');
     presetGrid.className = 'preset-grid';
@@ -1134,14 +1135,19 @@ export class SettingsEditor {
         this.build();
       });
 
-      // Check if this preset matches current settings
+      // Check if this preset matches current settings (first match only)
       const currentOpts = this.renderer.getOptions();
-      const isActive =
+      const isActive = !activePresetFound &&
         currentOpts.cardFill === preset.colors.cardFill &&
         currentOpts.cardStroke === preset.colors.cardStroke &&
-        currentOpts.linkColor === preset.colors.linkColor;
+        currentOpts.linkColor === preset.colors.linkColor &&
+        currentOpts.cardStrokeWidth === preset.colors.cardStrokeWidth &&
+        currentOpts.icContainerFill === preset.colors.icContainerFill &&
+        currentOpts.nodeWidth === preset.sizes.nodeWidth &&
+        currentOpts.nodeHeight === preset.sizes.nodeHeight;
 
       if (isActive) {
+        activePresetFound = true;
         card.classList.add('preset-active');
         const badge = document.createElement('span');
         badge.className = 'preset-active-badge';

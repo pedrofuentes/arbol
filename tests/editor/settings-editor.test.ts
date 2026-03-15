@@ -947,7 +947,7 @@ describe('SettingsEditor', () => {
   describe('active preset indicator', () => {
     it('preset card has .preset-active class when renderer options match preset colors', () => {
       // Default opts match the first preset if colors align — use a renderer
-      // whose cardFill/cardStroke/linkColor match the first combined preset
+      // whose colors and sizes match the first combined preset
       const firstPreset = COMBINED_PRESETS[0];
       const matchingRenderer = {
         getOptions: vi.fn(() => ({
@@ -955,6 +955,10 @@ describe('SettingsEditor', () => {
           cardFill: firstPreset.colors.cardFill,
           cardStroke: firstPreset.colors.cardStroke,
           linkColor: firstPreset.colors.linkColor,
+          cardStrokeWidth: firstPreset.colors.cardStrokeWidth,
+          icContainerFill: firstPreset.colors.icContainerFill,
+          nodeWidth: firstPreset.sizes.nodeWidth,
+          nodeHeight: firstPreset.sizes.nodeHeight,
         })),
         updateOptions: vi.fn(),
       } as unknown as ChartRenderer;
@@ -971,6 +975,10 @@ describe('SettingsEditor', () => {
           cardFill: firstPreset.colors.cardFill,
           cardStroke: firstPreset.colors.cardStroke,
           linkColor: firstPreset.colors.linkColor,
+          cardStrokeWidth: firstPreset.colors.cardStrokeWidth,
+          icContainerFill: firstPreset.colors.icContainerFill,
+          nodeWidth: firstPreset.sizes.nodeWidth,
+          nodeHeight: firstPreset.sizes.nodeHeight,
         })),
         updateOptions: vi.fn(),
       } as unknown as ChartRenderer;
