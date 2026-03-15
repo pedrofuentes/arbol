@@ -75,11 +75,12 @@ describe('SettingsModal', () => {
     modal.destroy();
   });
 
-  it('Apply button calls onApply and closes', () => {
+  it('Apply button calls onApply and closes', async () => {
     const { modal, onClose } = createModal();
     modal.open();
     const applyBtn = document.querySelector('.settings-apply-btn') as HTMLElement;
     applyBtn.click();
+    await Promise.resolve();
     expect(onClose).toHaveBeenCalled();
     modal.destroy();
   });

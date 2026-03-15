@@ -406,11 +406,9 @@ describe('SettingsEditor', () => {
       }
     });
 
-    it('renders Save as Preset button', () => {
-      new SettingsEditor(container, renderer, rerenderCb);
-      const saveBtn = container.querySelector('.save-preset-btn');
-      expect(saveBtn).not.toBeNull();
-      expect(saveBtn!.textContent).toBe('💾 Save as Preset');
+    it('exposes saveCurrentAsPreset public method', () => {
+      const editor = new SettingsEditor(container, renderer, rerenderCb);
+      expect(typeof editor.saveCurrentAsPreset).toBe('function');
     });
 
     it('clicking a preset applies both colors and layout', () => {
@@ -452,28 +450,9 @@ describe('SettingsEditor', () => {
       expect(lastCall).not.toHaveProperty('cardFill');
     });
 
-    it('shows name input when Save as Preset is clicked', () => {
-      new SettingsEditor(container, renderer, rerenderCb);
-      const saveBtn = container.querySelector<HTMLButtonElement>('.save-preset-btn')!;
-      const nameInput = container.querySelector<HTMLInputElement>(
-        'input[aria-label="Custom preset name"]',
-      )!;
-      // Initially hidden
-      expect(nameInput.style.display).not.toBe('block');
-      saveBtn.click();
-      expect(nameInput.style.display).toBe('block');
-    });
-
-    it('saves custom preset to localStorage and renders it', () => {
-      new SettingsEditor(container, renderer, rerenderCb);
-      const saveBtn = container.querySelector<HTMLButtonElement>('.save-preset-btn')!;
-      saveBtn.click();
-      const nameInput = container.querySelector<HTMLInputElement>(
-        'input[aria-label="Custom preset name"]',
-      )!;
-      nameInput.value = 'My Custom';
-      const confirmBtn = container.querySelector<HTMLButtonElement>('.btn-primary')!;
-      confirmBtn.click();
+    it('saveCurrentAsPreset saves to localStorage and rebuilds', () => {
+      const editor = new SettingsEditor(container, renderer, rerenderCb);
+      editor.saveCurrentAsPreset('My Custom');
       // After save, preset grid should include the custom preset
       const cards = container.querySelectorAll('.preset-card');
       expect(cards.length).toBe(COMBINED_PRESETS.length + 1);

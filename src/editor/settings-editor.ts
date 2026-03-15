@@ -538,6 +538,48 @@ export class SettingsEditor {
     );
   }
 
+  saveCurrentAsPreset(name: string): void {
+    const opts = this.renderer.getOptions();
+    const newPreset: CombinedPreset = {
+      id: 'custom-' + generateId(),
+      name,
+      colors: {
+        cardFill: String(opts.cardFill),
+        cardStroke: String(opts.cardStroke),
+        cardStrokeWidth: Number(opts.cardStrokeWidth),
+        linkColor: String(opts.linkColor),
+        linkWidth: Number(opts.linkWidth),
+        icContainerFill: String(opts.icContainerFill),
+        nameColor: String(opts.nameColor),
+        titleColor: String(opts.titleColor),
+      },
+      sizes: {
+        nodeWidth: Number(opts.nodeWidth),
+        nodeHeight: Number(opts.nodeHeight),
+        horizontalSpacing: Number(opts.horizontalSpacing),
+        branchSpacing: Number(opts.branchSpacing),
+        topVerticalSpacing: Number(opts.topVerticalSpacing),
+        bottomVerticalSpacing: Number(opts.bottomVerticalSpacing),
+        icNodeWidth: Number(opts.icNodeWidth),
+        icGap: Number(opts.icGap),
+        icContainerPadding: Number(opts.icContainerPadding),
+        palTopGap: Number(opts.palTopGap),
+        palBottomGap: Number(opts.palBottomGap),
+        palRowGap: Number(opts.palRowGap),
+        palCenterGap: Number(opts.palCenterGap),
+        nameFontSize: Number(opts.nameFontSize),
+        titleFontSize: Number(opts.titleFontSize),
+        textPaddingTop: Number(opts.textPaddingTop),
+        textGap: Number(opts.textGap),
+      },
+      isCustom: true,
+    };
+    const customs = this.loadCustomPresets();
+    customs.push(newPreset);
+    this.saveCustomPresets(customs);
+    this.build();
+  }
+
   private deleteCustomPreset(id: string): void {
     const presets = this.loadCustomPresets().filter((p) => p.id !== id);
     this.saveCustomPresets(presets);
@@ -1570,93 +1612,6 @@ export class SettingsEditor {
     }
 
     wrapper.appendChild(layoutGrid);
-
-    // Save as Preset button + inline name input
-    const saveRow = document.createElement('div');
-    saveRow.className = 'flex-row';
-    saveRow.style.cssText = 'gap:6px;';
-
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.placeholder = 'Preset name…';
-    nameInput.setAttribute('aria-label', 'Custom preset name');
-    nameInput.style.cssText =
-      'flex:1;padding:4px 8px;font-size:11px;font-family:var(--font-sans);' +
-      'border:1px solid var(--border-default);border-radius:var(--radius-sm);' +
-      'background:var(--bg-surface);color:var(--text-primary);display:none;';
-
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'btn btn-secondary save-preset-btn w-full';
-    saveBtn.textContent = '💾 Save as Preset';
-    saveBtn.style.cssText = 'font-size:11px;padding:4px 8px;';
-
-    const confirmBtn = document.createElement('button');
-    confirmBtn.className = 'btn btn-primary';
-    confirmBtn.textContent = 'Save';
-    confirmBtn.style.cssText = 'font-size:11px;padding:4px 10px;display:none;';
-
-    saveBtn.addEventListener('click', () => {
-      nameInput.style.display = 'block';
-      confirmBtn.style.display = 'block';
-      saveBtn.style.display = 'none';
-      nameInput.focus();
-    });
-
-    const doSave = () => {
-      const presetName = nameInput.value.trim();
-      if (!presetName) return;
-
-      const opts = this.renderer.getOptions();
-      const newPreset: CombinedPreset = {
-        id: 'custom-' + generateId(),
-        name: presetName,
-        colors: {
-          cardFill: String(opts.cardFill),
-          cardStroke: String(opts.cardStroke),
-          cardStrokeWidth: Number(opts.cardStrokeWidth),
-          linkColor: String(opts.linkColor),
-          linkWidth: Number(opts.linkWidth),
-          icContainerFill: String(opts.icContainerFill),
-          nameColor: String(opts.nameColor),
-          titleColor: String(opts.titleColor),
-        },
-        sizes: {
-          nodeWidth: Number(opts.nodeWidth),
-          nodeHeight: Number(opts.nodeHeight),
-          horizontalSpacing: Number(opts.horizontalSpacing),
-          branchSpacing: Number(opts.branchSpacing),
-          topVerticalSpacing: Number(opts.topVerticalSpacing),
-          bottomVerticalSpacing: Number(opts.bottomVerticalSpacing),
-          icNodeWidth: Number(opts.icNodeWidth),
-          icGap: Number(opts.icGap),
-          icContainerPadding: Number(opts.icContainerPadding),
-          palTopGap: Number(opts.palTopGap),
-          palBottomGap: Number(opts.palBottomGap),
-          palRowGap: Number(opts.palRowGap),
-          palCenterGap: Number(opts.palCenterGap),
-          nameFontSize: Number(opts.nameFontSize),
-          titleFontSize: Number(opts.titleFontSize),
-          textPaddingTop: Number(opts.textPaddingTop),
-          textGap: Number(opts.textGap),
-        },
-        isCustom: true,
-      };
-
-      const customs = this.loadCustomPresets();
-      customs.push(newPreset);
-      this.saveCustomPresets(customs);
-      this.build();
-    };
-
-    confirmBtn.addEventListener('click', doSave);
-    nameInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') doSave();
-    });
-
-    saveRow.appendChild(saveBtn);
-    saveRow.appendChild(nameInput);
-    saveRow.appendChild(confirmBtn);
-    wrapper.appendChild(saveRow);
 
     return wrapper;
   }

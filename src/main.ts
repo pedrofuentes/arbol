@@ -440,13 +440,34 @@ async function main(): Promise<void> {
     });
   }
 
-  let settingsEditorMounted = false;
+  let settingsEditorInstance: SettingsEditor | null = null;
 
   let settingsSnapshot: Partial<RendererOptions> | null = null;
 
   const settingsModal = new SettingsModal({
     onClose: () => {},
     onApply: () => {},
+    onDone: async () => {
+      if (!settingsSnapshot) return;
+      const currentOpts = renderer.getOptions();
+      const hasChanges = Object.keys(settingsSnapshot).some((key) => {
+        const k = key as keyof typeof currentOpts;
+        if (k === 'categories') return false;
+        return settingsSnapshot![k] !== currentOpts[k];
+      });
+      if (hasChanges && settingsEditorInstance) {
+        const name = await showInputDialog({
+          title: t('settings.save_preset_prompt_title'),
+          label: t('settings.save_preset_prompt_label'),
+          placeholder: t('settings.preset_name_placeholder'),
+          confirmLabel: t('settings.save_preset_button'),
+        });
+        if (name) {
+          settingsEditorInstance.saveCurrentAsPreset(name);
+        }
+      }
+      settingsSnapshot = null;
+    },
     onCancel: () => {
       // Revert to snapshot taken when modal was opened
       if (settingsSnapshot) {
@@ -471,8 +492,8 @@ async function main(): Promise<void> {
     // Snapshot current settings so Cancel can revert
     settingsSnapshot = { ...renderer.getOptions() };
     settingsModal.open();
-    if (!settingsEditorMounted) {
-      new SettingsEditor(
+    if (!settingsEditorInstance) {
+      settingsEditorInstance = new SettingsEditor(
         settingsModal.getContentArea(),
         renderer,
         rerender,
@@ -480,7 +501,6 @@ async function main(): Promise<void> {
         categoryStore,
         chartDB,
       );
-      settingsEditorMounted = true;
     }
     filterSettingsSections(settingsModal.getActiveTab());
   });

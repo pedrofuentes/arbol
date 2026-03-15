@@ -9,6 +9,7 @@ export interface SettingsTab {
 export interface SettingsModalOptions {
   onClose: () => void;
   onApply: () => void;
+  onDone?: () => Promise<void> | void;
   onCancel?: () => void;
   onTabChange?: (tabId: string) => void;
 }
@@ -150,7 +151,8 @@ export class SettingsModal {
     const applyBtn = document.createElement('button');
     applyBtn.className = 'settings-apply-btn';
     applyBtn.textContent = t('settings_modal.apply');
-    applyBtn.addEventListener('click', () => {
+    applyBtn.addEventListener('click', async () => {
+      await this.options.onDone?.();
       this.close();
     });
 
