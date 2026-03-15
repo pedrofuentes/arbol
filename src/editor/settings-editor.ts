@@ -1237,11 +1237,11 @@ export class SettingsEditor {
     label.className = 'setting-label';
     label.htmlFor = inputId;
 
-    if (isModified) {
-      const dot = document.createElement('span');
-      dot.className = 'setting-modified-dot';
-      label.appendChild(dot);
-    }
+    // Modified dot — always created, visibility toggled
+    const dot = document.createElement('span');
+    dot.className = 'setting-modified-dot';
+    dot.style.display = isModified ? '' : 'none';
+    label.appendChild(dot);
 
     label.appendChild(document.createTextNode(setting.label));
     info.appendChild(label);
@@ -1259,6 +1259,33 @@ export class SettingsEditor {
     const control = document.createElement('div');
     control.className = 'setting-control';
 
+    // Reset button — always created, visibility toggled
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'setting-reset-btn';
+    if (isModified) resetBtn.classList.add('visible');
+    resetBtn.textContent = '↺';
+    if (defaultValue !== undefined) {
+      resetBtn.setAttribute('aria-label', `Reset ${setting.label} to default (${defaultValue})`);
+      resetBtn.setAttribute('data-tooltip', `Default: ${defaultValue}${setting.unit ? ' ' + setting.unit : ''}`);
+    }
+
+    const updateModifiedState = (newValue: number | string | boolean) => {
+      const modified = defaultValue !== undefined && newValue !== defaultValue;
+      dot.style.display = modified ? '' : 'none';
+      if (modified) {
+        resetBtn.classList.add('visible');
+      } else {
+        resetBtn.classList.remove('visible');
+      }
+    };
+
+    resetBtn.addEventListener('click', () => {
+      if (defaultValue === undefined) return;
+      this.renderer.updateOptions({ [setting.key]: defaultValue } as Partial<RendererOptions>);
+      this.rerenderCallback();
+      this.build();
+    });
+
     if (setting.type === 'checkbox') {
       const input = document.createElement('input');
       input.id = inputId;
@@ -1268,6 +1295,7 @@ export class SettingsEditor {
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.checked } as Partial<RendererOptions>);
         this.rerenderCallback();
+        updateModifiedState(input.checked);
       });
 
       control.appendChild(input);
@@ -1308,6 +1336,7 @@ export class SettingsEditor {
         }
         this.renderer.updateOptions({ [setting.key]: val } as Partial<RendererOptions>);
         this.rerenderCallback();
+        updateModifiedState(val);
       });
 
       control.appendChild(input);
@@ -1327,6 +1356,7 @@ export class SettingsEditor {
       select.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: select.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        updateModifiedState(select.value);
       });
 
       control.appendChild(select);
@@ -1339,6 +1369,7 @@ export class SettingsEditor {
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        updateModifiedState(input.value);
       });
 
       control.appendChild(input);
@@ -1352,26 +1383,13 @@ export class SettingsEditor {
       input.addEventListener('input', () => {
         this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        updateModifiedState(input.value);
       });
 
       control.appendChild(input);
     }
 
-    // Per-setting reset button
-    if (defaultValue !== undefined) {
-      const resetBtn = document.createElement('button');
-      resetBtn.className = 'setting-reset-btn';
-      if (isModified) resetBtn.classList.add('visible');
-      resetBtn.textContent = '↺';
-      resetBtn.setAttribute('aria-label', `Reset ${setting.label} to default (${defaultValue})`);
-      resetBtn.setAttribute('data-tooltip', `Default: ${defaultValue}${setting.unit ? ' ' + setting.unit : ''}`);
-      resetBtn.addEventListener('click', () => {
-        this.renderer.updateOptions({ [setting.key]: defaultValue } as Partial<RendererOptions>);
-        this.rerenderCallback();
-        this.build();
-      });
-      control.appendChild(resetBtn);
-    }
+    control.appendChild(resetBtn);
 
     wrapper.appendChild(info);
     wrapper.appendChild(control);

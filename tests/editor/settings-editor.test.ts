@@ -783,7 +783,8 @@ describe('SettingsEditor', () => {
       } as unknown as ChartRenderer;
       new SettingsEditor(container, exactDefaultRenderer, rerenderCb);
       const dots = container.querySelectorAll('.setting-modified-dot');
-      expect(dots.length).toBe(0);
+      const visibleDots = Array.from(dots).filter(d => (d as HTMLElement).style.display !== 'none');
+      expect(visibleDots.length).toBe(0);
     });
 
     it('.setting-modified-dot appears when renderer returns non-default value', () => {
