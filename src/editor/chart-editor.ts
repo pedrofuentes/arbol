@@ -6,6 +6,7 @@ import { showExportDialog } from '../ui/export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../export/chart-exporter';
 import { flattenTree } from '../utils/tree';
 import { t } from '../i18n';
+import { createButton } from '../utils/dom-builder';
 
 export interface ChartEditorOptions {
   container: HTMLElement;
@@ -109,12 +110,13 @@ export class ChartEditor {
     chartTitle.textContent = t('chart_editor.charts_heading');
     chartHeader.appendChild(chartTitle);
 
-    const addChartBtn = document.createElement('button');
-    addChartBtn.className = 'btn btn-icon btn-ghost';
+    const addChartBtn = createButton({
+      className: 'btn btn-icon btn-ghost',
+      title: t('chart_editor.new_chart_tooltip'),
+      label: '+',
+      onClick: () => this.handleCreateChart(),
+    });
     addChartBtn.style.cssText = 'width:24px;height:24px;font-size:16px;';
-    addChartBtn.title = t('chart_editor.new_chart_tooltip');
-    addChartBtn.textContent = '+';
-    addChartBtn.addEventListener('click', () => this.handleCreateChart());
     chartHeader.appendChild(addChartBtn);
 
     this.container.appendChild(chartHeader);
@@ -147,12 +149,13 @@ export class ChartEditor {
     versionTitle.textContent = t('chart_editor.versions_heading');
     versionHeader.appendChild(versionTitle);
 
-    const saveVersionBtn = document.createElement('button');
-    saveVersionBtn.className = 'btn btn-ghost';
+    const saveVersionBtn = createButton({
+      className: 'btn btn-ghost',
+      title: t('chart_editor.save_version_tooltip'),
+      label: t('chart_editor.save_version'),
+      onClick: () => this.handleSaveVersion(),
+    });
     saveVersionBtn.style.cssText = 'padding:2px 6px;font-size:10px;';
-    saveVersionBtn.title = t('chart_editor.save_version_tooltip');
-    saveVersionBtn.textContent = t('chart_editor.save_version');
-    saveVersionBtn.addEventListener('click', () => this.handleSaveVersion());
     versionHeader.appendChild(saveVersionBtn);
 
     this.container.appendChild(versionHeader);
@@ -413,19 +416,21 @@ export class ChartEditor {
   // ── Inline button helper ───────────────────────────────
 
   private createInlineButton(label: string, danger = false): HTMLButtonElement {
-    const btn = document.createElement('button');
-    btn.className = danger ? 'btn btn-danger' : 'btn btn-secondary';
-    btn.textContent = label;
+    const btn = createButton({
+      className: danger ? 'btn btn-danger' : 'btn btn-secondary',
+      label,
+    });
     btn.style.cssText = INLINE_BTN_EXTRA;
     return btn;
   }
 
   private createActionButton(icon: string, label: string, danger = false): HTMLButtonElement {
-    const btn = document.createElement('button');
-    btn.className = danger ? 'btn btn-danger' : 'btn btn-ghost';
-    btn.textContent = icon;
-    btn.title = label;
-    btn.setAttribute('aria-label', label);
+    const btn = createButton({
+      className: danger ? 'btn btn-danger' : 'btn btn-ghost',
+      label: icon,
+      title: label,
+      ariaLabel: label,
+    });
     btn.style.cssText = ACTION_BTN_STYLE;
     return btn;
   }

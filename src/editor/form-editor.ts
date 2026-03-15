@@ -1,6 +1,7 @@
 import { OrgStore } from '../store/org-store';
 import { flattenTree } from '../utils/tree';
 import { t } from '../i18n';
+import { createButton, createFormGroup as createFormGroupBase } from '../utils/dom-builder';
 
 let formIdCounter = 0;
 function uniqueId(prefix: string): string {
@@ -95,11 +96,12 @@ export class FormEditor {
     this.container.appendChild(titleGroup);
 
     // Add button
-    const addBtn = document.createElement('button');
-    addBtn.className = 'btn btn-primary';
-    addBtn.dataset.action = 'add';
-    addBtn.textContent = t('form.add_button');
-    addBtn.addEventListener('click', () => this.handleAdd());
+    const addBtn = createButton({
+      className: 'btn btn-primary',
+      dataAction: 'add',
+      label: t('form.add_button'),
+      onClick: () => this.handleAdd(),
+    });
     this.container.appendChild(addBtn);
 
     // --- Edit Person Section (hidden initially) ---
@@ -110,13 +112,7 @@ export class FormEditor {
   }
 
   private createFormGroup(labelText: string, inputId?: string): HTMLDivElement {
-    const group = document.createElement('div');
-    group.className = 'form-group';
-    const label = document.createElement('label');
-    label.textContent = labelText;
-    if (inputId) label.htmlFor = inputId;
-    group.appendChild(label);
-    return group;
+    return createFormGroupBase(labelText, inputId);
   }
 
   private populateParentDropdown(): void {
@@ -187,37 +183,40 @@ export class FormEditor {
     const btnGroup = document.createElement('div');
     btnGroup.className = 'btn-group';
 
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'btn btn-primary';
-    saveBtn.dataset.action = 'save';
-    saveBtn.textContent = t('form.save_button');
-    saveBtn.addEventListener('click', () => {
-      this.store.updateNode(this.selectedNodeId!, {
-        name: editNameInput.value,
-        title: editTitleInput.value,
-      });
+    const saveBtn = createButton({
+      className: 'btn btn-primary',
+      dataAction: 'save',
+      label: t('form.save_button'),
+      onClick: () => {
+        this.store.updateNode(this.selectedNodeId!, {
+          name: editNameInput.value,
+          title: editTitleInput.value,
+        });
+      },
     });
     btnGroup.appendChild(saveBtn);
 
     if (!isRoot) {
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'btn btn-danger';
-      deleteBtn.dataset.action = 'delete';
-      deleteBtn.setAttribute('aria-label', t('form.delete_aria'));
-      deleteBtn.textContent = t('form.delete_button');
-      deleteBtn.addEventListener('click', () => {
-        this.store.removeNode(this.selectedNodeId!);
-        this.selectNode(null);
+      const deleteBtn = createButton({
+        className: 'btn btn-danger',
+        dataAction: 'delete',
+        ariaLabel: t('form.delete_aria'),
+        label: t('form.delete_button'),
+        onClick: () => {
+          this.store.removeNode(this.selectedNodeId!);
+          this.selectNode(null);
+        },
       });
       btnGroup.appendChild(deleteBtn);
     }
 
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'btn btn-secondary';
-    cancelBtn.dataset.action = 'deselect';
-    cancelBtn.textContent = t('form.cancel_button');
-    cancelBtn.addEventListener('click', () => {
-      this.selectNode(null);
+    const cancelBtn = createButton({
+      className: 'btn btn-secondary',
+      dataAction: 'deselect',
+      label: t('form.cancel_button'),
+      onClick: () => {
+        this.selectNode(null);
+      },
     });
     btnGroup.appendChild(cancelBtn);
 

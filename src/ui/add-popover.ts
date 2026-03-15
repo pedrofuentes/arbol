@@ -1,6 +1,7 @@
 import { createDismissible } from './dismissible';
 import { trapFocus } from './dialog-utils';
 import { t } from '../i18n';
+import { createButton } from '../utils/dom-builder';
 
 let formIdCounter = 0;
 function uniqueId(prefix: string): string {
@@ -130,13 +131,15 @@ export function showAddPopover(options: AddPopoverOptions): void {
   const btnGroup = document.createElement('div');
   btnGroup.style.cssText = 'display:flex;gap:var(--space-2);justify-content:flex-end;';
 
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'btn btn-secondary';
-  cancelBtn.textContent = t('add_popover.cancel');
+  const cancelBtn = createButton({
+    className: 'btn btn-secondary',
+    label: t('add_popover.cancel'),
+  });
 
-  const addBtn = document.createElement('button');
-  addBtn.className = 'btn btn-primary';
-  addBtn.textContent = t('add_popover.add');
+  const addBtn = createButton({
+    className: 'btn btn-primary',
+    label: t('add_popover.add'),
+  });
 
   btnGroup.appendChild(cancelBtn);
   btnGroup.appendChild(addBtn);

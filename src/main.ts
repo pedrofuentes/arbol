@@ -4,16 +4,11 @@ import { OrgStore } from './store/org-store';
 import { ChartRenderer, type RendererOptions } from './renderer/chart-renderer';
 import { FormEditor } from './editor/form-editor';
 import { JsonEditor } from './editor/json-editor';
-import { exportToPptx } from './export/pptx-exporter';
 import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { MappingStore } from './store/mapping-store';
 import { CategoryStore } from './store/category-store';
-import { flattenTree, findNodeById, findParent, isLeaf, countLeaves, countManagersByLevel, avgSpanOfControl } from './utils/tree';
-import { showHelpDialog } from './ui/help-dialog';
-import { ShortcutManager } from './utils/shortcuts';
-import { timestampedFilename } from './utils/filename';
-import { APP_VERSION } from './version';
+import { flattenTree, findNodeById, findParent, isLeaf, avgSpanOfControl } from './utils/tree';
 import { dismissContextMenu } from './ui/context-menu';
 import { dismissInlineEditor } from './ui/inline-editor';
 import { showAddPopover, dismissAddPopover } from './ui/add-popover';
@@ -26,25 +21,23 @@ import { ChartDB } from './store/chart-db';
 import { ChartStore } from './store/chart-store';
 import { ChartEditor } from './editor/chart-editor';
 import { ChartNameHeader } from './ui/chart-name-header';
-import { showVersionViewer, dismissVersionViewer, isVersionViewerActive } from './ui/version-viewer';
-import { showComparisonBanner, dismissComparisonBanner, isComparisonBannerActive } from './ui/comparison-banner';
-import { showVersionPicker } from './ui/version-picker';
-import { compareTrees, buildMergedTree, getDiffStats } from './utils/tree-diff';
-import { SideBySideRenderer } from './renderer/side-by-side-renderer';
+import { showVersionViewer, dismissVersionViewer } from './ui/version-viewer';
+import { createComparisonHandler } from './init/comparison-handler';
 import { FocusModeController } from './controllers/focus-mode';
 import { SelectionManager } from './controllers/selection-manager';
 import { SearchController } from './controllers/search-controller';
 import { announce } from './ui/announcer';
 import { createShowSingleCardMenu, createShowMultiSelectMenu, type ContextMenuDeps } from './init/context-menu-handler';
 import { buildToolbar, type ToolbarElements } from './init/toolbar-builder';
+import { buildFooter } from './init/footer-builder';
 import { showWelcomeBanner } from './ui/welcome-banner';
-import { CommandPalette, CommandItem } from './ui/command-palette';
 import { PropertyPanel } from './ui/property-panel';
 import { SettingsModal } from './ui/settings-modal';
 import { SettingsEditor } from './editor/settings-editor';
 import { ImportWizard } from './ui/import-wizard';
 import { WizardState, renderSourceStep, renderMappingStep, renderPreviewStep, renderImportStep } from './ui/import-wizard-steps';
-import type { ChartRecord, ComparisonState, VersionRecord } from './types';
+import { registerShortcuts } from './init/shortcuts-handler';
+import type { ChartRecord, VersionRecord } from './types';
 
 async function main(): Promise<void> {
   const sidebar = document.getElementById('sidebar')!;
@@ -148,164 +141,8 @@ async function main(): Promise<void> {
   let focusMode: FocusModeController;
   const selection = new SelectionManager();
 
-  // Comparison mode: show diff between two trees
-  let comparisonState: ComparisonState | null = null;
-  let sideBySideRenderer: SideBySideRenderer | null = null;
-  let dimUnchanged = true;
-
-  const exitComparisonMode = () => {
-    comparisonState = null;
-    dimUnchanged = true;
-    renderer.setDiffMap(null);
-    dismissComparisonBanner();
-    if (sideBySideRenderer) {
-      sideBySideRenderer.destroy();
-      sideBySideRenderer = null;
-    }
-    // Show main SVG again if it was hidden
-    const svgEl = chartArea.querySelector('svg');
-    if (svgEl) svgEl.removeAttribute('style');
-    rerender();
-    renderer.getZoomManager()?.fitToContent();
-  };
-
-  const showMergedView = (state: ComparisonState) => {
-    // Tear down side-by-side if active
-    if (sideBySideRenderer) {
-      sideBySideRenderer.destroy();
-      sideBySideRenderer = null;
-    }
-    // Show main SVG
-    const svgEl = chartArea.querySelector('svg');
-    if (svgEl) svgEl.removeAttribute('style');
-
-    const merged = buildMergedTree(state.oldTree, state.newTree, state.diff);
-    renderer.setDiffMap(state.diff);
-    renderer.updateOptions({ categories: categoryStore.getAll() });
-    renderer.render(merged);
-    renderer.getZoomManager()?.fitToContent();
-  };
-
-  const showSideBySideView = (state: ComparisonState) => {
-    // Hide main SVG
-    const svgEl = chartArea.querySelector('svg');
-    if (svgEl) svgEl.setAttribute('style', 'display:none');
-
-    // Tear down previous side-by-side if any
-    if (sideBySideRenderer) {
-      sideBySideRenderer.destroy();
-      sideBySideRenderer = null;
-    }
-
-    sideBySideRenderer = new SideBySideRenderer({
-      container: chartArea,
-      rendererOptions: { ...renderer.getOptions(), container: chartArea },
-      oldLabel: state.oldLabel,
-      newLabel: state.newLabel,
-    });
-    sideBySideRenderer.setDimUnchanged(dimUnchanged);
-    sideBySideRenderer.render(state.oldTree, state.newTree, state.diff);
-  };
-
-  const handleToggleDim = (enabled: boolean) => {
-    dimUnchanged = enabled;
-    renderer.setDimUnchanged(enabled);
-    if (!comparisonState) return;
-
-    if (comparisonState.viewMode === 'merged') {
-      showMergedView(comparisonState);
-    } else {
-      showSideBySideView(comparisonState);
-    }
-  };
-
-  const toggleComparisonView = () => {
-    if (!comparisonState) return;
-
-    const newMode = comparisonState.viewMode === 'merged' ? 'side-by-side' : 'merged';
-    comparisonState.viewMode = newMode;
-
-    if (newMode === 'merged') {
-      showMergedView(comparisonState);
-    } else {
-      showSideBySideView(comparisonState);
-    }
-
-    // Re-show banner with updated mode
-    const stats = getDiffStats(comparisonState.diff);
-    dismissComparisonBanner();
-    showComparisonBanner({
-      container: chartArea,
-      oldLabel: comparisonState.oldLabel,
-      newLabel: comparisonState.newLabel,
-      stats,
-      viewMode: newMode,
-      dimUnchanged,
-      onToggleView: toggleComparisonView,
-      onToggleDimUnchanged: handleToggleDim,
-      onExit: exitComparisonMode,
-    });
-  };
-
-  const enterComparisonMode = async (baseVersion: VersionRecord) => {
-    // Exit any active modes first
-    if (focusMode?.isFocused) { focusMode.clear(); }
-    if (isVersionViewerActive()) { dismissVersionViewer(); }
-    if (comparisonState) {
-      renderer.setDiffMap(null);
-      dismissComparisonBanner();
-      if (sideBySideRenderer) { sideBySideRenderer.destroy(); sideBySideRenderer = null; }
-      const svgEl = chartArea.querySelector('svg');
-      if (svgEl) svgEl.removeAttribute('style');
-      comparisonState = null;
-    }
-
-    // Get all versions for the picker
-    const allVersions = await chartStore.getVersions();
-
-    const target = await showVersionPicker({
-      versions: allVersions,
-      excludeVersionId: baseVersion.id,
-      includeWorkingTree: true,
-    });
-
-    if (!target) return;
-
-    // Determine old (base) and new (target) trees
-    const oldTree = baseVersion.tree;
-    const oldLabel = baseVersion.name;
-    let newTree: typeof oldTree;
-    let newLabel: string;
-
-    if (target.type === 'working') {
-      newTree = store.getTree();
-      newLabel = t('comparison.working_tree');
-    } else {
-      newTree = target.version.tree;
-      newLabel = target.version.name;
-    }
-
-    // Compute diff
-    const diff = compareTrees(oldTree, newTree);
-    const stats = getDiffStats(diff);
-
-    comparisonState = { oldTree, newTree, oldLabel, newLabel, diff, viewMode: 'merged' };
-
-    // Show merged view by default
-    showMergedView(comparisonState);
-
-    showComparisonBanner({
-      container: chartArea,
-      oldLabel,
-      newLabel,
-      stats,
-      viewMode: 'merged',
-      dimUnchanged,
-      onToggleView: toggleComparisonView,
-      onToggleDimUnchanged: handleToggleDim,
-      onExit: exitComparisonMode,
-    });
-  };
+  // Comparison handler (initialized after rerender, before footer)
+  let comparison: ReturnType<typeof createComparisonHandler>;
 
   const rerender = () => {
     const fullTree = store.getTree();
@@ -340,6 +177,17 @@ async function main(): Promise<void> {
   // Initialize focus mode controller now that rerender is defined
   focusMode = new FocusModeController(store, renderer, rerender);
   focusMode.onExit(() => announce(t('focus.exited')));
+
+  // Initialize comparison handler now that rerender and focusMode are defined
+  comparison = createComparisonHandler({
+    store,
+    renderer,
+    chartStore,
+    categoryStore,
+    chartArea,
+    focusMode,
+    rerender,
+  });
 
   // Theme manager + header references
   const themeManager = new ThemeManager();
@@ -720,7 +568,7 @@ async function main(): Promise<void> {
           chartEditor.setViewingVersion(null);
           rerender();
           renderer.getZoomManager()?.fitToContent();
-          enterComparisonMode(version);
+          comparison.enterComparisonMode(version);
         },
         onRestore: async () => {
           const shouldProceed = await handleBeforeSwitch();
@@ -741,7 +589,7 @@ async function main(): Promise<void> {
       });
     },
     onVersionCompare: (version) => {
-      enterComparisonMode(version);
+      comparison.enterComparisonMode(version);
     },
   });
 
@@ -759,16 +607,12 @@ async function main(): Promise<void> {
     sidebarToggle.textContent = collapsed ? '\u203A' : '\u2039';
   });
 
-  // Sidebar footer with ⌘K button
+  // Sidebar footer with ⌘K button (handler wired after registerShortcuts)
   const sidebarFooter = document.createElement('div');
   sidebarFooter.className = 'chart-nav-footer';
   const cmdKBtn = document.createElement('button');
   cmdKBtn.className = 'chart-nav-cmdk';
   cmdKBtn.textContent = t('toolbar.quick_actions');
-  cmdKBtn.addEventListener('click', async () => {
-    commandPalette.setItems(await buildCommandItems());
-    commandPalette.open();
-  });
   sidebarFooter.appendChild(cmdKBtn);
   sidebar.appendChild(sidebarFooter);
 
@@ -980,486 +824,46 @@ async function main(): Promise<void> {
   });
 
   // Footer
-  const footer = document.getElementById('footer')!;
-
-  // Footer: Status area (left side)
-  const footerLeft = document.createElement('div');
-  footerLeft.className = 'footer-left';
-  footerLeft.style.cssText = 'display:flex;align-items:center;gap:8px;margin-right:auto;';
-  footer.appendChild(footerLeft);
-
-  const versionLabel = document.createElement('span');
-  versionLabel.className = 'footer-version';
-  versionLabel.id = 'footer-version';
-  versionLabel.style.cssText =
-    'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
-  versionLabel.textContent = t('footer.version', { version: APP_VERSION });
-  footerLeft.appendChild(versionLabel);
-
-  const versionSeparator = document.createElement('span');
-  versionSeparator.style.cssText =
-    'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
-  versionSeparator.textContent = '·';
-  footerLeft.appendChild(versionSeparator);
-
-  const statusText = document.createElement('span');
-  statusText.className = 'footer-status';
-  statusText.id = 'footer-status';
-  statusText.style.cssText =
-    'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
-  footerLeft.appendChild(statusText);
-
-  // Save indicator — flashes briefly when settings are persisted
-  const saveIndicator = document.createElement('span');
-  saveIndicator.style.cssText =
-    'font-size:10px;color:var(--accent);font-family:var(--font-sans);font-weight:600;' +
-    'opacity:0;transition:opacity 200ms ease;';
-  saveIndicator.textContent = t('footer.saved');
-  footerLeft.appendChild(saveIndicator);
-
-  let saveFlashTimer: ReturnType<typeof setTimeout> | null = null;
-  const flashSaved = () => {
-    saveIndicator.style.opacity = '1';
-    if (saveFlashTimer) clearTimeout(saveFlashTimer);
-    saveFlashTimer = setTimeout(() => {
-      saveIndicator.style.opacity = '0';
-    }, 1500);
-  };
-  onSettingsSaved = flashSaved;
-
-  const updateStatus = () => {
-    const tree = focusMode.getVisibleTree();
-    const allNodes = flattenTree(tree);
-    const total = allNodes.length;
-    const managerCount = allNodes.filter((n) => !isLeaf(n)).length;
-    const icCount = countLeaves(tree);
-    const levels = countManagersByLevel(tree);
-
-    const activeChartName = chartNameHeader.getName();
-    const prefix = activeChartName ? `${activeChartName} · ` : '';
-    const parts = [`${prefix}${t('footer.people', { count: total })}`, t('footer.managers', { count: managerCount }), t('footer.ics', { count: icCount })];
-    const sortedLevels = Array.from(levels.entries()).sort((a, b) => a[0] - b[0]);
-    for (const [depth, count] of sortedLevels) {
-      parts.push(t('footer.manager_level', { count, depth }));
-    }
-    statusText.textContent = parts.join(' · ');
-  };
-  store.onChange(updateStatus);
-  updateStatus();
-
-  // Footer: Center area (GitHub links + selection indicator)
-  const footerCenter = document.createElement('div');
-  footerCenter.className = 'footer-center';
-  footerCenter.style.cssText =
-    'position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--font-sans);';
-
-  const selectionIndicator = document.createElement('span');
-  selectionIndicator.style.cssText = 'color:var(--accent);font-weight:600;display:none;';
-  footerCenter.appendChild(selectionIndicator);
-
-  const githubLink = document.createElement('a');
-  githubLink.href = 'https://github.com/pedrofuentes/arbol';
-  githubLink.target = '_blank';
-  githubLink.rel = 'noopener noreferrer';
-  githubLink.textContent = t('footer.built_with');
-  footerCenter.appendChild(githubLink);
-
-  const centerSeparator = document.createElement('span');
-  centerSeparator.style.color = 'var(--text-tertiary)';
-  centerSeparator.textContent = '·';
-  footerCenter.appendChild(centerSeparator);
-
-  const issuesLink = document.createElement('a');
-  issuesLink.href = 'https://github.com/pedrofuentes/arbol/issues';
-  issuesLink.target = '_blank';
-  issuesLink.rel = 'noopener noreferrer';
-  issuesLink.textContent = t('footer.report_bugs');
-  footerCenter.appendChild(issuesLink);
-
-  footer.appendChild(footerCenter);
-
-  // Update selection indicator when multi-select changes
-  updateSelectionIndicator = () => {
-    if (selection.hasSelection) {
-      selectionIndicator.textContent = t('footer.selected', { count: selection.count });
-      selectionIndicator.style.display = '';
-      // Hide links when selection is active
-      githubLink.style.display = 'none';
-      centerSeparator.style.display = 'none';
-      issuesLink.style.display = 'none';
-    } else {
-      selectionIndicator.style.display = 'none';
-      githubLink.style.display = '';
-      centerSeparator.style.display = '';
-      issuesLink.style.display = '';
-    }
-  };
-
-  // Zoom indicator (will be appended to footer right, after Reset button)
-  const zoomIndicator = document.createElement('span');
-  zoomIndicator.style.cssText =
-    'font-size:11px;color:var(--text-tertiary);font-family:var(--font-mono);min-width:36px;text-align:end;';
-
-  const zoomManager = renderer.getZoomManager();
-  const updateZoomIndicator = () => {
-    if (zoomManager) {
-      const pct = zoomManager.getRelativeZoomPercent();
-      zoomIndicator.textContent = `${pct}%`;
-    }
-  };
-  zoomManager?.onZoom(() => {
-    updateZoomIndicator();
+  const footerResult = buildFooter({
+    store,
+    renderer,
+    categoryStore,
+    chartStore,
+    focusMode,
+    selection,
+    footer: document.getElementById('footer')!,
+    getChartName: () => chartNameHeader.getName(),
+    getSideBySideRenderer: () => comparison.getSideBySideRenderer(),
   });
-  updateZoomIndicator();
+  const { exportCurrentChart } = footerResult;
+  updateSelectionIndicator = footerResult.updateSelectionIndicator;
+  onSettingsSaved = footerResult.notifySettingsSaved;
 
-  // Footer: Buttons (right side) — hidden, controls moved to canvas/header
-  const footerRight = document.createElement('div');
-  footerRight.style.cssText = 'display:flex;align-items:center;gap:var(--space-2);';
-  footer.appendChild(footerRight);
-
-  const exportCurrentChart = async () => {
-    const layout = renderer.getLastLayout();
-    if (!layout) return;
-
-    // Warn if chart will be scaled down due to PowerPoint's 56" limit
-    const PX_TO_IN = 1 / 96;
-    const MAX_SLIDE = 56;
-    const chartW = layout.boundingBox.width * PX_TO_IN + 1;
-    const chartH = layout.boundingBox.height * PX_TO_IN + 1;
-    if (chartW > MAX_SLIDE || chartH > MAX_SLIDE) {
-      const confirmed = await showConfirmDialog({
-        title: t('dialog.large_export.title'),
-        message: t('dialog.large_export.message'),
-        confirmLabel: t('dialog.large_export.confirm'),
-        danger: false,
-      });
-      if (!confirmed) return;
-    }
-
-    try {
-      const rendererOpts = renderer.getOptions();
-      const activeChart = await chartStore.getActiveChart();
-      const chartName = activeChart?.name ?? 'org-chart';
-      const safeChartName = chartName.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').toLowerCase();
-      await exportToPptx(layout, {
-        fileName: timestampedFilename(`${safeChartName}.pptx`),
-        categories: categoryStore.getAll(),
-        nameFontSize: rendererOpts.nameFontSize,
-        titleFontSize: rendererOpts.titleFontSize,
-        cardFill: rendererOpts.cardFill,
-        cardStroke: rendererOpts.cardStroke,
-        cardStrokeWidth: rendererOpts.cardStrokeWidth,
-        icContainerFill: rendererOpts.icContainerFill,
-        linkColor: rendererOpts.linkColor,
-        linkWidth: rendererOpts.linkWidth,
-        nameColor: rendererOpts.nameColor,
-        titleColor: rendererOpts.titleColor,
-        showHeadcount: rendererOpts.showHeadcount,
-        headcountBadgeColor: rendererOpts.headcountBadgeColor,
-        headcountBadgeTextColor: rendererOpts.headcountBadgeTextColor,
-        headcountBadgeFontSize: rendererOpts.headcountBadgeFontSize,
-        headcountBadgeRadius: rendererOpts.headcountBadgeRadius,
-        headcountBadgePadding: rendererOpts.headcountBadgePadding,
-        headcountBadgeHeight: rendererOpts.headcountBadgeHeight,
-        legendRows: rendererOpts.legendRows,
-        textAlign: rendererOpts.textAlign as 'left' | 'center' | 'right',
-        cardBorderRadius: rendererOpts.cardBorderRadius as number,
-        fontFamily: rendererOpts.fontFamily as string,
-      });
-      showToast(t('footer.exported'), 'success');
-    } catch (e) {
-      showToast(t('footer.export_failed', { error: e instanceof Error ? e.message : String(e) }), 'error');
-    }
-  };
-
-  const fitBtn= document.createElement('button');
-  fitBtn.className = 'footer-btn';
-  fitBtn.dataset.action = 'fit';
-  const fitIcon = document.createElement('span');
-  fitIcon.setAttribute('aria-hidden', 'true');
-  fitIcon.textContent = t('footer.fit_icon');
-  fitBtn.appendChild(fitIcon);
-  fitBtn.appendChild(document.createTextNode(t('footer.fit_label')));
-  fitBtn.setAttribute('aria-label', t('footer.fit_aria'));
-  fitBtn.setAttribute('data-tooltip', t('footer.fit_tooltip'));
-  footerRight.appendChild(fitBtn);
-
-  fitBtn.addEventListener('click', () => {
-    if (sideBySideRenderer) {
-      sideBySideRenderer.fitToContent();
-    } else {
-      renderer.getZoomManager()?.fitToContent();
-    }
+  // Keyboard shortcuts + Command Palette
+  const { commandPalette, buildCommandItems } = registerShortcuts({
+    store,
+    chartStore,
+    themeManager,
+    search,
+    focusMode,
+    propertyPanel,
+    formEditor,
+    renderer,
+    noResultsHint,
+    searchInput,
+    settingsBtn,
+    importBtn,
+    exportCurrentChart,
+    exitComparisonMode: comparison.exitComparisonMode,
+    clearMultiSelection,
+    handleBeforeSwitch,
+    handleChartSwitched,
   });
 
-  const resetZoomBtn = document.createElement('button');
-  resetZoomBtn.className = 'footer-btn';
-  resetZoomBtn.dataset.action = 'reset-zoom';
-  const resetIcon = document.createElement('span');
-  resetIcon.setAttribute('aria-hidden', 'true');
-  resetIcon.textContent = t('footer.reset_icon');
-  resetZoomBtn.appendChild(resetIcon);
-  resetZoomBtn.appendChild(document.createTextNode(t('footer.reset_label')));
-  resetZoomBtn.setAttribute('aria-label', t('footer.reset_aria'));
-  resetZoomBtn.setAttribute('data-tooltip', t('footer.reset_tooltip'));
-  footerRight.appendChild(resetZoomBtn);
-
-  resetZoomBtn.addEventListener('click', () => {
-    if (sideBySideRenderer) {
-      sideBySideRenderer.centerAtRealSize();
-    } else {
-      renderer.getZoomManager()?.centerAtRealSize();
-    }
-  });
-
-  // Zoom level indicator (right side, after Reset)
-  const zoomSeparator = document.createElement('span');
-  zoomSeparator.style.cssText = 'width:1px;height:14px;background:var(--border-default);';
-  footerRight.appendChild(zoomSeparator);
-  footerRight.appendChild(zoomIndicator);
-
-  // Keyboard shortcuts
-  const shortcuts = new ShortcutManager();
-
-  shortcuts.register({
-    key: 'z',
-    ctrl: true,
-    handler: () => { if (store.undo()) announce(t('announce.undo')); },
-    description: t('shortcut.undo'),
-  });
-
-  shortcuts.register({
-    key: 'z',
-    ctrl: true,
-    shift: true,
-    handler: () => { if (store.redo()) announce(t('announce.redo')); },
-    description: t('shortcut.redo'),
-  });
-
-  shortcuts.register({
-    key: 'y',
-    ctrl: true,
-    handler: () => { if (store.redo()) announce(t('announce.redo')); },
-    description: t('shortcut.redo_alt'),
-  });
-
-  shortcuts.register({
-    key: 'e',
-    ctrl: true,
-    handler: exportCurrentChart,
-    description: t('shortcut.export'),
-  });
-
-  shortcuts.register({
-    key: 'f',
-    ctrl: true,
-    handler: () => {
-      search.focus();
-    },
-    description: t('shortcut.search'),
-  });
-
-  // Command Palette (Ctrl+K)
-  const commandPalette = new CommandPalette({
-    onDismiss: () => {},
-  });
-
-  const buildCommandItems = async (): Promise<CommandItem[]> => {
-    const items: CommandItem[] = [
-      {
-        id: 'export',
-        label: t('command_palette.item_export'),
-        icon: '📊',
-        shortcut: 'Ctrl+E',
-        group: t('command_palette.group_actions'),
-        action: () => { exportCurrentChart(); },
-      },
-      {
-        id: 'undo',
-        label: t('command_palette.item_undo'),
-        icon: '↩',
-        shortcut: 'Ctrl+Z',
-        group: t('command_palette.group_actions'),
-        action: () => { if (store.undo()) { announce(t('announce.undo')); } },
-      },
-      {
-        id: 'redo',
-        label: t('command_palette.item_redo'),
-        icon: '↪',
-        shortcut: 'Ctrl+Shift+Z',
-        group: t('command_palette.group_actions'),
-        action: () => { if (store.redo()) { announce(t('announce.redo')); } },
-      },
-      {
-        id: 'settings',
-        label: t('command_palette.item_settings'),
-        icon: '⚙️',
-        shortcut: 'Ctrl+,',
-        group: t('command_palette.group_actions'),
-        action: () => { settingsBtn.click(); },
-      },
-      {
-        id: 'search',
-        label: t('command_palette.item_search'),
-        icon: '🔍',
-        shortcut: 'Ctrl+F',
-        group: t('command_palette.group_navigation'),
-        action: () => { search.focus(); },
-      },
-      {
-        id: 'help',
-        label: t('command_palette.item_help'),
-        icon: '❓',
-        shortcut: '?',
-        group: t('command_palette.group_navigation'),
-        action: () => { showHelpDialog(); },
-      },
-      {
-        id: 'theme',
-        label: t('command_palette.item_theme'),
-        icon: themeManager.getTheme() === 'dark' ? '☀️' : '🌙',
-        group: t('command_palette.group_actions'),
-        action: () => { themeManager.toggle(); },
-      },
-      {
-        id: 'new-chart',
-        label: t('command_palette.item_new_chart'),
-        icon: '➕',
-        group: t('command_palette.group_charts'),
-        action: async () => {
-          const name = await showInputDialog({
-            title: t('chart_editor.new_chart_dialog_title'),
-            label: t('chart_editor.new_chart_dialog_label'),
-            placeholder: t('chart_editor.new_chart_placeholder'),
-            maxLength: 100,
-          });
-          if (name?.trim()) {
-            const proceed = await handleBeforeSwitch();
-            if (!proceed) return;
-            const chart = await chartStore.createChart(name.trim());
-            handleChartSwitched(chart);
-          }
-        },
-      },
-      {
-        id: 'save-version',
-        label: t('command_palette.item_save_version'),
-        icon: '💾',
-        group: t('command_palette.group_charts'),
-        action: async () => {
-          const name = await showInputDialog({
-            title: t('dialog.save_version.title'),
-            label: t('dialog.save_version.label'),
-            placeholder: t('dialog.save_version.placeholder'),
-            maxLength: 100,
-          });
-          if (name?.trim()) {
-            chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
-            announce(t('announce.chart_saved'));
-          }
-        },
-      },
-      {
-        id: 'import',
-        label: t('command_palette.item_import'),
-        icon: '📥',
-        group: t('command_palette.group_actions'),
-        action: () => { importBtn.click(); },
-      },
-    ];
-
-    // Dynamic chart entries
-    const activeId = chartStore.getActiveChartId();
-    const allCharts = await chartStore.getCharts();
-    for (const chart of allCharts) {
-      if (chart.id === activeId) continue;
-      items.push({
-        id: `chart-${chart.id}`,
-        label: chart.name,
-        icon: '🌳',
-        group: t('command_palette.group_charts'),
-        action: async () => {
-          const proceed = await handleBeforeSwitch();
-          if (!proceed) return;
-          const switched = await chartStore.switchChart(chart.id);
-          handleChartSwitched(switched);
-        },
-      });
-    }
-
-    return items;
-  };
-
-  shortcuts.register({
-    key: 'k',
-    ctrl: true,
-    handler: async () => {
-      if (commandPalette.isOpen()) {
-        commandPalette.close();
-      } else {
-        commandPalette.setItems(await buildCommandItems());
-        commandPalette.open();
-      }
-    },
-    description: t('shortcut.command_palette'),
-  });
-
-  shortcuts.register({
-    key: 'Escape',
-    handler: () => {
-      // Dismiss command palette if open
-      if (commandPalette.isOpen()) {
-        commandPalette.close();
-        return;
-      }
-      // Dismiss version viewer if active
-      if (isVersionViewerActive()) {
-        dismissVersionViewer();
-        return;
-      }
-      // Exit comparison mode if active
-      if (isComparisonBannerActive()) {
-        exitComparisonMode();
-        return;
-      }
-      // Clear search if active
-      if (search.isActive) {
-        search.clear();
-        noResultsHint.style.display = 'none';
-        searchInput.blur();
-        return;
-      }
-      // Exit focus mode if active
-      if (focusMode.isFocused) {
-        focusMode.exit();
-        return;
-      }
-      // Clear multi-selection
-      clearMultiSelection();
-      // Close property panel
-      if (propertyPanel.isVisible()) {
-        propertyPanel.hide();
-        renderer.setSelectedNode(null);
-        return;
-      }
-      // Deselect node
-      formEditor.selectNode(null);
-      renderer.setSelectedNode(null);
-    },
-    description: t('shortcut.escape'),
-  });
-
-  shortcuts.register({
-    key: '?',
-    handler: () => showHelpDialog(),
-    description: t('shortcut.help'),
-  });
-
-  shortcuts.register({
-    key: ',',
-    ctrl: true,
-    handler: () => { settingsBtn.click(); },
-    description: t('shortcut.settings'),
+  // Wire ⌘K button now that commandPalette exists
+  cmdKBtn.addEventListener('click', async () => {
+    commandPalette.setItems(await buildCommandItems());
+    commandPalette.open();
   });
 
   window.addEventListener('beforeunload', (e) => {

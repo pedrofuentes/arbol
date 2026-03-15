@@ -1,5 +1,6 @@
 import { t } from '../i18n';
 import type { OrgNode } from '../types';
+import { createButton } from '../utils/dom-builder';
 
 export interface CategoryInfo {
   id: string;
@@ -58,11 +59,12 @@ export class PropertyPanel {
     headerTitle.className = 'pp-header-title';
     headerTitle.textContent = t('property_panel.title');
 
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'pp-close';
-    closeBtn.setAttribute('aria-label', t('property_panel.close_aria'));
-    closeBtn.textContent = '✕';
-    closeBtn.addEventListener('click', () => options.onClose());
+    const closeBtn = createButton({
+      className: 'pp-close',
+      ariaLabel: t('property_panel.close_aria'),
+      label: '✕',
+      onClick: () => options.onClose(),
+    });
 
     header.appendChild(headerTitle);
     header.appendChild(closeBtn);
@@ -136,18 +138,19 @@ export class PropertyPanel {
     editSection.appendChild(catGroup);
 
     // Save button
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'pp-save-btn';
-    saveBtn.textContent = t('property_panel.save');
-    saveBtn.addEventListener('click', () => {
-      if (!this.nodeId) return;
-      const newName = this.nameInput.value.trim();
-      const newTitle = this.titleInput.value.trim();
-      if (newName !== this.savedName || newTitle !== this.savedTitle) {
-        options.onEdit(this.nodeId, newName, newTitle);
-        this.savedName = newName;
-        this.savedTitle = newTitle;
-      }
+    const saveBtn = createButton({
+      className: 'pp-save-btn',
+      label: t('property_panel.save'),
+      onClick: () => {
+        if (!this.nodeId) return;
+        const newName = this.nameInput.value.trim();
+        const newTitle = this.titleInput.value.trim();
+        if (newName !== this.savedName || newTitle !== this.savedTitle) {
+          options.onEdit(this.nodeId, newName, newTitle);
+          this.savedName = newName;
+          this.savedTitle = newTitle;
+        }
+      },
     });
     editSection.appendChild(saveBtn);
     content.appendChild(editSection);
@@ -324,9 +327,10 @@ export class PropertyPanel {
   }
 
   private createActionBtn(text: string, danger: boolean, disabled: boolean): HTMLButtonElement {
-    const btn = document.createElement('button');
-    btn.className = `pp-action-btn${danger ? ' btn-danger' : ''}`;
-    btn.textContent = text;
+    const btn = createButton({
+      className: `pp-action-btn${danger ? ' btn-danger' : ''}`,
+      label: text,
+    });
     if (disabled) this.setDisabled(btn, true);
     return btn;
   }
