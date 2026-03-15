@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] — 2026-03-15
+
+### Fixed
+- **Sidebar UX polish** — reduced side padding, chart list absorbs height (versions + Quick Actions flush at bottom)
+- **Ghost buttons** — added `.btn-ghost` and `.btn-icon` CSS classes; `+` and `+ Save` buttons now transparent
+- **Chart names visible** — action buttons changed from `opacity:0` to `display:none` so they don't steal flex space
+- **No horizontal scrollbar** — added `overflow-x: hidden` to sidebar
+- **Text color hierarchy** — fixed dark theme `--text-tertiary` (`#94a3b8` → `#64748b`) to differ from `--text-secondary`
+- **Hover actions overlay** — chart/version action buttons render as centered icon overlay (✏️📋📤🗑️) instead of expanding the row
+- **Actions on active chart only** — non-active charts are click-to-switch; overlay doesn't block selection
+- **Rename via dialog** — replaced inline text input with `showInputDialog` popup (consistent with New Chart)
+- **Footer stats update** — `OrgStore.replaceTree()` now emits change event so footer status refreshes on chart switch
+- **Version highlighting** — viewed version gets teal accent highlight (`.version-item.viewing`) matching active chart style
+
+### Added
+- **Compare button in version viewer** — banner now shows Compare · Restore · ✕ Close (was Restore · Close)
+- **Header toolbar dividers** — separators between Undo/Redo | Import/Export | Settings/Theme/Help
+
+### Removed
+- **Footer export button** — redundant with header Export button and Ctrl+E shortcut
+
+### Testing
+- 1,707 tests across 68 files — all passing
+
 ## [3.0.0] — 2026-03-14
 
 ### Added
@@ -24,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Header buttons styled with ghost theme (transparent background, hover highlight)
 
 ### Testing
-- 1,656 tests across 67 files — all passing
+- 1,707 tests across 68 files — all passing
 
 ## [2.9.1] — 2026-03-14
 

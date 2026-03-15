@@ -304,6 +304,7 @@ export class OrgStore extends EventEmitter {
     this.root = cloneTree(tree);
     this.undoStack.length = 0;
     this.redoStack.length = 0;
+    this.emit();
   }
 
   private validateTree(node: unknown, depth = 0, count = { value: 0 }): asserts node is OrgNode {

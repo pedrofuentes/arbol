@@ -1,6 +1,7 @@
 export interface VersionViewerOptions {
   versionName: string;
   container: HTMLElement;
+  onCompare?: () => void;
   onRestore: () => void;
   onClose: () => void;
 }
@@ -85,6 +86,19 @@ export function showVersionViewer(options: VersionViewerOptions): void {
   const separator = document.createElement('span');
   separator.style.cssText = 'width:1px;height:14px;background:var(--border-default);';
   banner.appendChild(separator);
+
+  // Compare button (optional)
+  if (options.onCompare) {
+    const compareBtn = document.createElement('button');
+    compareBtn.setAttribute('data-testid', 'version-viewer-compare');
+    compareBtn.className = 'btn btn-primary';
+    compareBtn.textContent = 'Compare';
+    compareBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
+    compareBtn.addEventListener('click', () => {
+      options.onCompare!();
+    });
+    banner.appendChild(compareBtn);
+  }
 
   // Restore button
   const restoreBtn = document.createElement('button');

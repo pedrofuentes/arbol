@@ -296,6 +296,7 @@ const en: Record<string, string> = {
   'chart_editor.new_chart_tooltip': 'New chart',
   'chart_editor.new_chart_dialog_title': 'New Chart',
   'chart_editor.new_chart_dialog_label': 'Chart name',
+  'chart_editor.rename_chart_dialog_title': 'Rename Chart',
   'chart_editor.save_version_tooltip': 'Save new version',
   'chart_editor.working_tree': 'Working tree',
   'chart_editor.working_tree_dirty': 'Current · unsaved changes',

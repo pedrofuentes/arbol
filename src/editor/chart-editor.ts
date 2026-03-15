@@ -20,6 +20,7 @@ export interface ChartEditorOptions {
 }
 
 const INLINE_BTN_EXTRA = 'font-size:10px;padding:3px 8px;';
+const ACTION_BTN_STYLE = 'font-size:14px;padding:4px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;line-height:1;';
 
 const ERROR_TIMEOUT_MS = 3000;
 
@@ -40,6 +41,7 @@ export class ChartEditor {
   private chartErrorEl!: HTMLDivElement;
   private versionErrorEl!: HTMLDivElement;
   private chartSearchTerm = '';
+  private viewingVersionId: string | null = null;
 
   private unsubscribe: (() => void) | null = null;
   private errorTimers: ReturnType<typeof setTimeout>[] = [];
@@ -88,6 +90,11 @@ export class ChartEditor {
     this.container.innerHTML = '';
   }
 
+  setViewingVersion(versionId: string | null): void {
+    this.viewingVersionId = versionId;
+    this.renderVersionList();
+  }
+
   // ── Build ──────────────────────────────────────────────
 
   private build(): void {
@@ -126,6 +133,7 @@ export class ChartEditor {
     this.chartErrorEl = this.createErrorArea();
     this.container.appendChild(this.chartErrorEl);
     this.chartListEl = document.createElement('div');
+    this.chartListEl.className = 'chart-list';
     this.chartListEl.dataset.field = 'chart-list';
     this.chartListEl.setAttribute('role', 'list');
     this.container.appendChild(this.chartListEl);
@@ -268,39 +276,42 @@ export class ChartEditor {
 
     item.appendChild(infoEl);
 
-    // Action buttons (hidden by default, shown on hover via CSS)
-    const actions = document.createElement('div');
-    actions.className = 'chart-item-actions';
+    // Action buttons — only on active chart (non-active items are click-to-switch)
+    if (isActive) {
+      const actions = document.createElement('div');
+      actions.className = 'chart-item-actions';
 
-    const renameBtn = this.createInlineButton(t('chart_editor.rename'));
-    renameBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.handleRenameChart(chart, item);
-    });
-    actions.appendChild(renameBtn);
+      const renameBtn = this.createActionButton('✏️', t('chart_editor.rename'));
+      renameBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.handleRenameChart(chart);
+      });
+      actions.appendChild(renameBtn);
 
-    const duplicateBtn = this.createInlineButton(t('chart_editor.duplicate'));
-    duplicateBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.handleDuplicateChart(chart);
-    });
-    actions.appendChild(duplicateBtn);
+      const duplicateBtn = this.createActionButton('📋', t('chart_editor.duplicate'));
+      duplicateBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.handleDuplicateChart(chart);
+      });
+      actions.appendChild(duplicateBtn);
 
-    const exportBtn = this.createInlineButton(t('chart_editor.export'));
-    exportBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.handleExportChart(chart);
-    });
-    actions.appendChild(exportBtn);
+      const exportBtn = this.createActionButton('📤', t('chart_editor.export'));
+      exportBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.handleExportChart(chart);
+      });
+      actions.appendChild(exportBtn);
 
-    const deleteBtn = this.createInlineButton(t('chart_editor.delete'), true);
-    deleteBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.handleDeleteChart(chart);
-    });
-    actions.appendChild(deleteBtn);
+      const deleteBtn = this.createActionButton('🗑️', t('chart_editor.delete'), true);
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.handleDeleteChart(chart);
+      });
+      actions.appendChild(deleteBtn);
 
-    item.appendChild(actions);
+      item.appendChild(actions);
+    }
+
     return item;
   }
 
@@ -348,7 +359,8 @@ export class ChartEditor {
 
   private createVersionItem(version: VersionRecord): HTMLDivElement {
     const item = document.createElement('div');
-    item.className = 'version-item';
+    const isViewing = this.viewingVersionId === version.id;
+    item.className = 'version-item' + (isViewing ? ' viewing' : '');
     item.setAttribute('role', 'listitem');
     item.dataset.versionId = version.id;
 
@@ -378,19 +390,19 @@ export class ChartEditor {
     const actions = document.createElement('div');
     actions.className = 'version-item-actions';
 
-    const viewBtn = this.createInlineButton(t('chart_editor.view'));
+    const viewBtn = this.createActionButton('👁', t('chart_editor.view'));
     viewBtn.addEventListener('click', () => this.onVersionView(version));
     actions.appendChild(viewBtn);
 
-    const compareBtn = this.createInlineButton(t('chart_editor.compare'));
+    const compareBtn = this.createActionButton('⚖️', t('chart_editor.compare'));
     compareBtn.addEventListener('click', () => this.onVersionCompare(version));
     actions.appendChild(compareBtn);
 
-    const restoreBtn = this.createInlineButton(t('chart_editor.restore'));
+    const restoreBtn = this.createActionButton('↩️', t('chart_editor.restore'));
     restoreBtn.addEventListener('click', () => this.handleRestoreVersion(version.id));
     actions.appendChild(restoreBtn);
 
-    const deleteBtn = this.createInlineButton(t('chart_editor.delete'), true);
+    const deleteBtn = this.createActionButton('🗑️', t('chart_editor.delete'), true);
     deleteBtn.addEventListener('click', () => this.handleDeleteVersion(version));
     actions.appendChild(deleteBtn);
 
@@ -405,6 +417,16 @@ export class ChartEditor {
     btn.className = danger ? 'btn btn-danger' : 'btn btn-secondary';
     btn.textContent = label;
     btn.style.cssText = INLINE_BTN_EXTRA;
+    return btn;
+  }
+
+  private createActionButton(icon: string, label: string, danger = false): HTMLButtonElement {
+    const btn = document.createElement('button');
+    btn.className = danger ? 'btn btn-danger' : 'btn btn-ghost';
+    btn.textContent = icon;
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+    btn.style.cssText = ACTION_BTN_STYLE;
     return btn;
   }
 
@@ -479,53 +501,21 @@ export class ChartEditor {
     }
   }
 
-  private handleRenameChart(chart: ChartRecord, itemEl: HTMLDivElement): void {
-    const nameRow = itemEl.querySelector('div') as HTMLDivElement;
-    if (!nameRow) return;
-
-    // Replace name content with inline input
-    const existingInput = itemEl.querySelector('input');
-    if (existingInput) return; // Already renaming
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = chart.name;
-    input.style.cssText =
-      'font-size:var(--text-sm);width:100%;margin-top:4px;padding:5px var(--space-3);' +
-      'font-family:var(--font-sans);border:1px solid var(--accent);' +
-      'border-radius:var(--radius-md);background:var(--bg-base);color:var(--text-primary);' +
-      'box-shadow:0 0 0 2px var(--accent-muted);outline:none;';
-
-    const commitRename = async (): Promise<void> => {
-      const newName = input.value.trim();
-      if (!newName) {
-        this.showError(this.chartErrorEl, t('chart_header.name_empty_error'));
-        await this.refresh();
-        return;
-      }
-      if (newName === chart.name) {
-        await this.refresh();
-        return;
-      }
-      try {
-        await this.chartStore.renameChart(chart.id, newName);
-        await this.refresh();
-      } catch (err) {
-        this.showError(this.chartErrorEl, (err as Error).message);
-        await this.refresh();
-      }
-    };
-
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') commitRename();
-      if (e.key === 'Escape') this.refresh();
+  private async handleRenameChart(chart: ChartRecord): Promise<void> {
+    const newName = await showInputDialog({
+      title: t('chart_editor.rename_chart_dialog_title'),
+      label: t('chart_editor.new_chart_dialog_label'),
+      placeholder: chart.name,
+      initialValue: chart.name,
     });
-    input.addEventListener('blur', () => commitRename());
+    if (!newName || newName === chart.name) return;
 
-    // Insert input after the name row
-    nameRow.insertAdjacentElement('afterend', input);
-    input.focus();
-    input.select();
+    try {
+      await this.chartStore.renameChart(chart.id, newName);
+      await this.refresh();
+    } catch (err) {
+      this.showError(this.chartErrorEl, (err as Error).message);
+    }
   }
 
   private async handleDeleteChart(chart: ChartRecord): Promise<void> {

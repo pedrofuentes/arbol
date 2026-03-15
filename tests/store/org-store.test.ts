@@ -1124,12 +1124,12 @@ describe('OrgStore', () => {
       expect(store.canRedo()).toBe(false);
     });
 
-    it('does not emit a change event', () => {
+    it('emits a change event', () => {
       const store = new OrgStore(makeRoot());
       const listener = vi.fn();
       store.onChange(listener);
       store.replaceTree({ id: 'x', name: 'X', title: 'T' });
-      expect(listener).not.toHaveBeenCalled();
+      expect(listener).toHaveBeenCalledTimes(1);
     });
 
     it('does not create an undo snapshot', () => {

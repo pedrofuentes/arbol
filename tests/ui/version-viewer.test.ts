@@ -13,6 +13,10 @@ function getLabel(): HTMLSpanElement | null {
   return document.querySelector('[data-testid="version-viewer-label"]');
 }
 
+function getCompareButton(): HTMLButtonElement | null {
+  return document.querySelector('[data-testid="version-viewer-compare"]');
+}
+
 function getRestoreButton(): HTMLButtonElement | null {
   return document.querySelector('[data-testid="version-viewer-restore"]');
 }
@@ -87,6 +91,25 @@ describe('VersionViewer', () => {
   });
 
   describe('button callbacks', () => {
+    it('renders Compare button when onCompare is provided', () => {
+      showVersionViewer({ versionName: 'v1', container, onCompare: vi.fn(), onRestore: vi.fn(), onClose: vi.fn() });
+      const btn = getCompareButton();
+      expect(btn).not.toBeNull();
+      expect(btn!.textContent).toBe('Compare');
+    });
+
+    it('does not render Compare button when onCompare is omitted', () => {
+      showVersionViewer({ versionName: 'v1', container, onRestore: vi.fn(), onClose: vi.fn() });
+      expect(getCompareButton()).toBeNull();
+    });
+
+    it('calls onCompare when Compare is clicked', () => {
+      const onCompare = vi.fn();
+      showVersionViewer({ versionName: 'v1', container, onCompare, onRestore: vi.fn(), onClose: vi.fn() });
+      getCompareButton()!.click();
+      expect(onCompare).toHaveBeenCalledTimes(1);
+    });
+
     it('calls onRestore when Restore is clicked', () => {
       const onRestore = vi.fn();
       showVersionViewer({ versionName: 'v1', container, onRestore, onClose: vi.fn() });

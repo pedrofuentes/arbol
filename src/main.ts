@@ -571,7 +571,14 @@ async function main(): Promise<void> {
   exportHeaderBtn.addEventListener('click', () => { exportCurrentChart(); });
   headerRight.insertBefore(exportHeaderBtn, settingsBtn);
 
-  const updateUndoRedoState = () => {
+  // Reposition divider: between Export and Settings (was between Settings and Theme)
+  headerRight.insertBefore(divider, settingsBtn);
+  // Add second divider between Redo and Import
+  const divider2 = document.createElement('span');
+  divider2.className = 'header-divider';
+  headerRight.insertBefore(divider2, importBtn);
+
+  const updateUndoRedoState= () => {
     undoBtn.disabled = !store.canUndo();
     redoBtn.disabled = !store.canRedo();
     undoBtn.style.opacity = store.canUndo() ? '1' : '0.4';
@@ -697,7 +704,7 @@ async function main(): Promise<void> {
     return confirmed;
   };
 
-  new ChartEditor({
+  const chartEditor = new ChartEditor({
     container: sidebar,
     chartStore,
     getCurrentTree: () => store.getTree(),
@@ -735,20 +742,31 @@ async function main(): Promise<void> {
       store.replaceTree(version.tree);
       rerender();
       renderer.getZoomManager()?.fitToContent();
+      chartEditor.setViewingVersion(version.id);
       showVersionViewer({
         versionName: version.name,
         container: chartArea,
+        onCompare: () => {
+          store.replaceTree(savedTree);
+          dismissVersionViewer();
+          chartEditor.setViewingVersion(null);
+          rerender();
+          renderer.getZoomManager()?.fitToContent();
+          enterComparisonMode(version);
+        },
         onRestore: async () => {
           const shouldProceed = await handleBeforeSwitch();
           if (!shouldProceed) return;
           await chartStore.restoreVersion(version.id);
           dismissVersionViewer();
+          chartEditor.setViewingVersion(null);
           chartNameHeader.setDirty(false);
           rerender();
         },
         onClose: () => {
           store.replaceTree(savedTree);
           dismissVersionViewer();
+          chartEditor.setViewingVersion(null);
           rerender();
           renderer.getZoomManager()?.fitToContent();
         },
@@ -1505,20 +1523,6 @@ async function main(): Promise<void> {
   footerRight.style.cssText = 'display:flex;align-items:center;gap:var(--space-2);';
   footer.appendChild(footerRight);
 
-  const exportBtn = document.createElement('button');
-  exportBtn.className = 'footer-btn';
-  exportBtn.dataset.action = 'export-pptx';
-  const exportIconSpan = document.createElement('span');
-  exportIconSpan.setAttribute('aria-hidden', 'true');
-  exportIconSpan.textContent = t('footer.export_icon');
-  exportBtn.appendChild(exportIconSpan);
-  const exportLabel = document.createTextNode(t('footer.export_label'));
-  exportBtn.appendChild(exportLabel);
-  exportBtn.setAttribute('aria-label', t('footer.export_aria'));
-  exportBtn.setAttribute('aria-keyshortcuts', 'Control+E');
-  exportBtn.setAttribute('data-tooltip', t('footer.export_tooltip'));
-  footerRight.appendChild(exportBtn);
-
   const exportCurrentChart = async () => {
     const layout = renderer.getLastLayout();
     if (!layout) return;
@@ -1537,11 +1541,6 @@ async function main(): Promise<void> {
       });
       if (!confirmed) return;
     }
-
-    exportIconSpan.textContent = t('footer.exporting_icon');
-    exportLabel.textContent = t('footer.exporting_label');
-    exportBtn.classList.add('btn-loading');
-    exportBtn.disabled = true;
 
     try {
       const rendererOpts = renderer.getOptions();
@@ -1576,17 +1575,10 @@ async function main(): Promise<void> {
       showToast(t('footer.exported'), 'success');
     } catch (e) {
       showToast(t('footer.export_failed', { error: e instanceof Error ? e.message : String(e) }), 'error');
-    } finally {
-      exportIconSpan.textContent = t('footer.export_icon');
-      exportLabel.textContent = t('footer.export_label');
-      exportBtn.classList.remove('btn-loading');
-      exportBtn.disabled = false;
     }
   };
 
-  exportBtn.addEventListener('click', exportCurrentChart);
-
-  const fitBtn = document.createElement('button');
+  const fitBtn= document.createElement('button');
   fitBtn.className = 'footer-btn';
   fitBtn.dataset.action = 'fit';
   const fitIcon = document.createElement('span');
@@ -1685,7 +1677,7 @@ async function main(): Promise<void> {
       icon: '📊',
       shortcut: 'Ctrl+E',
       group: t('command_palette.group_actions'),
-      action: () => { exportBtn.click(); },
+      action: () => { exportCurrentChart(); },
     },
     {
       id: 'undo',

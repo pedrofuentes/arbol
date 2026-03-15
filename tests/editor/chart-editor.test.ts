@@ -12,9 +12,13 @@ vi.mock('../../src/export/chart-exporter', () => ({
 vi.mock('../../src/ui/confirm-dialog', () => ({
   showConfirmDialog: vi.fn().mockResolvedValue(true),
 }));
+vi.mock('../../src/ui/input-dialog', () => ({
+  showInputDialog: vi.fn().mockResolvedValue(null),
+}));
 
 import { showExportDialog } from '../../src/ui/export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../../src/export/chart-exporter';
+import { showInputDialog } from '../../src/ui/input-dialog';
 
 function makeTree(): OrgNode {
   return { id: 'root', name: 'Alice', title: 'CEO', children: [] };
@@ -101,14 +105,14 @@ describe('ChartEditor – Export button', () => {
   it('renders an Export button in each chart item', () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const buttons = chartItem.querySelectorAll('button');
-    const labels = Array.from(buttons).map((b) => b.textContent);
+    const labels = Array.from(buttons).map((b) => b.title);
     expect(labels).toContain('Export');
   });
 
   it('places Export between Duplicate and Delete', () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const buttons = chartItem.querySelectorAll('button');
-    const labels = Array.from(buttons).map((b) => b.textContent);
+    const labels = Array.from(buttons).map((b) => b.title);
     const dupIdx = labels.indexOf('Duplicate');
     const expIdx = labels.indexOf('Export');
     const delIdx = labels.indexOf('Delete');
@@ -119,7 +123,7 @@ describe('ChartEditor – Export button', () => {
   it('clicking Export calls showExportDialog with chart name and versions', async () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const exportBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Export',
+      (b) => b.title === 'Export',
     )!;
     exportBtn.click();
 
@@ -139,7 +143,7 @@ describe('ChartEditor – Export button', () => {
   it('onExport callback builds and downloads the bundle', async () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const exportBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Export',
+      (b) => b.title === 'Export',
     )!;
     exportBtn.click();
 
@@ -164,7 +168,7 @@ describe('ChartEditor – Export button', () => {
 
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const exportBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Export',
+      (b) => b.title === 'Export',
     )!;
     exportBtn.click();
 
@@ -177,12 +181,12 @@ describe('ChartEditor – Export button', () => {
     expect(showExportDialog).not.toHaveBeenCalled();
   });
 
-  it('Export button has secondary styling, not danger', () => {
+  it('Export button has ghost styling, not danger', () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const exportBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Export',
+      (b) => b.title === 'Export',
     )!;
-    expect(exportBtn.className).toContain('btn-secondary');
+    expect(exportBtn.className).toContain('btn-ghost');
     expect(exportBtn.className).not.toContain('btn-danger');
   });
 });
@@ -228,11 +232,11 @@ describe('ChartEditor – Compare button', () => {
     // Expand versions — click the chart item to show version list
     await vi.waitFor(() => {
       const allButtons = Array.from(container.querySelectorAll('button'));
-      const labels = allButtons.map((b) => b.textContent);
+      const labels = allButtons.map((b) => b.title);
       expect(labels).toContain('Compare');
     });
     const compareButtons = Array.from(container.querySelectorAll('button')).filter(
-      (b) => b.textContent === 'Compare',
+      (b) => b.title === 'Compare',
     );
     expect(compareButtons.length).toBe(versions.length);
   });
@@ -240,11 +244,11 @@ describe('ChartEditor – Compare button', () => {
   it('calls onVersionCompare when Compare button is clicked', async () => {
     await vi.waitFor(() => {
       const allButtons = Array.from(container.querySelectorAll('button'));
-      expect(allButtons.map((b) => b.textContent)).toContain('Compare');
+      expect(allButtons.map((b) => b.title)).toContain('Compare');
     });
 
     const compareBtn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Compare',
+      (b) => b.title === 'Compare',
     )!;
     compareBtn.click();
 
@@ -259,16 +263,16 @@ describe('ChartEditor – Compare button', () => {
   it('places Compare button between View and Restore', async () => {
     await vi.waitFor(() => {
       const allButtons = Array.from(container.querySelectorAll('button'));
-      expect(allButtons.map((b) => b.textContent)).toContain('Compare');
+      expect(allButtons.map((b) => b.title)).toContain('Compare');
     });
 
     // Get buttons within the first version item's action row
     const allButtons = Array.from(container.querySelectorAll('button'));
     const versionActionButtons = allButtons.filter(
-      (b) => ['View', 'Compare', 'Restore', 'Delete'].includes(b.textContent ?? ''),
+      (b) => ['View', 'Compare', 'Restore', 'Delete'].includes(b.title ?? ''),
     );
     // First group of 4 = first version item
-    const labels = versionActionButtons.slice(0, 4).map((b) => b.textContent);
+    const labels = versionActionButtons.slice(0, 4).map((b) => b.title);
     const viewIdx = labels.indexOf('View');
     const compareIdx = labels.indexOf('Compare');
     const restoreIdx = labels.indexOf('Restore');
@@ -339,5 +343,222 @@ describe('ChartEditor – chart item keyboard accessibility', () => {
     await vi.waitFor(() => {
       expect(store.switchChart).toHaveBeenCalledWith('chart-2');
     });
+  });
+});
+
+describe('ChartEditor – action button accessibility', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  const chart = makeChart();
+  const versions = [makeVersion()];
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    const store = mockChartStore([chart], versions);
+
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-chart-id]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    document.body.removeChild(container);
+  });
+
+  it('chart action buttons have title and aria-label attributes', () => {
+    const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
+    const buttons = Array.from(chartItem.querySelectorAll('button'));
+    const expectedLabels = ['Rename', 'Duplicate', 'Export', 'Delete'];
+
+    for (const label of expectedLabels) {
+      const btn = buttons.find((b) => b.title === label);
+      expect(btn, `button with title "${label}" should exist`).not.toBeUndefined();
+      expect(btn!.getAttribute('aria-label')).toBe(label);
+    }
+  });
+
+  it('chart action buttons render icon-only (no text labels)', () => {
+    const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
+    const buttons = Array.from(chartItem.querySelectorAll('button'));
+    const actionBtns = buttons.filter((b) =>
+      ['Rename', 'Duplicate', 'Export', 'Delete'].includes(b.title),
+    );
+    expect(actionBtns.length).toBe(4);
+    for (const btn of actionBtns) {
+      expect(btn.textContent!.length).toBeLessThanOrEqual(3);
+    }
+  });
+
+  it('version action buttons have title and aria-label attributes', async () => {
+    await vi.waitFor(() => {
+      const buttons = Array.from(container.querySelectorAll('button'));
+      expect(buttons.map((b) => b.title)).toContain('View');
+    });
+
+    const buttons = Array.from(container.querySelectorAll('button'));
+    const expectedLabels = ['View', 'Compare', 'Restore', 'Delete'];
+
+    for (const label of expectedLabels) {
+      const btn = buttons.find((b) => b.title === label);
+      expect(btn, `button with title "${label}" should exist`).not.toBeUndefined();
+      expect(btn!.getAttribute('aria-label')).toBe(label);
+    }
+  });
+});
+
+describe('ChartEditor – active vs inactive chart actions', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  const chart1 = makeChart({ id: 'chart-1', name: 'Active Chart' });
+  const chart2 = makeChart({ id: 'chart-2', name: 'Other Chart' });
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    const store = mockChartStore([chart1, chart2], []);
+
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-chart-id]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    document.body.removeChild(container);
+  });
+
+  it('active chart item has action buttons', () => {
+    const activeItem = container.querySelector('[data-chart-id="chart-1"]')!;
+    const actions = activeItem.querySelector('.chart-item-actions');
+    expect(actions).not.toBeNull();
+  });
+
+  it('inactive chart item does not have action buttons', () => {
+    const inactiveItem = container.querySelector('[data-chart-id="chart-2"]')!;
+    const actions = inactiveItem.querySelector('.chart-item-actions');
+    expect(actions).toBeNull();
+  });
+});
+
+describe('ChartEditor – rename via dialog', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let store: ReturnType<typeof mockChartStore>;
+  const chart = makeChart({ id: 'chart-1', name: 'Original Name' });
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = mockChartStore([chart], []);
+
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-chart-id]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    document.body.removeChild(container);
+  });
+
+  it('clicking rename button opens input dialog', async () => {
+    const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
+    const renameBtn = Array.from(chartItem.querySelectorAll('button')).find(
+      (b) => b.title === 'Rename',
+    )!;
+    renameBtn.click();
+
+    await vi.waitFor(() => {
+      expect(showInputDialog).toHaveBeenCalledTimes(1);
+    });
+
+    const opts = (showInputDialog as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(opts.title).toBe('Rename Chart');
+    expect(opts.initialValue).toBe('Original Name');
+  });
+
+  it('submitting new name calls chartStore.renameChart', async () => {
+    (showInputDialog as ReturnType<typeof vi.fn>).mockResolvedValueOnce('New Name');
+
+    const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
+    const renameBtn = Array.from(chartItem.querySelectorAll('button')).find(
+      (b) => b.title === 'Rename',
+    )!;
+    renameBtn.click();
+
+    await vi.waitFor(() => {
+      expect(store.renameChart).toHaveBeenCalledWith('chart-1', 'New Name');
+    });
+  });
+
+  it('canceling dialog does not call renameChart', async () => {
+    (showInputDialog as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+
+    const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
+    const renameBtn = Array.from(chartItem.querySelectorAll('button')).find(
+      (b) => b.title === 'Rename',
+    )!;
+    renameBtn.click();
+
+    await vi.waitFor(() => {
+      expect(showInputDialog).toHaveBeenCalledTimes(1);
+    });
+    expect(store.renameChart).not.toHaveBeenCalled();
+  });
+
+  it('entering same name does not call renameChart', async () => {
+    (showInputDialog as ReturnType<typeof vi.fn>).mockResolvedValueOnce('Original Name');
+
+    const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
+    const renameBtn = Array.from(chartItem.querySelectorAll('button')).find(
+      (b) => b.title === 'Rename',
+    )!;
+    renameBtn.click();
+
+    await vi.waitFor(() => {
+      expect(showInputDialog).toHaveBeenCalledTimes(1);
+    });
+    expect(store.renameChart).not.toHaveBeenCalled();
   });
 });
