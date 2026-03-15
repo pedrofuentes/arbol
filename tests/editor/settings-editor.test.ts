@@ -117,7 +117,7 @@ describe('SettingsEditor', () => {
     container.remove();
   });
 
-  it('builds settings panel with accordion and flat sections', () => {
+  it('builds settings panel with sections', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const titles = getSectionTitles(container);
     expect(titles.length).toBeGreaterThan(0);
@@ -144,59 +144,6 @@ describe('SettingsEditor', () => {
     expect(flatTitles).toContain('Card Dimensions');
     expect(flatTitles).toContain('Typography');
     expect(flatTitles).toContain('Card Style');
-  });
-
-  it('accordion header toggles expanded state', () => {
-    new SettingsEditor(container, renderer, rerenderCb);
-    // Settings IO is collapsed by default (not in DEFAULT_EXPANDED)
-    const headers = container.querySelectorAll<HTMLButtonElement>('.accordion-header');
-    const settingsIOHeader = Array.from(headers).find(
-      (h) => h.querySelector('.accordion-title')?.textContent === 'Settings',
-    )!;
-    expect(settingsIOHeader.getAttribute('aria-expanded')).toBe('false');
-
-    settingsIOHeader.click();
-    expect(settingsIOHeader.getAttribute('aria-expanded')).toBe('true');
-
-    settingsIOHeader.click();
-    expect(settingsIOHeader.getAttribute('aria-expanded')).toBe('false');
-  });
-
-  it('default-expanded sections start expanded', () => {
-    new SettingsEditor(container, renderer, rerenderCb);
-    const presetsContent = container.querySelector('#accordion-presets');
-    expect(presetsContent).not.toBeNull();
-    expect(presetsContent!.getAttribute('data-expanded')).toBe('true');
-  });
-
-  it('persists accordion state to localStorage', () => {
-    new SettingsEditor(container, renderer, rerenderCb);
-    const headers = container.querySelectorAll<HTMLButtonElement>('.accordion-header');
-    const presetsHeader = Array.from(headers).find(
-      (h) => h.querySelector('.accordion-title')?.textContent === 'Presets',
-    )!;
-    // Collapse the presets section (starts expanded)
-    presetsHeader.click();
-    expect(localStorageMock.setItem).toHaveBeenCalledWith(
-      'arbol-accordion-state',
-      expect.any(String),
-    );
-    const saved = JSON.parse(localStorageMock.setItem.mock.calls.at(-1)![1] as string);
-    expect(saved.presets).toBe(false);
-  });
-
-  it('loads accordion state from localStorage', () => {
-    localStorageMock.setItem(
-      'arbol-accordion-state',
-      JSON.stringify({ presets: false, 'settings-io': true }),
-    );
-    new SettingsEditor(container, renderer, rerenderCb);
-
-    const presetsContent = container.querySelector('#accordion-presets');
-    expect(presetsContent!.getAttribute('data-expanded')).toBe('false');
-
-    const settingsIOContent = container.querySelector('#accordion-settings-io');
-    expect(settingsIOContent!.getAttribute('data-expanded')).toBe('true');
   });
 
   describe('Node Categories section', () => {
@@ -388,7 +335,7 @@ describe('SettingsEditor', () => {
   });
 
   describe('Unified Presets section', () => {
-    it('renders a single Presets accordion section', () => {
+    it('renders a single Presets section', () => {
       new SettingsEditor(container, renderer, rerenderCb);
       const titles = getAccordionTitles(container);
       expect(titles.filter((t) => t === 'Presets').length).toBe(1);
@@ -595,7 +542,7 @@ describe('SettingsEditor', () => {
       };
     }
 
-    it('renders Backup & Restore accordion section when chartDB is provided', () => {
+    it('renders Backup & Restore section when chartDB is provided', () => {
       const db = createMockChartDB();
       new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
       const titles = getAccordionTitles(container);
@@ -667,23 +614,6 @@ describe('SettingsEditor', () => {
       expect(restoreBtn).toBeDefined();
     });
 
-    it('accordion state for backup-restore section persists', () => {
-      const db = createMockChartDB();
-      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
-
-      const headers = container.querySelectorAll<HTMLButtonElement>('.accordion-header');
-      const backupHeader = Array.from(headers).find(
-        (h) => h.querySelector('.accordion-title')?.textContent === 'Backup & Restore',
-      )!;
-
-      // Click to toggle
-      backupHeader.click();
-
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'arbol-accordion-state',
-        expect.any(String),
-      );
-    });
   });
 
   describe('text alignment select control', () => {

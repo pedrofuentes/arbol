@@ -23,7 +23,6 @@ const ARBOL_STORAGE_KEYS = [
   'arbol-settings',
   'arbol-categories',
   'arbol-csv-mappings',
-  'arbol-accordion-state',
   'arbol-custom-presets',
   'arbol-theme',
 ];
@@ -433,13 +432,6 @@ function sectionIdFromTitle(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 }
 
-const ALL_SECTION_IDS = [
-  'presets',
-  'categories',
-  'settings-io',
-  'backup-restore',
-];
-
 export class SettingsEditor {
   private container: HTMLElement;
   private renderer: ChartRenderer;
@@ -449,12 +441,7 @@ export class SettingsEditor {
   private chartDB: ChartDB | null;
   private storage: IStorage;
 
-  private static ACCORDION_STORAGE_KEY = 'arbol-accordion-state';
-  private static DEFAULT_EXPANDED = new Set(['presets', 'categories']);
-
-  private accordionState: Map<string, boolean> = new Map();
-
-  private static CUSTOM_PRESETS_KEY = 'arbol-custom-presets';
+  private static CUSTOM_PRESETS_KEY= 'arbol-custom-presets';
 
   constructor(
     container: HTMLElement,
@@ -472,47 +459,7 @@ export class SettingsEditor {
     this.categoryStore = categoryStore ?? null;
     this.chartDB = chartDB ?? null;
     this.storage = storage;
-    this.loadAccordionState();
     this.build();
-  }
-
-  private loadAccordionState(): void {
-    try {
-      const raw = this.storage.getItem(SettingsEditor.ACCORDION_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (typeof parsed === 'object') {
-          for (const [key, value] of Object.entries(parsed)) {
-            if (typeof value === 'boolean') {
-              this.accordionState.set(key, value);
-            }
-          }
-        }
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-
-  private saveAccordionState(): void {
-    const obj: Record<string, boolean> = {};
-    for (const [key, value] of this.accordionState) {
-      obj[key] = value;
-    }
-    this.storage.setItem(SettingsEditor.ACCORDION_STORAGE_KEY, JSON.stringify(obj));
-  }
-
-  private isExpanded(sectionId: string): boolean {
-    if (this.accordionState.has(sectionId)) {
-      return this.accordionState.get(sectionId)!;
-    }
-    return SettingsEditor.DEFAULT_EXPANDED.has(sectionId);
-  }
-
-  private toggleSection(sectionId: string): void {
-    const current = this.isExpanded(sectionId);
-    this.accordionState.set(sectionId, !current);
-    this.saveAccordionState();
   }
 
   private loadCustomPresets(): CombinedPreset[] {
@@ -599,16 +546,9 @@ export class SettingsEditor {
     const heading = document.createElement('h3');
     heading.style.cssText = 'margin:0;padding:0;font:inherit;';
 
-    const header = document.createElement('button');
+    const header = document.createElement('div');
     header.className = 'accordion-header';
     header.id = headerId;
-    header.setAttribute('aria-expanded', String(this.isExpanded(id)));
-    header.setAttribute('aria-controls', `accordion-${id}`);
-
-    const chevron = document.createElement('span');
-    chevron.className = 'accordion-chevron';
-    chevron.textContent = '▶';
-    header.appendChild(chevron);
 
     const titleEl = document.createElement('span');
     titleEl.className = 'accordion-title';
@@ -633,7 +573,7 @@ export class SettingsEditor {
     contentWrapper.id = `accordion-${id}`;
     contentWrapper.setAttribute('role', 'region');
     contentWrapper.setAttribute('aria-labelledby', headerId);
-    contentWrapper.setAttribute('data-expanded', String(this.isExpanded(id)));
+    contentWrapper.setAttribute('data-expanded', 'true');
 
     const inner = document.createElement('div');
     inner.className = 'accordion-inner';
@@ -641,13 +581,6 @@ export class SettingsEditor {
     const contentEl = typeof content === 'function' ? content() : content;
     inner.appendChild(contentEl);
     contentWrapper.appendChild(inner);
-
-    header.addEventListener('click', () => {
-      this.toggleSection(id);
-      const expanded = this.isExpanded(id);
-      header.setAttribute('aria-expanded', String(expanded));
-      contentWrapper.setAttribute('data-expanded', String(expanded));
-    });
 
     heading.appendChild(header);
     section.appendChild(heading);
