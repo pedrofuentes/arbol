@@ -420,6 +420,7 @@ async function main(): Promise<void> {
     'categories-legend': 'categories',
     'settings-io': 'backup',
     'backup-restore': 'backup',
+    'preview-presets': 'presets',
     'preview-layout': 'layout',
     'preview-typography': 'typography',
     'preview-cards': 'cards',
@@ -427,7 +428,6 @@ async function main(): Promise<void> {
     'preview-ic': 'ic',
     'preview-advisors': 'advisors',
     'preview-badges': 'badges',
-    'preview-categories': 'categories',
   };
 
   function filterSettingsSections(tabId: string): void {

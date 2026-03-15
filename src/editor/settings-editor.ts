@@ -453,6 +453,7 @@ export class SettingsEditor {
   private static DEFAULT_EXPANDED = new Set(['presets', 'categories']);
 
   private accordionState: Map<string, boolean> = new Map();
+  private previewAreas: Map<string, HTMLElement> = new Map();
 
   private static CUSTOM_PRESETS_KEY = 'arbol-custom-presets';
 
@@ -615,60 +616,9 @@ export class SettingsEditor {
 
   private build(): void {
     this.container.innerHTML = '';
+    this.previewAreas.clear();
 
     const opts = this.renderer.getOptions();
-
-    // Settings filter
-    const filterWrapper = document.createElement('div');
-    filterWrapper.className = 'mb-2';
-    filterWrapper.style.cssText = 'position:relative;';
-
-    const filterInput = document.createElement('input');
-    filterInput.type = 'text';
-    filterInput.placeholder = '🔍  Filter settings…';
-    filterInput.setAttribute('aria-label', 'Filter settings');
-    filterInput.style.cssText =
-      'width:100%;padding:6px 28px 6px 12px;font-size:12px;font-family:var(--font-sans);' +
-      'border:1px solid var(--border-default);border-radius:var(--radius-full);' +
-      'background:var(--bg-base);color:var(--text-primary);' +
-      'transition:border-color var(--transition-fast);';
-
-    const clearBtn = document.createElement('button');
-    clearBtn.textContent = '×';
-    clearBtn.setAttribute('aria-label', 'Clear filter');
-    clearBtn.style.cssText =
-      'position:absolute;right:8px;top:50%;transform:translateY(-50%);' +
-      'border:none;background:transparent;color:var(--text-tertiary);' +
-      'cursor:pointer;font-size:14px;padding:0 2px;' +
-      'transition:color var(--transition-fast);';
-    clearBtn.style.display = 'none';
-    clearBtn.addEventListener('click', () => {
-      filterInput.value = '';
-      filterInput.dispatchEvent(new Event('input'));
-      filterInput.focus();
-    });
-
-    filterWrapper.appendChild(filterInput);
-    filterWrapper.appendChild(clearBtn);
-    this.container.appendChild(filterWrapper);
-
-    // Expand All / Collapse All toggle
-    const actionsRow = document.createElement('div');
-    actionsRow.className = 'accordion-actions';
-
-    const toggleAllBtn = document.createElement('button');
-    const allExpanded = ALL_SECTION_IDS.every((id) => this.isExpanded(id));
-    toggleAllBtn.textContent = allExpanded ? 'Collapse all' : 'Expand all';
-    toggleAllBtn.addEventListener('click', () => {
-      const allExp = ALL_SECTION_IDS.every((id) => this.isExpanded(id));
-      for (const id of ALL_SECTION_IDS) {
-        this.accordionState.set(id, !allExp);
-      }
-      this.saveAccordionState();
-      this.build();
-    });
-    actionsRow.appendChild(toggleAllBtn);
-    this.container.appendChild(actionsRow);
 
     // Unified Presets section
     this.container.appendChild(
@@ -685,7 +635,7 @@ export class SettingsEditor {
     }
 
     // Preview strips for each tab
-    const previewTabs = ['layout', 'typography', 'cards', 'connectors', 'ic', 'advisors', 'badges', 'categories'];
+    const previewTabs = ['presets', 'layout', 'typography', 'cards', 'connectors', 'ic', 'advisors', 'badges'];
     for (const tabId of previewTabs) {
       this.container.appendChild(this.buildPreviewStrip(tabId));
     }
@@ -931,76 +881,6 @@ export class SettingsEditor {
       );
     }
 
-    // Filter handler — wired after all sections are built
-    let filterTimeout: ReturnType<typeof setTimeout> | null = null;
-
-    filterInput.addEventListener('input', () => {
-      if (filterTimeout) clearTimeout(filterTimeout);
-      filterTimeout = setTimeout(() => {
-        const query = filterInput.value.trim().toLowerCase();
-        clearBtn.style.display = query ? 'block' : 'none';
-
-        const sections = this.container.querySelectorAll('[data-section-id]');
-
-        if (!query) {
-          sections.forEach((section) => {
-            (section as HTMLElement).style.opacity = '1';
-            (section as HTMLElement).style.pointerEvents = '';
-            // Restore accordion state for accordion sections
-            const header = section.querySelector('.accordion-header') as HTMLElement;
-            const content = section.querySelector('.accordion-content') as HTMLElement;
-            if (header && content) {
-              const sectionId = content.id.replace('accordion-', '');
-              const expanded = this.isExpanded(sectionId);
-              header.setAttribute('aria-expanded', String(expanded));
-              content.setAttribute('data-expanded', String(expanded));
-            }
-          });
-          return;
-        }
-
-        sections.forEach((section) => {
-          const titleEl = section.querySelector('.accordion-title') ?? section.querySelector('.setting-section-title');
-          const titleText = titleEl?.textContent?.toLowerCase() ?? '';
-
-          let labelMatch = false;
-          const labels = section.querySelectorAll('label, .setting-label');
-          labels.forEach((label) => {
-            if (label.textContent?.toLowerCase().includes(query)) {
-              labelMatch = true;
-            }
-          });
-
-          const presetNames = section.querySelectorAll('.preset-card span, button span');
-          presetNames.forEach((el) => {
-            if (el.textContent?.toLowerCase().includes(query)) {
-              labelMatch = true;
-            }
-          });
-
-          // Also match setting descriptions
-          const descs = section.querySelectorAll('.setting-desc');
-          descs.forEach((el) => {
-            if (el.textContent?.toLowerCase().includes(query)) {
-              labelMatch = true;
-            }
-          });
-
-          const matches = titleText.includes(query) || labelMatch;
-
-          (section as HTMLElement).style.opacity = matches ? '1' : '0.3';
-          (section as HTMLElement).style.pointerEvents = matches ? '' : 'none';
-
-          // Auto-expand matching accordion sections
-          const header = section.querySelector('.accordion-header') as HTMLElement;
-          const content = section.querySelector('.accordion-content') as HTMLElement;
-          if (header && content && matches) {
-            header.setAttribute('aria-expanded', 'true');
-            content.setAttribute('data-expanded', 'true');
-          }
-        });
-      }, 150);
-    });
   }
 
   private buildCategoriesContent(): HTMLElement {
@@ -1215,6 +1095,15 @@ export class SettingsEditor {
 
     const area = document.createElement('div');
     area.className = 'preview-area';
+    this.previewAreas.set(tabId, area);
+    this.renderPreviewSvg(tabId, area);
+
+    strip.appendChild(area);
+    return strip;
+  }
+
+  private renderPreviewSvg(tabId: string, area: HTMLElement): void {
+    area.innerHTML = '';
 
     const ns = 'http://www.w3.org/2000/svg';
     const svgEl = (tag: string, attrs: Record<string, string | number>): SVGElement => {
@@ -1229,6 +1118,51 @@ export class SettingsEditor {
     const opts = this.renderer.getOptions();
 
     switch (tabId) {
+      case 'presets': {
+        const cw = 70;
+        const ch = 20;
+        const rootX = 220 - cw / 2;
+        const rootY = 4;
+
+        // Root card
+        svg.appendChild(svgEl('rect', { x: rootX, y: rootY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+        svg.appendChild(svgEl('text', { x: 220, y: rootY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.nameColor ?? '#1e293b' })).textContent = 'CEO';
+
+        // Connectors
+        const midY = rootY + ch + 8;
+        svg.appendChild(svgEl('line', { x1: 220, y1: rootY + ch, x2: 220, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+        svg.appendChild(svgEl('line', { x1: 90, y1: midY, x2: 350, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+
+        const childY = midY + 8;
+        const childXs = [55, 175, 305];
+        const labels = ['VP Eng', 'VP Sales', 'VP Product'];
+        for (let i = 0; i < 3; i++) {
+          svg.appendChild(svgEl('line', { x1: childXs[i] + cw / 2, y1: midY, x2: childXs[i] + cw / 2, y2: childY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
+          svg.appendChild(svgEl('rect', { x: childXs[i], y: childY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
+          svg.appendChild(svgEl('text', { x: childXs[i] + cw / 2, y: childY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = labels[i];
+        }
+
+        // IC stack under first child
+        const icTop = childY + ch + 4;
+        const icW = cw - 8;
+        const icContainer = svgEl('rect', { x: childXs[0] + 4, y: icTop, width: icW, height: 28, rx: opts.icContainerBorderRadius ?? 0, fill: opts.icContainerFill ?? '#e5e7eb' });
+        svg.appendChild(icContainer);
+        for (let i = 0; i < 2; i++) {
+          const icY = icTop + 4 + i * 12;
+          svg.appendChild(svgEl('rect', { x: childXs[0] + 8, y: icY, width: icW - 8, height: 9, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': 0.5 }));
+          svg.appendChild(svgEl('text', { x: childXs[0] + cw / 2, y: icY + 6, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '5', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = `IC ${i + 1}`;
+        }
+
+        // Category-colored card
+        const cats = this.categoryStore ? this.categoryStore.getAll() : [];
+        if (cats.length > 0) {
+          const cat = cats[0];
+          svg.appendChild(svgEl('rect', { x: childXs[1], y: childY + ch + 4, width: cw, height: 14, rx: opts.cardBorderRadius ?? 0, fill: cat.color, stroke: cat.color, 'stroke-width': 0.5 }));
+          svg.appendChild(svgEl('text', { x: childXs[1] + cw / 2, y: childY + ch + 13, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '5', 'font-family': opts.fontFamily ?? 'Calibri', fill: cat.nameColor ?? '#fff' })).textContent = cat.label;
+        }
+        break;
+      }
+
       case 'layout': {
         const s = 0.5;
         const cw = opts.nodeWidth * s;
@@ -1447,29 +1381,6 @@ export class SettingsEditor {
         break;
       }
 
-      case 'categories': {
-        const cw = 80;
-        const ch = 30;
-        const gap = 12;
-        const cats = this.categoryStore ? this.categoryStore.getAll() : [];
-        const colors = [
-          { fill: opts.cardFill ?? '#ffffff', nameColor: opts.nameColor ?? '#1e293b', titleColor: opts.titleColor ?? '#64748b', label: 'Default' },
-          ...cats.slice(0, 3).map(c => ({ fill: c.color, nameColor: c.nameColor ?? '#1e293b', titleColor: c.titleColor ?? '#64748b', label: c.label })),
-        ];
-        const total = colors.length;
-        const totalW = total * cw + (total - 1) * gap;
-        const startX = 220 - totalW / 2;
-        for (let i = 0; i < total; i++) {
-          const x = startX + i * (cw + gap);
-          const y = 20;
-          const c = colors[i];
-          svg.appendChild(svgEl('rect', { x, y, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: c.fill, stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-          svg.appendChild(svgEl('text', { x: x + cw / 2, y: y + 12, 'text-anchor': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: c.nameColor })).textContent = 'Name';
-          svg.appendChild(svgEl('text', { x: x + cw / 2, y: y + 22, 'text-anchor': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: c.titleColor })).textContent = c.label;
-        }
-        break;
-      }
-
       default: {
         // Fallback: show a single card
         const cw = 120;
@@ -1481,8 +1392,12 @@ export class SettingsEditor {
     }
 
     area.appendChild(svg);
-    strip.appendChild(area);
-    return strip;
+  }
+
+  private rebuildPreviews(): void {
+    for (const [tabId, area] of this.previewAreas) {
+      this.renderPreviewSvg(tabId, area);
+    }
   }
 
   private buildPresetsContent(): HTMLElement {
@@ -1792,6 +1707,7 @@ export class SettingsEditor {
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.checked } as Partial<RendererOptions>);
         this.rerenderCallback();
+        this.rebuildPreviews();
       });
 
       control.appendChild(input);
@@ -1832,6 +1748,7 @@ export class SettingsEditor {
         }
         this.renderer.updateOptions({ [setting.key]: val } as Partial<RendererOptions>);
         this.rerenderCallback();
+        this.rebuildPreviews();
       });
 
       control.appendChild(input);
@@ -1851,6 +1768,7 @@ export class SettingsEditor {
       select.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: select.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        this.rebuildPreviews();
       });
 
       control.appendChild(select);
@@ -1863,6 +1781,7 @@ export class SettingsEditor {
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        this.rebuildPreviews();
       });
 
       control.appendChild(input);
@@ -1876,6 +1795,7 @@ export class SettingsEditor {
       input.addEventListener('input', () => {
         this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        this.rebuildPreviews();
       });
 
       control.appendChild(input);
@@ -1892,6 +1812,7 @@ export class SettingsEditor {
       resetBtn.addEventListener('click', () => {
         this.renderer.updateOptions({ [setting.key]: defaultValue } as Partial<RendererOptions>);
         this.rerenderCallback();
+        this.rebuildPreviews();
         this.build();
       });
       control.appendChild(resetBtn);
