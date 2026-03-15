@@ -456,6 +456,7 @@ const en: Record<string, string> = {
   'footer.reset_aria': 'Reset zoom',
   'footer.reset_tooltip': 'Reset zoom',
   'footer.operation_failed': 'Operation failed',
+  'footer.imported': 'Imported successfully',
 
   // ─── Keyboard Shortcuts ────────────────────────────────────────────
   'shortcut.undo': 'Undo',
