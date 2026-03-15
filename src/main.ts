@@ -38,7 +38,6 @@ import { announce } from './ui/announcer';
 import { showWelcomeBanner } from './ui/welcome-banner';
 import { CommandPalette, CommandItem } from './ui/command-palette';
 import { PropertyPanel } from './ui/property-panel';
-import { FloatingActions } from './ui/floating-actions';
 import { SettingsModal } from './ui/settings-modal';
 import { SettingsEditor } from './editor/settings-editor';
 import { ImportWizard } from './ui/import-wizard';
@@ -970,7 +969,6 @@ async function main(): Promise<void> {
           if (confirmed) {
             store.removeNode(nodeId);
             propertyPanel.hide();
-            floatingActions.hide();
             announce(t('announce.removed', { name: node.name }));
           }
         });
@@ -997,7 +995,6 @@ async function main(): Promise<void> {
               if (result) {
                 store.removeNodeWithReassign(nodeId, result.managerId);
                 propertyPanel.hide();
-                floatingActions.hide();
                 announce(t('announce.removed', { name: node.name }));
               }
             });
@@ -1014,9 +1011,12 @@ async function main(): Promise<void> {
     onCategoryChange: (nodeId, categoryId) => {
       store.setNodeCategory(nodeId, categoryId);
     },
+    onToggleDottedLine: (nodeId) => {
+      const node = findNodeById(store.getTree(), nodeId);
+      if (node) store.setDottedLine(nodeId, !node.dottedLine);
+    },
     onClose: () => {
       propertyPanel.hide();
-      floatingActions.hide();
       renderer.setSelectedNode(null);
       announce(t('announce.panel_closed'));
     },
@@ -1034,70 +1034,6 @@ async function main(): Promise<void> {
     propertyPanel.show(node, parent?.name ?? null, directReports, totalOrg, avgSpan, categories);
   };
 
-  // ─── Floating Actions (bottom toolbar) ──────────────────────────────
-  const floatingActions = new FloatingActions({
-    container: chartArea,
-    onEdit: () => {
-      const nodeId = propertyPanel.getNodeId();
-      if (!nodeId) return;
-      const rect = renderer.getNodeScreenRect(nodeId);
-      const node = findNodeById(store.getTree(), nodeId);
-      if (!rect || !node) return;
-      showInlineEditor({
-        rect, name: node.name, title: node.title,
-        onSave: (name, title) => { store.updateNode(nodeId, { name, title }); },
-        onCancel: () => {},
-      });
-    },
-    onAdd: () => {
-      const nodeId = propertyPanel.getNodeId();
-      if (!nodeId) return;
-      const rect = renderer.getNodeScreenRect(nodeId);
-      const node = findNodeById(store.getTree(), nodeId);
-      if (!rect || !node) return;
-      showAddPopover({
-        anchor: rect, parentName: node.name,
-        onAdd: (name, title) => { store.addChild(nodeId, { name, title }); },
-        onCancel: () => {},
-      });
-    },
-    onFocus: () => {
-      const nodeId = propertyPanel.getNodeId();
-      if (!nodeId) return;
-      propertyPanel['options'].onFocus(nodeId);
-    },
-    onMove: () => {
-      const nodeId = propertyPanel.getNodeId();
-      if (!nodeId) return;
-      propertyPanel['options'].onMove(nodeId);
-    },
-    onCategory: () => {
-      const nodeId = propertyPanel.getNodeId();
-      if (!nodeId) return;
-      const node = findNodeById(store.getTree(), nodeId);
-      if (!node) return;
-      showContextMenu({
-        x: window.innerWidth / 2,
-        y: window.innerHeight - 80,
-        items: [
-          { label: t('menu.category_none'), icon: node.categoryId ? ' ' : t('menu.category_check'),
-            action: () => { store.setNodeCategory(nodeId, null); } },
-          ...categoryStore.getAll().map((cat): ContextMenuItem => ({
-            label: cat.label,
-            icon: node.categoryId === cat.id ? t('menu.category_check') : ' ',
-            swatch: cat.color,
-            action: () => { store.setNodeCategory(nodeId, cat.id); },
-          })),
-        ],
-      });
-    },
-    onRemove: () => {
-      const nodeId = propertyPanel.getNodeId();
-      if (!nodeId) return;
-      propertyPanel['options'].onRemove(nodeId);
-    },
-  });
-
   store.onChange(() => {
     rerender();
     formEditor.refresh();
@@ -1114,7 +1050,6 @@ async function main(): Promise<void> {
         propertyPanel.update(node, parent?.name ?? null, node.children?.length ?? 0, store.getDescendantCount(panelNodeId), avgSpanOfControl(node), categories);
       } else {
         propertyPanel.hide();
-        floatingActions.hide();
         renderer.setSelectedNode(null);
       }
     }
@@ -1134,9 +1069,6 @@ async function main(): Promise<void> {
       announce(t('announce.multi_selected', { count: selection.count }));
       if (selection.hasSelection) {
         propertyPanel.hide();
-        floatingActions.showMulti(selection.count);
-      } else {
-        floatingActions.hide();
       }
     } else {
       clearMultiSelection();
@@ -1145,10 +1077,6 @@ async function main(): Promise<void> {
       if (node) {
         announce(t('announce.selected', { name: node.name, title: node.title }));
         showPropertyPanel(nodeId);
-        floatingActions.showSingle({
-          isRoot: store.getTree().id === nodeId,
-          isLeaf: isLeaf(node),
-        });
       }
     }
   });
@@ -1159,7 +1087,6 @@ async function main(): Promise<void> {
     dismissInlineEditor();
     dismissAddPopover();
     propertyPanel.hide();
-    floatingActions.hide();
   };
   renderer.getZoomManager()?.onZoom(dismissAllOverlays);
 
@@ -1881,10 +1808,9 @@ async function main(): Promise<void> {
       }
       // Clear multi-selection
       clearMultiSelection();
-      // Close property panel + floating actions
+      // Close property panel
       if (propertyPanel.isVisible()) {
         propertyPanel.hide();
-        floatingActions.hide();
         renderer.setSelectedNode(null);
         return;
       }

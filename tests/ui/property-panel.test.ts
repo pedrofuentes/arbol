@@ -19,7 +19,7 @@ function createPanel() {
   document.body.appendChild(container);
   const callbacks = {
     onEdit: vi.fn(), onAddChild: vi.fn(), onMove: vi.fn(), onRemove: vi.fn(),
-    onFocus: vi.fn(), onCategoryChange: vi.fn(), onClose: vi.fn(),
+    onFocus: vi.fn(), onCategoryChange: vi.fn(), onToggleDottedLine: vi.fn(), onClose: vi.fn(),
   };
   const panel = new PropertyPanel({ container, ...callbacks });
   return { container, panel, ...callbacks };
@@ -221,6 +221,49 @@ describe('PropertyPanel', () => {
     const { container, panel } = createPanel();
     panel.destroy();
     expect(container.querySelector('.property-panel')).toBeNull();
+  });
+
+  it('Dotted button shows "Dotted" for normal node', () => {
+    const { container, panel } = createPanel();
+    panel.show(makeNode(), 'Boss', 0, 0, 0, []);
+    const btns = container.querySelectorAll('.pp-action-btn');
+    const dottedBtn = Array.from(btns).find(b => b.textContent?.includes('Dotted'))!;
+    expect(dottedBtn).toBeDefined();
+    expect(dottedBtn.getAttribute('aria-disabled')).toBeNull();
+  });
+
+  it('Dotted button shows "Solid" when node has dottedLine', () => {
+    const { container, panel } = createPanel();
+    panel.show(makeNode({ dottedLine: true }), 'Boss', 0, 0, 0, []);
+    const btns = container.querySelectorAll('.pp-action-btn');
+    const solidBtn = Array.from(btns).find(b => b.textContent?.includes('Solid'))!;
+    expect(solidBtn).toBeDefined();
+  });
+
+  it('Dotted button disabled for root node', () => {
+    const { container, panel } = createPanel();
+    panel.show(makeNode(), null, 0, 0, 0, []);
+    const btns = container.querySelectorAll('.pp-action-btn');
+    const dottedBtn = Array.from(btns).find(b => b.textContent?.includes('Dotted'))!;
+    expect(dottedBtn.getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('Dotted button calls onToggleDottedLine', () => {
+    const { container, panel, onToggleDottedLine } = createPanel();
+    panel.show(makeNode(), 'Boss', 0, 0, 0, []);
+    const btns = container.querySelectorAll('.pp-action-btn');
+    const dottedBtn = Array.from(btns).find(b => b.textContent?.includes('Dotted'))!;
+    (dottedBtn as HTMLElement).click();
+    expect(onToggleDottedLine).toHaveBeenCalledWith('n1');
+  });
+
+  it('Disabled dotted button does not fire callback', () => {
+    const { container, panel, onToggleDottedLine } = createPanel();
+    panel.show(makeNode(), null, 0, 0, 0, []);
+    const btns = container.querySelectorAll('.pp-action-btn');
+    const dottedBtn = Array.from(btns).find(b => b.textContent?.includes('Dotted'))!;
+    (dottedBtn as HTMLElement).click();
+    expect(onToggleDottedLine).not.toHaveBeenCalled();
   });
 });
 

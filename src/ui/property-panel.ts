@@ -15,6 +15,7 @@ export interface PropertyPanelOptions {
   onRemove: (nodeId: string) => void;
   onFocus: (nodeId: string) => void;
   onCategoryChange: (nodeId: string, categoryId: string | null) => void;
+  onToggleDottedLine: (nodeId: string) => void;
   onClose: () => void;
 }
 
@@ -34,6 +35,7 @@ export class PropertyPanel {
   private titleInput: HTMLInputElement;
   private categorySelect: HTMLSelectElement;
   private focusBtn: HTMLButtonElement;
+  private dottedBtn: HTMLButtonElement;
   private moveBtn: HTMLButtonElement;
   private removeBtn: HTMLButtonElement;
 
@@ -187,6 +189,13 @@ export class PropertyPanel {
       }
     });
 
+    this.dottedBtn = this.createActionBtn(t('property_panel.dotted'), false, false);
+    this.dottedBtn.addEventListener('click', () => {
+      if (this.nodeId && this.dottedBtn.getAttribute('aria-disabled') !== 'true') {
+        options.onToggleDottedLine(this.nodeId);
+      }
+    });
+
     this.removeBtn = this.createActionBtn(t('property_panel.remove'), true, false);
     this.removeBtn.addEventListener('click', () => {
       if (this.nodeId && this.removeBtn.getAttribute('aria-disabled') !== 'true') {
@@ -195,6 +204,7 @@ export class PropertyPanel {
     });
 
     row2.appendChild(this.focusBtn);
+    row2.appendChild(this.dottedBtn);
     row2.appendChild(this.removeBtn);
 
     actionsSection.appendChild(row1);
@@ -276,6 +286,8 @@ export class PropertyPanel {
 
     // Disable states
     this.setDisabled(this.focusBtn, nodeIsLeaf);
+    this.dottedBtn.textContent = node.dottedLine ? t('property_panel.solid') : t('property_panel.dotted');
+    this.setDisabled(this.dottedBtn, isRoot);
     this.setDisabled(this.moveBtn, isRoot);
     this.setDisabled(this.removeBtn, isRoot);
   }
