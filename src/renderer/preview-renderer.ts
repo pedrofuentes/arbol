@@ -7,21 +7,22 @@ import type { OrgNode } from '../types';
  */
 export const PREVIEW_TREE: OrgNode = {
   id: 'prev-root',
-  name: 'Sarah Chen',
+  name: 'Root',
   title: 'CEO',
   children: [
-    { id: 'prev-advisor', name: 'Quinn Rivera', title: 'Chief of Staff' },
+    { id: 'prev-advisor', name: 'Advisor', title: 'Chief of Staff' },
     {
       id: 'prev-mgr1',
-      name: 'Alex Kim',
+      name: 'Manager A',
       title: 'VP Engineering',
-      children: [{ id: 'prev-ic1', name: 'Jordan Lee', title: 'Staff Engineer' }],
+      children: [{ id: 'prev-ic1', name: 'Individual Contributor A', title: 'Staff Engineer' }],
     },
     {
       id: 'prev-mgr2',
-      name: 'Maria Lopez',
+      name: 'Manager B',
       title: 'VP Sales',
-      children: [{ id: 'prev-ic2', name: 'Sam Patel', title: 'Account Executive' }],
+      dottedLine: true,
+      children: [{ id: 'prev-ic2', name: 'Individual Contributor B', title: 'Account Executive' }],
     },
   ],
 };

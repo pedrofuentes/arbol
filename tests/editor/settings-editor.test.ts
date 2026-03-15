@@ -1006,8 +1006,8 @@ describe('SettingsEditor', () => {
       const previewArea = document.createElement('div');
       editor.setPreviewArea(previewArea);
       const textContent = previewArea.textContent ?? '';
-      expect(textContent).toContain('Sarah Chen');
-      expect(textContent).toContain('Alex Kim');
+      expect(textContent).toContain('Root');
+      expect(textContent).toContain('Manager A');
     });
 
     it('preview updates on refresh()', () => {

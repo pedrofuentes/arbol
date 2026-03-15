@@ -62,12 +62,12 @@ describe('PreviewRenderer', () => {
     it('contains expected names from PREVIEW_TREE', () => {
       const svg = renderPreview();
       const textContent = svg.textContent ?? '';
-      expect(textContent).toContain('Sarah Chen');
-      expect(textContent).toContain('Alex Kim');
-      expect(textContent).toContain('Maria Lopez');
-      expect(textContent).toContain('Quinn Rivera');
-      expect(textContent).toContain('Jordan Lee');
-      expect(textContent).toContain('Sam Patel');
+      expect(textContent).toContain('Root');
+      expect(textContent).toContain('Manager A');
+      expect(textContent).toContain('Manager B');
+      expect(textContent).toContain('Advisor');
+      expect(textContent).toContain('Individual Contributor A');
+      expect(textContent).toContain('Individual Contributor B');
     });
 
     it('contains expected titles from PREVIEW_TREE', () => {
@@ -158,7 +158,7 @@ describe('PreviewRenderer', () => {
     });
 
     it('root is CEO', () => {
-      expect(PREVIEW_TREE.name).toBe('Sarah Chen');
+      expect(PREVIEW_TREE.name).toBe('Root');
       expect(PREVIEW_TREE.title).toBe('CEO');
     });
 
@@ -168,6 +168,11 @@ describe('PreviewRenderer', () => {
       const managers = children.filter((c) => c.children && c.children.length > 0);
       expect(leaves).toHaveLength(1);
       expect(managers).toHaveLength(2);
+    });
+
+    it('VP Sales has dottedLine flag', () => {
+      const vpSales = PREVIEW_TREE.children!.find((c) => c.title === 'VP Sales');
+      expect(vpSales?.dottedLine).toBe(true);
     });
 
     it('each manager has 1 IC', () => {
