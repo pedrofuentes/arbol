@@ -15,7 +15,7 @@ export interface SettingsModalOptions {
 }
 
 const DEFAULT_TABS: SettingsTab[] = [
-  { id: 'presets', label: 'Theme & Presets', icon: '🎨' },
+  { id: 'presets', label: 'Presets', icon: '🎨' },
   { id: 'layout', label: 'Layout', icon: '📐' },
   { id: 'typography', label: 'Typography', icon: '🔤' },
   { id: 'cards', label: 'Cards', icon: '🃏' },

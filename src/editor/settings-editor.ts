@@ -1151,8 +1151,7 @@ export class SettingsEditor {
     // Layout preset buttons (4-column grid)
     const layoutHeading = document.createElement('div');
     layoutHeading.textContent = 'Layout';
-    layoutHeading.className = 'text-xs text-tertiary';
-    layoutHeading.style.cssText = 'margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;';
+    layoutHeading.className = 'setting-section-title';
     wrapper.appendChild(layoutHeading);
 
     const layoutGrid = document.createElement('div');

@@ -966,6 +966,7 @@ textarea:focus-visible {
 
 .accordion-content > .accordion-inner {
   overflow: hidden;
+  padding: 1px;
 }
 
 .accordion-actions {
