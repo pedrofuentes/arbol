@@ -927,10 +927,6 @@ const en: Record<string, string> = {
   'settings.layout_spacious_desc': 'Extra room between cards',
   'settings.layout_presentation_desc': 'Large cards for slides and screens',
 
-  // ─── Settings: Preview ──────────────────────────────────────────────
-  'settings.preview_title': 'Live Preview',
-  'settings.preview_hint': 'Updates as you change settings',
-
   // ─── Settings: Modified Indicators ──────────────────────────────────
   'settings.modified_tooltip': 'Modified from default ({default})',
   'settings.reset_setting_aria': 'Reset {label} to default ({default})',

@@ -453,7 +453,6 @@ export class SettingsEditor {
   private static DEFAULT_EXPANDED = new Set(['presets', 'categories']);
 
   private accordionState: Map<string, boolean> = new Map();
-  private previewAreas: Map<string, HTMLElement> = new Map();
 
   private static CUSTOM_PRESETS_KEY = 'arbol-custom-presets';
 
@@ -658,7 +657,6 @@ export class SettingsEditor {
 
   private build(): void {
     this.container.innerHTML = '';
-    this.previewAreas.clear();
 
     const opts = this.renderer.getOptions();
 
@@ -674,12 +672,6 @@ export class SettingsEditor {
           this.buildCategoriesContent(),
         ),
       );
-    }
-
-    // Preview strips for each tab
-    const previewTabs = ['presets', 'layout', 'typography', 'cards', 'connectors', 'ic', 'advisors', 'badges'];
-    for (const tabId of previewTabs) {
-      this.container.appendChild(this.buildPreviewStrip(tabId));
     }
 
     // Setting groups — flat sections (no accordion)
@@ -1118,330 +1110,6 @@ export class SettingsEditor {
     return wrapper;
   }
 
-  private buildPreviewStrip(tabId: string): HTMLElement {
-    const strip = document.createElement('div');
-    strip.className = 'preview-strip';
-    strip.setAttribute('data-section-id', `preview-${tabId}`);
-
-    const header = document.createElement('div');
-    header.className = 'preview-header';
-    const title = document.createElement('span');
-    title.className = 'preview-title';
-    title.textContent = t('settings.preview_title');
-    const hint = document.createElement('span');
-    hint.className = 'preview-hint';
-    hint.textContent = t('settings.preview_hint');
-    header.appendChild(title);
-    header.appendChild(hint);
-    strip.appendChild(header);
-
-    const area = document.createElement('div');
-    area.className = 'preview-area';
-    this.previewAreas.set(tabId, area);
-    this.renderPreviewSvg(tabId, area);
-
-    strip.appendChild(area);
-    return strip;
-  }
-
-  private renderPreviewSvg(tabId: string, area: HTMLElement): void {
-    area.innerHTML = '';
-
-    const ns = 'http://www.w3.org/2000/svg';
-    const svgEl = (tag: string, attrs: Record<string, string | number>): SVGElement => {
-      const el = document.createElementNS(ns, tag);
-      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
-      return el;
-    };
-
-    const svg = svgEl('svg', { viewBox: '0 0 440 120', width: '440', height: '120' }) as SVGSVGElement;
-    svg.style.cssText = 'display:block;max-width:100%;height:auto;';
-
-    const opts = this.renderer.getOptions();
-
-    switch (tabId) {
-      case 'presets': {
-        const cw = 70;
-        const ch = 20;
-        const rootX = 220 - cw / 2;
-        const rootY = 4;
-
-        // Root card
-        svg.appendChild(svgEl('rect', { x: rootX, y: rootY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: 220, y: rootY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.nameColor ?? '#1e293b' })).textContent = 'CEO';
-
-        // Connectors
-        const midY = rootY + ch + 8;
-        svg.appendChild(svgEl('line', { x1: 220, y1: rootY + ch, x2: 220, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-        svg.appendChild(svgEl('line', { x1: 90, y1: midY, x2: 350, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-
-        const childY = midY + 8;
-        const childXs = [55, 175, 305];
-        const labels = ['VP Eng', 'VP Sales', 'VP Product'];
-        for (let i = 0; i < 3; i++) {
-          svg.appendChild(svgEl('line', { x1: childXs[i] + cw / 2, y1: midY, x2: childXs[i] + cw / 2, y2: childY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-          svg.appendChild(svgEl('rect', { x: childXs[i], y: childY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-          svg.appendChild(svgEl('text', { x: childXs[i] + cw / 2, y: childY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = labels[i];
-        }
-
-        // IC stack under first child
-        const icTop = childY + ch + 4;
-        const icW = cw - 8;
-        const icContainer = svgEl('rect', { x: childXs[0] + 4, y: icTop, width: icW, height: 28, rx: opts.icContainerBorderRadius ?? 0, fill: opts.icContainerFill ?? '#e5e7eb' });
-        svg.appendChild(icContainer);
-        for (let i = 0; i < 2; i++) {
-          const icY = icTop + 4 + i * 12;
-          svg.appendChild(svgEl('rect', { x: childXs[0] + 8, y: icY, width: icW - 8, height: 9, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': 0.5 }));
-          svg.appendChild(svgEl('text', { x: childXs[0] + cw / 2, y: icY + 6, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '5', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = `IC ${i + 1}`;
-        }
-
-        // Category-colored card
-        const cats = this.categoryStore ? this.categoryStore.getAll() : [];
-        if (cats.length > 0) {
-          const cat = cats[0];
-          svg.appendChild(svgEl('rect', { x: childXs[1], y: childY + ch + 4, width: cw, height: 14, rx: opts.cardBorderRadius ?? 0, fill: cat.color, stroke: cat.color, 'stroke-width': 0.5 }));
-          svg.appendChild(svgEl('text', { x: childXs[1] + cw / 2, y: childY + ch + 13, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '5', 'font-family': opts.fontFamily ?? 'Calibri', fill: cat.nameColor ?? '#fff' })).textContent = cat.label;
-        }
-        break;
-      }
-
-      case 'layout': {
-        const s = 0.5;
-        const cw = opts.nodeWidth * s;
-        const ch = opts.nodeHeight * s;
-        const rootX = 220 - cw / 2;
-        const rootY = 8;
-        const childY = rootY + ch + (opts.topVerticalSpacing ?? 10) * s + (opts.bottomVerticalSpacing ?? 20) * s;
-        const gap = (opts.horizontalSpacing ?? 50) * s;
-        const child1X = 220 - gap / 2 - cw;
-        const child2X = 220 + gap / 2;
-
-        // Root card
-        svg.appendChild(svgEl('rect', { x: rootX, y: rootY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: rootX + cw / 2, y: rootY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Manager';
-
-        // Connectors
-        const midY = rootY + ch + (opts.topVerticalSpacing ?? 10) * s;
-        svg.appendChild(svgEl('line', { x1: 220, y1: rootY + ch, x2: 220, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-        svg.appendChild(svgEl('line', { x1: child1X + cw / 2, y1: midY, x2: child2X + cw / 2, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-        svg.appendChild(svgEl('line', { x1: child1X + cw / 2, y1: midY, x2: child1X + cw / 2, y2: childY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-        svg.appendChild(svgEl('line', { x1: child2X + cw / 2, y1: midY, x2: child2X + cw / 2, y2: childY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-
-        // Child cards
-        svg.appendChild(svgEl('rect', { x: child1X, y: childY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: child1X + cw / 2, y: childY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Report A';
-        svg.appendChild(svgEl('rect', { x: child2X, y: childY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: child2X + cw / 2, y: childY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Report B';
-
-        // Spacing indicators
-        const dashStyle = 'stroke:#94a3b8;stroke-width:0.5;stroke-dasharray:2,2';
-        // Horizontal spacing indicator
-        const indY = childY + ch + 8;
-        svg.appendChild(svgEl('line', { x1: child1X + cw, y1: indY, x2: child2X, y2: indY, style: dashStyle }));
-        const spacingLabel = svgEl('text', { x: 220, y: indY + 8, 'text-anchor': 'middle', 'font-size': '6', fill: '#94a3b8' });
-        spacingLabel.textContent = `${opts.horizontalSpacing ?? 50}px`;
-        svg.appendChild(spacingLabel);
-        break;
-      }
-
-      case 'typography': {
-        const cw = Math.min(opts.nodeWidth * 1.4, 200);
-        const ch = Math.max(opts.nodeHeight * 1.8, 50);
-        const cx = 220 - cw / 2;
-        const cy = 10;
-        svg.appendChild(svgEl('rect', { x: cx, y: cy, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-
-        const align = opts.textAlign ?? 'center';
-        let textX = cx + cw / 2;
-        let anchor = 'middle';
-        if (align === 'left' || align === 'start') { textX = cx + (opts.textPaddingHorizontal ?? 8); anchor = 'start'; }
-        else if (align === 'right' || align === 'end') { textX = cx + cw - (opts.textPaddingHorizontal ?? 8); anchor = 'end'; }
-
-        const nameY = cy + (opts.textPaddingTop ?? 6) + (opts.nameFontSize ?? 11);
-        const titleY = nameY + (opts.textGap ?? 2) + (opts.titleFontSize ?? 9);
-
-        svg.appendChild(svgEl('text', { x: textX, y: nameY, 'text-anchor': anchor, 'font-size': opts.nameFontSize ?? 11, 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Sarah Chen';
-        svg.appendChild(svgEl('text', { x: textX, y: titleY, 'text-anchor': anchor, 'font-size': opts.titleFontSize ?? 9, 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.titleColor ?? '#64748b' })).textContent = 'Chief Executive Officer';
-
-        // Font label
-        svg.appendChild(svgEl('text', { x: cx + cw + 10, y: nameY, 'font-size': '6', fill: '#94a3b8' })).textContent = `${opts.nameFontSize ?? 11}px`;
-        svg.appendChild(svgEl('text', { x: cx + cw + 10, y: titleY, 'font-size': '6', fill: '#94a3b8' })).textContent = `${opts.titleFontSize ?? 9}px`;
-        svg.appendChild(svgEl('text', { x: 220, y: cy + ch + 14, 'text-anchor': 'middle', 'font-size': '7', fill: '#94a3b8' })).textContent = opts.fontFamily ?? 'Calibri';
-        break;
-      }
-
-      case 'cards': {
-        const cw = 100;
-        const ch = 36;
-        const gap = 20;
-        const startX = 220 - (3 * cw + 2 * gap) / 2;
-        for (let i = 0; i < 3; i++) {
-          const x = startX + i * (cw + gap);
-          const y = 20;
-          svg.appendChild(svgEl('rect', { x, y, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-          svg.appendChild(svgEl('text', { x: x + cw / 2, y: y + 14, 'text-anchor': 'middle', 'font-size': '8', 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.nameColor ?? '#1e293b' })).textContent = ['Alice', 'Bob', 'Carol'][i];
-          svg.appendChild(svgEl('text', { x: x + cw / 2, y: y + 26, 'text-anchor': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.titleColor ?? '#64748b' })).textContent = ['Engineer', 'Designer', 'Manager'][i];
-        }
-        // Labels
-        svg.appendChild(svgEl('text', { x: 220, y: 72, 'text-anchor': 'middle', 'font-size': '7', fill: '#94a3b8' })).textContent = `fill: ${opts.cardFill ?? '#fff'}  stroke: ${opts.cardStroke ?? '#22c55e'}  radius: ${opts.cardBorderRadius ?? 0}px`;
-        break;
-      }
-
-      case 'connectors': {
-        const cw = 70;
-        const ch = 24;
-        const rootX = 220 - cw / 2;
-        const rootY = 8;
-        const childY = 68;
-        const positions = [80, 185, 290];
-
-        svg.appendChild(svgEl('rect', { x: rootX, y: rootY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: 220, y: rootY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Manager';
-
-        const midY = rootY + ch + 12;
-        svg.appendChild(svgEl('line', { x1: 220, y1: rootY + ch, x2: 220, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-        svg.appendChild(svgEl('line', { x1: positions[0] + cw / 2, y1: midY, x2: positions[2] + cw / 2, y2: midY, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-
-        for (let i = 0; i < 3; i++) {
-          const x = positions[i];
-          const isDotted = i === 2;
-          svg.appendChild(svgEl('line', {
-            x1: x + cw / 2, y1: midY, x2: x + cw / 2, y2: childY,
-            stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5,
-            ...(isDotted ? { 'stroke-dasharray': opts.dottedLineDash ?? '6,4' } : {}),
-          }));
-          svg.appendChild(svgEl('rect', { x, y: childY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-          const labels = ['Solid', 'Solid', 'Dotted'];
-          svg.appendChild(svgEl('text', { x: x + cw / 2, y: childY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = labels[i];
-        }
-        // Label
-        svg.appendChild(svgEl('text', { x: 220, y: 110, 'text-anchor': 'middle', 'font-size': '7', fill: '#94a3b8' })).textContent = `width: ${opts.linkWidth ?? 1.5}px  dash: ${opts.dottedLineDash ?? '6,4'}`;
-        break;
-      }
-
-      case 'ic': {
-        const cw = 80;
-        const ch = 22;
-        const icW = Math.min((opts.icNodeWidth ?? 141) * 0.5, 70);
-        const icH = 16;
-        const icGap = opts.icGap ?? 6;
-        const pad = opts.icContainerPadding ?? 10;
-
-        // Manager card
-        const mgrX = 220 - cw / 2;
-        const mgrY = 6;
-        svg.appendChild(svgEl('rect', { x: mgrX, y: mgrY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: 220, y: mgrY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'M1 Manager';
-
-        // Connector
-        const containerTop = mgrY + ch + 10;
-        svg.appendChild(svgEl('line', { x1: 220, y1: mgrY + ch, x2: 220, y2: containerTop, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-
-        // IC container
-        const containerH = pad * 2 + 3 * icH + 2 * icGap;
-        const containerW = icW + pad * 2;
-        const containerX = 220 - containerW / 2;
-        svg.appendChild(svgEl('rect', { x: containerX, y: containerTop, width: containerW, height: containerH, rx: opts.icContainerBorderRadius ?? 0, fill: opts.icContainerFill ?? '#e5e7eb' }));
-
-        // IC cards
-        for (let i = 0; i < 3; i++) {
-          const icX = 220 - icW / 2;
-          const icY = containerTop + pad + i * (icH + icGap);
-          svg.appendChild(svgEl('rect', { x: icX, y: icY, width: icW, height: icH, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-          svg.appendChild(svgEl('text', { x: 220, y: icY + icH / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = `IC ${i + 1}`;
-        }
-        break;
-      }
-
-      case 'advisors': {
-        const cw = 70;
-        const ch = 22;
-        const advW = 60;
-        const advH = 18;
-        const centerGap = (opts.palCenterGap ?? 70) * 0.5;
-        const topGap = (opts.palTopGap ?? 12) * 0.5;
-        const rowGap = (opts.palRowGap ?? 6) * 0.5;
-
-        // Manager card
-        const mgrX = 220 - cw / 2;
-        const mgrY = 8;
-        svg.appendChild(svgEl('rect', { x: mgrX, y: mgrY, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: 220, y: mgrY + ch / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Director';
-
-        // Advisors
-        const advY1 = mgrY + ch + topGap;
-        const advY2 = advY1 + advH + rowGap;
-
-        // Left advisor
-        const leftX = 220 - centerGap / 2 - advW;
-        svg.appendChild(svgEl('rect', { x: leftX, y: advY1, width: advW, height: advH, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: leftX + advW / 2, y: advY1 + advH / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Advisor L1';
-        // Left elbow connector
-        svg.appendChild(svgEl('line', { x1: leftX + advW, y1: advY1 + advH / 2, x2: 220, y2: advY1 + advH / 2, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-        svg.appendChild(svgEl('line', { x1: 220, y1: mgrY + ch, x2: 220, y2: advY1 + advH / 2, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-
-        // Right advisor
-        const rightX = 220 + centerGap / 2;
-        svg.appendChild(svgEl('rect', { x: rightX, y: advY1, width: advW, height: advH, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: rightX + advW / 2, y: advY1 + advH / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Advisor R1';
-        svg.appendChild(svgEl('line', { x1: rightX, y1: advY1 + advH / 2, x2: 220, y2: advY1 + advH / 2, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-
-        // Second row
-        svg.appendChild(svgEl('rect', { x: leftX, y: advY2, width: advW, height: advH, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: leftX + advW / 2, y: advY2 + advH / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '6', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Advisor L2';
-        svg.appendChild(svgEl('line', { x1: leftX + advW, y1: advY2 + advH / 2, x2: 220, y2: advY2 + advH / 2, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-        svg.appendChild(svgEl('line', { x1: 220, y1: advY1 + advH / 2, x2: 220, y2: advY2 + advH / 2, stroke: opts.linkColor ?? '#94a3b8', 'stroke-width': opts.linkWidth ?? 1.5 }));
-        break;
-      }
-
-      case 'badges': {
-        const cw = 110;
-        const ch = 34;
-        const gap = 40;
-
-        // Card without badge
-        const x1 = 220 - gap / 2 - cw;
-        svg.appendChild(svgEl('rect', { x: x1, y: 20, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: x1 + cw / 2, y: 34, 'text-anchor': 'middle', 'font-size': '8', 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.nameColor ?? '#1e293b' })).textContent = 'No Badge';
-        svg.appendChild(svgEl('text', { x: x1 + cw / 2, y: 46, 'text-anchor': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.titleColor ?? '#64748b' })).textContent = 'Leaf node';
-
-        // Card with badge
-        const x2 = 220 + gap / 2;
-        svg.appendChild(svgEl('rect', { x: x2, y: 20, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: x2 + cw / 2, y: 34, 'text-anchor': 'middle', 'font-size': '8', 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Manager';
-        svg.appendChild(svgEl('text', { x: x2 + cw / 2, y: 46, 'text-anchor': 'middle', 'font-size': '7', 'font-family': opts.fontFamily ?? 'Calibri', fill: opts.titleColor ?? '#64748b' })).textContent = 'VP Eng';
-
-        // Badge
-        const badgeH = Math.min((opts.headcountBadgeHeight ?? 22) * 0.8, 18);
-        const badgeR = opts.headcountBadgeRadius ?? 4;
-        const badgeFS = Math.min((opts.headcountBadgeFontSize ?? 11) * 0.9, 10);
-        const badgeW = 28;
-        const badgeX = x2 + cw / 2 - badgeW / 2;
-        const badgeY = 20 + ch + 2;
-        svg.appendChild(svgEl('rect', { x: badgeX, y: badgeY, width: badgeW, height: badgeH, rx: badgeR, fill: opts.headcountBadgeColor ?? '#9ca3af' }));
-        svg.appendChild(svgEl('text', { x: badgeX + badgeW / 2, y: badgeY + badgeH / 2 + 1, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': badgeFS, 'font-family': opts.fontFamily ?? 'Calibri', 'font-weight': 'bold', fill: opts.headcountBadgeTextColor ?? '#1e293b' })).textContent = '12';
-        break;
-      }
-
-      default: {
-        // Fallback: show a single card
-        const cw = 120;
-        const ch = 36;
-        svg.appendChild(svgEl('rect', { x: 220 - cw / 2, y: 42, width: cw, height: ch, rx: opts.cardBorderRadius ?? 0, fill: opts.cardFill ?? '#ffffff', stroke: opts.cardStroke ?? '#22c55e', 'stroke-width': opts.cardStrokeWidth ?? 1 }));
-        svg.appendChild(svgEl('text', { x: 220, y: 62, 'text-anchor': 'middle', 'font-size': '8', fill: opts.nameColor ?? '#1e293b' })).textContent = 'Preview';
-        break;
-      }
-    }
-
-    area.appendChild(svg);
-  }
-
-  private rebuildPreviews(): void {
-    for (const [tabId, area] of this.previewAreas) {
-      this.renderPreviewSvg(tabId, area);
-    }
-  }
-
   private buildPresetsContent(): HTMLElement {
     const wrapper = document.createElement('div');
 
@@ -1662,7 +1330,6 @@ export class SettingsEditor {
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.checked } as Partial<RendererOptions>);
         this.rerenderCallback();
-        this.rebuildPreviews();
       });
 
       control.appendChild(input);
@@ -1703,7 +1370,6 @@ export class SettingsEditor {
         }
         this.renderer.updateOptions({ [setting.key]: val } as Partial<RendererOptions>);
         this.rerenderCallback();
-        this.rebuildPreviews();
       });
 
       control.appendChild(input);
@@ -1723,7 +1389,6 @@ export class SettingsEditor {
       select.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: select.value } as Partial<RendererOptions>);
         this.rerenderCallback();
-        this.rebuildPreviews();
       });
 
       control.appendChild(select);
@@ -1736,7 +1401,6 @@ export class SettingsEditor {
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
-        this.rebuildPreviews();
       });
 
       control.appendChild(input);
@@ -1750,7 +1414,6 @@ export class SettingsEditor {
       input.addEventListener('input', () => {
         this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
-        this.rebuildPreviews();
       });
 
       control.appendChild(input);
@@ -1767,7 +1430,6 @@ export class SettingsEditor {
       resetBtn.addEventListener('click', () => {
         this.renderer.updateOptions({ [setting.key]: defaultValue } as Partial<RendererOptions>);
         this.rerenderCallback();
-        this.rebuildPreviews();
         this.build();
       });
       control.appendChild(resetBtn);

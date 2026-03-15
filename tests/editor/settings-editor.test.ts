@@ -129,8 +129,8 @@ describe('SettingsEditor', () => {
   it('renders setting groups as flat sections with data-section-id', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const allSections = container.querySelectorAll('[data-section-id]');
-    // presets(accordion) + 9 flat groups + settings-io(accordion) + 8 preview strips = 19 (no categories without store)
-    expect(allSections.length).toBe(19);
+    // presets(accordion) + 9 flat groups + settings-io(accordion) = 11 (no categories without store)
+    expect(allSections.length).toBe(11);
     // 9 flat setting sections
     const flatSections = container.querySelectorAll('.setting-section');
     expect(flatSections.length).toBe(9);
@@ -1052,30 +1052,4 @@ describe('SettingsEditor', () => {
     });
   });
 
-  describe('preview strips', () => {
-    it('[data-section-id^="preview-"] elements exist', () => {
-      new SettingsEditor(container, renderer, rerenderCb);
-      const previews = container.querySelectorAll('[data-section-id^="preview-"]');
-      expect(previews.length).toBeGreaterThan(0);
-    });
-
-    it('preview strips contain .preview-strip class', () => {
-      new SettingsEditor(container, renderer, rerenderCb);
-      const strips = container.querySelectorAll('.preview-strip');
-      expect(strips.length).toBeGreaterThan(0);
-      // All preview-strip elements should have data-section-id starting with "preview-"
-      for (const strip of Array.from(strips)) {
-        expect(strip.getAttribute('data-section-id')?.startsWith('preview-')).toBe(true);
-      }
-    });
-
-    it('preview strips contain SVG elements', () => {
-      new SettingsEditor(container, renderer, rerenderCb);
-      const strips = container.querySelectorAll('.preview-strip');
-      for (const strip of Array.from(strips)) {
-        const svg = strip.querySelector('svg');
-        expect(svg).not.toBeNull();
-      }
-    });
-  });
 });
