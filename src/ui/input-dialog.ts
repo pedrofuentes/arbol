@@ -7,6 +7,7 @@ export interface InputDialogOptions {
   placeholder?: string;
   initialValue?: string;
   confirmLabel?: string;
+  cancelLabel?: string;
   maxLength?: number;
 }
 
@@ -69,7 +70,7 @@ export function showInputDialog(options: InputDialogOptions): Promise<string | n
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-secondary';
-    cancelBtn.textContent = t('dialog.cancel');
+    cancelBtn.textContent = options.cancelLabel ?? t('dialog.cancel');
     btnGroup.appendChild(cancelBtn);
 
     const confirmBtn = document.createElement('button');

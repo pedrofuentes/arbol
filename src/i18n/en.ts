@@ -502,6 +502,7 @@ const en: Record<string, string> = {
   'settings.delete_preset_aria': 'Delete preset {name}',
   'settings.save_preset': '💾 Save as Preset',
   'settings.save_preset_button': 'Save',
+  'settings.save_preset_skip': 'No',
   'settings.save_preset_prompt_title': 'Save as Preset?',
   'settings.save_preset_prompt_label': 'Your settings have changed. Save them as a reusable preset?',
   'settings.layout_label': 'Layout',

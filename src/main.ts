@@ -461,6 +461,7 @@ async function main(): Promise<void> {
           label: t('settings.save_preset_prompt_label'),
           placeholder: t('settings.preset_name_placeholder'),
           confirmLabel: t('settings.save_preset_button'),
+          cancelLabel: t('settings.save_preset_skip'),
         });
         if (name) {
           settingsEditorInstance.saveCurrentAsPreset(name);
