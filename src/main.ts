@@ -9,7 +9,7 @@ import { ThemeManager, Theme } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { MappingStore } from './store/mapping-store';
 import { CategoryStore } from './store/category-store';
-import { flattenTree, findNodeById, findParent, isLeaf, isM1, countLeaves, countManagersByLevel } from './utils/tree';
+import { flattenTree, findNodeById, findParent, isLeaf, isM1, countLeaves, countManagersByLevel, avgSpanOfControl } from './utils/tree';
 import { showHelpDialog } from './ui/help-dialog';
 import { ShortcutManager } from './utils/shortcuts';
 import { timestampedFilename } from './utils/filename';
@@ -43,7 +43,7 @@ import { SettingsModal } from './ui/settings-modal';
 import { SettingsEditor } from './editor/settings-editor';
 import { ImportWizard } from './ui/import-wizard';
 import { WizardState, renderSourceStep, renderMappingStep, renderPreviewStep, renderImportStep } from './ui/import-wizard-steps';
-import type { ComparisonState, VersionRecord } from './types';
+import type { ChartRecord, ComparisonState, VersionRecord } from './types';
 
 async function main(): Promise<void> {
   const sidebar = document.getElementById('sidebar')!;
@@ -648,11 +648,15 @@ async function main(): Promise<void> {
 
   sidebarBackdrop.addEventListener('click', closeSidebar);
 
-  // Search UI
-  const headerCenter = document.getElementById('header-center')!;
-
+  // Search UI — floating over the chart canvas
   const searchWrapper = document.createElement('div');
-  searchWrapper.className = 'search-wrapper';
+  searchWrapper.className = 'search-float';
+
+  const searchIcon = document.createElement('span');
+  searchIcon.className = 'search-icon';
+  searchIcon.setAttribute('aria-hidden', 'true');
+  searchIcon.textContent = '🔍';
+  searchWrapper.appendChild(searchIcon);
 
   const searchInput = document.createElement('input');
   searchInput.className = 'search-input';
@@ -670,7 +674,56 @@ async function main(): Promise<void> {
   noResultsHint.style.display = 'none';
   searchWrapper.appendChild(noResultsHint);
 
-  headerCenter.appendChild(searchWrapper);
+  chartArea.appendChild(searchWrapper);
+
+  // Make search bar draggable — click-vs-drag disambiguation
+  {
+    const DRAG_THRESHOLD = 5;
+    let pending = false;
+    let dragging = false;
+    let startX = 0;
+    let startY = 0;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    searchWrapper.addEventListener('mousedown', (e: MouseEvent) => {
+      if (document.activeElement === searchInput) return;
+      const rect = searchWrapper.getBoundingClientRect();
+      startX = e.clientX;
+      startY = e.clientY;
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      pending = true;
+    });
+
+    window.addEventListener('mousemove', (e: MouseEvent) => {
+      if (!pending && !dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      if (pending && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+        pending = false;
+        dragging = true;
+        searchInput.blur();
+        searchWrapper.style.cursor = 'grabbing';
+      }
+
+      if (dragging) {
+        const parentRect = chartArea.getBoundingClientRect();
+        searchWrapper.style.left = `${e.clientX - parentRect.left - offsetX}px`;
+        searchWrapper.style.top = `${e.clientY - parentRect.top - offsetY}px`;
+        searchWrapper.style.transform = 'none';
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      pending = false;
+      if (dragging) {
+        dragging = false;
+        searchWrapper.style.cursor = '';
+      }
+    });
+  }
 
   const search = new SearchController(searchInput, store, renderer, 200, (count) => {
     announce(count > 0 ? t('search.results_found', { count }) : t('search.no_results'));
@@ -704,30 +757,32 @@ async function main(): Promise<void> {
     return confirmed;
   };
 
+  const handleChartSwitched = (chart: ChartRecord) => {
+    focusMode.clear();
+    dismissVersionViewer();
+    clearMultiSelection();
+    store.replaceTree(chart.workingTree);
+    if (chart.categories.length > 0) {
+      categoryStore.replaceAll(chart.categories);
+    } else {
+      categoryStore.replaceAll([]);
+    }
+    chartNameHeader.setName(chart.name);
+    chartNameHeader.setDirty(false);
+    rerender();
+    renderer.getZoomManager()?.fitToContent();
+    formEditor.refresh();
+    jsonEditor.refresh();
+    announce(t('announce.chart_switched', { name: chart.name }));
+  };
+
   const chartEditor = new ChartEditor({
     container: sidebar,
     chartStore,
     getCurrentTree: () => store.getTree(),
     getCurrentCategories: () => categoryStore.getAll(),
     onBeforeSwitch: handleBeforeSwitch,
-    onChartSwitch: (chart) => {
-      focusMode.clear();
-      dismissVersionViewer();
-      clearMultiSelection();
-      store.replaceTree(chart.workingTree);
-      if (chart.categories.length > 0) {
-        categoryStore.replaceAll(chart.categories);
-      } else {
-        categoryStore.replaceAll([]);
-      }
-      chartNameHeader.setName(chart.name);
-      chartNameHeader.setDirty(false);
-      rerender();
-      renderer.getZoomManager()?.fitToContent();
-      formEditor.refresh();
-      jsonEditor.refresh();
-      announce(t('announce.chart_switched', { name: chart.name }));
-    },
+    onChartSwitch: handleChartSwitched,
     onVersionRestore: (tree) => {
       dismissVersionViewer();
       store.replaceTree(tree);
@@ -797,8 +852,8 @@ async function main(): Promise<void> {
   const cmdKBtn = document.createElement('button');
   cmdKBtn.className = 'chart-nav-cmdk';
   cmdKBtn.textContent = t('toolbar.quick_actions');
-  cmdKBtn.addEventListener('click', () => {
-    commandPalette.setItems(buildCommandItems());
+  cmdKBtn.addEventListener('click', async () => {
+    commandPalette.setItems(await buildCommandItems());
     commandPalette.open();
   });
   sidebarFooter.appendChild(cmdKBtn);
@@ -931,8 +986,9 @@ async function main(): Promise<void> {
     const parent = findParent(tree, nodeId);
     const directReports = node.children?.length ?? 0;
     const totalOrg = store.getDescendantCount(nodeId);
+    const avgSpan = avgSpanOfControl(node);
     const categories = categoryStore.getAll().map((c) => ({ id: c.id, label: c.label, color: c.color }));
-    propertyPanel.show(node, parent?.name ?? null, directReports, totalOrg, categories);
+    propertyPanel.show(node, parent?.name ?? null, directReports, totalOrg, avgSpan, categories);
   };
 
   // ─── Floating Actions (bottom toolbar) ──────────────────────────────
@@ -1012,7 +1068,7 @@ async function main(): Promise<void> {
       if (node) {
         const parent = findParent(tree, panelNodeId);
         const categories = categoryStore.getAll().map((c) => ({ id: c.id, label: c.label, color: c.color }));
-        propertyPanel.update(node, parent?.name ?? null, node.children?.length ?? 0, store.getDescendantCount(panelNodeId), categories);
+        propertyPanel.update(node, parent?.name ?? null, node.children?.length ?? 0, store.getDescendantCount(panelNodeId), avgSpanOfControl(node), categories);
       } else {
         propertyPanel.hide();
         floatingActions.hide();
@@ -1670,49 +1726,80 @@ async function main(): Promise<void> {
     onDismiss: () => {},
   });
 
-  const buildCommandItems = (): CommandItem[] => [
-    {
-      id: 'export',
-      label: t('command_palette.item_export'),
-      icon: '📊',
-      shortcut: 'Ctrl+E',
-      group: t('command_palette.group_actions'),
-      action: () => { exportCurrentChart(); },
-    },
-    {
-      id: 'undo',
-      label: t('command_palette.item_undo'),
-      icon: '↩',
-      shortcut: 'Ctrl+Z',
-      group: t('command_palette.group_actions'),
-      action: () => { if (store.undo()) { announce(t('announce.undo')); } },
-    },
-    {
-      id: 'redo',
-      label: t('command_palette.item_redo'),
-      icon: '↪',
-      shortcut: 'Ctrl+Shift+Z',
-      group: t('command_palette.group_actions'),
-      action: () => { if (store.redo()) { announce(t('announce.redo')); } },
-    },
-    {
-      id: 'search',
-      label: t('command_palette.item_search'),
-      icon: '🔍',
-      shortcut: 'Ctrl+F',
-      group: t('command_palette.group_navigation'),
-      action: () => { search.focus(); },
-    },
-  ];
+  const buildCommandItems = async (): Promise<CommandItem[]> => {
+    const items: CommandItem[] = [
+      {
+        id: 'export',
+        label: t('command_palette.item_export'),
+        icon: '📊',
+        shortcut: 'Ctrl+E',
+        group: t('command_palette.group_actions'),
+        action: () => { exportCurrentChart(); },
+      },
+      {
+        id: 'undo',
+        label: t('command_palette.item_undo'),
+        icon: '↩',
+        shortcut: 'Ctrl+Z',
+        group: t('command_palette.group_actions'),
+        action: () => { if (store.undo()) { announce(t('announce.undo')); } },
+      },
+      {
+        id: 'redo',
+        label: t('command_palette.item_redo'),
+        icon: '↪',
+        shortcut: 'Ctrl+Shift+Z',
+        group: t('command_palette.group_actions'),
+        action: () => { if (store.redo()) { announce(t('announce.redo')); } },
+      },
+      {
+        id: 'settings',
+        label: t('command_palette.item_settings'),
+        icon: '⚙️',
+        shortcut: 'Ctrl+,',
+        group: t('command_palette.group_actions'),
+        action: () => { settingsBtn.click(); },
+      },
+      {
+        id: 'search',
+        label: t('command_palette.item_search'),
+        icon: '🔍',
+        shortcut: 'Ctrl+F',
+        group: t('command_palette.group_navigation'),
+        action: () => { search.focus(); },
+      },
+    ];
+
+    // Dynamic chart entries
+    const activeId = chartStore.getActiveChartId();
+    const allCharts = await chartStore.getCharts();
+    for (const chart of allCharts) {
+      if (chart.id === activeId) continue;
+      items.push({
+        id: `chart-${chart.id}`,
+        label: chart.name,
+        icon: '🌳',
+        group: t('command_palette.group_charts'),
+        action: async () => {
+          const proceed = await handleBeforeSwitch();
+          if (!proceed) return;
+          const switched = await chartStore.switchChart(chart.id);
+          handleChartSwitched(switched);
+        },
+      });
+    }
+
+    return items;
+  };
 
   shortcuts.register({
     key: 'k',
     ctrl: true,
-    handler: () => {
+    handler: async () => {
       if (commandPalette.isOpen()) {
         commandPalette.close();
       } else {
-        commandPalette.setItems(buildCommandItems());
+        commandPalette.setItems(await buildCommandItems());
         commandPalette.open();
       }
     },

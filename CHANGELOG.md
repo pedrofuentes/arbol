@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.2] — 2026-03-15
+
+### Added
+- **Command palette: Settings** — ⚙️ Settings action with Ctrl+, shortcut
+- **Command palette: Switch Chart** — lists all non-active charts for quick switching
+- **Property panel: Avg Span of Control** — shows average direct reports per manager in the selected node's subtree
+- **Draggable search bar** — click+drag to reposition the floating search bar on the canvas
+
+### Fixed
+- **Command palette input** — removed focus-visible border on the search input
+- **Floating search bar** — moved from header to canvas overlay matching mockup (pill shape, 🔍 icon, expands on focus)
+- **Clear All Data** — moved inside Backup & Restore section (was showing on every settings tab)
+
+### Testing
+- 1,712 tests across 68 files — all passing
+
 ## [3.0.1] — 2026-03-15
 
 ### Fixed

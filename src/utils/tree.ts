@@ -133,3 +133,18 @@ export function countManagersByLevel(root: OrgNode): Map<number, number> {
   walk(root);
   return map;
 }
+
+/** Average span of control (direct reports per manager) within a subtree. */
+export function avgSpanOfControl(root: OrgNode): number {
+  let managerCount = 0;
+  let totalDirectReports = 0;
+  function walk(node: OrgNode): void {
+    if (!isLeaf(node)) {
+      managerCount++;
+      totalDirectReports += node.children!.length;
+      for (const child of node.children!) walk(child);
+    }
+  }
+  walk(root);
+  return managerCount === 0 ? 0 : totalDirectReports / managerCount;
+}

@@ -837,60 +837,60 @@ export class SettingsEditor {
       });
       backupBtnGroup.appendChild(restoreBtn);
 
+      // Clear All Data button — inside the backup section
+      const clearDataBtn = document.createElement('button');
+      clearDataBtn.textContent = '🗑 Clear All Data';
+      clearDataBtn.setAttribute('aria-label', 'Clear all local data');
+      clearDataBtn.style.cssText = `
+        width:100%;margin-top:12px;padding:8px 14px;font-size:12px;
+        font-family:var(--font-sans);cursor:pointer;
+        background:transparent;color:var(--text-tertiary);
+        border:1px solid var(--border-default);border-radius:var(--radius-md);
+        transition:background var(--transition-fast),color var(--transition-fast),border-color var(--transition-fast);
+      `;
+      clearDataBtn.addEventListener('mouseenter', () => {
+        clearDataBtn.style.background = 'var(--bg-danger, #fef2f2)';
+        clearDataBtn.style.color = 'var(--text-danger, #dc2626)';
+        clearDataBtn.style.borderColor = 'var(--text-danger, #dc2626)';
+      });
+      clearDataBtn.addEventListener('mouseleave', () => {
+        clearDataBtn.style.background = 'transparent';
+        clearDataBtn.style.color = 'var(--text-tertiary)';
+        clearDataBtn.style.borderColor = 'var(--border-default)';
+      });
+      clearDataBtn.addEventListener('click', async () => {
+        // Auto-backup before destructive clear
+        if (this.chartDB) {
+          try {
+            const autoBackup = await createBackup(this.chartDB);
+            downloadBackup(autoBackup);
+          } catch {
+            // If auto-backup fails, still allow the user to proceed
+          }
+        }
+
+        const confirmed = await showConfirmDialog({
+          title: 'Clear All Data',
+          message:
+            'This will permanently delete all your org charts, versions, settings, themes, and preferences. ' +
+            'This cannot be undone.\n\nAre you sure?',
+          confirmLabel: 'Delete everything',
+          danger: true,
+        });
+        if (confirmed) {
+          for (const key of ARBOL_STORAGE_KEYS) {
+            this.storage.removeItem(key);
+          }
+          indexedDB.deleteDatabase('arbol-db');
+          window.location.reload();
+        }
+      });
+      backupBtnGroup.appendChild(clearDataBtn);
+
       this.container.appendChild(
         this.createAccordionSection('backup-restore', 'Backup & Restore', backupBtnGroup),
       );
     }
-
-    // Clear All Data button
-    const clearDataBtn = document.createElement('button');
-    clearDataBtn.textContent = '🗑 Clear All Data';
-    clearDataBtn.setAttribute('aria-label', 'Clear all local data');
-    clearDataBtn.style.cssText = `
-      width:100%;margin-top:12px;padding:8px 14px;font-size:12px;
-      font-family:var(--font-sans);cursor:pointer;
-      background:transparent;color:var(--text-tertiary);
-      border:1px solid var(--border-default);border-radius:var(--radius-md);
-      transition:background var(--transition-fast),color var(--transition-fast),border-color var(--transition-fast);
-    `;
-    clearDataBtn.addEventListener('mouseenter', () => {
-      clearDataBtn.style.background = 'var(--bg-danger, #fef2f2)';
-      clearDataBtn.style.color = 'var(--text-danger, #dc2626)';
-      clearDataBtn.style.borderColor = 'var(--text-danger, #dc2626)';
-    });
-    clearDataBtn.addEventListener('mouseleave', () => {
-      clearDataBtn.style.background = 'transparent';
-      clearDataBtn.style.color = 'var(--text-tertiary)';
-      clearDataBtn.style.borderColor = 'var(--border-default)';
-    });
-    clearDataBtn.addEventListener('click', async () => {
-      // Auto-backup before destructive clear
-      if (this.chartDB) {
-        try {
-          const autoBackup = await createBackup(this.chartDB);
-          downloadBackup(autoBackup);
-        } catch {
-          // If auto-backup fails, still allow the user to proceed
-        }
-      }
-
-      const confirmed = await showConfirmDialog({
-        title: 'Clear All Data',
-        message:
-          'This will permanently delete all your org charts, versions, settings, themes, and preferences. ' +
-          'This cannot be undone.\n\nAre you sure?',
-        confirmLabel: 'Delete everything',
-        danger: true,
-      });
-      if (confirmed) {
-        for (const key of ARBOL_STORAGE_KEYS) {
-          this.storage.removeItem(key);
-        }
-        indexedDB.deleteDatabase('arbol-db');
-        window.location.reload();
-      }
-    });
-    this.container.appendChild(clearDataBtn);
 
     // Filter handler — wired after all sections are built
     let filterTimeout: ReturnType<typeof setTimeout> | null = null;

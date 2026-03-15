@@ -77,6 +77,8 @@ const en: Record<string, string> = {
   'command_palette.item_undo': 'Undo',
   'command_palette.item_redo': 'Redo',
   'command_palette.item_search': 'Search People',
+  'command_palette.item_settings': 'Settings',
+  'command_palette.group_charts': 'Switch Chart',
   'shortcut.command_palette': 'Command palette',
 
   // ─── Property Panel ─────────────────────────────────────────────────
@@ -87,6 +89,7 @@ const en: Record<string, string> = {
   'property_panel.root_node': 'Root',
   'property_panel.direct_reports': 'Direct reports:',
   'property_panel.total_org': 'Total org:',
+  'property_panel.span_of_control': 'Avg span of control:',
   'property_panel.edit': 'Edit',
   'property_panel.name': 'Name',
   'property_panel.title_field': 'Title',

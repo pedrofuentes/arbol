@@ -575,18 +575,46 @@ g.pal-node:focus-visible > rect {
    Search Input — The lookout
    ====================================================================== */
 
+/* ── Floating search bar ───────────────────────────────── */
+
+.search-float {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  cursor: grab;
+}
+
+.search-float:has(.search-input:focus) {
+  cursor: default;
+}
+
+.search-float .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
 .search-input {
-  width: 100%;
-  padding: 6px var(--space-4);
-  font-size: var(--text-sm);
+  width: 280px;
+  padding: 8px 14px 8px 34px;
+  font-size: 13px;
   font-family: var(--font-sans);
   font-weight: var(--font-medium);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-full);
-  background: var(--bg-elevated);
+  background: var(--bg-surface);
   color: var(--text-primary);
   outline: none;
-  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
   letter-spacing: 0.01em;
 }
 
@@ -597,13 +625,12 @@ g.pal-node:focus-visible > rect {
 
 .search-input:focus {
   border-color: var(--accent);
-  background: var(--bg-base);
-  box-shadow: 0 0 0 3px var(--accent-muted), var(--shadow-glow);
+  box-shadow: var(--shadow-md), 0 0 0 2px var(--accent-muted);
+  width: 340px;
 }
 
 .search-input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  outline: none;
 }
 
 /* ======================================================================
@@ -1064,17 +1091,20 @@ textarea:focus-visible {
 }
 
 /* Search wrapper & no-results indicator */
-.search-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
 .search-no-results {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
   font-family: var(--font-sans);
   font-size: var(--text-xs);
   color: var(--danger);
   white-space: nowrap;
+  background: var(--bg-surface);
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Loading state utilities */
@@ -1362,6 +1392,7 @@ textarea:focus-visible {
   font-weight: var(--font-medium);
   outline: none;
 }
+.cp-input:focus-visible { outline: none; }
 .cp-input::placeholder { color: var(--text-tertiary); }
 
 .cp-results {

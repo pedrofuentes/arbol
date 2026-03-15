@@ -29,6 +29,7 @@ export class PropertyPanel {
   private metaReportsTo: HTMLElement;
   private metaDirectReports: HTMLElement;
   private metaTotalOrg: HTMLElement;
+  private metaSpanOfControl: HTMLElement;
   private nameInput: HTMLInputElement;
   private titleInput: HTMLInputElement;
   private categorySelect: HTMLSelectElement;
@@ -84,10 +85,12 @@ export class PropertyPanel {
     this.metaReportsTo = this.createMetaRow('📍', t('property_panel.reports_to'));
     this.metaDirectReports = this.createMetaRow('👥', t('property_panel.direct_reports'));
     this.metaTotalOrg = this.createMetaRow('📊', t('property_panel.total_org'));
+    this.metaSpanOfControl = this.createMetaRow('📐', t('property_panel.span_of_control'));
 
     meta.appendChild(this.metaReportsTo);
     meta.appendChild(this.metaDirectReports);
     meta.appendChild(this.metaTotalOrg);
+    meta.appendChild(this.metaSpanOfControl);
 
     card.appendChild(this.nameDisplay);
     card.appendChild(this.titleDisplay);
@@ -211,15 +214,15 @@ export class PropertyPanel {
     options.container.appendChild(this.el);
   }
 
-  show(node: OrgNode, parentName: string | null, directReports: number, totalOrg: number, categories: CategoryInfo[]): void {
+  show(node: OrgNode, parentName: string | null, directReports: number, totalOrg: number, avgSpan: number, categories: CategoryInfo[]): void {
     this.nodeId = node.id;
-    this.populateContent(node, parentName, directReports, totalOrg, categories);
+    this.populateContent(node, parentName, directReports, totalOrg, avgSpan, categories);
     this.el.classList.add('open');
     this.nameInput.focus();
   }
 
-  update(node: OrgNode, parentName: string | null, directReports: number, totalOrg: number, categories: CategoryInfo[]): void {
-    this.populateContent(node, parentName, directReports, totalOrg, categories);
+  update(node: OrgNode, parentName: string | null, directReports: number, totalOrg: number, avgSpan: number, categories: CategoryInfo[]): void {
+    this.populateContent(node, parentName, directReports, totalOrg, avgSpan, categories);
   }
 
   hide(): void {
@@ -239,7 +242,7 @@ export class PropertyPanel {
     if (this.el.parentElement) this.el.parentElement.removeChild(this.el);
   }
 
-  private populateContent(node: OrgNode, parentName: string | null, directReports: number, totalOrg: number, categories: CategoryInfo[]): void {
+  private populateContent(node: OrgNode, parentName: string | null, directReports: number, totalOrg: number, avgSpan: number, categories: CategoryInfo[]): void {
     this.nameDisplay.textContent = node.name;
     this.titleDisplay.textContent = node.title;
 
@@ -247,6 +250,10 @@ export class PropertyPanel {
     this.updateMetaValue(this.metaReportsTo, isRoot ? t('property_panel.root_node') : parentName);
     this.updateMetaValue(this.metaDirectReports, String(directReports));
     this.updateMetaValue(this.metaTotalOrg, String(totalOrg));
+
+    const nodeIsLeaf = !node.children || node.children.length === 0;
+    this.updateMetaValue(this.metaSpanOfControl, nodeIsLeaf ? '—' : avgSpan.toFixed(1));
+    this.metaSpanOfControl.style.display = nodeIsLeaf ? 'none' : '';
 
     this.savedName = node.name;
     this.savedTitle = node.title;
@@ -268,7 +275,6 @@ export class PropertyPanel {
     this.categorySelect.value = node.categoryId ?? '';
 
     // Disable states
-    const nodeIsLeaf = !node.children || node.children.length === 0;
     this.setDisabled(this.focusBtn, nodeIsLeaf);
     this.setDisabled(this.moveBtn, isRoot);
     this.setDisabled(this.removeBtn, isRoot);

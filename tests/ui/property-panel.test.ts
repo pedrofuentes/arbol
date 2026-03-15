@@ -41,35 +41,51 @@ describe('PropertyPanel', () => {
 
   it('show() adds open class and sets node data', () => {
     const { panel } = createPanel();
-    panel.show(makeNode(), 'Boss', 0, 5, cats);
+    panel.show(makeNode(), 'Boss', 0, 5, 0, cats);
     expect(panel.isVisible()).toBe(true);
     expect(panel.getNodeId()).toBe('n1');
   });
 
   it('displays node name and title', () => {
     const { container, panel } = createPanel();
-    panel.show(makeNode(), 'Boss', 2, 10, []);
+    panel.show(makeNode(), 'Boss', 2, 10, 0, []);
     expect(container.querySelector('.pp-node-name')!.textContent).toBe('Alice');
     expect(container.querySelector('.pp-node-title')!.textContent).toBe('Engineer');
   });
 
   it('shows parent name in metadata', () => {
     const { container, panel } = createPanel();
-    panel.show(makeNode(), 'Boss', 0, 0, []);
+    panel.show(makeNode(), 'Boss', 0, 0, 0, []);
     const meta = container.querySelector('.pp-node-meta')!.textContent!;
     expect(meta).toContain('Boss');
   });
 
   it('shows Root when parentName is null', () => {
     const { container, panel } = createPanel();
-    panel.show(makeNode(), null, 0, 0, []);
+    panel.show(makeNode(), null, 0, 0, 0, []);
     const meta = container.querySelector('.pp-node-meta')!.textContent!;
     expect(meta).toContain('Root');
   });
 
+  it('shows avg span of control for manager nodes', () => {
+    const { container, panel } = createPanel();
+    panel.show(makeManager(), 'CEO', 1, 2, 3.5, []);
+    const meta = container.querySelector('.pp-node-meta')!.textContent!;
+    expect(meta).toContain('3.5');
+  });
+
+  it('hides span of control for leaf nodes', () => {
+    const { container, panel } = createPanel();
+    panel.show(makeNode(), 'Boss', 0, 0, 0, []);
+    const spanRow = container.querySelectorAll('.pp-node-meta span');
+    const spanOfControl = Array.from(spanRow).find(s => s.textContent?.includes('span of control'));
+    expect(spanOfControl).toBeDefined();
+    expect((spanOfControl as HTMLElement).style.display).toBe('none');
+  });
+
   it('populates edit inputs', () => {
     const { container, panel } = createPanel();
-    panel.show(makeNode(), 'Boss', 0, 0, []);
+    panel.show(makeNode(), 'Boss', 0, 0, 0, []);
     const nameInput = container.querySelector('#pp-name-input') as HTMLInputElement;
     const titleInput = container.querySelector('#pp-title-input') as HTMLInputElement;
     expect(nameInput.value).toBe('Alice');
@@ -78,7 +94,7 @@ describe('PropertyPanel', () => {
 
   it('populates category dropdown', () => {
     const { container, panel } = createPanel();
-    panel.show(makeNode({ categoryId: 'c1' }), 'Boss', 0, 0, cats);
+    panel.show(makeNode({ categoryId: 'c1' }), 'Boss', 0, 0, 0, cats);
     const select = container.querySelector('#pp-category-select') as HTMLSelectElement;
     expect(select.options.length).toBe(2); // None + 1 category
     expect(select.value).toBe('c1');
@@ -86,7 +102,7 @@ describe('PropertyPanel', () => {
 
   it('hide() removes open class', () => {
     const { panel } = createPanel();
-    panel.show(makeNode(), 'Boss', 0, 0, []);
+    panel.show(makeNode(), 'Boss', 0, 0, 0, []);
     panel.hide();
     expect(panel.isVisible()).toBe(false);
     expect(panel.getNodeId()).toBeNull();
@@ -94,7 +110,7 @@ describe('PropertyPanel', () => {
 
   it('save button calls onEdit when values changed', () => {
     const { container, panel, onEdit } = createPanel();
-    panel.show(makeNode(), 'Boss', 0, 0, []);
+    panel.show(makeNode(), 'Boss', 0, 0, 0, []);
     const nameInput = container.querySelector('#pp-name-input') as HTMLInputElement;
     nameInput.value = 'Alice Updated';
     container.querySelector('.pp-save-btn')!.dispatchEvent(new Event('click'));
@@ -103,14 +119,14 @@ describe('PropertyPanel', () => {
 
   it('save button does NOT call onEdit when values unchanged', () => {
     const { container, panel, onEdit } = createPanel();
-    panel.show(makeNode(), 'Boss', 0, 0, []);
+    panel.show(makeNode(), 'Boss', 0, 0, 0, []);
     container.querySelector('.pp-save-btn')!.dispatchEvent(new Event('click'));
     expect(onEdit).not.toHaveBeenCalled();
   });
 
   it('category change calls onCategoryChange', () => {
     const { container, panel, onCategoryChange } = createPanel();
-    panel.show(makeNode(), 'Boss', 0, 0, cats);
+    panel.show(makeNode(), 'Boss', 0, 0, 0, cats);
     const select = container.querySelector('#pp-category-select') as HTMLSelectElement;
     select.value = 'c1';
     select.dispatchEvent(new Event('change'));
@@ -119,7 +135,7 @@ describe('PropertyPanel', () => {
 
   it('category change to None passes null', () => {
     const { container, panel, onCategoryChange } = createPanel();
-    panel.show(makeNode({ categoryId: 'c1' }), 'Boss', 0, 0, cats);
+    panel.show(makeNode({ categoryId: 'c1' }), 'Boss', 0, 0, 0, cats);
     const select = container.querySelector('#pp-category-select') as HTMLSelectElement;
     select.value = '';
     select.dispatchEvent(new Event('change'));
@@ -128,14 +144,14 @@ describe('PropertyPanel', () => {
 
   it('close button calls onClose', () => {
     const { container, panel, onClose } = createPanel();
-    panel.show(makeNode(), 'Boss', 0, 0, []);
+    panel.show(makeNode(), 'Boss', 0, 0, 0, []);
     container.querySelector('.pp-close')!.dispatchEvent(new Event('click'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('Move button disabled for root node', () => {
     const { container, panel } = createPanel();
-    panel.show(makeNode(), null, 0, 0, []);
+    panel.show(makeNode(), null, 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
     const moveBtn = Array.from(btns).find(b => b.textContent?.includes('Move'))!;
     expect(moveBtn.getAttribute('aria-disabled')).toBe('true');
@@ -143,7 +159,7 @@ describe('PropertyPanel', () => {
 
   it('Remove button disabled for root node', () => {
     const { container, panel } = createPanel();
-    panel.show(makeNode(), null, 0, 0, []);
+    panel.show(makeNode(), null, 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
     const removeBtn = Array.from(btns).find(b => b.textContent?.includes('Remove'))!;
     expect(removeBtn.getAttribute('aria-disabled')).toBe('true');
@@ -151,7 +167,7 @@ describe('PropertyPanel', () => {
 
   it('Focus button disabled for leaf node', () => {
     const { container, panel } = createPanel();
-    panel.show(makeNode(), 'Boss', 0, 0, []);
+    panel.show(makeNode(), 'Boss', 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
     const focusBtn = Array.from(btns).find(b => b.textContent?.includes('Focus'))!;
     expect(focusBtn.getAttribute('aria-disabled')).toBe('true');
@@ -159,7 +175,7 @@ describe('PropertyPanel', () => {
 
   it('Focus button enabled for manager node', () => {
     const { container, panel } = createPanel();
-    panel.show(makeManager(), 'CEO', 1, 2, []);
+    panel.show(makeManager(), 'CEO', 1, 2, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
     const focusBtn = Array.from(btns).find(b => b.textContent?.includes('Focus'))!;
     expect(focusBtn.getAttribute('aria-disabled')).toBeNull();
@@ -167,7 +183,7 @@ describe('PropertyPanel', () => {
 
   it('disabled buttons do not fire callbacks', () => {
     const { container, panel, onMove } = createPanel();
-    panel.show(makeNode(), null, 0, 0, []);
+    panel.show(makeNode(), null, 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
     const moveBtn = Array.from(btns).find(b => b.textContent?.includes('Move'))!;
     (moveBtn as HTMLElement).click();
@@ -195,8 +211,8 @@ describe('PropertyPanel', () => {
 
   it('update() refreshes displayed content', () => {
     const { container, panel } = createPanel();
-    panel.show(makeNode(), 'Boss', 0, 5, []);
-    panel.update({ id: 'n1', name: 'Alice2', title: 'Sr Eng' }, 'NewBoss', 3, 10, []);
+    panel.show(makeNode(), 'Boss', 0, 5, 0, []);
+    panel.update({ id: 'n1', name: 'Alice2', title: 'Sr Eng' }, 'NewBoss', 3, 10, 0, []);
     expect(container.querySelector('.pp-node-name')!.textContent).toBe('Alice2');
     expect(container.querySelector('.pp-node-title')!.textContent).toBe('Sr Eng');
   });
@@ -207,3 +223,5 @@ describe('PropertyPanel', () => {
     expect(container.querySelector('.property-panel')).toBeNull();
   });
 });
+
+

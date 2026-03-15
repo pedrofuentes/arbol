@@ -13,6 +13,7 @@ import {
   countDescendants,
   managerLevel,
   countManagersByLevel,
+  avgSpanOfControl,
 } from '../../src/utils/tree';
 
 function makeTree(): OrgNode {
@@ -449,5 +450,50 @@ describe('countDescendants', () => {
       ],
     };
     expect(countDescendants(tree)).toBe(3);
+  });
+});
+
+describe('avgSpanOfControl', () => {
+  it('returns 0 for a leaf node', () => {
+    const leaf: OrgNode = { id: '1', name: 'A', title: 'T' };
+    expect(avgSpanOfControl(leaf)).toBe(0);
+  });
+
+  it('returns direct reports count for a single manager', () => {
+    const root: OrgNode = {
+      id: '1', name: 'A', title: 'T',
+      children: [
+        { id: '2', name: 'B', title: 'T' },
+        { id: '3', name: 'C', title: 'T' },
+        { id: '4', name: 'D', title: 'T' },
+      ],
+    };
+    expect(avgSpanOfControl(root)).toBe(3);
+  });
+
+  it('returns average across multiple managers', () => {
+    const root: OrgNode = {
+      id: '1', name: 'CEO', title: 'T',
+      children: [
+        {
+          id: '2', name: 'VP1', title: 'T',
+          children: [
+            { id: '4', name: 'IC1', title: 'T' },
+            { id: '5', name: 'IC2', title: 'T' },
+          ],
+        },
+        {
+          id: '3', name: 'VP2', title: 'T',
+          children: [
+            { id: '6', name: 'IC3', title: 'T' },
+            { id: '7', name: 'IC4', title: 'T' },
+            { id: '8', name: 'IC5', title: 'T' },
+            { id: '9', name: 'IC6', title: 'T' },
+          ],
+        },
+      ],
+    };
+    // CEO has 2 reports, VP1 has 2, VP2 has 4 → total 8 / 3 managers ≈ 2.667
+    expect(avgSpanOfControl(root)).toBeCloseTo(2.667, 2);
   });
 });
