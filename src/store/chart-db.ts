@@ -27,8 +27,16 @@ export class ChartDB {
         }
       };
 
+      request.onblocked = () => {
+        reject(new Error('Database upgrade blocked. Please close other tabs and refresh.'));
+      };
+
       request.onsuccess = () => {
         this.db = request.result;
+        this.db.onversionchange = () => {
+          this.db?.close();
+          this.db = null;
+        };
         resolve();
       };
 

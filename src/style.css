@@ -2622,6 +2622,30 @@ textarea:focus-visible {
   }
 }
 
+/* Fatal error boundary — shown when app initialization fails */
+.fatal-error {
+  max-width: 28rem;
+  margin: 4rem auto;
+  padding: 2rem;
+  text-align: center;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: var(--text-primary, #1a1a1a);
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-color, #d0d0d0);
+  border-radius: 0.5rem;
+}
+
+.fatal-error h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: var(--color-danger, #c0392b);
+}
+
+.fatal-error p {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
 /* High contrast mode — ensure cards and focus indicators are visible */
 @media (forced-colors: active) {
   .card rect,

@@ -265,6 +265,82 @@ describe('ChartDB', () => {
     });
   });
 
+  describe('onblocked handler', () => {
+    it('rejects when the database upgrade is blocked', async () => {
+      const db1 = new ChartDB();
+      await db1.open();
+
+      // Open a higher version to trigger onblocked (db1 holds an active connection)
+      const blockedPromise = new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open('arbol-db', 999);
+        request.onblocked = () => {
+          // The upgrade is blocked because db1 hasn't closed
+        };
+        request.onsuccess = () => {
+          request.result.close();
+          resolve();
+        };
+        request.onerror = () => reject(request.error);
+      });
+
+      // db1's onversionchange fires and closes the connection
+      await blockedPromise;
+      db1.close();
+    });
+
+    it('rejects with appropriate error when open() is blocked', async () => {
+      // Hold an open connection at version 1
+      const holder = indexedDB.open('arbol-db-blocked-test', 1);
+      await new Promise<void>((resolve) => {
+        holder.onsuccess = () => resolve();
+      });
+      const holderDb = holder.result;
+
+      // Attempt to open at a higher version — this will be blocked
+      const blockedPromise = new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open('arbol-db-blocked-test', 2);
+        request.onblocked = () => {
+          reject(new Error('Database upgrade blocked. Please close other tabs and refresh.'));
+        };
+        request.onsuccess = () => {
+          request.result.close();
+          resolve();
+        };
+      });
+
+      await expect(blockedPromise).rejects.toThrow(
+        'Database upgrade blocked. Please close other tabs and refresh.',
+      );
+
+      holderDb.close();
+      indexedDB.deleteDatabase('arbol-db-blocked-test');
+    });
+  });
+
+  describe('onversionchange handler', () => {
+    it('closes the connection when another context triggers a version upgrade', async () => {
+      const db1 = new ChartDB();
+      await db1.open();
+
+      // Store a chart to verify the connection works before upgrade
+      await db1.putChart(makeChart());
+
+      // Trigger a version change by opening a higher version
+      const upgradeRequest = indexedDB.open('arbol-db', 999);
+      await new Promise<void>((resolve) => {
+        upgradeRequest.onsuccess = () => {
+          upgradeRequest.result.close();
+          resolve();
+        };
+      });
+
+      // db1's onversionchange should have closed and nulled the connection
+      expect(() => db1.getAllCharts()).toThrow('Database not open');
+
+      indexedDB.deleteDatabase('arbol-db');
+    });
+  });
+
   describe('Chart name uniqueness', () => {
     it('isChartNameTaken returns false when name is not taken', async () => {
       const result = await db.isChartNameTaken('Unused Name');

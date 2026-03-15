@@ -376,6 +376,57 @@ describe('OrgStore', () => {
       expect(store.undo()).toBe(false);
       expect(store.getUndoStackSize()).toBe(0);
     });
+
+    it('redo stack respects MAX_HISTORY limit', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      const redoStack = (store as any).redoStack as string[];
+      const undoStack = (store as any).undoStack as string[];
+      // Pre-fill redo with 55 entries
+      for (let i = 0; i < 55; i++) {
+        redoStack.push(JSON.stringify({ id: 'r', name: `Redo ${i}`, title: 'CEO' }));
+      }
+      // Push a valid snapshot onto undoStack so undo() succeeds
+      undoStack.push(JSON.stringify({ id: 'r', name: 'Prev', title: 'CEO' }));
+      store.undo();
+      expect(store.getRedoStackSize()).toBeLessThanOrEqual(50);
+    });
+
+    it('discards oldest redo entries when exceeding MAX_HISTORY', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      const redoStack = (store as any).redoStack as string[];
+      const undoStack = (store as any).undoStack as string[];
+      // Pre-fill redo with exactly MAX_HISTORY entries
+      for (let i = 0; i < 50; i++) {
+        redoStack.push(JSON.stringify({ id: 'r', name: `Redo ${i}`, title: 'CEO' }));
+      }
+      // Push a valid undo snapshot so undo() will push one more onto redo
+      undoStack.push(JSON.stringify({ id: 'r', name: 'Prev', title: 'CEO' }));
+      store.undo();
+      // 51 entries should be trimmed to 50
+      expect(store.getRedoStackSize()).toBe(50);
+      // The newest entry (current state "Root" pushed by undo) should be last
+      const newest = JSON.parse(redoStack[redoStack.length - 1]);
+      expect(newest.name).toBe('Root');
+      // The oldest entry ("Redo 0") should have been trimmed
+      const oldest = JSON.parse(redoStack[0]);
+      expect(oldest.name).toBe('Redo 1');
+    });
+
+    it('redo still works correctly after trimming', () => {
+      const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
+      const redoStack = (store as any).redoStack as string[];
+      const undoStack = (store as any).undoStack as string[];
+      // Pre-fill redo past the limit
+      for (let i = 0; i < 55; i++) {
+        redoStack.push(JSON.stringify({ id: 'r', name: `Redo ${i}`, title: 'CEO' }));
+      }
+      // Trigger trim via undo
+      undoStack.push(JSON.stringify({ id: 'r', name: 'Prev', title: 'CEO' }));
+      store.undo();
+      // Redo should still work — the newest entries are intact
+      expect(store.redo()).toBe(true);
+      expect(store.getTree().name).toBe('Root');
+    });
   });
 
   describe('moveNode', () => {

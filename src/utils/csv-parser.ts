@@ -1,4 +1,5 @@
 import type { OrgNode, ColumnMapping } from '../types';
+import { generateId } from './id';
 
 export const MAX_NODES = 10_000;
 
@@ -201,7 +202,7 @@ export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvPar
     const id =
       colMap.format === 'A' && colMap.id !== undefined
         ? (fields[colMap.id] ?? '')
-        : crypto.randomUUID();
+        : generateId();
 
     nodes.push({ id, name, title, parentRef });
   }
@@ -342,7 +343,7 @@ function buildTreeByName(
     const missingName = [...missingParents][0];
     const originalRef = nodes.find((n) => normalize(n.parentRef) === missingName)!.parentRef;
     const placeholder = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       name: originalRef,
       title: '\u2014',
       parentRef: '',

@@ -1,5 +1,6 @@
 import type { ColumnMapping, MappingPreset, OrgNode, TextNormalization } from '../types';
 import { t } from '../i18n';
+import { showToast } from './toast';
 import { extractHeaders, parseCsvToTree } from '../utils/csv-parser';
 import { normalizeText } from '../utils/text-normalize';
 import { flattenTree } from '../utils/tree';
@@ -101,6 +102,9 @@ export function renderSourceStep(
       dropText.textContent = `✓ ${file.name}`;
       textarea.value = '';
       onReady(true);
+    };
+    reader.onerror = () => {
+      showToast(t('error.file_read_failed'), 'error');
     };
     reader.readAsText(file);
   }
