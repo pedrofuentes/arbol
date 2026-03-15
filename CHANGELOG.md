@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.1] — 2026-03-15
+
+### Fixed
+- **Silent data loss prevention** — `saveWorkingTree()` now catches IndexedDB failures and shows a toast notification instead of silently losing edits
+- **Crash on early interaction** — guarded `focusMode` references before initialization to prevent `TypeError` when comparison mode triggers during page load
+- **Memory leak** — bounded the redo stack to `MAX_HISTORY` (50 entries), matching the undo stack, preventing unbounded memory growth
+- **Ghost highlights** — multi-selection is now cleared before re-rendering, preventing brief flicker of deleted nodes
+- **CSV import crash on HTTP** — replaced direct `crypto.randomUUID()` calls with `generateId()` fallback for non-secure contexts
+- **White screen on init failure** — added error boundary to `main()` showing a user-friendly fatal error screen instead of a blank page
+- **Frozen UI on file read failure** — added `FileReader.onerror` handlers to import wizard and settings import
+- **Multi-tab deadlock** — added `IndexedDB.onblocked` and `onversionchange` handlers to prevent cross-tab database upgrade deadlocks
+- **i18n compliance** — replaced 3 hardcoded error strings in import-editor with `t()` calls
+
+### Testing
+- 1,809 tests across 70 files — all passing
+- 8 new tests: redo stack limits (3), IndexedDB blocked/versionchange (3), saveWorkingTree catch (3) (note: 1 test file was added but contains 3 tests)
+
 ## [3.3.0] — 2026-03-15
 
 ### Added
