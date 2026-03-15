@@ -474,9 +474,19 @@ async function main(): Promise<void> {
         if (wizardState.destination === 'new' && wizardState.chartName) {
           const chart = await chartStore.createChartFromTree(wizardState.chartName, finalTree);
           await chartStore.saveVersion(t('import_wizard.original_version'), chart.workingTree);
+          // Switch the live OrgStore to the new chart's tree
+          store.replaceTree(chart.workingTree);
+          if (chart.categories.length > 0) {
+            categoryStore.replaceAll(chart.categories);
+          }
+          chartNameHeader.setName(chart.name);
+          chartNameHeader.setDirty(false);
+          rerender();
+          renderer.getZoomManager()?.fitToContent();
           announce(t('announce.chart_switched', { name: wizardState.chartName }));
         } else {
           store.fromJSON(JSON.stringify(finalTree));
+          renderer.getZoomManager()?.fitToContent();
         }
         importWizard.close();
         wizardState = {};
