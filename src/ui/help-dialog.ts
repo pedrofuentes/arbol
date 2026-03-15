@@ -79,20 +79,20 @@ function getHelpSections(): HelpSection[] {
       titleKey: 'help.sidebar_tabs.title',
       items: [
         [
-          { tag: 'strong', text: t('help.sidebar_tabs.people_label') },
-          t('help.sidebar_tabs.people_desc'),
-        ],
-        [
-          { tag: 'strong', text: t('help.sidebar_tabs.import_label') },
-          t('help.sidebar_tabs.import_desc'),
+          { tag: 'strong', text: t('help.sidebar_tabs.sidebar_label') },
+          t('help.sidebar_tabs.sidebar_desc'),
         ],
         [
           { tag: 'strong', text: t('help.sidebar_tabs.settings_label') },
           t('help.sidebar_tabs.settings_desc'),
         ],
         [
-          { tag: 'strong', text: t('help.sidebar_tabs.charts_label') },
-          t('help.sidebar_tabs.charts_desc'),
+          { tag: 'strong', text: t('help.sidebar_tabs.import_label') },
+          t('help.sidebar_tabs.import_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.sidebar_tabs.export_label') },
+          t('help.sidebar_tabs.export_desc'),
         ],
       ],
     },
@@ -122,30 +122,21 @@ function getHelpSections(): HelpSection[] {
       titleKey: 'help.importing.title',
       items: [
         [
+          t('help.importing.how_1'),
+          { tag: 'strong', text: t('help.importing.how_strong') },
+          t('help.importing.how_2'),
+        ],
+        [t('help.importing.wizard')],
+        [
           { tag: 'strong', text: t('help.importing.json_label') },
-          t('help.importing.json_desc_1'),
-          { tag: 'code', text: t('help.importing.json_code_id') },
-          t('help.importing.json_desc_2'),
-          { tag: 'code', text: t('help.importing.json_code_name') },
-          t('help.importing.json_desc_3'),
-          { tag: 'code', text: t('help.importing.json_code_title') },
-          t('help.importing.json_desc_4'),
-          { tag: 'code', text: t('help.importing.json_code_children') },
-          t('help.importing.json_desc_5'),
+          t('help.importing.json_desc'),
         ],
         [
-          { tag: 'strong', text: t('help.importing.csv_id_label') },
-          t('help.importing.csv_id_desc_1'),
-          { tag: 'code', text: t('help.importing.csv_id_code') },
-          t('help.importing.csv_id_desc_2'),
+          { tag: 'strong', text: t('help.importing.csv_label') },
+          t('help.importing.csv_desc'),
         ],
-        [
-          { tag: 'strong', text: t('help.importing.csv_name_label') },
-          t('help.importing.csv_name_desc_1'),
-          { tag: 'code', text: t('help.importing.csv_name_code') },
-          t('help.importing.csv_name_desc_2'),
-        ],
-        [t('help.importing.drop_hint')],
+        [t('help.importing.normalize')],
+        [t('help.importing.limit')],
       ],
     },
     {
@@ -170,10 +161,6 @@ function getHelpSections(): HelpSection[] {
         [
           { tag: 'strong', text: t('help.interactions.inline_label') },
           t('help.interactions.inline_desc'),
-        ],
-        [
-          { tag: 'strong', text: t('help.interactions.collapse_label') },
-          t('help.interactions.collapse_desc'),
         ],
         [
           { tag: 'strong', text: t('help.interactions.search_label') },
@@ -253,17 +240,9 @@ function getHelpSections(): HelpSection[] {
       titleKey: 'help.settings.title',
       items: [
         [t('help.settings.auto_save')],
-        [
-          t('help.settings.export_1'),
-          { tag: 'strong', text: t('help.settings.export_strong') },
-          t('help.settings.export_2'),
-        ],
-        [
-          t('help.settings.import_1'),
-          { tag: 'strong', text: t('help.settings.import_strong') },
-          t('help.settings.import_2'),
-        ],
+        [t('help.settings.modal')],
         [t('help.settings.presets')],
+        [t('help.settings.preview')],
         [
           t('help.settings.backup_1'),
           { tag: 'strong', text: t('help.settings.backup_strong') },
@@ -283,6 +262,7 @@ function getHelpSections(): HelpSection[] {
           { tag: 'strong', text: t('help.exporting.pptx_label') },
           t('help.exporting.pptx_desc'),
         ],
+        [t('help.exporting.versions')],
         [t('help.exporting.scale')],
       ],
     },
