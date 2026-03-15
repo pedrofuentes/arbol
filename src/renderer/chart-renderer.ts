@@ -151,7 +151,7 @@ export class ChartRenderer {
     this.g = this.svg.append('g').attr('class', 'chart-group');
 
     if (isPreview) {
-      this.zoomManager = null;
+      this.zoomManager = new ZoomManager(this.svg.node()!, this.g.node()!);
       this.keyboardNav = null;
     } else {
       this.zoomManager = new ZoomManager(this.svg.node()!, this.g.node()!);
@@ -387,6 +387,9 @@ export class ChartRenderer {
       if (this.diffMap) {
         this.renderDiffLegend(layout);
       }
+    } else {
+      // Preview mode: fit chart to visible area
+      this.zoomManager?.fitToContent();
     }
   }
 

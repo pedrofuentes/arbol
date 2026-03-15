@@ -1,5 +1,6 @@
 import { ChartRenderer, RendererOptions } from '../renderer/chart-renderer';
 import { CHART_THEME_PRESETS, ChartThemePreset, addCustomPreset } from '../store/theme-presets';
+import { PreviewRenderer } from '../renderer/preview-renderer';
 import { SettingsStore, type PersistableSettings } from '../store/settings-store';
 import { CategoryStore } from '../store/category-store';
 import { generateId } from '../utils/id';
@@ -17,7 +18,6 @@ import {
 import { showRestoreStrategyDialog } from '../ui/restore-dialog';
 import { type IStorage, browserStorage } from '../utils/storage';
 import { detectArbolFileType } from '../utils/file-type';
-import { renderPreview } from '../renderer/preview-renderer';
 import { t } from '../i18n';
 
 const ARBOL_STORAGE_KEYS = [
@@ -444,6 +444,7 @@ export class SettingsEditor {
   private storage: IStorage;
   private onBuildCallback: (() => void) | null = null;
   private previewArea: HTMLElement | null = null;
+  private previewRenderer: PreviewRenderer | null = null;
 
   private static CUSTOM_PRESETS_KEY= 'arbol-custom-presets';
 
@@ -468,7 +469,13 @@ export class SettingsEditor {
 
   setPreviewArea(area: HTMLElement): void {
     this.previewArea = area;
-    this.updatePreview();
+    if (this.previewRenderer) {
+      this.previewRenderer.destroy();
+    }
+    const opts = this.renderer.getOptions();
+    const categories = this.categoryStore?.getAll() ?? [];
+    this.previewRenderer = new PreviewRenderer(area, { ...opts, categories } as Partial<RendererOptions>);
+    this.previewRenderer.render();
   }
 
   onBuild(callback: () => void): void {
@@ -1355,6 +1362,7 @@ export class SettingsEditor {
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.checked } as Partial<RendererOptions>);
         this.rerenderCallback();
+        this.updatePreview();
         updateModifiedState(input.checked);
       });
 
@@ -1396,6 +1404,7 @@ export class SettingsEditor {
         }
         this.renderer.updateOptions({ [setting.key]: val } as Partial<RendererOptions>);
         this.rerenderCallback();
+        this.updatePreview();
         updateModifiedState(val);
       });
 
@@ -1416,6 +1425,7 @@ export class SettingsEditor {
       select.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: select.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        this.updatePreview();
         updateModifiedState(select.value);
       });
 
@@ -1429,6 +1439,7 @@ export class SettingsEditor {
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        this.updatePreview();
         updateModifiedState(input.value);
       });
 
@@ -1443,6 +1454,7 @@ export class SettingsEditor {
       input.addEventListener('input', () => {
         this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        this.updatePreview();
         updateModifiedState(input.value);
       });
 
@@ -1462,14 +1474,11 @@ export class SettingsEditor {
   }
 
   private updatePreview(): void {
-    if (!this.previewArea) return;
-    this.previewArea.innerHTML = '';
+    if (!this.previewRenderer) return;
     const opts = this.renderer.getOptions();
     const categories = this.categoryStore?.getAll() ?? [];
-    const svg = renderPreview({
-      rendererOptions: { ...opts, categories } as Partial<RendererOptions>,
-    });
-    this.previewArea.appendChild(svg);
+    this.previewRenderer.updateOptions({ ...opts, categories } as Partial<RendererOptions>);
+    this.previewRenderer.render();
   }
 
   destroy(): void {

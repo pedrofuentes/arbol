@@ -1643,7 +1643,7 @@ describe('ChartRenderer', () => {
       previewContainer.remove();
     });
 
-    it('getZoomManager() returns null in preview mode', () => {
+    it('getZoomManager() returns ZoomManager in preview mode (pan/zoom enabled)', () => {
       const previewContainer = document.createElement('div');
       document.body.appendChild(previewContainer);
       const previewRenderer = new ChartRenderer({
@@ -1653,7 +1653,7 @@ describe('ChartRenderer', () => {
         horizontalSpacing: 50,
         preview: true,
       });
-      expect(previewRenderer.getZoomManager()).toBeNull();
+      expect(previewRenderer.getZoomManager()).not.toBeNull();
       previewRenderer.destroy();
       previewContainer.remove();
     });

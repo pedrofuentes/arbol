@@ -34,49 +34,72 @@ export interface PreviewOptions {
   tree?: OrgNode;
 }
 
+function stripPreviewKeys(partial: Partial<RendererOptions>): Partial<RendererOptions> {
+  const { container: _, preview: __, ...rest } = partial as
+    Partial<RendererOptions> & Record<string, unknown>;
+  return rest as Partial<RendererOptions>;
+}
+
 /**
- * Renders a preview SVG using the full ChartRenderer in preview mode.
- * Uses the same rendering code as the main chart — zero divergence.
+ * Renders a one-shot preview SVG using ChartRenderer in preview mode.
+ * For live-updating previews, use PreviewRenderer instead.
  */
 export function renderPreview(options?: PreviewOptions): SVGSVGElement {
   const tree = options?.tree ?? PREVIEW_TREE;
   const partial = options?.rendererOptions ?? {};
 
-  // Temporary off-screen container for ChartRenderer
   const container = document.createElement('div');
   container.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:800px;height:600px;';
   document.body.appendChild(container);
-
-  // Strip container and preview from partial — we control those ourselves
-  const { container: _, preview: __, ...rendererOverrides } = partial as
-    Partial<RendererOptions> & Record<string, unknown>;
 
   const renderer = new ChartRenderer({
     container,
     nodeWidth: 160,
     nodeHeight: 34,
     horizontalSpacing: 50,
-    ...rendererOverrides,
+    ...stripPreviewKeys(partial),
     preview: true,
   });
 
   renderer.render(tree);
-
   const svg = renderer.getSvgElement();
-
-  // Auto-fit viewBox from layout bounding box
-  const layout = renderer.getLastLayout();
-  if (layout) {
-    const padding = 8;
-    const { minX, minY, width, height } = layout.boundingBox;
-    svg.setAttribute('viewBox', `${minX - padding} ${minY - padding} ${width + padding * 2} ${height + padding * 2}`);
-  }
-
   svg.style.maxHeight = '100%';
 
-  // Detach SVG from the temporary container and clean up
   svg.remove();
   document.body.removeChild(container);
 
   return svg;
+}
+
+/**
+ * Persistent preview renderer that wraps a ChartRenderer in preview mode.
+ * Supports live updates via updateOptions() + render().
+ */
+export class PreviewRenderer {
+  private renderer: ChartRenderer;
+  private tree: OrgNode;
+
+  constructor(container: HTMLElement, options?: Partial<RendererOptions>, tree?: OrgNode) {
+    this.tree = tree ?? PREVIEW_TREE;
+    this.renderer = new ChartRenderer({
+      container,
+      nodeWidth: 160,
+      nodeHeight: 34,
+      horizontalSpacing: 50,
+      ...stripPreviewKeys(options ?? {}),
+      preview: true,
+    });
+  }
+
+  render(): void {
+    this.renderer.render(this.tree);
+  }
+
+  updateOptions(opts: Partial<RendererOptions>): void {
+    this.renderer.updateOptions(stripPreviewKeys(opts));
+  }
+
+  destroy(): void {
+    this.renderer.destroy();
+  }
 }

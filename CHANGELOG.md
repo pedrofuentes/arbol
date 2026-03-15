@@ -10,7 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Live preview strip** — shared preview area at the top of the settings modal content, visible on all tabs except Backup; per-tab contextual hint text updates automatically on tab switch
 - **Preview renderer** — new `src/renderer/preview-renderer.ts` that uses the full `ChartRenderer` in preview mode — zero rendering divergence with the main chart
-- Preview mode (`preview: true`) on `ChartRenderer` disables zoom, keyboard nav, click handlers, legend, and ARIA tree attributes
+- Preview mode (`preview: true`) on `ChartRenderer` disables keyboard nav, click handlers, legend, and ARIA tree attributes; pan/zoom remains enabled
+- Preview area has fixed 225px height with pan/zoom support for navigating the mini chart
+- Preview updates live on every individual control change (sliders, colors, selects, text inputs), not just presets
+- Persistent `PreviewRenderer` class avoids recreating the renderer on each update
 - `getSvgElement()` API on `ChartRenderer` to access the underlying SVG element
 - Preview SVG renders live inside the preview strip and updates whenever settings change
 - New `getPreviewArea()` and `setPreviewHint()` APIs on `SettingsModal`
@@ -21,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Settings modal content area wrapped in `.settings-content-column` flex container to support the fixed preview strip above scrollable settings
 
 ### Testing
-- 1,788 tests across 70 files — all passing
+- 1,789 tests across 70 files — all passing
 
 ## [3.1.1] — 2026-03-15
 

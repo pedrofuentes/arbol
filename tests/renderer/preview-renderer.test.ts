@@ -12,9 +12,10 @@ describe('PreviewRenderer', () => {
       expect(svg).toBeInstanceOf(SVGSVGElement);
     });
 
-    it('has viewBox attribute', () => {
+    it('has width and height 100%', () => {
       const svg = renderPreview();
-      expect(svg.getAttribute('viewBox')).toBeTruthy();
+      expect(svg.getAttribute('width')).toBe('100%');
+      expect(svg.getAttribute('height')).toBe('100%');
     });
 
     it('has class preview-svg', () => {

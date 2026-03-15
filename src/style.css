@@ -1792,7 +1792,7 @@ textarea:focus-visible {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100px;
+  height: 225px;
   position: relative;
   z-index: 1;
 }
