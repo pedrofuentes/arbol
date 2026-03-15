@@ -120,6 +120,23 @@ describe('ZoomManager', () => {
     gEl.getBBox = originalGetBBox;
   });
 
+  it('fitToContent() centers vertically in viewport', () => {
+    const zm = new ZoomManager(svgEl, gEl);
+    gEl.getBBox = () => ({ x: 0, y: 0, width: 400, height: 300 }) as DOMRect;
+    Object.defineProperty(svgEl, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(svgEl, 'clientHeight', { value: 600, configurable: true });
+
+    zm.fitToContent();
+
+    const t = zm.getCurrentTransform();
+    // scale = min((800-80)/400, (600-80)/300, 1.5) = min(1.8, 1.733, 1.5) = 1.5
+    expect(t.k).toBe(1.5);
+    // tx = 800/2 - (0 + 400/2) * 1.5 = 400 - 300 = 100
+    expect(t.x).toBe(100);
+    // ty = 600/2 - (0 + 300/2) * 1.5 = 300 - 225 = 75
+    expect(t.y).toBe(75);
+  });
+
   it('getRelativeZoomPercent() reflects manual zoom as absolute percentage', () => {
     const zm = new ZoomManager(svgEl, gEl);
 
@@ -133,10 +150,9 @@ describe('ZoomManager', () => {
   it('centerAtRealSize() does not throw when getBBox is unavailable', () => {
     const zm = new ZoomManager(svgEl, gEl);
     expect(() => zm.centerAtRealSize()).not.toThrow();
-    expect(() => zm.centerAtRealSize(20)).not.toThrow();
   });
 
-  it('centerAtRealSize() sets scale to 1 and centers horizontally', () => {
+  it('centerAtRealSize() sets scale to 1 and centers horizontally and vertically', () => {
     const zm = new ZoomManager(svgEl, gEl);
     gEl.getBBox = () => ({ x: -200, y: 0, width: 400, height: 300 }) as DOMRect;
     Object.defineProperty(svgEl, 'clientWidth', { value: 800, configurable: true });
@@ -146,24 +162,26 @@ describe('ZoomManager', () => {
 
     const t = zm.getCurrentTransform();
     expect(t.k).toBe(1);
-    // Chart center is at x=-200 + 400/2 = 0, viewport center is 400
-    // tx = 800/2 - ((-200) + 400/2) = 400 - 0 = 400
+    // Horizontal: tx = 800/2 - ((-200) + 400/2) = 400 - 0 = 400
     expect(t.x).toBe(400);
-    // ty = padding(40) - bbox.y(0) = 40
-    expect(t.y).toBe(40);
+    // Vertical: ty = 600/2 - (0 + 300/2) = 300 - 150 = 150
+    expect(t.y).toBe(150);
     expect(zm.getRelativeZoomPercent()).toBe(100);
   });
 
-  it('centerAtRealSize() respects custom padding', () => {
+  it('centerAtRealSize() centers tall content vertically', () => {
     const zm = new ZoomManager(svgEl, gEl);
-    gEl.getBBox = () => ({ x: 0, y: 0, width: 400, height: 300 }) as DOMRect;
+    gEl.getBBox = () => ({ x: 0, y: -100, width: 200, height: 800 }) as DOMRect;
     Object.defineProperty(svgEl, 'clientWidth', { value: 800, configurable: true });
     Object.defineProperty(svgEl, 'clientHeight', { value: 600, configurable: true });
 
-    zm.centerAtRealSize(20);
+    zm.centerAtRealSize();
 
     const t = zm.getCurrentTransform();
     expect(t.k).toBe(1);
-    expect(t.y).toBe(20);
+    // Horizontal: tx = 800/2 - (0 + 200/2) = 400 - 100 = 300
+    expect(t.x).toBe(300);
+    // Vertical: ty = 600/2 - (-100 + 800/2) = 300 - 300 = 0
+    expect(t.y).toBe(0);
   });
 });
