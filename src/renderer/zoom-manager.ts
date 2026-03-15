@@ -6,6 +6,11 @@ const MAX_ZOOM = 4;
 const DEFAULT_FIT_PADDING = 40;
 const MAX_FIT_SCALE = 1.5;
 
+export interface ZoomManagerOptions {
+  /** When true, programmatic zoom (fit, reset, center) works but user interaction (wheel, drag, touch) is disabled. */
+  programmaticOnly?: boolean;
+}
+
 export class ZoomManager {
   private svg: SVGSVGElement;
   private g: SVGGElement;
@@ -13,7 +18,7 @@ export class ZoomManager {
   private svgSelection: Selection<SVGSVGElement, unknown, null, undefined>;
   private zoomListeners: Set<() => void> = new Set();
 
-  constructor(svg: SVGSVGElement, g: SVGGElement) {
+  constructor(svg: SVGSVGElement, g: SVGGElement, options?: ZoomManagerOptions) {
     this.svg = svg;
     this.g = g;
     this.svgSelection = select(svg);
@@ -34,6 +39,16 @@ export class ZoomManager {
       });
 
     this.svgSelection.call(this.zoom);
+
+    if (options?.programmaticOnly) {
+      this.svgSelection
+        .on('mousedown.zoom', null)
+        .on('wheel.zoom', null)
+        .on('touchstart.zoom', null)
+        .on('touchmove.zoom', null)
+        .on('touchend.zoom', null)
+        .on('dblclick.zoom', null);
+    }
   }
 
   onZoom(listener: () => void): () => void {

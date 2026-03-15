@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.1] — 2026-03-15
+
+### Fixed
+- **Preview zoom regression** — restored Fit, Reset, zoom percentage, drag-to-pan, and scroll-to-zoom in settings preview (broken in v3.4.0 when ZoomManager was set to null for preview mode)
+- **SettingsEditor cleanup** — `destroy()` now properly calls `previewRenderer.destroy()` to clean up D3 event listeners
+
+### Added
+- **ZoomManager `programmaticOnly` option** — allows creating zoom behavior for programmatic use only (no user interaction), available for future use
+
+### Testing
+- 1,945 tests across 74 files — all passing
+- 14 new tests: zoom-manager programmaticOnly (11), chart-renderer preview (1), settings-editor preview+destroy (2)
+
 ## [3.4.0] — 2026-03-15
 
 ### Security
