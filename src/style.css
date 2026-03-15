@@ -1777,6 +1777,51 @@ textarea:focus-visible {
 .settings-content::-webkit-scrollbar-track { background: transparent; }
 .settings-content::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: var(--radius-full); }
 
+/* Setting rows — row-based layout for settings panels */
+.setting-section-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.setting-section-desc { font-size: 12px; color: var(--text-tertiary); margin-bottom: 20px; }
+
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border-subtle);
+}
+.setting-row:last-child { border-bottom: none; }
+
+.setting-info { }
+.setting-label { font-size: 13px; font-weight: var(--font-medium); }
+.setting-desc { font-size: 11px; color: var(--text-tertiary); }
+
+.setting-control { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+.setting-value {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-tertiary);
+  width: 38px; text-align: right;
+}
+
+.settings-content input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  width: 120px; height: 4px;
+  background: var(--bg-hover); border-radius: 2px; outline: none;
+}
+.settings-content input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 4px rgba(0,0,0,0.3); cursor: pointer;
+}
+.settings-content input[type="range"]::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 4px rgba(0,0,0,0.3); cursor: pointer;
+}
+
+.color-swatch-input {
+  width: 28px; height: 28px; border-radius: var(--radius-sm);
+  border: 2px solid var(--border-default); cursor: pointer;
+  padding: 0; -webkit-appearance: none; appearance: none; background: none;
+}
+.color-swatch-input::-webkit-color-swatch-wrapper { padding: 0; }
+.color-swatch-input::-webkit-color-swatch { border: none; border-radius: 2px; }
+
 .settings-modal-footer {
   display: flex; justify-content: flex-end; gap: var(--space-2);
   padding: var(--space-3) var(--space-5);
