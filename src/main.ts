@@ -448,7 +448,7 @@ async function main(): Promise<void> {
         if (k === 'categories') return false;
         return settingsSnapshot![k] !== currentOpts[k];
       });
-      if (hasChanges && settingsEditorInstance) {
+      if (hasChanges && settingsEditorInstance && !settingsEditorInstance.matchesExistingPreset()) {
         const name = await showInputDialog({
           title: t('settings.save_preset_prompt_title'),
           label: t('settings.save_preset_prompt_label'),

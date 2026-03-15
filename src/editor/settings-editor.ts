@@ -489,6 +489,20 @@ export class SettingsEditor {
     );
   }
 
+  matchesExistingPreset(): boolean {
+    const opts = this.renderer.getOptions();
+    const allPresets = [...COMBINED_PRESETS, ...this.loadCustomPresets()];
+    return allPresets.some((p) =>
+      opts.cardFill === p.colors.cardFill &&
+      opts.cardStroke === p.colors.cardStroke &&
+      opts.linkColor === p.colors.linkColor &&
+      opts.cardStrokeWidth === p.colors.cardStrokeWidth &&
+      opts.icContainerFill === p.colors.icContainerFill &&
+      opts.nodeWidth === p.sizes.nodeWidth &&
+      opts.nodeHeight === p.sizes.nodeHeight,
+    );
+  }
+
   saveCurrentAsPreset(name: string): void {
     const opts = this.renderer.getOptions();
     const newPreset: CombinedPreset = {
