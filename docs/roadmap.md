@@ -8,6 +8,33 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
+## 🚀 v3.4.0 — Code Review Remediation (All Critical + High)
+
+### Phase 32 — Security, Performance & Architecture
+- [x] Tree validation on bundle import — prevents DoS via malicious `.arbol.json`
+- [x] Upgrade jsdom 28→29 — resolves 6 undici CVEs
+- [x] O(1) dirty tracking via mutation version counter (was JSON.stringify)
+- [x] O(n) descendant counts pre-computed (was O(n²) per-node)
+- [x] O(1) bulk operation lookups via pre-computed maps
+- [x] ZoomManager memory leak fix — skip in preview, add destroy()
+- [x] ADVISORS_PER_ROW constant extracted from magic numbers
+- [x] Chart switch sanitization — persist repaired charts to IndexedDB
+- [x] Bulk operations — collect all nodes before mutation loop
+- [x] isM1() documented with 9 edge case tests
+- [x] MappingStore now extends EventEmitter
+- [x] Standardized all store event payloads to void
+
+### Phase 33 — Architecture Refactors
+- [x] main.ts decomposed: 1,931→900 lines into 5 init modules
+- [x] SettingsEditor extracted: 1,517→736 lines into 4 sub-panels
+- [x] DOM builder utility created + 4 components refactored
+
+### Testing
+- [x] **1,931 tests across 74 files** — all passing
+- [x] 122 new tests across 12 files
+
+---
+
 ## 🚀 v3.3.1 — Code Review Quick Wins
 
 ### Phase 31 — Resilience & Error Handling Fixes
