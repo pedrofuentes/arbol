@@ -790,5 +790,171 @@ describe('ChartStore', () => {
         expect(versions).toHaveLength(0);
       });
     });
+
+    // --- Tree validation (Issue 1) ---
+
+    describe('tree validation on import', () => {
+      it('importChartAsNew rejects bundle with invalid workingTree (missing name)', async () => {
+        const bundle = makeBundle();
+        bundle.chart.workingTree = { id: 'r', title: 'CEO' } as any;
+        await expect(store.importChartAsNew(bundle)).rejects.toThrow();
+      });
+
+      it('importChartAsNew rejects bundle with invalid workingTree (non-object)', async () => {
+        const bundle = makeBundle();
+        bundle.chart.workingTree = 'not a tree' as any;
+        await expect(store.importChartAsNew(bundle)).rejects.toThrow();
+      });
+
+      it('importChartAsNew rejects bundle with excessively deep tree', async () => {
+        // Build a tree with depth > 100
+        let tree: any = { id: 'leaf', name: 'Leaf', title: 'IC' };
+        for (let i = 0; i < 110; i++) {
+          tree = { id: `n${i}`, name: `N${i}`, title: 'Mgr', children: [tree] };
+        }
+        const bundle = makeBundle();
+        bundle.chart.workingTree = tree;
+        await expect(store.importChartAsNew(bundle)).rejects.toThrow(/depth/i);
+      });
+
+      it('importChartAsNew rejects bundle with invalid version tree', async () => {
+        const bundle = makeBundle({
+          versions: [
+            {
+              name: 'bad-version',
+              createdAt: '2026-01-01T00:00:00.000Z',
+              tree: { id: 'r', title: 'CEO' } as any, // missing name
+            },
+          ],
+        });
+        await expect(store.importChartAsNew(bundle)).rejects.toThrow();
+      });
+
+      it('importChartAsNew does not persist anything when validation fails', async () => {
+        const chartsBefore = await store.getCharts();
+        const bundle = makeBundle();
+        bundle.chart.workingTree = 'invalid' as any;
+        await expect(store.importChartAsNew(bundle)).rejects.toThrow();
+        const chartsAfter = await store.getCharts();
+        expect(chartsAfter).toHaveLength(chartsBefore.length);
+      });
+
+      it('importChartReplaceCurrent rejects bundle with invalid workingTree', async () => {
+        const bundle = makeBundle();
+        bundle.chart.workingTree = { id: 'r', title: 'CEO' } as any;
+        await expect(store.importChartReplaceCurrent(bundle)).rejects.toThrow();
+      });
+
+      it('importChartReplaceCurrent rejects bundle with invalid version tree', async () => {
+        const bundle = makeBundle({
+          versions: [
+            {
+              name: 'bad',
+              createdAt: '2026-01-01T00:00:00.000Z',
+              tree: { id: '', name: 'Empty ID', title: 'CEO' }, // empty id
+            },
+          ],
+        });
+        await expect(store.importChartReplaceCurrent(bundle)).rejects.toThrow();
+      });
+
+      it('importChartReplaceCurrent does not modify chart when validation fails', async () => {
+        const originalChart = await store.getActiveChart();
+        const originalTree = originalChart!.workingTree.name;
+        const bundle = makeBundle();
+        bundle.chart.workingTree = null as any;
+        await expect(store.importChartReplaceCurrent(bundle)).rejects.toThrow();
+        const afterChart = await store.getActiveChart();
+        expect(afterChart!.workingTree.name).toBe(originalTree);
+      });
+
+      it('importChartAsNew accepts a valid bundle', async () => {
+        const bundle = makeBundle();
+        const chart = await store.importChartAsNew(bundle);
+        expect(chart.workingTree.name).toBe('Root');
+      });
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // switchChart sanitization persistence (Issue 2)
+  // ---------------------------------------------------------------------------
+
+  describe('switchChart sanitization persistence', () => {
+    beforeEach(async () => {
+      await store.initialize();
+    });
+
+    it('persists sanitized chart back to IndexedDB when fields are repaired', async () => {
+      // Manually insert a corrupt chart into IndexedDB
+      const corruptChart = {
+        id: 'corrupt-chart',
+        name: 'Corrupt',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        workingTree: { id: 123, name: 'Root', title: 'CEO' } as any, // id should be string
+        categories: 'not-an-array' as any, // should be array
+      };
+      await db.putChart(corruptChart as any);
+
+      // switchChart should sanitize and persist the repaired chart
+      const chart = await store.switchChart('corrupt-chart');
+      expect(chart.categories).toEqual([]);
+      expect(typeof chart.workingTree.id).toBe('string');
+
+      // Re-read directly from DB to verify it was persisted
+      const fromDb = await db.getChart('corrupt-chart');
+      expect(Array.isArray(fromDb!.categories)).toBe(true);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // isDirty mutation version fast path (Issue 3)
+  // ---------------------------------------------------------------------------
+
+  describe('isDirty mutation version fast path', () => {
+    beforeEach(async () => {
+      await store.initialize();
+    });
+
+    it('isDirty returns false when mutation version matches saved version', async () => {
+      const tree = makeTree({ name: 'Saved' });
+      await store.saveWorkingTree(tree, [], 42);
+      expect(store.isDirty(tree, 42)).toBe(false);
+    });
+
+    it('isDirty returns true when mutation version differs from saved version', async () => {
+      const tree = makeTree({ name: 'Saved' });
+      await store.saveWorkingTree(tree, [], 42);
+      expect(store.isDirty(tree, 43)).toBe(true);
+    });
+
+    it('isDirty falls back to JSON comparison when no mutation version provided', async () => {
+      const tree = makeTree({ name: 'Saved' });
+      await store.saveWorkingTree(tree, []);
+      // Same tree content → not dirty
+      expect(store.isDirty(makeTree({ name: 'Saved' }))).toBe(false);
+      // Different tree content → dirty
+      expect(store.isDirty(makeTree({ name: 'Changed' }))).toBe(true);
+    });
+
+    it('saveVersion with mutation version enables fast path', async () => {
+      const tree = makeTree({ name: 'Versioned' });
+      await store.saveVersion('v1', tree, 10);
+      expect(store.isDirty(tree, 10)).toBe(false);
+      expect(store.isDirty(tree, 11)).toBe(true);
+    });
+
+    it('fast path resets to JSON fallback after switchChart', async () => {
+      // Save with mutation version
+      await store.saveWorkingTree(makeTree(), [], 5);
+      expect(store.isDirty(makeTree(), 5)).toBe(false);
+
+      // switchChart doesn't know mutation version — should reset to JSON fallback
+      const otherChart = await store.createChart('Other');
+      await store.switchChart(otherChart.id);
+      // JSON fallback: same content → false
+      expect(store.isDirty(otherChart.workingTree)).toBe(false);
+    });
   });
 });

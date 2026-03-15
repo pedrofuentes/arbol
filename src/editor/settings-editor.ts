@@ -1,33 +1,17 @@
 import { ChartRenderer, RendererOptions } from '../renderer/chart-renderer';
-import { CHART_THEME_PRESETS, ChartThemePreset, addCustomPreset } from '../store/theme-presets';
 import { PreviewRenderer } from '../renderer/preview-renderer';
-import { SettingsStore, type PersistableSettings } from '../store/settings-store';
+import { SettingsStore } from '../store/settings-store';
 import { CategoryStore } from '../store/category-store';
-import { generateId } from '../utils/id';
-import { showConfirmDialog } from '../ui/confirm-dialog';
-import { showToast } from '../ui/toast';
 import type { ChartDB } from '../store/chart-db';
-import {
-  createBackup,
-  downloadBackup,
-  readBackupFile,
-  restoreFullReplace,
-  restoreMerge,
-  getBackupSummary,
-} from '../store/backup-manager';
-import { showRestoreStrategyDialog } from '../ui/restore-dialog';
 import { type IStorage, browserStorage } from '../utils/storage';
-import { detectArbolFileType } from '../utils/file-type';
 import { t } from '../i18n';
+import { PresetPanel } from './settings/preset-panel';
+import { CategoryPanel } from './settings/category-panel';
+import { SettingsIOPanel } from './settings/settings-io';
+import { BackupPanel } from './settings/backup-panel';
 
-const ARBOL_STORAGE_KEYS = [
-  'arbol-org-data',
-  'arbol-settings',
-  'arbol-categories',
-  'arbol-csv-mappings',
-  'arbol-custom-presets',
-  'arbol-theme',
-];
+export type { CombinedPreset } from './settings/preset-panel';
+export { COMBINED_PRESETS, LAYOUT_PRESETS } from './settings/preset-panel';
 
 interface SettingDef {
   key: keyof RendererOptions;
@@ -45,14 +29,6 @@ interface SettingGroup {
   title: string;
   description?: string;
   settings: SettingDef[];
-}
-
-export interface CombinedPreset {
-  id: string;
-  name: string;
-  colors: ChartThemePreset['colors'];
-  sizes: Partial<RendererOptions>;
-  isCustom?: boolean;
 }
 
 const SETTING_GROUPS: SettingGroup[] = [
@@ -322,114 +298,6 @@ const DEFAULT_SETTINGS: Record<string, number | string | boolean> = {
   legendRows: 0,
 };
 
-export const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<RendererOptions> }[] = [
-  {
-    name: 'Compact',
-    icon: '▪',
-    sizes: {
-      nodeWidth: 110,
-      nodeHeight: 22,
-      horizontalSpacing: 30,
-      branchSpacing: 10,
-      topVerticalSpacing: 5,
-      bottomVerticalSpacing: 12,
-      icNodeWidth: 99,
-      icGap: 4,
-      icContainerPadding: 6,
-      palTopGap: 7,
-      palBottomGap: 7,
-      palRowGap: 4,
-      palCenterGap: 50,
-      nameFontSize: 8,
-      titleFontSize: 7,
-      legendFontSize: 8,
-      textPaddingTop: 4,
-      textGap: 1,
-    },
-  },
-  {
-    name: 'Default',
-    icon: '▫',
-    sizes: {
-      nodeWidth: 160,
-      nodeHeight: 34,
-      horizontalSpacing: 50,
-      branchSpacing: 20,
-      topVerticalSpacing: 10,
-      bottomVerticalSpacing: 20,
-      icNodeWidth: 141,
-      icGap: 6,
-      icContainerPadding: 10,
-      palTopGap: 12,
-      palBottomGap: 12,
-      palRowGap: 6,
-      palCenterGap: 70,
-      nameFontSize: 11,
-      titleFontSize: 9,
-      legendFontSize: 12,
-      textPaddingTop: 6,
-      textGap: 2,
-    },
-  },
-  {
-    name: 'Spacious',
-    icon: '▢',
-    sizes: {
-      nodeWidth: 190,
-      nodeHeight: 42,
-      horizontalSpacing: 60,
-      branchSpacing: 26,
-      topVerticalSpacing: 14,
-      bottomVerticalSpacing: 26,
-      icNodeWidth: 167,
-      icGap: 8,
-      icContainerPadding: 12,
-      palTopGap: 16,
-      palBottomGap: 16,
-      palRowGap: 8,
-      palCenterGap: 85,
-      nameFontSize: 13,
-      titleFontSize: 11,
-      legendFontSize: 14,
-      textPaddingTop: 8,
-      textGap: 3,
-    },
-  },
-  {
-    name: 'Presentation',
-    icon: '▣',
-    sizes: {
-      nodeWidth: 220,
-      nodeHeight: 50,
-      horizontalSpacing: 70,
-      branchSpacing: 32,
-      topVerticalSpacing: 18,
-      bottomVerticalSpacing: 32,
-      icNodeWidth: 194,
-      icGap: 10,
-      icContainerPadding: 14,
-      palTopGap: 20,
-      palBottomGap: 20,
-      palRowGap: 10,
-      palCenterGap: 100,
-      nameFontSize: 15,
-      titleFontSize: 12,
-      legendFontSize: 16,
-      textPaddingTop: 10,
-      textGap: 3,
-    },
-  },
-];
-
-const DEFAULT_LAYOUT_SIZES = LAYOUT_PRESETS.find((p) => p.name === 'Default')!.sizes;
-
-export const COMBINED_PRESETS: CombinedPreset[] = CHART_THEME_PRESETS.map((theme) => ({
-  id: theme.id,
-  name: theme.name,
-  colors: theme.colors,
-  sizes: DEFAULT_LAYOUT_SIZES,
-}));
-
 function sectionIdFromTitle(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 }
@@ -445,8 +313,10 @@ export class SettingsEditor {
   private onBuildCallback: (() => void) | null = null;
   private previewArea: HTMLElement | null = null;
   private previewRenderer: PreviewRenderer | null = null;
-
-  private static CUSTOM_PRESETS_KEY= 'arbol-custom-presets';
+  private presetPanel: PresetPanel;
+  private categoryPanel: CategoryPanel | null = null;
+  private settingsIOPanel: SettingsIOPanel;
+  private backupPanel: BackupPanel | null = null;
 
   constructor(
     container: HTMLElement,
@@ -464,6 +334,38 @@ export class SettingsEditor {
     this.categoryStore = categoryStore ?? null;
     this.chartDB = chartDB ?? null;
     this.storage = storage;
+
+    const rebuildCallback = () => this.build();
+
+    this.presetPanel = new PresetPanel({
+      renderer,
+      storage: this.storage,
+      rerenderCallback,
+      rebuildCallback,
+    });
+
+    if (categoryStore) {
+      this.categoryPanel = new CategoryPanel({
+        categoryStore,
+        rerenderCallback,
+        rebuildCallback,
+      });
+    }
+
+    this.settingsIOPanel = new SettingsIOPanel({
+      settingsStore: settingsStore ?? null,
+      renderer,
+      rerenderCallback,
+      rebuildCallback,
+    });
+
+    if (chartDB) {
+      this.backupPanel = new BackupPanel({
+        chartDB,
+        storage: this.storage,
+      });
+    }
+
     this.build();
   }
 
@@ -509,87 +411,12 @@ export class SettingsEditor {
     this.onBuildCallback = callback;
   }
 
-  private loadCustomPresets(): CombinedPreset[] {
-    try {
-      const raw = this.storage.getItem(SettingsEditor.CUSTOM_PRESETS_KEY);
-      if (!raw) return [];
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return [];
-      return parsed.map((p: Record<string, unknown>) => ({
-        ...p,
-        isCustom: true,
-      })) as CombinedPreset[];
-    } catch {
-      return [];
-    }
-  }
-
-  private saveCustomPresets(presets: CombinedPreset[]): void {
-    this.storage.setItem(
-      SettingsEditor.CUSTOM_PRESETS_KEY,
-      JSON.stringify(presets.map(({ id, name, colors, sizes }) => ({ id, name, colors, sizes }))),
-    );
-  }
-
   matchesExistingPreset(): boolean {
-    const opts = this.renderer.getOptions();
-    const allPresets = [...COMBINED_PRESETS, ...this.loadCustomPresets()];
-    return allPresets.some((p) =>
-      opts.cardFill === p.colors.cardFill &&
-      opts.cardStroke === p.colors.cardStroke &&
-      opts.linkColor === p.colors.linkColor &&
-      opts.cardStrokeWidth === p.colors.cardStrokeWidth &&
-      opts.icContainerFill === p.colors.icContainerFill &&
-      opts.nodeWidth === p.sizes.nodeWidth &&
-      opts.nodeHeight === p.sizes.nodeHeight,
-    );
+    return this.presetPanel.matchesExistingPreset();
   }
 
   saveCurrentAsPreset(name: string): void {
-    const opts = this.renderer.getOptions();
-    const newPreset: CombinedPreset = {
-      id: 'custom-' + generateId(),
-      name,
-      colors: {
-        cardFill: String(opts.cardFill),
-        cardStroke: String(opts.cardStroke),
-        cardStrokeWidth: Number(opts.cardStrokeWidth),
-        linkColor: String(opts.linkColor),
-        linkWidth: Number(opts.linkWidth),
-        icContainerFill: String(opts.icContainerFill),
-        nameColor: String(opts.nameColor),
-        titleColor: String(opts.titleColor),
-      },
-      sizes: {
-        nodeWidth: Number(opts.nodeWidth),
-        nodeHeight: Number(opts.nodeHeight),
-        horizontalSpacing: Number(opts.horizontalSpacing),
-        branchSpacing: Number(opts.branchSpacing),
-        topVerticalSpacing: Number(opts.topVerticalSpacing),
-        bottomVerticalSpacing: Number(opts.bottomVerticalSpacing),
-        icNodeWidth: Number(opts.icNodeWidth),
-        icGap: Number(opts.icGap),
-        icContainerPadding: Number(opts.icContainerPadding),
-        palTopGap: Number(opts.palTopGap),
-        palBottomGap: Number(opts.palBottomGap),
-        palRowGap: Number(opts.palRowGap),
-        palCenterGap: Number(opts.palCenterGap),
-        nameFontSize: Number(opts.nameFontSize),
-        titleFontSize: Number(opts.titleFontSize),
-        textPaddingTop: Number(opts.textPaddingTop),
-        textGap: Number(opts.textGap),
-      },
-      isCustom: true,
-    };
-    const customs = this.loadCustomPresets();
-    customs.push(newPreset);
-    this.saveCustomPresets(customs);
-    this.build();
-  }
-
-  private deleteCustomPreset(id: string): void {
-    const presets = this.loadCustomPresets().filter((p) => p.id !== id);
-    this.saveCustomPresets(presets);
+    this.presetPanel.saveCurrentAsPreset(name);
   }
 
   private createAccordionSection(
@@ -656,14 +483,14 @@ export class SettingsEditor {
 
     // Unified Presets section
     this.container.appendChild(
-      this.createAccordionSection('presets', 'Presets', () => this.buildPresetsContent()),
+      this.createAccordionSection('presets', 'Presets', () => this.presetPanel.build()),
     );
 
     // Node Categories section
-    if (this.categoryStore) {
+    if (this.categoryPanel) {
       this.container.appendChild(
         this.createAccordionSection('categories', 'Node Categories', () =>
-          this.buildCategoriesContent(),
+          this.categoryPanel!.build(),
         ),
       );
     }
@@ -696,627 +523,19 @@ export class SettingsEditor {
     }
 
     // Settings Import/Export section
-    const ioBtnGroup = document.createElement('div');
-    ioBtnGroup.style.cssText = 'display:flex;gap:8px;';
-
-    const exportSettingsBtn = document.createElement('button');
-    exportSettingsBtn.className = 'btn btn-secondary';
-    exportSettingsBtn.style.cssText = 'flex:1;';
-    exportSettingsBtn.textContent = '💾 Export';
-    exportSettingsBtn.addEventListener('click', () => {
-      if (this.settingsStore) {
-        const currentOpts = this.renderer.getOptions();
-        this.settingsStore.saveImmediate(currentOpts as Partial<PersistableSettings>);
-        this.settingsStore.exportToFile('my-chart-theme');
-      }
-    });
-    ioBtnGroup.appendChild(exportSettingsBtn);
-
-    const importSettingsBtn = document.createElement('button');
-    importSettingsBtn.className = 'btn btn-secondary';
-    importSettingsBtn.style.cssText = 'flex:1;';
-    importSettingsBtn.textContent = '📂 Import';
-    importSettingsBtn.addEventListener('click', () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      input.style.display = 'none';
-      input.addEventListener('change', () => {
-        const file = input.files?.[0];
-        if (!file || !this.settingsStore) return;
-        if (file.size > 1 * 1024 * 1024) {
-          showToast('Settings file too large (max 1MB).', 'error');
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            const raw = JSON.parse(reader.result as string);
-
-            const fileType = detectArbolFileType(raw);
-            if (fileType === 'backup') {
-              showToast(t('settings.wrong_file_for_import_settings_backup'), 'error');
-              return;
-            }
-            if (fileType === 'chart-bundle') {
-              showToast(t('settings.wrong_file_for_import_settings_chart'), 'error');
-              return;
-            }
-            if (fileType === 'org-tree') {
-              showToast(t('settings.wrong_file_for_import_settings_org'), 'error');
-              return;
-            }
-
-            const settings = this.settingsStore!.importFromFile(reader.result as string);
-            this.renderer.updateOptions(settings as unknown as Partial<RendererOptions>);
-
-            const presetName = raw.name || file.name.replace(/\.json$/i, '');
-            const presetId = 'custom-' + presetName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            addCustomPreset({
-              id: presetId,
-              name: '⭐ ' + presetName,
-              description: 'Imported custom theme',
-              colors: {
-                cardFill: settings.cardFill,
-                cardStroke: settings.cardStroke,
-                cardStrokeWidth: settings.cardStrokeWidth,
-                linkColor: settings.linkColor,
-                linkWidth: settings.linkWidth,
-                icContainerFill: settings.icContainerFill,
-                nameColor: settings.nameColor,
-                titleColor: settings.titleColor,
-              },
-            });
-
-            this.rerenderCallback();
-            this.build();
-          } catch (e) {
-            showToast(`Import failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
-          }
-        };
-        reader.onerror = () => {
-          showToast(t('error.file_read_failed'), 'error');
-        };
-        reader.readAsText(file);
-      });
-      document.body.appendChild(input);
-      input.click();
-      document.body.removeChild(input);
-    });
-    ioBtnGroup.appendChild(importSettingsBtn);
-
-    this.container.appendChild(this.createAccordionSection('settings-io', 'Settings', ioBtnGroup));
+    this.container.appendChild(
+      this.createAccordionSection('settings-io', 'Settings', this.settingsIOPanel.build()),
+    );
 
     // Backup & Restore section
-    if (this.chartDB) {
-      const backupBtnGroup = document.createElement('div');
-      backupBtnGroup.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
-
-      const backupBtn = document.createElement('button');
-      backupBtn.className = 'btn btn-secondary';
-      backupBtn.textContent = '💾 Create Backup';
-      backupBtn.addEventListener('click', async () => {
-        try {
-          const backup = await createBackup(this.chartDB!);
-          downloadBackup(backup);
-        } catch (e) {
-          showToast(`Backup failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
-        }
-      });
-      backupBtnGroup.appendChild(backupBtn);
-
-      const restoreBtn = document.createElement('button');
-      restoreBtn.className = 'btn btn-secondary';
-      restoreBtn.textContent = '📂 Restore';
-      restoreBtn.addEventListener('click', () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.style.display = 'none';
-        input.addEventListener('change', async () => {
-          const file = input.files?.[0];
-          if (!file) return;
-          try {
-            const text = await file.text();
-            let earlyParsed: unknown;
-            try {
-              earlyParsed = JSON.parse(text);
-            } catch {
-              earlyParsed = null;
-            }
-            if (earlyParsed) {
-              const fileType = detectArbolFileType(earlyParsed);
-              if (fileType === 'settings') {
-                showToast(t('settings.wrong_file_for_restore_settings'), 'error');
-                return;
-              }
-              if (fileType === 'chart-bundle') {
-                showToast(t('settings.wrong_file_for_restore_chart'), 'error');
-                return;
-              }
-              if (fileType === 'org-tree') {
-                showToast(t('settings.wrong_file_for_restore_org'), 'error');
-                return;
-              }
-            }
-
-            const backup = await readBackupFile(file);
-            const summary = getBackupSummary(backup);
-            const date = new Date(summary.createdAt).toLocaleString();
-
-            const strategy = await showRestoreStrategyDialog({
-              chartCount: summary.chartCount,
-              versionCount: summary.versionCount,
-              backupDate: date,
-              appVersion: summary.appVersion,
-            });
-
-            if (strategy === 'cancel') return;
-
-            if (strategy === 'replace') {
-              // Auto-backup before destructive replace
-              try {
-                const autoBackup = await createBackup(this.chartDB!);
-                downloadBackup(autoBackup);
-              } catch {
-                // If auto-backup fails, still let the user proceed
-              }
-
-              const confirmed = await showConfirmDialog({
-                title: 'Replace All Data',
-                message:
-                  'This will permanently replace all existing charts, versions, and settings ' +
-                  'with the backup data. A backup of your current data has been downloaded.\n\n' +
-                  'Continue?',
-                confirmLabel: 'Replace everything',
-                danger: true,
-              });
-              if (!confirmed) return;
-
-              await restoreFullReplace(this.chartDB!, backup);
-              window.location.reload();
-            } else {
-              const result = await restoreMerge(this.chartDB!, backup);
-              await showConfirmDialog({
-                title: 'Merge Complete',
-                message:
-                  `Added ${result.chartsAdded} chart(s) and ${result.versionsAdded} version(s). ` +
-                  `Skipped ${result.chartsSkipped} chart(s) that already existed.\n\n` +
-                  'The page will reload to apply changes.',
-                confirmLabel: 'OK',
-              });
-              window.location.reload();
-            }
-          } catch (e) {
-            showToast(`Restore failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
-          }
-        });
-        document.body.appendChild(input);
-        input.click();
-        document.body.removeChild(input);
-      });
-      backupBtnGroup.appendChild(restoreBtn);
-
-      // Separator before destructive action
-      const separator = document.createElement('hr');
-      separator.className = 'separator';
-      backupBtnGroup.appendChild(separator);
-
-      // Clear All Data button — danger styling matching the mock
-      const clearDataBtn = document.createElement('button');
-      clearDataBtn.className = 'btn';
-      clearDataBtn.textContent = '🗑 Clear All Data';
-      clearDataBtn.setAttribute('aria-label', 'Clear all local data');
-      clearDataBtn.style.cssText =
-        'background:rgba(244,63,94,0.1);color:var(--danger);border:1px solid rgba(244,63,94,0.2);';
-      clearDataBtn.addEventListener('click', async () => {
-        // Auto-backup before destructive clear
-        if (this.chartDB) {
-          try {
-            const autoBackup = await createBackup(this.chartDB);
-            downloadBackup(autoBackup);
-          } catch {
-            // If auto-backup fails, still allow the user to proceed
-          }
-        }
-
-        const confirmed = await showConfirmDialog({
-          title: 'Clear All Data',
-          message:
-            'This will permanently delete all your org charts, versions, settings, themes, and preferences. ' +
-            'This cannot be undone.\n\nAre you sure?',
-          confirmLabel: 'Delete everything',
-          danger: true,
-        });
-        if (confirmed) {
-          for (const key of ARBOL_STORAGE_KEYS) {
-            this.storage.removeItem(key);
-          }
-          indexedDB.deleteDatabase('arbol-db');
-          window.location.reload();
-        }
-      });
-      backupBtnGroup.appendChild(clearDataBtn);
-
+    if (this.backupPanel) {
       this.container.appendChild(
-        this.createAccordionSection('backup-restore', 'Backup & Restore', backupBtnGroup),
+        this.createAccordionSection('backup-restore', 'Backup & Restore', this.backupPanel.build()),
       );
     }
 
     this.updatePreview();
     this.onBuildCallback?.();
-  }
-
-  private buildCategoriesContent(): HTMLElement {
-    const wrapper = document.createElement('div');
-
-    const categories = this.categoryStore!.getAll();
-
-    for (const cat of categories) {
-      const container = document.createElement('div');
-      container.className = 'mb-2';
-      container.style.cssText = 'padding:8px 0;border-bottom:1px solid var(--border-subtle);';
-
-      const row = document.createElement('div');
-      row.className = 'flex-row';
-      row.style.cssText = 'gap:8px;margin-bottom:4px;';
-
-      const colorInput = document.createElement('input');
-      colorInput.type = 'color';
-      colorInput.value = cat.color;
-      colorInput.style.cssText =
-        'width:32px;height:32px;border:2px solid var(--border-default);padding:0;cursor:pointer;flex-shrink:0;border-radius:var(--radius-sm);-webkit-appearance:none;appearance:none;background:none;';
-      colorInput.setAttribute('aria-label', t('settings.category_color_aria', { label: cat.label }));
-
-      const nameColorInput = document.createElement('input');
-      nameColorInput.type = 'color';
-      nameColorInput.value = cat.nameColor ?? '#1e293b';
-      nameColorInput.className = 'category-text-color-group';
-      nameColorInput.style.cssText =
-        'width:22px;height:18px;border:1px solid var(--border-default);padding:0;cursor:pointer;flex-shrink:0;border-radius:3px;-webkit-appearance:none;appearance:none;background:none;';
-      nameColorInput.setAttribute('aria-label', t('settings.category_name_color_aria', { label: cat.label }));
-      nameColorInput.addEventListener('input', () => {
-        this.categoryStore!.update(cat.id, { nameColor: nameColorInput.value });
-        updatePreview();
-        this.rerenderCallback();
-      });
-
-      const titleColorInput = document.createElement('input');
-      titleColorInput.type = 'color';
-      titleColorInput.value = cat.titleColor ?? '#64748b';
-      titleColorInput.style.cssText =
-        'width:22px;height:18px;border:1px solid var(--border-default);padding:0;cursor:pointer;flex-shrink:0;border-radius:3px;-webkit-appearance:none;appearance:none;background:none;';
-      titleColorInput.setAttribute('aria-label', t('settings.category_title_color_aria', { label: cat.label }));
-      titleColorInput.addEventListener('input', () => {
-        this.categoryStore!.update(cat.id, { titleColor: titleColorInput.value });
-        updatePreview();
-        this.rerenderCallback();
-      });
-
-      // Card preview
-      const preview = document.createElement('div');
-      preview.className = 'category-preview-card';
-      preview.style.background = cat.color;
-
-      const previewName = document.createElement('span');
-      previewName.className = 'cat-preview-name';
-      previewName.textContent = t('settings.category_preview_name');
-      previewName.style.color = cat.nameColor ?? '#1e293b';
-      preview.appendChild(previewName);
-
-      const previewTitle = document.createElement('span');
-      previewTitle.className = 'cat-preview-title';
-      previewTitle.textContent = t('settings.category_preview_title');
-      previewTitle.style.color = cat.titleColor ?? '#64748b';
-      preview.appendChild(previewTitle);
-
-      const updatePreview = () => {
-        const updated = this.categoryStore!.getById(cat.id);
-        if (updated) {
-          preview.style.background = updated.color;
-          previewName.style.color = updated.nameColor ?? '#1e293b';
-          previewTitle.style.color = updated.titleColor ?? '#64748b';
-        }
-      };
-
-      colorInput.addEventListener('input', () => {
-        this.categoryStore!.update(cat.id, { color: colorInput.value });
-        const updated = this.categoryStore!.getById(cat.id);
-        if (updated?.nameColor) nameColorInput.value = updated.nameColor;
-        if (updated?.titleColor) titleColorInput.value = updated.titleColor;
-        updatePreview();
-        this.rerenderCallback();
-      });
-      row.appendChild(colorInput);
-
-      const labelInput = document.createElement('input');
-      labelInput.type = 'text';
-      labelInput.value = cat.label;
-      labelInput.style.cssText =
-        'flex:1;padding:4px 8px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font-size:11px;font-family:var(--font-sans);min-width:0;';
-      labelInput.setAttribute('aria-label', t('settings.category_label_aria'));
-      labelInput.addEventListener('change', () => {
-        const newLabel = labelInput.value.trim();
-        if (newLabel) {
-          this.categoryStore!.update(cat.id, { label: newLabel });
-          this.rerenderCallback();
-        } else {
-          labelInput.value = cat.label;
-        }
-      });
-      row.appendChild(labelInput);
-
-      row.appendChild(preview);
-
-      // Delete button with confirmation
-      const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = '×';
-      deleteBtn.style.cssText =
-        'width:24px;height:24px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;opacity:0.4;';
-      deleteBtn.setAttribute('aria-label', t('settings.category_remove_aria', { label: cat.label }));
-
-      let confirmTimeout: ReturnType<typeof setTimeout> | null = null;
-      let isConfirming = false;
-
-      deleteBtn.addEventListener('mouseenter', () => {
-        if (!isConfirming) {
-          deleteBtn.style.color = 'var(--danger)';
-          deleteBtn.style.borderColor = 'var(--danger)';
-          deleteBtn.style.opacity = '1';
-        }
-      });
-      deleteBtn.addEventListener('mouseleave', () => {
-        if (!isConfirming) {
-          deleteBtn.style.color = 'var(--text-tertiary)';
-          deleteBtn.style.borderColor = 'var(--border-default)';
-          deleteBtn.style.opacity = '0.4';
-        }
-      });
-      deleteBtn.addEventListener('click', () => {
-        if (isConfirming) {
-          if (confirmTimeout) clearTimeout(confirmTimeout);
-          this.categoryStore!.remove(cat.id);
-          this.rerenderCallback();
-          this.build();
-        } else {
-          isConfirming = true;
-          deleteBtn.textContent = '?';
-          deleteBtn.className = 'category-delete-confirm';
-          deleteBtn.style.cssText =
-            'padding:2px 8px;cursor:pointer;flex-shrink:0;';
-          confirmTimeout = setTimeout(() => {
-            isConfirming = false;
-            deleteBtn.textContent = '×';
-            deleteBtn.className = '';
-            deleteBtn.style.cssText =
-              'width:24px;height:24px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;opacity:0.4;';
-          }, 3000);
-        }
-      });
-      row.appendChild(deleteBtn);
-
-      container.appendChild(row);
-
-      // Text color sub-row (improved layout)
-      const textRow = document.createElement('div');
-      textRow.className = 'category-text-colors';
-
-      const textColorsLabel = document.createElement('span');
-      textColorsLabel.className = 'category-text-colors-label';
-      textColorsLabel.textContent = t('settings.category_text_colors');
-      textRow.appendChild(textColorsLabel);
-
-      const nameGroup = document.createElement('div');
-      nameGroup.className = 'category-text-color-group';
-      const nameLabel = document.createElement('label');
-      nameLabel.textContent = t('settings.category_name');
-      nameGroup.appendChild(nameLabel);
-      nameGroup.appendChild(nameColorInput);
-      textRow.appendChild(nameGroup);
-
-      const titleGroup = document.createElement('div');
-      titleGroup.className = 'category-text-color-group';
-      const titleLabel = document.createElement('label');
-      titleLabel.textContent = t('settings.category_title');
-      titleGroup.appendChild(titleLabel);
-      titleGroup.appendChild(titleColorInput);
-      textRow.appendChild(titleGroup);
-
-      container.appendChild(textRow);
-      wrapper.appendChild(container);
-    }
-
-    const addBtn = document.createElement('button');
-    addBtn.className = 'btn btn-secondary w-full';
-    addBtn.textContent = t('settings.add_category');
-    addBtn.style.cssText = 'font-size:11px;padding:6px 8px;margin-top:8px;width:100%;display:flex;align-items:center;justify-content:center;gap:4px;border-style:dashed;';
-    addBtn.addEventListener('click', () => {
-      this.categoryStore!.add('New Category', '#94a3b8');
-      this.rerenderCallback();
-      this.build();
-    });
-    wrapper.appendChild(addBtn);
-
-    return wrapper;
-  }
-
-  private buildPresetsContent(): HTMLElement {
-    const wrapper = document.createElement('div');
-
-    // Combined preset grid
-    const allPresets = [...COMBINED_PRESETS, ...this.loadCustomPresets()];
-    let activePresetFound = false;
-
-    const presetGrid = document.createElement('div');
-    presetGrid.className = 'preset-grid';
-    presetGrid.style.cssText =
-      'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;';
-
-    for (const preset of allPresets) {
-      const card = document.createElement('button');
-      card.className = 'preset-card';
-      card.setAttribute('data-preset-id', preset.id);
-      card.style.cssText = `
-        display:flex;align-items:center;gap:6px;padding:6px 8px;position:relative;
-        border:1px solid var(--border-default);border-radius:var(--radius-md);
-        background:var(--bg-elevated);cursor:pointer;text-align:start;
-        transition:all 120ms ease;font-family:var(--font-sans);
-      `;
-
-      const swatch = document.createElement('div');
-      swatch.className = 'preset-swatch';
-      swatch.style.cssText = `
-        width:20px;height:20px;border-radius:3px;flex-shrink:0;
-        background:${preset.colors.cardFill};
-        border:2px solid ${preset.colors.cardStroke};
-      `;
-      card.appendChild(swatch);
-
-      const name = document.createElement('span');
-      name.textContent = preset.isCustom ? `⭐ ${preset.name}` : preset.name;
-      name.style.cssText =
-        'font-size:11px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;';
-      card.appendChild(name);
-
-      if (preset.isCustom) {
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'preset-delete';
-        deleteBtn.textContent = '×';
-        deleteBtn.setAttribute('aria-label', `Delete preset ${preset.name}`);
-        deleteBtn.style.cssText = `
-          position:absolute;top:2px;right:4px;font-size:13px;line-height:1;
-          color:var(--text-tertiary);cursor:pointer;opacity:0;
-          transition:opacity 120ms ease;padding:0 2px;
-          border:none;background:none;font-family:inherit;
-        `;
-        deleteBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.deleteCustomPreset(preset.id);
-          this.build();
-        });
-        card.appendChild(deleteBtn);
-
-        card.addEventListener('mouseenter', () => {
-          card.style.borderColor = 'var(--accent)';
-          card.style.background = 'var(--bg-hover)';
-          deleteBtn.style.opacity = '1';
-        });
-        card.addEventListener('mouseleave', () => {
-          card.style.borderColor = 'var(--border-default)';
-          card.style.background = 'var(--bg-elevated)';
-          deleteBtn.style.opacity = '0';
-        });
-      } else {
-        card.addEventListener('mouseenter', () => {
-          card.style.borderColor = 'var(--accent)';
-          card.style.background = 'var(--bg-hover)';
-        });
-        card.addEventListener('mouseleave', () => {
-          card.style.borderColor = 'var(--border-default)';
-          card.style.background = 'var(--bg-elevated)';
-        });
-      }
-
-      card.addEventListener('click', () => {
-        this.renderer.updateOptions({
-          ...preset.colors,
-          ...preset.sizes,
-        } as Partial<RendererOptions>);
-        this.rerenderCallback();
-        this.build();
-      });
-
-      // Check if this preset matches current settings (first match only)
-      const currentOpts = this.renderer.getOptions();
-      const isActive = !activePresetFound &&
-        currentOpts.cardFill === preset.colors.cardFill &&
-        currentOpts.cardStroke === preset.colors.cardStroke &&
-        currentOpts.linkColor === preset.colors.linkColor &&
-        currentOpts.cardStrokeWidth === preset.colors.cardStrokeWidth &&
-        currentOpts.icContainerFill === preset.colors.icContainerFill &&
-        currentOpts.nodeWidth === preset.sizes.nodeWidth &&
-        currentOpts.nodeHeight === preset.sizes.nodeHeight;
-
-      if (isActive) {
-        activePresetFound = true;
-        card.classList.add('preset-active');
-        const badge = document.createElement('span');
-        badge.className = 'preset-active-badge';
-        badge.textContent = t('settings.preset_active');
-        card.appendChild(badge);
-      }
-
-      presetGrid.appendChild(card);
-    }
-
-    wrapper.appendChild(presetGrid);
-
-    // Layout preset buttons (4-column grid)
-    const layoutHeading = document.createElement('div');
-    layoutHeading.textContent = 'Layout';
-    layoutHeading.className = 'setting-section-title';
-    wrapper.appendChild(layoutHeading);
-
-    const layoutGrid = document.createElement('div');
-    layoutGrid.style.cssText =
-      'display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;';
-
-    for (const lp of LAYOUT_PRESETS) {
-      const btn = document.createElement('button');
-      btn.className = 'layout-preset-card';
-
-      const icon = document.createElement('span');
-      icon.textContent = lp.icon;
-      icon.style.cssText = 'font-size:18px;line-height:1;';
-      btn.appendChild(icon);
-
-      const label = document.createElement('span');
-      label.textContent = lp.name;
-      label.className = 'layout-preset-name';
-      btn.appendChild(label);
-
-      const dims = document.createElement('span');
-      dims.className = 'layout-preset-dims';
-      dims.textContent = `${lp.sizes.nodeWidth} × ${lp.sizes.nodeHeight}`;
-      btn.appendChild(dims);
-
-      const descKey = `settings.layout_${lp.name.toLowerCase()}_desc`;
-      const descEl = document.createElement('span');
-      descEl.className = 'layout-preset-desc';
-      descEl.textContent = t(descKey);
-      btn.appendChild(descEl);
-
-      // Check if this layout preset matches current settings
-      const curOpts = this.renderer.getOptions();
-      const layoutActive =
-        curOpts.nodeWidth === lp.sizes.nodeWidth &&
-        curOpts.nodeHeight === lp.sizes.nodeHeight;
-
-      if (layoutActive) {
-        btn.classList.add('layout-active');
-      }
-
-      btn.addEventListener('mouseenter', () => {
-        btn.style.borderColor = 'var(--accent)';
-        btn.style.background = 'var(--bg-hover)';
-      });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.borderColor = layoutActive ? 'var(--accent)' : 'var(--border-default)';
-        btn.style.background = layoutActive ? 'var(--accent-muted)' : 'var(--bg-elevated)';
-      });
-
-      btn.addEventListener('click', () => {
-        this.renderer.updateOptions(lp.sizes);
-        this.rerenderCallback();
-        this.build();
-      });
-
-      layoutGrid.appendChild(btn);
-    }
-
-    wrapper.appendChild(layoutGrid);
-
-    return wrapper;
   }
 
   private createControl(setting: SettingDef, currentValue: number | string | boolean): HTMLDivElement {

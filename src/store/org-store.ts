@@ -8,6 +8,7 @@ export class OrgStore extends EventEmitter {
   private undoStack: string[] = [];
   private redoStack: string[] = [];
   private static MAX_HISTORY = 50;
+  private _mutationVersion = 0;
 
   constructor(root: OrgNode) {
     super();
@@ -18,12 +19,17 @@ export class OrgStore extends EventEmitter {
     return this.root;
   }
 
+  get mutationVersion(): number {
+    return this._mutationVersion;
+  }
+
   private snapshot(): void {
     this.undoStack.push(JSON.stringify(this.root));
     this.redoStack.length = 0;
     if (this.undoStack.length > OrgStore.MAX_HISTORY) {
       this.undoStack.splice(0, this.undoStack.length - OrgStore.MAX_HISTORY);
     }
+    this._mutationVersion++;
   }
 
   undo(): boolean {
@@ -36,6 +42,7 @@ export class OrgStore extends EventEmitter {
           this.redoStack.splice(0, this.redoStack.length - OrgStore.MAX_HISTORY);
         }
         this.root = parsed;
+        this._mutationVersion++;
         this.emit();
         return true;
       } catch (e) {
@@ -53,6 +60,7 @@ export class OrgStore extends EventEmitter {
         const parsed = JSON.parse(snapshot);
         this.undoStack.push(JSON.stringify(this.root));
         this.root = parsed;
+        this._mutationVersion++;
         this.emit();
         return true;
       } catch (e) {
@@ -229,16 +237,30 @@ export class OrgStore extends EventEmitter {
   }
 
   bulkMoveNodes(nodeIds: string[], newParentId: string): void {
-    const newParent = findNodeById(this.root, newParentId);
+    // Pre-compute lookups once to avoid O(n*k) tree traversals
+    const allNodes = flattenTree(this.root);
+    const nodeMap = new Map(allNodes.map((n) => [n.id, n]));
+    const parentMap = new Map<string, OrgNode>();
+    for (const n of allNodes) {
+      if (n.children) {
+        for (const child of n.children) {
+          parentMap.set(child.id, n);
+        }
+      }
+    }
+
+    const newParent = nodeMap.get(newParentId);
     if (!newParent) throw new Error(`Target parent "${newParentId}" not found`);
 
     // Filter out root and nodes already under target, validate all exist
     const validIds = nodeIds.filter((id) => {
       if (this.root.id === id) return false;
-      const node = findNodeById(this.root, id);
+      const node = nodeMap.get(id);
       if (!node) return false;
-      if (this.isDescendant(id, newParentId)) return false;
-      const currentParent = findParent(this.root, id);
+      // Check if newParent is a descendant of this node (would create cycle)
+      const descendants = flattenTree(node);
+      if (descendants.some((n) => n.id === newParentId && n.id !== id)) return false;
+      const currentParent = parentMap.get(id);
       return !(currentParent && currentParent.id === newParentId);
     });
 
@@ -246,9 +268,9 @@ export class OrgStore extends EventEmitter {
 
     this.snapshot();
     for (const id of validIds) {
-      const node = findNodeById(this.root, id);
+      const node = nodeMap.get(id);
       if (!node) continue;
-      const currentParent = findParent(this.root, id);
+      const currentParent = parentMap.get(id);
       if (currentParent) {
         currentParent.children = currentParent.children?.filter((c) => c.id !== id);
         if (currentParent.children?.length === 0) currentParent.children = undefined;
@@ -260,16 +282,28 @@ export class OrgStore extends EventEmitter {
   }
 
   bulkRemoveNodes(ids: string[]): void {
+    // Pre-compute lookups once to avoid O(n*k) tree traversals
+    const allNodes = flattenTree(this.root);
+    const nodeSet = new Set(allNodes.map((n) => n.id));
+    const parentMap = new Map<string, OrgNode>();
+    for (const n of allNodes) {
+      if (n.children) {
+        for (const child of n.children) {
+          parentMap.set(child.id, n);
+        }
+      }
+    }
+
     const validIds = ids.filter((id) => {
       if (this.root.id === id) return false;
-      return findNodeById(this.root, id) !== null;
+      return nodeSet.has(id);
     });
 
     if (validIds.length === 0) return;
 
     this.snapshot();
     for (const id of validIds) {
-      const parent = findParent(this.root, id);
+      const parent = parentMap.get(id);
       if (!parent) continue;
       parent.children = parent.children?.filter((c) => c.id !== id);
       if (parent.children?.length === 0) parent.children = undefined;
@@ -307,38 +341,43 @@ export class OrgStore extends EventEmitter {
     this.root = cloneTree(tree);
     this.undoStack.length = 0;
     this.redoStack.length = 0;
+    this._mutationVersion++;
     this.emit();
   }
 
-  private validateTree(node: unknown, depth = 0, count = { value: 0 }): asserts node is OrgNode {
-    if (depth > 100) throw new Error('Tree exceeds maximum depth of 100 levels');
-    if (++count.value > 50000) throw new Error('Tree exceeds maximum of 50,000 nodes');
-    if (!node || typeof node !== 'object') throw new Error('Invalid node: expected an object');
-    const obj = node as Record<string, unknown>;
-    if (typeof obj.id !== 'string' || !obj.id.trim())
-      throw new Error('Each node must have a non-empty string id');
-    if (typeof obj.name !== 'string') throw new Error('Each node must have a string name');
-    if (typeof obj.title !== 'string') throw new Error('Each node must have a string title');
-    if (obj.name.length > 500) throw new Error(`Name too long (max 500 chars) on node "${obj.id}"`);
-    if (obj.title.length > 500)
-      throw new Error(`Title too long (max 500 chars) on node "${obj.id}"`);
-    if (obj.categoryId !== undefined) {
-      if (typeof obj.categoryId !== 'string')
-        throw new Error(`Invalid categoryId on node "${obj.id}": expected a string`);
-      if (obj.categoryId.length > 100)
-        throw new Error(`categoryId too long (max 100 chars) on node "${obj.id}"`);
-    }
-    if (obj.dottedLine !== undefined) {
-      if (typeof obj.dottedLine !== 'boolean')
-        throw new Error(`Invalid dottedLine on node "${obj.id}": expected a boolean`);
-    }
-    if (obj.children !== undefined) {
-      if (!Array.isArray(obj.children))
-        throw new Error(`Invalid children on node "${obj.id}": expected an array`);
-      for (const child of obj.children) {
-        this.validateTree(child, depth + 1, count);
-      }
+  private validateTree(node: unknown, depth?: number, count?: { value: number }): asserts node is OrgNode {
+    validateTree(node, depth, count);
+  }
+}
+
+/** Standalone tree validator — reusable outside OrgStore (e.g. bundle imports). */
+export function validateTree(node: unknown, depth = 0, count = { value: 0 }): asserts node is OrgNode {
+  if (depth > 100) throw new Error('Tree exceeds maximum depth of 100 levels');
+  if (++count.value > 50000) throw new Error('Tree exceeds maximum of 50,000 nodes');
+  if (!node || typeof node !== 'object') throw new Error('Invalid node: expected an object');
+  const obj = node as Record<string, unknown>;
+  if (typeof obj.id !== 'string' || !obj.id.trim())
+    throw new Error('Each node must have a non-empty string id');
+  if (typeof obj.name !== 'string') throw new Error('Each node must have a string name');
+  if (typeof obj.title !== 'string') throw new Error('Each node must have a string title');
+  if (obj.name.length > 500) throw new Error(`Name too long (max 500 chars) on node "${obj.id}"`);
+  if (obj.title.length > 500)
+    throw new Error(`Title too long (max 500 chars) on node "${obj.id}"`);
+  if (obj.categoryId !== undefined) {
+    if (typeof obj.categoryId !== 'string')
+      throw new Error(`Invalid categoryId on node "${obj.id}": expected a string`);
+    if (obj.categoryId.length > 100)
+      throw new Error(`categoryId too long (max 100 chars) on node "${obj.id}"`);
+  }
+  if (obj.dottedLine !== undefined) {
+    if (typeof obj.dottedLine !== 'boolean')
+      throw new Error(`Invalid dottedLine on node "${obj.id}": expected a boolean`);
+  }
+  if (obj.children !== undefined) {
+    if (!Array.isArray(obj.children))
+      throw new Error(`Invalid children on node "${obj.id}": expected an array`);
+    for (const child of obj.children) {
+      validateTree(child, depth + 1, count);
     }
   }
-
 }

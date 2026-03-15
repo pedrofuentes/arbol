@@ -1,5 +1,6 @@
 import type { OrgNode, ColorCategory, ChartRecord, VersionRecord, ChartBundle } from '../types';
 import { ChartDB } from './chart-db';
+import { validateTree } from './org-store';
 import { generateId } from '../utils/id';
 import { EventEmitter } from '../utils/event-emitter';
 import { type IStorage, browserStorage } from '../utils/storage';
@@ -18,6 +19,7 @@ export class ChartStore extends EventEmitter {
   private db: ChartDB;
   private activeChartId: string | null = null;
   private lastSavedTree: string | null = null;
+  private savedMutationVersion: number | null = null;
   private storage: IStorage;
 
   constructor(db: ChartDB, storage: IStorage = browserStorage) {
@@ -41,6 +43,7 @@ export class ChartStore extends EventEmitter {
     const active = this.sanitizeChart(charts[0]);
     this.activeChartId = active.id;
     this.lastSavedTree = JSON.stringify(active.workingTree);
+    this.savedMutationVersion = null;
     return active;
   }
 
@@ -120,6 +123,7 @@ export class ChartStore extends EventEmitter {
     await this.db.putChart(chart);
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
+    this.savedMutationVersion = null;
     this.emit();
     return chart;
   }
@@ -148,6 +152,7 @@ export class ChartStore extends EventEmitter {
     await this.db.putChart(chart);
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
+    this.savedMutationVersion = null;
     this.emit();
     return chart;
   }
@@ -194,10 +199,12 @@ export class ChartStore extends EventEmitter {
       if (remaining.length > 0) {
         this.activeChartId = remaining[0].id;
         this.lastSavedTree = JSON.stringify(remaining[0].workingTree);
+        this.savedMutationVersion = null;
       } else {
         const fallback = await this.createFallbackChart();
         this.activeChartId = fallback.id;
         this.lastSavedTree = JSON.stringify(fallback.workingTree);
+        this.savedMutationVersion = null;
       }
     }
 
@@ -208,9 +215,11 @@ export class ChartStore extends EventEmitter {
     const raw = await this.db.getChart(id);
     if (!raw) throw new Error(`Chart not found: ${id}`);
     const chart = this.sanitizeChart(raw);
+    await this.db.putChart(chart);
 
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
+    this.savedMutationVersion = null;
     this.emit();
     return chart;
   }
@@ -219,7 +228,11 @@ export class ChartStore extends EventEmitter {
   // Working tree persistence
   // ---------------------------------------------------------------------------
 
-  async saveWorkingTree(tree: OrgNode, categories: ColorCategory[]): Promise<void> {
+  async saveWorkingTree(
+    tree: OrgNode,
+    categories: ColorCategory[],
+    mutationVersion?: number,
+  ): Promise<void> {
     if (!this.activeChartId) throw new Error('No active chart');
 
     const chart = await this.db.getChart(this.activeChartId);
@@ -230,9 +243,13 @@ export class ChartStore extends EventEmitter {
     chart.updatedAt = new Date().toISOString();
     await this.db.putChart(chart);
     this.lastSavedTree = JSON.stringify(tree);
+    this.savedMutationVersion = mutationVersion ?? null;
   }
 
-  isDirty(currentTree: OrgNode): boolean {
+  isDirty(currentTree: OrgNode, mutationVersion?: number): boolean {
+    if (mutationVersion !== undefined && this.savedMutationVersion !== null) {
+      return mutationVersion !== this.savedMutationVersion;
+    }
     return JSON.stringify(currentTree) !== this.lastSavedTree;
   }
 
@@ -246,7 +263,7 @@ export class ChartStore extends EventEmitter {
     return this.db.getVersionsByChart(id);
   }
 
-  async saveVersion(name: string, tree: OrgNode): Promise<VersionRecord> {
+  async saveVersion(name: string, tree: OrgNode, mutationVersion?: number): Promise<VersionRecord> {
     const trimmed = name.trim();
     if (!trimmed) throw new Error('Version name cannot be empty');
     if (!this.activeChartId) throw new Error('No active chart');
@@ -261,6 +278,7 @@ export class ChartStore extends EventEmitter {
 
     await this.db.putVersion(version);
     this.lastSavedTree = JSON.stringify(tree);
+    this.savedMutationVersion = mutationVersion ?? null;
     this.emit();
     return version;
   }
@@ -274,6 +292,7 @@ export class ChartStore extends EventEmitter {
     if (!version) throw new Error(`Version not found: ${versionId}`);
 
     this.lastSavedTree = JSON.stringify(version.tree);
+    this.savedMutationVersion = null;
     this.emit();
     return version.tree;
   }
@@ -288,6 +307,19 @@ export class ChartStore extends EventEmitter {
   // ---------------------------------------------------------------------------
 
   async importChartAsNew(bundle: ChartBundle): Promise<ChartRecord> {
+    try {
+      validateTree(bundle.chart.workingTree);
+      for (const v of bundle.versions) {
+        validateTree(v.tree);
+      }
+    } catch (e) {
+      throw new Error(
+        t('chart_store.error_import_invalid_tree', {
+          detail: e instanceof Error ? e.message : String(e),
+        }),
+      );
+    }
+
     let name = bundle.chart.name;
     if (await this.db.isChartNameTaken(name)) {
       name = `${bundle.chart.name} (imported)`;
@@ -319,6 +351,7 @@ export class ChartStore extends EventEmitter {
 
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
+    this.savedMutationVersion = null;
     this.emit();
     return chart;
   }
@@ -327,6 +360,19 @@ export class ChartStore extends EventEmitter {
     if (!this.activeChartId) throw new Error('No active chart');
     const chart = await this.db.getChart(this.activeChartId);
     if (!chart) throw new Error(`Chart not found: ${this.activeChartId}`);
+
+    try {
+      validateTree(bundle.chart.workingTree);
+      for (const v of bundle.versions) {
+        validateTree(v.tree);
+      }
+    } catch (e) {
+      throw new Error(
+        t('chart_store.error_import_invalid_tree', {
+          detail: e instanceof Error ? e.message : String(e),
+        }),
+      );
+    }
 
     chart.workingTree = bundle.chart.workingTree;
     chart.categories = bundle.chart.categories;
@@ -343,6 +389,7 @@ export class ChartStore extends EventEmitter {
     await this.db.putVersionsBatch(versions);
 
     this.lastSavedTree = JSON.stringify(chart.workingTree);
+    this.savedMutationVersion = null;
     this.emit();
     return chart;
   }

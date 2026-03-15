@@ -53,16 +53,42 @@ export function isLeaf(node: OrgNode): boolean {
   return !node.children || node.children.length === 0;
 }
 
+/**
+ * A manager is M1 (first-line manager) if ALL children are leaf nodes.
+ *
+ * Note: This means node types are determined solely by tree structure —
+ * there is no explicit role field. If a manager has a mix of "IC-like"
+ * and "advisor-like" leaf children, they will ALL be treated as ICs.
+ * Adding a non-leaf child converts the node from M1 to regular manager,
+ * changing the rendering mode for all its children.
+ *
+ * @see stripM1Children() for how M1 detection affects layout
+ * @see isLeaf() for the leaf node check
+ */
 export function isM1(node: OrgNode): boolean {
   if (!node.children || node.children.length === 0) return false;
   return node.children.every(isLeaf);
 }
 
+/**
+ * Clones the tree, stripping children from M1 nodes and leaf children from
+ * non-M1 managers. Returns the pruned layout tree plus two side-maps:
+ *
+ * - **icMap**: M1 node id → its IC children (rendered as vertical stacks).
+ * - **palMap**: non-M1 manager id → its Advisor (leaf) children (rendered
+ *   as alternating left/right elbow connectors).
+ *
+ * The layout tree only contains non-leaf manager nodes so that D3's tree
+ * layout computes positions for managers only. ICs and Advisors are then
+ * positioned by the renderer using the side-maps.
+ *
+ * @see isM1() for the M1 classification rule
+ */
 export function stripM1Children(node: OrgNode): {
   layoutTree: OrgNode;
   icMap: Map<string, OrgNode[]>;
   palMap: Map<string, OrgNode[]>;
-} {
+}{
   const icMap = new Map<string, OrgNode[]>();
   const palMap = new Map<string, OrgNode[]>();
 

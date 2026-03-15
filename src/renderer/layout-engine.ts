@@ -1,8 +1,28 @@
 import { hierarchy, tree } from 'd3';
 import type { HierarchyPointNode } from 'd3';
 import { OrgNode } from '../types';
-import { filterVisibleTree, stripM1Children, countDescendants, flattenTree } from '../utils/tree';
+import { filterVisibleTree, stripM1Children } from '../utils/tree';
 import type { ResolvedOptions } from './chart-renderer';
+
+/** Number of advisor (pal) nodes displayed per row in the layout. */
+export const ADVISORS_PER_ROW = 2;
+
+/** Pre-computes descendant counts for every node in a single O(n) bottom-up pass. */
+export function precomputeDescendantCounts(root: OrgNode): Map<string, number> {
+  const counts = new Map<string, number>();
+  function walk(node: OrgNode): number {
+    let count = 0;
+    if (node.children) {
+      for (const child of node.children) {
+        count += 1 + walk(child);
+      }
+    }
+    counts.set(node.id, count);
+    return count;
+  }
+  walk(root);
+  return counts;
+}
 
 export interface LayoutNode {
   id: string;
@@ -39,8 +59,8 @@ export interface LayoutResult {
 }
 
 export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResult {
-  // Pre-compute node lookup map for O(1) access by ID (avoids O(n²) findNodeById in loops)
-  const nodeById = new Map<string, OrgNode>(flattenTree(root).map((n) => [n.id, n]));
+  // Pre-compute descendant counts in a single O(n) pass (avoids O(n²) flattenTree per node)
+  const descendantCounts = precomputeDescendantCounts(root);
 
   const visibleTree = filterVisibleTree(root);
   const { layoutTree, icMap, palMap } = stripM1Children(visibleTree);
@@ -64,7 +84,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
   const totalVerticalSpacing = topVerticalSpacing + bottomVerticalSpacing;
 
   const hier = hierarchy(layoutTree, (d) => d.children);
-  const palTotalWidth = nodeWidth * 2 + palCenterGap;
+  const palTotalWidth = nodeWidth * ADVISORS_PER_ROW + palCenterGap;
 
   const treeLayout = tree<OrgNode>()
     .nodeSize([nodeWidth + horizontalSpacing, nodeHeight + totalVerticalSpacing])
@@ -84,7 +104,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
   const getPalStackHeight = (nodeId: string): number => {
     const pals = palMap.get(nodeId);
     if (!pals || pals.length === 0) return 0;
-    const rows = Math.ceil(pals.length / 2);
+    const rows = Math.ceil(pals.length / ADVISORS_PER_ROW);
     return palTopGap + palRowGap + rows * nodeHeight + (rows - 1) * palRowGap + palBottomGap;
   };
 
@@ -115,8 +135,9 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
     }
   }
 
-  // Enforce branchSpacing: ensure subtree bounding boxes don't overlap
-  // Cache bounds to avoid O(n²) recomputation; invalidated on subtree shifts
+  // Enforce branchSpacing: ensure subtree bounding boxes don't overlap.
+  // boundsCache is a local variable — recreated each computeLayout() call
+  // and not captured by any returned closure, so it's GC'd after the call returns.
   const boundsCache = new Map<HierarchyPointNode<OrgNode>, [number, number]>();
 
   const getSubtreeXBounds = (node: HierarchyPointNode<OrgNode>): [number, number] => {
@@ -291,8 +312,8 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
       const startY = treeNode.y + nodeHeight + palTopGap;
 
       pals.forEach((pal, i) => {
-        const row = Math.floor(i / 2);
-        const isLeft = i % 2 === 0;
+        const row = Math.floor(i / ADVISORS_PER_ROW);
+        const isLeft = i % ADVISORS_PER_ROW === 0;
         const x = isLeft
           ? treeNode.x - palCenterGap / 2 - nodeWidth
           : treeNode.x + palCenterGap / 2;
@@ -325,8 +346,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
     const hasTreeChildren = !!(treeNode.data.children && treeNode.data.children.length > 0);
     const hasICs = icMap.has(treeNode.data.id);
 
-    const originalNode = nodeById.get(treeNode.data.id);
-    const descCount = originalNode ? countDescendants(originalNode) : 0;
+    const descCount = descendantCounts.get(treeNode.data.id) ?? 0;
 
     nodes.push({
       id: treeNode.data.id,

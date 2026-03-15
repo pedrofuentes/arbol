@@ -1643,7 +1643,7 @@ describe('ChartRenderer', () => {
       previewContainer.remove();
     });
 
-    it('getZoomManager() returns ZoomManager in preview mode (pan/zoom enabled)', () => {
+    it('getZoomManager() returns null in preview mode (no zoom handlers)', () => {
       const previewContainer = document.createElement('div');
       document.body.appendChild(previewContainer);
       const previewRenderer = new ChartRenderer({
@@ -1653,9 +1653,55 @@ describe('ChartRenderer', () => {
         horizontalSpacing: 50,
         preview: true,
       });
-      expect(previewRenderer.getZoomManager()).not.toBeNull();
+      expect(previewRenderer.getZoomManager()).toBeNull();
       previewRenderer.destroy();
       previewContainer.remove();
+    });
+
+    it('non-preview mode creates renderer with ZoomManager', () => {
+      const c = document.createElement('div');
+      document.body.appendChild(c);
+      const r = new ChartRenderer({
+        container: c,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
+        preview: false,
+      });
+      expect(r.getZoomManager()).not.toBeNull();
+      r.destroy();
+      c.remove();
+    });
+
+    it('destroy() cleans up ZoomManager in non-preview mode', () => {
+      const c = document.createElement('div');
+      document.body.appendChild(c);
+      const r = new ChartRenderer({
+        container: c,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
+      });
+      const zm = r.getZoomManager();
+      expect(zm).not.toBeNull();
+      // destroy should not throw
+      expect(() => r.destroy()).not.toThrow();
+      c.remove();
+    });
+
+    it('destroy() does not throw in preview mode (no ZoomManager)', () => {
+      const c = document.createElement('div');
+      document.body.appendChild(c);
+      const r = new ChartRenderer({
+        container: c,
+        nodeWidth: 160,
+        nodeHeight: 34,
+        horizontalSpacing: 50,
+        preview: true,
+      });
+      expect(r.getZoomManager()).toBeNull();
+      expect(() => r.destroy()).not.toThrow();
+      c.remove();
     });
 
     it('getKeyboardNav() returns null in preview mode', () => {

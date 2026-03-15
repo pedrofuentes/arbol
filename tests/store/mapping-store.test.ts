@@ -173,6 +173,42 @@ describe('MappingStore', () => {
     });
   });
 
+  describe('change events', () => {
+    it('emits change event on savePreset', () => {
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.savePreset(makePreset('A'));
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('emits change event on deletePreset', () => {
+      store.savePreset(makePreset('A'));
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.deletePreset('A');
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('emits change event on importPresets', () => {
+      const json = JSON.stringify([{
+        name: 'Test',
+        mapping: validMapping,
+      }]);
+      const listener = vi.fn();
+      store.onChange(listener);
+      store.importPresets(json);
+      expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not emit after unsubscribe', () => {
+      const listener = vi.fn();
+      const unsub = store.onChange(listener);
+      unsub();
+      store.savePreset(makePreset('A'));
+      expect(listener).not.toHaveBeenCalled();
+    });
+  });
+
   describe('importPresets', () => {
     const validPreset = {
       name: 'Test',

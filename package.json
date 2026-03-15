@@ -1,6 +1,6 @@
 {
   "name": "arbol",
-  "version": "3.3.1",
+  "version": "3.4.0",
   "description": "An interactive org chart editor for the browser",
   "directories": {
     "doc": "docs"
@@ -48,7 +48,7 @@
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "fake-indexeddb": "^6.2.5",
-    "jsdom": "^28.1.0",
+    "jsdom": "^29.0.0",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.0",

@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] — 2026-03-15
+
+### Security
+- **Tree validation on bundle import** — `.arbol.json` imports now validate tree structure (depth, node count, field types) before storing, preventing DoS via malicious files
+- **Upgrade jsdom 28→29** — resolves 6 undici CVEs (0 audit vulnerabilities)
+
+### Performance
+- **O(1) dirty tracking** — replaced JSON.stringify comparison with mutation version counter
+- **O(n) descendant counts** — pre-computed in single bottom-up pass (was O(n²) per-node flattenTree)
+- **O(1) bulk operation lookups** — pre-computed node/parent maps (was O(n) findNodeById per node)
+- **ZoomManager memory leak fix** — skip creation in preview mode, add destroy() for cleanup
+- **ADVISORS_PER_ROW constant** — extracted magic number from 5 interdependent layout calculations
+
+### Architecture
+- **main.ts decomposition** — split from 1,931→900 lines (53% reduction) into 5 init modules: context-menu-handler, toolbar-builder, footer-builder, comparison-handler, shortcuts-handler
+- **SettingsEditor extraction** — split from 1,517→736 lines into 4 panels: preset-panel, category-panel, settings-io, backup-panel
+- **DOM builder utility** — shared createButton/createFormGroup/createHeading helpers, refactored 4 UI components
+
+### API Design
+- **MappingStore reactive** — now extends EventEmitter (was only store without events)
+- **Standardized event payloads** — all stores emit void (ThemeManager was inconsistent)
+
+### Regression fixes
+- **Chart switch sanitization** — repaired charts now persisted back to IndexedDB
+- **Bulk operations** — collect all nodes before mutation loop (prevents silent skips)
+- **isM1() documented** — comprehensive JSDoc + 9 edge case tests for node type classification
+
+### Testing
+- 1,931 tests across 74 files — all passing
+- 122 new tests: event-emitter (21), E2E workflows (11), dom-builder (22), layout-engine (7), chart-store (14), org-store (6), zoom-manager (5), tree (9), PPTX assertions (23), mapping-store (4)
+
 ## [3.3.1] — 2026-03-15
 
 ### Fixed

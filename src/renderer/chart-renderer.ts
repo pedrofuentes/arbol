@@ -151,7 +151,7 @@ export class ChartRenderer {
     this.g = this.svg.append('g').attr('class', 'chart-group');
 
     if (isPreview) {
-      this.zoomManager = new ZoomManager(this.svg.node()!, this.g.node()!);
+      this.zoomManager = null;
       this.keyboardNav = null;
     } else {
       this.zoomManager = new ZoomManager(this.svg.node()!, this.g.node()!);
@@ -974,6 +974,7 @@ export class ChartRenderer {
   }
 
   destroy(): void {
+    this.zoomManager?.destroy();
     this.keyboardNav?.destroy();
     this.svg.remove();
   }

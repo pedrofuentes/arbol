@@ -729,6 +729,75 @@ describe('OrgStore', () => {
       store.bulkMoveNodes(['a1', 'a2'], 'b');
       expect(listener).toHaveBeenCalledTimes(1);
     });
+
+    it('moves 10+ nodes to a new parent correctly', () => {
+      const children = Array.from({ length: 12 }, (_, i) => ({
+        id: `n${i}`,
+        name: `Node${i}`,
+        title: `Title${i}`,
+      }));
+      const tree: OrgNode = {
+        id: 'r',
+        name: 'Root',
+        title: 'CEO',
+        children: [
+          { id: 'src', name: 'Source', title: 'VP', children },
+          { id: 'dst', name: 'Dest', title: 'VP' },
+        ],
+      };
+      const store = new OrgStore(tree);
+      const ids = children.map((c) => c.id);
+      store.bulkMoveNodes(ids, 'dst');
+      const dst = findNodeById(store.getTree(), 'dst')!;
+      expect(dst.children!.length).toBe(12);
+      for (const id of ids) {
+        expect(dst.children!.some((c) => c.id === id)).toBe(true);
+      }
+      const src = findNodeById(store.getTree(), 'src')!;
+      expect(src.children).toBeUndefined();
+    });
+
+    it('uses pre-computed lookups instead of per-node tree traversal', async () => {
+      const treeUtils = await import('../../src/utils/tree');
+      const spy = vi.spyOn(treeUtils, 'findNodeById');
+
+      const children = Array.from({ length: 50 }, (_, i) => ({
+        id: `n${i}`,
+        name: `Node${i}`,
+        title: `Title${i}`,
+      }));
+      const tree: OrgNode = {
+        id: 'r',
+        name: 'Root',
+        title: 'CEO',
+        children: [
+          { id: 'src', name: 'Source', title: 'VP', children },
+          { id: 'dst', name: 'Dest', title: 'VP' },
+        ],
+      };
+      const store = new OrgStore(tree);
+      spy.mockClear();
+      store.bulkMoveNodes(
+        children.map((c) => c.id),
+        'dst',
+      );
+      // With pre-computed maps, findNodeById should be called O(1) times (for newParent only),
+      // NOT O(n*k) times. Allow a small constant number of calls.
+      expect(spy.mock.calls.length).toBeLessThanOrEqual(5);
+      spy.mockRestore();
+    });
+
+    it('correctly moves nodes when their siblings are also being moved', () => {
+      const store = new OrgStore(makeTree());
+      // Move both a1 and a2 (siblings) to b
+      store.bulkMoveNodes(['a1', 'a2'], 'b');
+      const b = findNodeById(store.getTree(), 'b')!;
+      expect(b.children!.some((c) => c.id === 'a1')).toBe(true);
+      expect(b.children!.some((c) => c.id === 'a2')).toBe(true);
+      // Verify neither was lost due to mid-mutation re-traversal
+      expect(flattenTree(store.getTree()).map((n) => n.id)).toContain('a1');
+      expect(flattenTree(store.getTree()).map((n) => n.id)).toContain('a2');
+    });
   });
 
   describe('bulkRemoveNodes', () => {
@@ -796,6 +865,50 @@ describe('OrgStore', () => {
       store.onChange(listener);
       store.bulkRemoveNodes(['a1', 'a2']);
       expect(listener).toHaveBeenCalledTimes(1);
+    });
+
+    it('removes 10+ nodes correctly', () => {
+      const children = Array.from({ length: 12 }, (_, i) => ({
+        id: `n${i}`,
+        name: `Node${i}`,
+        title: `Title${i}`,
+      }));
+      const tree: OrgNode = {
+        id: 'r',
+        name: 'Root',
+        title: 'CEO',
+        children: [{ id: 'a', name: 'A', title: 'VP', children }],
+      };
+      const store = new OrgStore(tree);
+      store.bulkRemoveNodes(children.map((c) => c.id));
+      const a = findNodeById(store.getTree(), 'a')!;
+      expect(a.children).toBeUndefined();
+      for (const child of children) {
+        expect(findNodeById(store.getTree(), child.id)).toBeNull();
+      }
+    });
+
+    it('uses pre-computed lookups instead of per-node tree traversal', async () => {
+      const treeUtils = await import('../../src/utils/tree');
+      const spy = vi.spyOn(treeUtils, 'findNodeById');
+
+      const children = Array.from({ length: 50 }, (_, i) => ({
+        id: `n${i}`,
+        name: `Node${i}`,
+        title: `Title${i}`,
+      }));
+      const tree: OrgNode = {
+        id: 'r',
+        name: 'Root',
+        title: 'CEO',
+        children: [{ id: 'a', name: 'A', title: 'VP', children }],
+      };
+      const store = new OrgStore(tree);
+      spy.mockClear();
+      store.bulkRemoveNodes(children.map((c) => c.id));
+      // With pre-computed maps, findNodeById should NOT be called O(n*k) times
+      expect(spy.mock.calls.length).toBeLessThanOrEqual(5);
+      spy.mockRestore();
     });
   });
 

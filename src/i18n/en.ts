@@ -636,6 +636,7 @@ const en: Record<string, string> = {
   'chart_store.error_no_active': 'No active chart',
   'chart_store.error_version_name_empty': 'Version name cannot be empty',
   'chart_store.error_version_not_found': 'Version not found: {id}',
+  'chart_store.error_import_invalid_tree': 'Imported file contains invalid tree data: {detail}',
 
   // ─── Org Store Validation ──────────────────────────────────────────
   'org_store.error_remove_root': 'Cannot remove root node',
