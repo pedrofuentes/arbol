@@ -9,6 +9,8 @@ import type { ChartStore } from '../store/chart-store';
 import { timestampedFilename } from '../utils/filename';
 import { showConfirmDialog } from '../ui/confirm-dialog';
 import { showInputDialog } from '../ui/input-dialog';
+import { detectArbolFileType } from '../utils/file-type';
+import { t } from '../i18n';
 
 let formIdCounter = 0;
 function uniqueId(prefix: string): string {
@@ -644,19 +646,30 @@ export class ImportEditor {
     const ext =
       source.lastIndexOf('.') >= 0 ? source.slice(source.lastIndexOf('.')).toLowerCase() : '';
 
-    // Detect chart bundle format
+    // Detect chart bundle format and file-type mismatches
     if (ext === '.json' || ext === '') {
       const trimmed = text.trimStart();
       if (trimmed.startsWith('{')) {
+        let parsed: unknown = null;
         try {
-          const parsed = JSON.parse(text);
-          if (parsed && parsed.format === 'arbol-chart') {
+          parsed = JSON.parse(text);
+        } catch {
+          /* not valid JSON, continue to CSV */
+        }
+
+        if (parsed && typeof parsed === 'object') {
+          const obj = parsed as Record<string, unknown>;
+          if (obj.format === 'arbol-chart') {
             return this.parseChartBundle(parsed, source);
           }
-        } catch (e) {
-          // If parseChartBundle threw a validation error, propagate it
-          if (e instanceof Error && e.message.includes('chart bundle')) throw e;
-          /* otherwise not a bundle, continue */
+
+          const fileType = detectArbolFileType(parsed);
+          if (fileType === 'backup') {
+            throw new Error(t('import.wrong_file_backup'));
+          }
+          if (fileType === 'settings') {
+            throw new Error(t('import.wrong_file_settings'));
+          }
         }
       }
     }

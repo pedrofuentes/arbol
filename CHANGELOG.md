@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **File type mismatch warnings** — when restoring a backup, importing settings, or importing org data, the app now detects if you selected the wrong file type and shows a helpful message directing you to the correct feature
+
 ## [3.1.0] — 2026-03-15
 
 ### Changed

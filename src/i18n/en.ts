@@ -489,6 +489,22 @@ const en: Record<string, string> = {
   'settings.import_failed': 'Import failed: {error}',
   'settings.backup_failed': 'Backup failed: {error}',
   'settings.restore_failed': 'Restore failed: {error}',
+  'settings.wrong_file_for_restore_settings':
+    'This looks like a settings file, not a backup. Use "Import" in the Settings section instead.',
+  'settings.wrong_file_for_restore_chart':
+    'This looks like a chart export, not a backup. Use "Import" in the sidebar to import charts.',
+  'settings.wrong_file_for_restore_org':
+    'This looks like org chart data, not a backup. Use "Import" in the sidebar to load org data.',
+  'settings.wrong_file_for_import_settings_backup':
+    'This looks like a full backup, not a settings file. Use "Restore" in the Backup & Restore section instead.',
+  'settings.wrong_file_for_import_settings_chart':
+    'This looks like a chart export, not a settings file. Use "Import" in the sidebar to import charts.',
+  'settings.wrong_file_for_import_settings_org':
+    'This looks like org chart data, not a settings file. Use "Import" in the sidebar to load org data.',
+  'import.wrong_file_settings':
+    'This looks like a settings file, not org data. Use "Import" in the Settings panel to load settings.',
+  'import.wrong_file_backup':
+    'This looks like a full backup, not org data. Use "Restore" in the Settings panel to restore backups.',
   'settings.add_category': '+ Add Category',
   'settings.new_category': 'New Category',
   'settings.category_label_aria': 'Category label',

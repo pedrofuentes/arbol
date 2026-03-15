@@ -16,6 +16,7 @@ import {
 } from '../store/backup-manager';
 import { showRestoreStrategyDialog } from '../ui/restore-dialog';
 import { type IStorage, browserStorage } from '../utils/storage';
+import { detectArbolFileType } from '../utils/file-type';
 import { t } from '../i18n';
 
 const ARBOL_STORAGE_KEYS = [
@@ -690,6 +691,21 @@ export class SettingsEditor {
         reader.onload = () => {
           try {
             const raw = JSON.parse(reader.result as string);
+
+            const fileType = detectArbolFileType(raw);
+            if (fileType === 'backup') {
+              showToast(t('settings.wrong_file_for_import_settings_backup'), 'error');
+              return;
+            }
+            if (fileType === 'chart-bundle') {
+              showToast(t('settings.wrong_file_for_import_settings_chart'), 'error');
+              return;
+            }
+            if (fileType === 'org-tree') {
+              showToast(t('settings.wrong_file_for_import_settings_org'), 'error');
+              return;
+            }
+
             const settings = this.settingsStore!.importFromFile(reader.result as string);
             this.renderer.updateOptions(settings as unknown as Partial<RendererOptions>);
 
@@ -757,6 +773,29 @@ export class SettingsEditor {
           const file = input.files?.[0];
           if (!file) return;
           try {
+            const text = await file.text();
+            let earlyParsed: unknown;
+            try {
+              earlyParsed = JSON.parse(text);
+            } catch {
+              earlyParsed = null;
+            }
+            if (earlyParsed) {
+              const fileType = detectArbolFileType(earlyParsed);
+              if (fileType === 'settings') {
+                showToast(t('settings.wrong_file_for_restore_settings'), 'error');
+                return;
+              }
+              if (fileType === 'chart-bundle') {
+                showToast(t('settings.wrong_file_for_restore_chart'), 'error');
+                return;
+              }
+              if (fileType === 'org-tree') {
+                showToast(t('settings.wrong_file_for_restore_org'), 'error');
+                return;
+              }
+            }
+
             const backup = await readBackupFile(file);
             const summary = getBackupSummary(backup);
             const date = new Date(summary.createdAt).toLocaleString();
