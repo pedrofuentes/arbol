@@ -1202,13 +1202,13 @@ export class SettingsEditor {
     strip.setAttribute('data-section-id', `preview-${tabId}`);
 
     const header = document.createElement('div');
-    header.className = 'preview-strip-header';
+    header.className = 'preview-header';
     const title = document.createElement('span');
-    title.className = 'preview-strip-title';
-    title.textContent = 'Live Preview';
+    title.className = 'preview-title';
+    title.textContent = t('settings.preview_title');
     const hint = document.createElement('span');
-    hint.className = 'preview-strip-hint';
-    hint.textContent = 'Updates as you change settings';
+    hint.className = 'preview-hint';
+    hint.textContent = t('settings.preview_hint');
     header.appendChild(title);
     header.appendChild(hint);
     strip.appendChild(header);
@@ -1223,8 +1223,8 @@ export class SettingsEditor {
       return el;
     };
 
-    const svg = svgEl('svg', { viewBox: '0 0 440 120', width: '100%', height: '120' }) as SVGSVGElement;
-    svg.style.display = 'block';
+    const svg = svgEl('svg', { viewBox: '0 0 440 120', width: '440', height: '120' }) as SVGSVGElement;
+    svg.style.cssText = 'display:block;max-width:100%;height:auto;';
 
     const opts = this.renderer.getOptions();
 
@@ -1604,23 +1604,15 @@ export class SettingsEditor {
     for (const lp of LAYOUT_PRESETS) {
       const btn = document.createElement('button');
       btn.className = 'layout-preset-card';
-      btn.style.cssText = `
-        display:flex;flex-direction:column;align-items:center;gap:2px;
-        padding:6px 4px;border:1px solid var(--border-default);
-        border-radius:var(--radius-md);background:var(--bg-elevated);
-        cursor:pointer;transition:all 120ms ease;font-family:var(--font-sans);
-      `;
 
       const icon = document.createElement('span');
       icon.textContent = lp.icon;
-      icon.className = 'text-base text-secondary';
-      icon.style.cssText = 'line-height:1;';
+      icon.style.cssText = 'font-size:18px;line-height:1;';
       btn.appendChild(icon);
 
       const label = document.createElement('span');
       label.textContent = lp.name;
-      label.className = 'text-tertiary';
-      label.style.cssText = 'font-size:9px;font-weight:600;';
+      label.className = 'layout-preset-name';
       btn.appendChild(label);
 
       const dims = document.createElement('span');
@@ -1641,7 +1633,7 @@ export class SettingsEditor {
         curOpts.nodeHeight === lp.sizes.nodeHeight;
 
       if (layoutActive) {
-        btn.classList.add('preset-active');
+        btn.classList.add('layout-active');
       }
 
       btn.addEventListener('mouseenter', () => {
@@ -1650,7 +1642,7 @@ export class SettingsEditor {
       });
       btn.addEventListener('mouseleave', () => {
         btn.style.borderColor = layoutActive ? 'var(--accent)' : 'var(--border-default)';
-        btn.style.background = 'var(--bg-elevated)';
+        btn.style.background = layoutActive ? 'var(--accent-muted)' : 'var(--bg-elevated)';
       });
 
       btn.addEventListener('click', () => {
