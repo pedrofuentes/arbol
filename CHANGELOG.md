@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] — 2026-03-15
+
+### Added
+- **Collapsible accordion help dialog** — 13 sections now collapse/expand with chevron indicators; only one section open at a time
+- **Keyboard Shortcuts promoted** — Shortcuts section is now first and expanded by default, displayed as a clean two-column grid with 13 shortcuts (8 new: Ctrl+K, Ctrl+,, ?, arrow keys, Enter, Space, Home/End, Shift+F10)
+- **New keyboard shortcuts** — `?` opens help dialog, `Ctrl+,` opens settings modal
+- **5 new command palette commands** — Help & Shortcuts (❓), Toggle Theme (🌙/☀️), New Chart (➕), Save Version (💾), Import Data (📥)
+- **Mobile-friendly welcome** — updated to "Tap, click, or right-click any card…"
+
+### Changed
+- **Help content accuracy overhaul** — every section audited and corrected to match current app state: removed non-existent Sidebar Tabs/Collapse-Expand/Export-Import Settings; fixed menu labels (Tag not Set Category, Focus not Focus on sub-org); updated sidebar, import wizard, settings modal, and export dialog descriptions
+- **i18n compliance** — all hardcoded English strings in help dialog now use `t()` i18n calls
+
+### Testing
+- 1,800 tests across 69 files — all passing
+
 ## [3.2.2] — 2026-03-15
 
 ### Changed

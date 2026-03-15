@@ -46,7 +46,7 @@ describe('WelcomeBanner', () => {
       const text = getBannerText();
       expect(text).not.toBeNull();
       expect(text!.textContent).toContain('Welcome to Arbol');
-      expect(text!.textContent).toContain('Right-click');
+      expect(text!.textContent).toContain('right-click');
     });
 
     it('appends banner to the provided container', () => {

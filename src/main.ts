@@ -1738,6 +1738,66 @@ async function main(): Promise<void> {
         group: t('command_palette.group_navigation'),
         action: () => { search.focus(); },
       },
+      {
+        id: 'help',
+        label: t('command_palette.item_help'),
+        icon: '❓',
+        shortcut: '?',
+        group: t('command_palette.group_navigation'),
+        action: () => { showHelpDialog(); },
+      },
+      {
+        id: 'theme',
+        label: t('command_palette.item_theme'),
+        icon: themeManager.getTheme() === 'dark' ? '☀️' : '🌙',
+        group: t('command_palette.group_actions'),
+        action: () => { themeManager.toggle(); },
+      },
+      {
+        id: 'new-chart',
+        label: t('command_palette.item_new_chart'),
+        icon: '➕',
+        group: t('command_palette.group_charts'),
+        action: async () => {
+          const name = await showInputDialog({
+            title: t('chart_editor.new_chart_dialog_title'),
+            label: t('chart_editor.new_chart_dialog_label'),
+            placeholder: t('chart_editor.new_chart_placeholder'),
+            maxLength: 100,
+          });
+          if (name?.trim()) {
+            const proceed = await handleBeforeSwitch();
+            if (!proceed) return;
+            const chart = await chartStore.createChart(name.trim());
+            handleChartSwitched(chart);
+          }
+        },
+      },
+      {
+        id: 'save-version',
+        label: t('command_palette.item_save_version'),
+        icon: '💾',
+        group: t('command_palette.group_charts'),
+        action: async () => {
+          const name = await showInputDialog({
+            title: t('dialog.save_version.title'),
+            label: t('dialog.save_version.label'),
+            placeholder: t('dialog.save_version.placeholder'),
+            maxLength: 100,
+          });
+          if (name?.trim()) {
+            chartStore.saveVersion(name.trim(), store.getTree());
+            announce(t('announce.chart_saved'));
+          }
+        },
+      },
+      {
+        id: 'import',
+        label: t('command_palette.item_import'),
+        icon: '📥',
+        group: t('command_palette.group_actions'),
+        action: () => { importBtn.click(); },
+      },
     ];
 
     // Dynamic chart entries
@@ -1819,6 +1879,19 @@ async function main(): Promise<void> {
       renderer.setSelectedNode(null);
     },
     description: t('shortcut.escape'),
+  });
+
+  shortcuts.register({
+    key: '?',
+    handler: () => showHelpDialog(),
+    description: t('shortcut.help'),
+  });
+
+  shortcuts.register({
+    key: ',',
+    ctrl: true,
+    handler: () => { settingsBtn.click(); },
+    description: t('shortcut.settings'),
   });
 
   window.addEventListener('beforeunload', (e) => {

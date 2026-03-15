@@ -1452,6 +1452,109 @@ textarea:focus-visible {
   .command-palette { width: calc(100vw - 32px); }
 }
 
+/* ─── Help Dialog ─────────────────────────────────────────────── */
+
+.help-section {
+  border-bottom: 1px solid var(--border-subtle);
+}
+.help-section:last-child { border-bottom: none; }
+
+.help-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  cursor: pointer;
+  user-select: none;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  transition: color var(--transition-fast);
+}
+.help-section-header:hover { color: var(--text-primary); }
+.help-section-header:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.help-chevron {
+  font-size: 10px;
+  transition: transform 200ms ease;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+.help-section.open .help-chevron { transform: rotate(90deg); }
+
+.help-section-body {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 300ms ease, opacity 200ms ease;
+}
+.help-section.open .help-section-body {
+  max-height: 2000px;
+  opacity: 1;
+}
+
+.help-section-list {
+  list-style: none;
+  padding: 0 0 10px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.help-section-item {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  padding-left: 12px;
+  position: relative;
+}
+
+.help-item-bullet {
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+/* Shortcuts grid — two-column layout */
+.help-shortcuts-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  padding: 0 0 10px;
+  align-items: baseline;
+}
+
+.help-shortcut-key {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+  justify-self: end;
+}
+
+.help-shortcut-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
 /* ======================================================================
    Property Panel — Right-side contextual panel
    ====================================================================== */
