@@ -38,13 +38,14 @@ describe('SettingsModal', () => {
     modal.destroy();
   });
 
-  it('close button closes modal', () => {
-    const { modal, onClose } = createModal();
+  it('close button closes modal and calls onCancel', () => {
+    const onCancel = vi.fn();
+    const modal = new SettingsModal({ onClose: vi.fn(), onApply: vi.fn(), onCancel });
     modal.open();
     const closeBtn = document.querySelector('.settings-modal-close') as HTMLElement;
     closeBtn.click();
     expect(modal.isOpen()).toBe(false);
-    expect(onClose).toHaveBeenCalled();
+    expect(onCancel).toHaveBeenCalledTimes(1);
     modal.destroy();
   });
 
@@ -74,13 +75,13 @@ describe('SettingsModal', () => {
     modal.destroy();
   });
 
-  it('Apply button calls onApply and closes', () => {
-    const { modal, onApply, onClose } = createModal();
+  it('Apply button calls onApply and closes', async () => {
+    const { modal, onClose } = createModal();
     modal.open();
     const applyBtn = document.querySelector('.settings-apply-btn') as HTMLElement;
     applyBtn.click();
-    expect(onApply).toHaveBeenCalledTimes(1);
-    expect(onClose).toHaveBeenCalled(); // close is called after apply
+    await Promise.resolve();
+    expect(onClose).toHaveBeenCalled();
     modal.destroy();
   });
 
@@ -179,5 +180,103 @@ describe('SettingsModal', () => {
     modal.open();
     modal.destroy();
     expect(document.querySelector('.settings-modal-overlay')).toBeNull();
+  });
+
+  describe('cancel behavior', () => {
+    it('Cancel button calls onCancel callback', () => {
+      const onCancel = vi.fn();
+      const modal = new SettingsModal({ onClose: vi.fn(), onApply: vi.fn(), onCancel });
+      modal.open();
+      const cancelBtn = document.querySelector('.settings-cancel-btn') as HTMLElement;
+      cancelBtn.click();
+      expect(onCancel).toHaveBeenCalledTimes(1);
+      modal.destroy();
+    });
+
+    it('Escape key calls onCancel callback', () => {
+      const onCancel = vi.fn();
+      const modal = new SettingsModal({ onClose: vi.fn(), onApply: vi.fn(), onCancel });
+      modal.open();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      expect(onCancel).toHaveBeenCalledTimes(1);
+      modal.destroy();
+    });
+
+    it('overlay click calls onCancel callback', () => {
+      const onCancel = vi.fn();
+      const modal = new SettingsModal({ onClose: vi.fn(), onApply: vi.fn(), onCancel });
+      modal.open();
+      const overlay = document.querySelector('.settings-modal-overlay') as HTMLElement;
+      overlay.click();
+      expect(onCancel).toHaveBeenCalledTimes(1);
+      modal.destroy();
+    });
+
+    it('Apply button does NOT call onCancel', () => {
+      const onCancel = vi.fn();
+      const modal = new SettingsModal({ onClose: vi.fn(), onApply: vi.fn(), onCancel });
+      modal.open();
+      const applyBtn = document.querySelector('.settings-apply-btn') as HTMLElement;
+      applyBtn.click();
+      expect(onCancel).not.toHaveBeenCalled();
+      modal.destroy();
+    });
+  });
+
+  describe('tab badges', () => {
+    it('updateTabBadge adds .settings-tab-badge to the correct tab', () => {
+      const { modal } = createModal();
+      modal.open();
+      modal.updateTabBadge('layout', 3);
+      const layoutTab = document.querySelector('[data-tab="layout"]')!;
+      const badge = layoutTab.querySelector('.settings-tab-badge');
+      expect(badge).not.toBeNull();
+      expect(badge!.textContent).toBe('3');
+      modal.destroy();
+    });
+
+    it('updateTabBadge with 0 removes the badge', () => {
+      const { modal } = createModal();
+      modal.open();
+      modal.updateTabBadge('layout', 5);
+      let badge = document.querySelector('[data-tab="layout"] .settings-tab-badge');
+      expect(badge).not.toBeNull();
+
+      modal.updateTabBadge('layout', 0);
+      badge = document.querySelector('[data-tab="layout"] .settings-tab-badge');
+      expect(badge).toBeNull();
+      modal.destroy();
+    });
+
+    it('badge shows correct count text', () => {
+      const { modal } = createModal();
+      modal.open();
+      modal.updateTabBadge('cards', 42);
+      const badge = document.querySelector('[data-tab="cards"] .settings-tab-badge');
+      expect(badge).not.toBeNull();
+      expect(badge!.textContent).toBe('42');
+      modal.destroy();
+    });
+  });
+
+  describe('footer structure', () => {
+    it('footer contains .settings-footer-left and .settings-footer-right', () => {
+      const { modal } = createModal();
+      modal.open();
+      const footerLeft = document.querySelector('.settings-footer-left');
+      const footerRight = document.querySelector('.settings-footer-right');
+      expect(footerLeft).not.toBeNull();
+      expect(footerRight).not.toBeNull();
+      modal.destroy();
+    });
+
+    it('getFooterLeft() returns the left footer element', () => {
+      const { modal } = createModal();
+      modal.open();
+      const footerLeft = modal.getFooterLeft();
+      expect(footerLeft).not.toBeNull();
+      expect(footerLeft.classList.contains('settings-footer-left')).toBe(true);
+      modal.destroy();
+    });
   });
 });

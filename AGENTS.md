@@ -23,7 +23,7 @@ Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 
 
 ## Project Structure
 
-70 TypeScript source files in `src/`, organized by concern:
+72 TypeScript source files in `src/`, organized by concern:
 
 ```
 src/
@@ -80,6 +80,7 @@ src/
 │   ├── focus-banner.ts        # Focus mode banner — "Viewing [Name]'s org" + "Show full org" exit
 │   ├── help-dialog.ts         # Help/about overlay (sections on interactions, shortcuts, imports)
 │   ├── import-wizard.ts       # Step-by-step import wizard modal container
+│   ├── import-wizard-steps.ts # Individual step content renderers for the import wizard
 │   ├── inline-editor.ts       # Inline card editing — text inputs overlaid on SVG card
 │   ├── input-dialog.ts        # Custom text input dialog replacing native prompt()
 │   ├── manager-picker.ts      # Modal for selecting target node (Move/Reassign operations)
@@ -96,6 +97,7 @@ src/
 │   ├── csv-parser.ts          # CSV parsing (RFC 4180 multi-line quotes, escapes) + tree building from flat CSV, duplicate/cycle/limit validation
 │   ├── event-emitter.ts       # Typed event emitter base class
 │   ├── filename.ts            # Safe filename generation for exports
+│   ├── file-type.ts           # Arbol JSON file type detection (backup vs settings vs chart-bundle vs org-tree)
 │   ├── id.ts                  # UUID generation via crypto.randomUUID()
 │   ├── search.ts              # Case-insensitive substring search on name/title, returns matching IDs
 │   ├── shortcuts.ts           # Keyboard shortcut manager (register combos, prevent defaults)
@@ -352,12 +354,12 @@ The app follows WCAG 2.1 AA guidelines:
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **1,711 tests across 68 files** — all must pass before committing
+- **1,744 tests across 69 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
 
-### Test Files (all 62)
+### Test Files (all 69)
 
 | File | Scope |
 |------|-------|
@@ -372,6 +374,7 @@ The app follows WCAG 2.1 AA guidelines:
 | `tests/utils/text-normalize.test.ts` | normalizeText (titleCase, uppercase, lowercase, none), normalizeTreeText (recursive, immutable) |
 | `tests/utils/contrast.test.ts` | parseHex, relativeLuminance, contrastingTextColor, contrastingTitleColor |
 | `tests/utils/filename.test.ts` | Safe filename generation, special character handling |
+| `tests/utils/file-type.test.ts` | detectArbolFileType — backup, settings, chart-bundle, org-tree, unknown detection |
 | `tests/utils/tree-diff.test.ts` | Tree comparison, added/removed/moved/changed node detection |
 | `tests/store/backup-manager.test.ts` | Full backup creation, restore (replace/merge), data integrity |
 | `tests/store/category-store.test.ts` | ColorCategory CRUD, defaults, localStorage persistence, validation, events, text color auto-contrast |
@@ -427,6 +430,7 @@ The app follows WCAG 2.1 AA guidelines:
 | `tests/ui/property-panel.test.ts` | Property panel — node info display, edit fields, action buttons |
 | `tests/ui/settings-modal.test.ts` | Settings modal — tab rendering, open/close, container structure |
 | `tests/ui/import-wizard.test.ts` | Import wizard — step navigation, open/close, container structure |
+| `tests/ui/import-wizard-steps.test.ts` | Import wizard step content renderers, step transitions |
 | `tests/version.test.ts` | APP_VERSION export, semver format validation |
 
 ## Development

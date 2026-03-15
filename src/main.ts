@@ -1,7 +1,7 @@
 import { setLocale, t } from './i18n';
 import en from './i18n/en';
 import { OrgStore } from './store/org-store';
-import { ChartRenderer } from './renderer/chart-renderer';
+import { ChartRenderer, type RendererOptions } from './renderer/chart-renderer';
 import { FormEditor } from './editor/form-editor';
 import { JsonEditor } from './editor/json-editor';
 import { exportToPptx } from './export/pptx-exporter';
@@ -420,6 +420,7 @@ async function main(): Promise<void> {
     'categories-legend': 'categories',
     'settings-io': 'backup',
     'backup-restore': 'backup',
+
   };
 
   function filterSettingsSections(tabId: string): void {
@@ -432,11 +433,43 @@ async function main(): Promise<void> {
     });
   }
 
-  let settingsEditorMounted = false;
+  let settingsEditorInstance: SettingsEditor | null = null;
+
+  let settingsSnapshot: Partial<RendererOptions> | null = null;
 
   const settingsModal = new SettingsModal({
     onClose: () => {},
-    onApply: () => { rerender(); },
+    onApply: () => {},
+    onDone: async () => {
+      if (!settingsSnapshot) return;
+      const currentOpts = renderer.getOptions();
+      const hasChanges = Object.keys(settingsSnapshot).some((key) => {
+        const k = key as keyof typeof currentOpts;
+        if (k === 'categories') return false;
+        return settingsSnapshot![k] !== currentOpts[k];
+      });
+      if (hasChanges && settingsEditorInstance && !settingsEditorInstance.matchesExistingPreset()) {
+        const name = await showInputDialog({
+          title: t('settings.save_preset_prompt_title'),
+          label: t('settings.save_preset_prompt_label'),
+          placeholder: t('settings.preset_name_placeholder'),
+          confirmLabel: t('settings.save_preset_button'),
+          cancelLabel: t('settings.save_preset_skip'),
+        });
+        if (name) {
+          settingsEditorInstance.saveCurrentAsPreset(name);
+        }
+      }
+      settingsSnapshot = null;
+    },
+    onCancel: () => {
+      // Revert to snapshot taken when modal was opened
+      if (settingsSnapshot) {
+        renderer.updateOptions(settingsSnapshot);
+        rerender();
+        settingsSnapshot = null;
+      }
+    },
     onTabChange: (tabId) => { filterSettingsSections(tabId); },
   });
 
@@ -450,9 +483,11 @@ async function main(): Promise<void> {
   settingsIcon.textContent = '⚙️';
   settingsBtn.appendChild(settingsIcon);
   settingsBtn.addEventListener('click', () => {
+    // Snapshot current settings so Cancel can revert
+    settingsSnapshot = { ...renderer.getOptions() };
     settingsModal.open();
-    if (!settingsEditorMounted) {
-      new SettingsEditor(
+    if (!settingsEditorInstance) {
+      settingsEditorInstance = new SettingsEditor(
         settingsModal.getContentArea(),
         renderer,
         rerender,
@@ -460,7 +495,9 @@ async function main(): Promise<void> {
         categoryStore,
         chartDB,
       );
-      settingsEditorMounted = true;
+      settingsEditorInstance.onBuild(() => {
+        filterSettingsSections(settingsModal.getActiveTab());
+      });
     }
     filterSettingsSections(settingsModal.getActiveTab());
   });

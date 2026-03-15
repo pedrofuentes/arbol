@@ -16,13 +16,14 @@ import {
 } from '../store/backup-manager';
 import { showRestoreStrategyDialog } from '../ui/restore-dialog';
 import { type IStorage, browserStorage } from '../utils/storage';
+import { detectArbolFileType } from '../utils/file-type';
+import { t } from '../i18n';
 
 const ARBOL_STORAGE_KEYS = [
   'arbol-org-data',
   'arbol-settings',
   'arbol-categories',
   'arbol-csv-mappings',
-  'arbol-accordion-state',
   'arbol-custom-presets',
   'arbol-theme',
 ];
@@ -35,11 +36,13 @@ interface SettingDef {
   min?: number;
   max?: number;
   step?: number;
+  unit?: string;
   options?: string[];
 }
 
 interface SettingGroup {
   title: string;
+  description?: string;
   settings: SettingDef[];
 }
 
@@ -54,13 +57,15 @@ export interface CombinedPreset {
 const SETTING_GROUPS: SettingGroup[] = [
   {
     title: 'Card Dimensions',
+    description: 'settings.section_desc.card_dimensions',
     settings: [
-      { key: 'nodeWidth', label: 'Node Width', description: 'Width of each card in pixels', type: 'range', min: 50, max: 250, step: 1 },
-      { key: 'nodeHeight', label: 'Node Height', description: 'Height of each card in pixels', type: 'range', min: 16, max: 60, step: 1 },
+      { key: 'nodeWidth', label: 'Node Width', description: 'Width of each card in pixels', type: 'range', min: 50, max: 250, step: 1, unit: 'px' },
+      { key: 'nodeHeight', label: 'Node Height', description: 'Height of each card in pixels', type: 'range', min: 16, max: 60, step: 1, unit: 'px' },
     ],
   },
   {
     title: 'Tree Spacing',
+    description: 'settings.section_desc.tree_spacing',
     settings: [
       {
         key: 'horizontalSpacing',
@@ -70,8 +75,9 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 5,
         max: 100,
         step: 1,
+        unit: 'px',
       },
-      { key: 'branchSpacing', label: 'Branch Spacing', description: 'Gap between sibling subtrees', type: 'range', min: 0, max: 60, step: 1 },
+      { key: 'branchSpacing', label: 'Branch Spacing', description: 'Gap between sibling subtrees', type: 'range', min: 0, max: 60, step: 1, unit: 'px' },
       {
         key: 'topVerticalSpacing',
         label: 'Top Vertical Spacing',
@@ -80,6 +86,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 50,
         step: 1,
+        unit: 'px',
       },
       {
         key: 'bottomVerticalSpacing',
@@ -89,14 +96,16 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 50,
         step: 1,
+        unit: 'px',
       },
     ],
   },
   {
     title: 'IC Options',
+    description: 'settings.section_desc.ic_options',
     settings: [
-      { key: 'icNodeWidth', label: 'IC Node Width', description: 'Width of IC cards', type: 'range', min: 40, max: 220, step: 1 },
-      { key: 'icGap', label: 'IC Gap', description: 'Spacing between stacked ICs', type: 'range', min: 0, max: 20, step: 1 },
+      { key: 'icNodeWidth', label: 'IC Node Width', description: 'Width of IC cards', type: 'range', min: 40, max: 220, step: 1, unit: 'px' },
+      { key: 'icGap', label: 'IC Gap', description: 'Spacing between stacked ICs', type: 'range', min: 0, max: 20, step: 1, unit: 'px' },
       {
         key: 'icContainerPadding',
         label: 'IC Container Padding',
@@ -104,6 +113,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 20,
         step: 1,
+        unit: 'px',
       },
       { key: 'icContainerFill', label: 'IC Container Fill', description: 'Background of IC group box', type: 'color' },
       {
@@ -113,15 +123,17 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 15,
         step: 1,
+        unit: 'px',
       },
     ],
   },
   {
     title: 'Advisor Options',
+    description: 'settings.section_desc.advisor_options',
     settings: [
-      { key: 'palTopGap', label: 'Advisor Top Gap', type: 'range', min: 0, max: 40, step: 1 },
-      { key: 'palBottomGap', label: 'Advisor Bottom Gap', type: 'range', min: 0, max: 40, step: 1 },
-      { key: 'palRowGap', label: 'Advisor Row Gap', type: 'range', min: 0, max: 20, step: 1 },
+      { key: 'palTopGap', label: 'Advisor Top Gap', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
+      { key: 'palBottomGap', label: 'Advisor Bottom Gap', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
+      { key: 'palRowGap', label: 'Advisor Row Gap', type: 'range', min: 0, max: 20, step: 1, unit: 'px' },
       {
         key: 'palCenterGap',
         label: 'Advisor Center Gap',
@@ -130,16 +142,18 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 10,
         max: 100,
         step: 1,
+        unit: 'px',
       },
     ],
   },
   {
     title: 'Typography',
+    description: 'settings.section_desc.typography',
     settings: [
-      { key: 'nameFontSize', label: 'Name Font Size', description: 'Font size for person names', type: 'range', min: 5, max: 20, step: 1 },
-      { key: 'titleFontSize', label: 'Title Font Size', description: 'Font size for job titles', type: 'range', min: 5, max: 20, step: 1 },
-      { key: 'textPaddingTop', label: 'Text Padding Top', type: 'range', min: 0, max: 15, step: 1 },
-      { key: 'textGap', label: 'Text Gap', description: 'Space between name and title', type: 'range', min: 0, max: 10, step: 1 },
+      { key: 'nameFontSize', label: 'Name Font Size', description: 'Font size for person names', type: 'range', min: 5, max: 20, step: 1, unit: 'px' },
+      { key: 'titleFontSize', label: 'Title Font Size', description: 'Font size for job titles', type: 'range', min: 5, max: 20, step: 1, unit: 'px' },
+      { key: 'textPaddingTop', label: 'Text Padding Top', type: 'range', min: 0, max: 15, step: 1, unit: 'px' },
+      { key: 'textGap', label: 'Text Gap', description: 'Space between name and title', type: 'range', min: 0, max: 10, step: 1, unit: 'px' },
       {
         key: 'textAlign',
         label: 'Text Alignment',
@@ -160,6 +174,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 20,
         step: 1,
+        unit: 'px',
       },
       { key: 'nameColor', label: 'Name Color', description: 'Color for person names', type: 'color' },
       { key: 'titleColor', label: 'Title Color', description: 'Color for job titles', type: 'color' },
@@ -167,14 +182,16 @@ const SETTING_GROUPS: SettingGroup[] = [
   },
   {
     title: 'Link Style',
+    description: 'settings.section_desc.link_style',
     settings: [
-      { key: 'linkWidth', label: 'Link Width', type: 'range', min: 0.5, max: 5, step: 0.5 },
+      { key: 'linkWidth', label: 'Link Width', type: 'range', min: 0.5, max: 5, step: 0.5, unit: 'px' },
       { key: 'linkColor', label: 'Link Color', description: 'Color of connector lines', type: 'color' },
       { key: 'dottedLineDash', label: 'Dotted Line Pattern', description: 'Dash pattern e.g. "6,4"', type: 'text' },
     ],
   },
   {
     title: 'Card Style',
+    description: 'settings.section_desc.card_style',
     settings: [
       {
         key: 'cardStrokeWidth',
@@ -183,6 +200,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0.5,
         max: 5,
         step: 0.5,
+        unit: 'px',
       },
       { key: 'cardStroke', label: 'Card Stroke', description: 'Card border color', type: 'color' },
       { key: 'cardFill', label: 'Card Fill', description: 'Background color of cards', type: 'color' },
@@ -194,11 +212,13 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 15,
         step: 1,
+        unit: 'px',
       },
     ],
   },
   {
     title: 'Headcount Badge',
+    description: 'settings.section_desc.headcount_badge',
     settings: [
       { key: 'showHeadcount', label: 'Show Headcount', description: 'Show badges on manager cards', type: 'checkbox' },
       {
@@ -208,6 +228,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 5,
         max: 16,
         step: 1,
+        unit: 'px',
       },
       {
         key: 'headcountBadgeHeight',
@@ -216,6 +237,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 10,
         max: 30,
         step: 1,
+        unit: 'px',
       },
       {
         key: 'headcountBadgeRadius',
@@ -224,6 +246,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 15,
         step: 1,
+        unit: 'px',
       },
       {
         key: 'headcountBadgePadding',
@@ -232,6 +255,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 2,
         max: 16,
         step: 1,
+        unit: 'px',
       },
       { key: 'headcountBadgeColor', label: 'Badge Color', type: 'color' },
       { key: 'headcountBadgeTextColor', label: 'Badge Text Color', type: 'color' },
@@ -239,6 +263,7 @@ const SETTING_GROUPS: SettingGroup[] = [
   },
   {
     title: 'Categories Legend',
+    description: 'settings.section_desc.categories_legend',
     settings: [
       {
         key: 'legendRows',
@@ -248,6 +273,7 @@ const SETTING_GROUPS: SettingGroup[] = [
         min: 0,
         max: 20,
         step: 1,
+        unit: 'rows',
       },
     ],
   },
@@ -407,13 +433,6 @@ function sectionIdFromTitle(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 }
 
-const ALL_SECTION_IDS = [
-  'presets',
-  'categories',
-  'settings-io',
-  'backup-restore',
-];
-
 export class SettingsEditor {
   private container: HTMLElement;
   private renderer: ChartRenderer;
@@ -422,13 +441,9 @@ export class SettingsEditor {
   private categoryStore: CategoryStore | null;
   private chartDB: ChartDB | null;
   private storage: IStorage;
+  private onBuildCallback: (() => void) | null = null;
 
-  private static ACCORDION_STORAGE_KEY = 'arbol-accordion-state';
-  private static DEFAULT_EXPANDED = new Set(['presets', 'categories']);
-
-  private accordionState: Map<string, boolean> = new Map();
-
-  private static CUSTOM_PRESETS_KEY = 'arbol-custom-presets';
+  private static CUSTOM_PRESETS_KEY= 'arbol-custom-presets';
 
   constructor(
     container: HTMLElement,
@@ -446,47 +461,11 @@ export class SettingsEditor {
     this.categoryStore = categoryStore ?? null;
     this.chartDB = chartDB ?? null;
     this.storage = storage;
-    this.loadAccordionState();
     this.build();
   }
 
-  private loadAccordionState(): void {
-    try {
-      const raw = this.storage.getItem(SettingsEditor.ACCORDION_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (typeof parsed === 'object') {
-          for (const [key, value] of Object.entries(parsed)) {
-            if (typeof value === 'boolean') {
-              this.accordionState.set(key, value);
-            }
-          }
-        }
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-
-  private saveAccordionState(): void {
-    const obj: Record<string, boolean> = {};
-    for (const [key, value] of this.accordionState) {
-      obj[key] = value;
-    }
-    this.storage.setItem(SettingsEditor.ACCORDION_STORAGE_KEY, JSON.stringify(obj));
-  }
-
-  private isExpanded(sectionId: string): boolean {
-    if (this.accordionState.has(sectionId)) {
-      return this.accordionState.get(sectionId)!;
-    }
-    return SettingsEditor.DEFAULT_EXPANDED.has(sectionId);
-  }
-
-  private toggleSection(sectionId: string): void {
-    const current = this.isExpanded(sectionId);
-    this.accordionState.set(sectionId, !current);
-    this.saveAccordionState();
+  onBuild(callback: () => void): void {
+    this.onBuildCallback = callback;
   }
 
   private loadCustomPresets(): CombinedPreset[] {
@@ -511,6 +490,62 @@ export class SettingsEditor {
     );
   }
 
+  matchesExistingPreset(): boolean {
+    const opts = this.renderer.getOptions();
+    const allPresets = [...COMBINED_PRESETS, ...this.loadCustomPresets()];
+    return allPresets.some((p) =>
+      opts.cardFill === p.colors.cardFill &&
+      opts.cardStroke === p.colors.cardStroke &&
+      opts.linkColor === p.colors.linkColor &&
+      opts.cardStrokeWidth === p.colors.cardStrokeWidth &&
+      opts.icContainerFill === p.colors.icContainerFill &&
+      opts.nodeWidth === p.sizes.nodeWidth &&
+      opts.nodeHeight === p.sizes.nodeHeight,
+    );
+  }
+
+  saveCurrentAsPreset(name: string): void {
+    const opts = this.renderer.getOptions();
+    const newPreset: CombinedPreset = {
+      id: 'custom-' + generateId(),
+      name,
+      colors: {
+        cardFill: String(opts.cardFill),
+        cardStroke: String(opts.cardStroke),
+        cardStrokeWidth: Number(opts.cardStrokeWidth),
+        linkColor: String(opts.linkColor),
+        linkWidth: Number(opts.linkWidth),
+        icContainerFill: String(opts.icContainerFill),
+        nameColor: String(opts.nameColor),
+        titleColor: String(opts.titleColor),
+      },
+      sizes: {
+        nodeWidth: Number(opts.nodeWidth),
+        nodeHeight: Number(opts.nodeHeight),
+        horizontalSpacing: Number(opts.horizontalSpacing),
+        branchSpacing: Number(opts.branchSpacing),
+        topVerticalSpacing: Number(opts.topVerticalSpacing),
+        bottomVerticalSpacing: Number(opts.bottomVerticalSpacing),
+        icNodeWidth: Number(opts.icNodeWidth),
+        icGap: Number(opts.icGap),
+        icContainerPadding: Number(opts.icContainerPadding),
+        palTopGap: Number(opts.palTopGap),
+        palBottomGap: Number(opts.palBottomGap),
+        palRowGap: Number(opts.palRowGap),
+        palCenterGap: Number(opts.palCenterGap),
+        nameFontSize: Number(opts.nameFontSize),
+        titleFontSize: Number(opts.titleFontSize),
+        textPaddingTop: Number(opts.textPaddingTop),
+        textGap: Number(opts.textGap),
+      },
+      isCustom: true,
+    };
+    const customs = this.loadCustomPresets();
+    customs.push(newPreset);
+    this.saveCustomPresets(customs);
+    this.build();
+  }
+
   private deleteCustomPreset(id: string): void {
     const presets = this.loadCustomPresets().filter((p) => p.id !== id);
     this.saveCustomPresets(presets);
@@ -531,16 +566,9 @@ export class SettingsEditor {
     const heading = document.createElement('h3');
     heading.style.cssText = 'margin:0;padding:0;font:inherit;';
 
-    const header = document.createElement('button');
+    const header = document.createElement('div');
     header.className = 'accordion-header';
     header.id = headerId;
-    header.setAttribute('aria-expanded', String(this.isExpanded(id)));
-    header.setAttribute('aria-controls', `accordion-${id}`);
-
-    const chevron = document.createElement('span');
-    chevron.className = 'accordion-chevron';
-    chevron.textContent = '▶';
-    header.appendChild(chevron);
 
     const titleEl = document.createElement('span');
     titleEl.className = 'accordion-title';
@@ -565,7 +593,7 @@ export class SettingsEditor {
     contentWrapper.id = `accordion-${id}`;
     contentWrapper.setAttribute('role', 'region');
     contentWrapper.setAttribute('aria-labelledby', headerId);
-    contentWrapper.setAttribute('data-expanded', String(this.isExpanded(id)));
+    contentWrapper.setAttribute('data-expanded', 'true');
 
     const inner = document.createElement('div');
     inner.className = 'accordion-inner';
@@ -573,13 +601,6 @@ export class SettingsEditor {
     const contentEl = typeof content === 'function' ? content() : content;
     inner.appendChild(contentEl);
     contentWrapper.appendChild(inner);
-
-    header.addEventListener('click', () => {
-      this.toggleSection(id);
-      const expanded = this.isExpanded(id);
-      header.setAttribute('aria-expanded', String(expanded));
-      contentWrapper.setAttribute('data-expanded', String(expanded));
-    });
 
     heading.appendChild(header);
     section.appendChild(heading);
@@ -591,58 +612,6 @@ export class SettingsEditor {
     this.container.innerHTML = '';
 
     const opts = this.renderer.getOptions();
-
-    // Settings filter
-    const filterWrapper = document.createElement('div');
-    filterWrapper.className = 'mb-2';
-    filterWrapper.style.cssText = 'position:relative;';
-
-    const filterInput = document.createElement('input');
-    filterInput.type = 'text';
-    filterInput.placeholder = '🔍  Filter settings…';
-    filterInput.setAttribute('aria-label', 'Filter settings');
-    filterInput.style.cssText =
-      'width:100%;padding:6px 28px 6px 12px;font-size:12px;font-family:var(--font-sans);' +
-      'border:1px solid var(--border-default);border-radius:var(--radius-full);' +
-      'background:var(--bg-base);color:var(--text-primary);' +
-      'transition:border-color var(--transition-fast);';
-
-    const clearBtn = document.createElement('button');
-    clearBtn.textContent = '×';
-    clearBtn.setAttribute('aria-label', 'Clear filter');
-    clearBtn.style.cssText =
-      'position:absolute;right:8px;top:50%;transform:translateY(-50%);' +
-      'border:none;background:transparent;color:var(--text-tertiary);' +
-      'cursor:pointer;font-size:14px;padding:0 2px;' +
-      'transition:color var(--transition-fast);';
-    clearBtn.style.display = 'none';
-    clearBtn.addEventListener('click', () => {
-      filterInput.value = '';
-      filterInput.dispatchEvent(new Event('input'));
-      filterInput.focus();
-    });
-
-    filterWrapper.appendChild(filterInput);
-    filterWrapper.appendChild(clearBtn);
-    this.container.appendChild(filterWrapper);
-
-    // Expand All / Collapse All toggle
-    const actionsRow = document.createElement('div');
-    actionsRow.className = 'accordion-actions';
-
-    const toggleAllBtn = document.createElement('button');
-    const allExpanded = ALL_SECTION_IDS.every((id) => this.isExpanded(id));
-    toggleAllBtn.textContent = allExpanded ? 'Collapse all' : 'Expand all';
-    toggleAllBtn.addEventListener('click', () => {
-      const allExp = ALL_SECTION_IDS.every((id) => this.isExpanded(id));
-      for (const id of ALL_SECTION_IDS) {
-        this.accordionState.set(id, !allExp);
-      }
-      this.saveAccordionState();
-      this.build();
-    });
-    actionsRow.appendChild(toggleAllBtn);
-    this.container.appendChild(actionsRow);
 
     // Unified Presets section
     this.container.appendChild(
@@ -670,6 +639,13 @@ export class SettingsEditor {
       title.textContent = group.title;
       section.appendChild(title);
 
+      if (group.description) {
+        const desc = document.createElement('div');
+        desc.className = 'section-intro';
+        desc.textContent = t(group.description);
+        section.appendChild(desc);
+      }
+
       for (const setting of group.settings) {
         const value = opts[setting.key] as number | string | boolean;
         section.appendChild(this.createControl(setting, value));
@@ -680,10 +656,11 @@ export class SettingsEditor {
 
     // Settings Import/Export section
     const ioBtnGroup = document.createElement('div');
-    ioBtnGroup.className = 'btn-group';
+    ioBtnGroup.style.cssText = 'display:flex;gap:8px;';
 
     const exportSettingsBtn = document.createElement('button');
     exportSettingsBtn.className = 'btn btn-secondary';
+    exportSettingsBtn.style.cssText = 'flex:1;';
     exportSettingsBtn.textContent = '💾 Export';
     exportSettingsBtn.addEventListener('click', () => {
       if (this.settingsStore) {
@@ -696,6 +673,7 @@ export class SettingsEditor {
 
     const importSettingsBtn = document.createElement('button');
     importSettingsBtn.className = 'btn btn-secondary';
+    importSettingsBtn.style.cssText = 'flex:1;';
     importSettingsBtn.textContent = '📂 Import';
     importSettingsBtn.addEventListener('click', () => {
       const input = document.createElement('input');
@@ -713,6 +691,21 @@ export class SettingsEditor {
         reader.onload = () => {
           try {
             const raw = JSON.parse(reader.result as string);
+
+            const fileType = detectArbolFileType(raw);
+            if (fileType === 'backup') {
+              showToast(t('settings.wrong_file_for_import_settings_backup'), 'error');
+              return;
+            }
+            if (fileType === 'chart-bundle') {
+              showToast(t('settings.wrong_file_for_import_settings_chart'), 'error');
+              return;
+            }
+            if (fileType === 'org-tree') {
+              showToast(t('settings.wrong_file_for_import_settings_org'), 'error');
+              return;
+            }
+
             const settings = this.settingsStore!.importFromFile(reader.result as string);
             this.renderer.updateOptions(settings as unknown as Partial<RendererOptions>);
 
@@ -753,7 +746,7 @@ export class SettingsEditor {
     // Backup & Restore section
     if (this.chartDB) {
       const backupBtnGroup = document.createElement('div');
-      backupBtnGroup.className = 'btn-group';
+      backupBtnGroup.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
 
       const backupBtn = document.createElement('button');
       backupBtn.className = 'btn btn-secondary';
@@ -780,6 +773,29 @@ export class SettingsEditor {
           const file = input.files?.[0];
           if (!file) return;
           try {
+            const text = await file.text();
+            let earlyParsed: unknown;
+            try {
+              earlyParsed = JSON.parse(text);
+            } catch {
+              earlyParsed = null;
+            }
+            if (earlyParsed) {
+              const fileType = detectArbolFileType(earlyParsed);
+              if (fileType === 'settings') {
+                showToast(t('settings.wrong_file_for_restore_settings'), 'error');
+                return;
+              }
+              if (fileType === 'chart-bundle') {
+                showToast(t('settings.wrong_file_for_restore_chart'), 'error');
+                return;
+              }
+              if (fileType === 'org-tree') {
+                showToast(t('settings.wrong_file_for_restore_org'), 'error');
+                return;
+              }
+            }
+
             const backup = await readBackupFile(file);
             const summary = getBackupSummary(backup);
             const date = new Date(summary.createdAt).toLocaleString();
@@ -837,27 +853,18 @@ export class SettingsEditor {
       });
       backupBtnGroup.appendChild(restoreBtn);
 
-      // Clear All Data button — inside the backup section
+      // Separator before destructive action
+      const separator = document.createElement('hr');
+      separator.className = 'separator';
+      backupBtnGroup.appendChild(separator);
+
+      // Clear All Data button — danger styling matching the mock
       const clearDataBtn = document.createElement('button');
+      clearDataBtn.className = 'btn';
       clearDataBtn.textContent = '🗑 Clear All Data';
       clearDataBtn.setAttribute('aria-label', 'Clear all local data');
-      clearDataBtn.style.cssText = `
-        width:100%;margin-top:12px;padding:8px 14px;font-size:12px;
-        font-family:var(--font-sans);cursor:pointer;
-        background:transparent;color:var(--text-tertiary);
-        border:1px solid var(--border-default);border-radius:var(--radius-md);
-        transition:background var(--transition-fast),color var(--transition-fast),border-color var(--transition-fast);
-      `;
-      clearDataBtn.addEventListener('mouseenter', () => {
-        clearDataBtn.style.background = 'var(--bg-danger, #fef2f2)';
-        clearDataBtn.style.color = 'var(--text-danger, #dc2626)';
-        clearDataBtn.style.borderColor = 'var(--text-danger, #dc2626)';
-      });
-      clearDataBtn.addEventListener('mouseleave', () => {
-        clearDataBtn.style.background = 'transparent';
-        clearDataBtn.style.color = 'var(--text-tertiary)';
-        clearDataBtn.style.borderColor = 'var(--border-default)';
-      });
+      clearDataBtn.style.cssText =
+        'background:rgba(244,63,94,0.1);color:var(--danger);border:1px solid rgba(244,63,94,0.2);';
       clearDataBtn.addEventListener('click', async () => {
         // Auto-backup before destructive clear
         if (this.chartDB) {
@@ -892,76 +899,7 @@ export class SettingsEditor {
       );
     }
 
-    // Filter handler — wired after all sections are built
-    let filterTimeout: ReturnType<typeof setTimeout> | null = null;
-
-    filterInput.addEventListener('input', () => {
-      if (filterTimeout) clearTimeout(filterTimeout);
-      filterTimeout = setTimeout(() => {
-        const query = filterInput.value.trim().toLowerCase();
-        clearBtn.style.display = query ? 'block' : 'none';
-
-        const sections = this.container.querySelectorAll('[data-section-id]');
-
-        if (!query) {
-          sections.forEach((section) => {
-            (section as HTMLElement).style.opacity = '1';
-            (section as HTMLElement).style.pointerEvents = '';
-            // Restore accordion state for accordion sections
-            const header = section.querySelector('.accordion-header') as HTMLElement;
-            const content = section.querySelector('.accordion-content') as HTMLElement;
-            if (header && content) {
-              const sectionId = content.id.replace('accordion-', '');
-              const expanded = this.isExpanded(sectionId);
-              header.setAttribute('aria-expanded', String(expanded));
-              content.setAttribute('data-expanded', String(expanded));
-            }
-          });
-          return;
-        }
-
-        sections.forEach((section) => {
-          const titleEl = section.querySelector('.accordion-title') ?? section.querySelector('.setting-section-title');
-          const titleText = titleEl?.textContent?.toLowerCase() ?? '';
-
-          let labelMatch = false;
-          const labels = section.querySelectorAll('label, .setting-label');
-          labels.forEach((label) => {
-            if (label.textContent?.toLowerCase().includes(query)) {
-              labelMatch = true;
-            }
-          });
-
-          const presetNames = section.querySelectorAll('.preset-card span, button span');
-          presetNames.forEach((el) => {
-            if (el.textContent?.toLowerCase().includes(query)) {
-              labelMatch = true;
-            }
-          });
-
-          // Also match setting descriptions
-          const descs = section.querySelectorAll('.setting-desc');
-          descs.forEach((el) => {
-            if (el.textContent?.toLowerCase().includes(query)) {
-              labelMatch = true;
-            }
-          });
-
-          const matches = titleText.includes(query) || labelMatch;
-
-          (section as HTMLElement).style.opacity = matches ? '1' : '0.3';
-          (section as HTMLElement).style.pointerEvents = matches ? '' : 'none';
-
-          // Auto-expand matching accordion sections
-          const header = section.querySelector('.accordion-header') as HTMLElement;
-          const content = section.querySelector('.accordion-content') as HTMLElement;
-          if (header && content && matches) {
-            header.setAttribute('aria-expanded', 'true');
-            content.setAttribute('data-expanded', 'true');
-          }
-        });
-      }, 150);
-    });
+    this.onBuildCallback?.();
   }
 
   private buildCategoriesContent(): HTMLElement {
@@ -972,27 +910,29 @@ export class SettingsEditor {
     for (const cat of categories) {
       const container = document.createElement('div');
       container.className = 'mb-2';
+      container.style.cssText = 'padding:8px 0;border-bottom:1px solid var(--border-subtle);';
 
       const row = document.createElement('div');
       row.className = 'flex-row';
-      row.style.cssText = 'gap:6px;margin-bottom:4px;';
+      row.style.cssText = 'gap:8px;margin-bottom:4px;';
 
       const colorInput = document.createElement('input');
       colorInput.type = 'color';
       colorInput.value = cat.color;
       colorInput.style.cssText =
-        'width:28px;height:22px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
-      colorInput.setAttribute('aria-label', `Color for ${cat.label}`);
+        'width:32px;height:32px;border:2px solid var(--border-default);padding:0;cursor:pointer;flex-shrink:0;border-radius:var(--radius-sm);-webkit-appearance:none;appearance:none;background:none;';
+      colorInput.setAttribute('aria-label', t('settings.category_color_aria', { label: cat.label }));
 
-      // Name and title color pickers (created before colorInput listener so they can be referenced)
       const nameColorInput = document.createElement('input');
       nameColorInput.type = 'color';
       nameColorInput.value = cat.nameColor ?? '#1e293b';
+      nameColorInput.className = 'category-text-color-group';
       nameColorInput.style.cssText =
-        'width:22px;height:18px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
-      nameColorInput.setAttribute('aria-label', `Name color for ${cat.label}`);
+        'width:22px;height:18px;border:1px solid var(--border-default);padding:0;cursor:pointer;flex-shrink:0;border-radius:3px;-webkit-appearance:none;appearance:none;background:none;';
+      nameColorInput.setAttribute('aria-label', t('settings.category_name_color_aria', { label: cat.label }));
       nameColorInput.addEventListener('input', () => {
         this.categoryStore!.update(cat.id, { nameColor: nameColorInput.value });
+        updatePreview();
         this.rerenderCallback();
       });
 
@@ -1000,19 +940,46 @@ export class SettingsEditor {
       titleColorInput.type = 'color';
       titleColorInput.value = cat.titleColor ?? '#64748b';
       titleColorInput.style.cssText =
-        'width:22px;height:18px;border:none;padding:0;cursor:pointer;flex-shrink:0;';
-      titleColorInput.setAttribute('aria-label', `Title color for ${cat.label}`);
+        'width:22px;height:18px;border:1px solid var(--border-default);padding:0;cursor:pointer;flex-shrink:0;border-radius:3px;-webkit-appearance:none;appearance:none;background:none;';
+      titleColorInput.setAttribute('aria-label', t('settings.category_title_color_aria', { label: cat.label }));
       titleColorInput.addEventListener('input', () => {
         this.categoryStore!.update(cat.id, { titleColor: titleColorInput.value });
+        updatePreview();
         this.rerenderCallback();
       });
 
+      // Card preview
+      const preview = document.createElement('div');
+      preview.className = 'category-preview-card';
+      preview.style.background = cat.color;
+
+      const previewName = document.createElement('span');
+      previewName.className = 'cat-preview-name';
+      previewName.textContent = t('settings.category_preview_name');
+      previewName.style.color = cat.nameColor ?? '#1e293b';
+      preview.appendChild(previewName);
+
+      const previewTitle = document.createElement('span');
+      previewTitle.className = 'cat-preview-title';
+      previewTitle.textContent = t('settings.category_preview_title');
+      previewTitle.style.color = cat.titleColor ?? '#64748b';
+      preview.appendChild(previewTitle);
+
+      const updatePreview = () => {
+        const updated = this.categoryStore!.getById(cat.id);
+        if (updated) {
+          preview.style.background = updated.color;
+          previewName.style.color = updated.nameColor ?? '#1e293b';
+          previewTitle.style.color = updated.titleColor ?? '#64748b';
+        }
+      };
+
       colorInput.addEventListener('input', () => {
         this.categoryStore!.update(cat.id, { color: colorInput.value });
-        // Sync text color pickers with auto-computed values
         const updated = this.categoryStore!.getById(cat.id);
         if (updated?.nameColor) nameColorInput.value = updated.nameColor;
         if (updated?.titleColor) titleColorInput.value = updated.titleColor;
+        updatePreview();
         this.rerenderCallback();
       });
       row.appendChild(colorInput);
@@ -1021,8 +988,8 @@ export class SettingsEditor {
       labelInput.type = 'text';
       labelInput.value = cat.label;
       labelInput.style.cssText =
-        'flex:1;padding:3px 6px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font-size:11px;font-family:var(--font-sans);min-width:0;';
-      labelInput.setAttribute('aria-label', 'Category label');
+        'flex:1;padding:4px 8px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font-size:11px;font-family:var(--font-sans);min-width:0;';
+      labelInput.setAttribute('aria-label', t('settings.category_label_aria'));
       labelInput.addEventListener('change', () => {
         const newLabel = labelInput.value.trim();
         if (newLabel) {
@@ -1034,43 +1001,81 @@ export class SettingsEditor {
       });
       row.appendChild(labelInput);
 
+      row.appendChild(preview);
+
+      // Delete button with confirmation
       const deleteBtn = document.createElement('button');
       deleteBtn.textContent = '×';
       deleteBtn.style.cssText =
-        'width:22px;height:22px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;';
-      deleteBtn.setAttribute('aria-label', `Remove ${cat.label}`);
+        'width:24px;height:24px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;opacity:0.4;';
+      deleteBtn.setAttribute('aria-label', t('settings.category_remove_aria', { label: cat.label }));
+
+      let confirmTimeout: ReturnType<typeof setTimeout> | null = null;
+      let isConfirming = false;
+
       deleteBtn.addEventListener('mouseenter', () => {
-        deleteBtn.style.color = 'var(--danger)';
-        deleteBtn.style.borderColor = 'var(--danger)';
+        if (!isConfirming) {
+          deleteBtn.style.color = 'var(--danger)';
+          deleteBtn.style.borderColor = 'var(--danger)';
+          deleteBtn.style.opacity = '1';
+        }
       });
       deleteBtn.addEventListener('mouseleave', () => {
-        deleteBtn.style.color = 'var(--text-tertiary)';
-        deleteBtn.style.borderColor = 'var(--border-default)';
+        if (!isConfirming) {
+          deleteBtn.style.color = 'var(--text-tertiary)';
+          deleteBtn.style.borderColor = 'var(--border-default)';
+          deleteBtn.style.opacity = '0.4';
+        }
       });
       deleteBtn.addEventListener('click', () => {
-        this.categoryStore!.remove(cat.id);
-        this.rerenderCallback();
-        this.build();
+        if (isConfirming) {
+          if (confirmTimeout) clearTimeout(confirmTimeout);
+          this.categoryStore!.remove(cat.id);
+          this.rerenderCallback();
+          this.build();
+        } else {
+          isConfirming = true;
+          deleteBtn.textContent = '?';
+          deleteBtn.className = 'category-delete-confirm';
+          deleteBtn.style.cssText =
+            'padding:2px 8px;cursor:pointer;flex-shrink:0;';
+          confirmTimeout = setTimeout(() => {
+            isConfirming = false;
+            deleteBtn.textContent = '×';
+            deleteBtn.className = '';
+            deleteBtn.style.cssText =
+              'width:24px;height:24px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;opacity:0.4;';
+          }, 3000);
+        }
       });
       row.appendChild(deleteBtn);
 
       container.appendChild(row);
 
-      // Text color sub-row
+      // Text color sub-row (improved layout)
       const textRow = document.createElement('div');
-      textRow.className = 'flex-row text-xs text-tertiary';
-      textRow.style.cssText = 'gap:6px;padding-left:34px;';
+      textRow.className = 'category-text-colors';
 
-      const nameLabel = document.createElement('span');
-      nameLabel.textContent = 'Name';
-      textRow.appendChild(nameLabel);
-      textRow.appendChild(nameColorInput);
+      const textColorsLabel = document.createElement('span');
+      textColorsLabel.className = 'category-text-colors-label';
+      textColorsLabel.textContent = t('settings.category_text_colors');
+      textRow.appendChild(textColorsLabel);
 
-      const titleLabel = document.createElement('span');
-      titleLabel.textContent = 'Title';
-      titleLabel.style.cssText = 'margin-left:4px;';
-      textRow.appendChild(titleLabel);
-      textRow.appendChild(titleColorInput);
+      const nameGroup = document.createElement('div');
+      nameGroup.className = 'category-text-color-group';
+      const nameLabel = document.createElement('label');
+      nameLabel.textContent = t('settings.category_name');
+      nameGroup.appendChild(nameLabel);
+      nameGroup.appendChild(nameColorInput);
+      textRow.appendChild(nameGroup);
+
+      const titleGroup = document.createElement('div');
+      titleGroup.className = 'category-text-color-group';
+      const titleLabel = document.createElement('label');
+      titleLabel.textContent = t('settings.category_title');
+      titleGroup.appendChild(titleLabel);
+      titleGroup.appendChild(titleColorInput);
+      textRow.appendChild(titleGroup);
 
       container.appendChild(textRow);
       wrapper.appendChild(container);
@@ -1078,8 +1083,8 @@ export class SettingsEditor {
 
     const addBtn = document.createElement('button');
     addBtn.className = 'btn btn-secondary w-full';
-    addBtn.textContent = '+ Add Category';
-    addBtn.style.cssText = 'font-size:11px;padding:4px 8px;';
+    addBtn.textContent = t('settings.add_category');
+    addBtn.style.cssText = 'font-size:11px;padding:6px 8px;margin-top:8px;width:100%;display:flex;align-items:center;justify-content:center;gap:4px;border-style:dashed;';
     addBtn.addEventListener('click', () => {
       this.categoryStore!.add('New Category', '#94a3b8');
       this.rerenderCallback();
@@ -1095,6 +1100,7 @@ export class SettingsEditor {
 
     // Combined preset grid
     const allPresets = [...COMBINED_PRESETS, ...this.loadCustomPresets()];
+    let activePresetFound = false;
 
     const presetGrid = document.createElement('div');
     presetGrid.className = 'preset-grid';
@@ -1175,6 +1181,26 @@ export class SettingsEditor {
         this.build();
       });
 
+      // Check if this preset matches current settings (first match only)
+      const currentOpts = this.renderer.getOptions();
+      const isActive = !activePresetFound &&
+        currentOpts.cardFill === preset.colors.cardFill &&
+        currentOpts.cardStroke === preset.colors.cardStroke &&
+        currentOpts.linkColor === preset.colors.linkColor &&
+        currentOpts.cardStrokeWidth === preset.colors.cardStrokeWidth &&
+        currentOpts.icContainerFill === preset.colors.icContainerFill &&
+        currentOpts.nodeWidth === preset.sizes.nodeWidth &&
+        currentOpts.nodeHeight === preset.sizes.nodeHeight;
+
+      if (isActive) {
+        activePresetFound = true;
+        card.classList.add('preset-active');
+        const badge = document.createElement('span');
+        badge.className = 'preset-active-badge';
+        badge.textContent = t('settings.preset_active');
+        card.appendChild(badge);
+      }
+
       presetGrid.appendChild(card);
     }
 
@@ -1183,8 +1209,7 @@ export class SettingsEditor {
     // Layout preset buttons (4-column grid)
     const layoutHeading = document.createElement('div');
     layoutHeading.textContent = 'Layout';
-    layoutHeading.className = 'text-xs text-tertiary';
-    layoutHeading.style.cssText = 'margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;';
+    layoutHeading.className = 'setting-section-title';
     wrapper.appendChild(layoutHeading);
 
     const layoutGrid = document.createElement('div');
@@ -1193,32 +1218,46 @@ export class SettingsEditor {
 
     for (const lp of LAYOUT_PRESETS) {
       const btn = document.createElement('button');
-      btn.style.cssText = `
-        display:flex;flex-direction:column;align-items:center;gap:2px;
-        padding:6px 4px;border:1px solid var(--border-default);
-        border-radius:var(--radius-md);background:var(--bg-elevated);
-        cursor:pointer;transition:all 120ms ease;font-family:var(--font-sans);
-      `;
+      btn.className = 'layout-preset-card';
 
       const icon = document.createElement('span');
       icon.textContent = lp.icon;
-      icon.className = 'text-base text-secondary';
-      icon.style.cssText = 'line-height:1;';
+      icon.style.cssText = 'font-size:18px;line-height:1;';
       btn.appendChild(icon);
 
       const label = document.createElement('span');
       label.textContent = lp.name;
-      label.className = 'text-tertiary';
-      label.style.cssText = 'font-size:9px;font-weight:600;';
+      label.className = 'layout-preset-name';
       btn.appendChild(label);
+
+      const dims = document.createElement('span');
+      dims.className = 'layout-preset-dims';
+      dims.textContent = `${lp.sizes.nodeWidth} × ${lp.sizes.nodeHeight}`;
+      btn.appendChild(dims);
+
+      const descKey = `settings.layout_${lp.name.toLowerCase()}_desc`;
+      const descEl = document.createElement('span');
+      descEl.className = 'layout-preset-desc';
+      descEl.textContent = t(descKey);
+      btn.appendChild(descEl);
+
+      // Check if this layout preset matches current settings
+      const curOpts = this.renderer.getOptions();
+      const layoutActive =
+        curOpts.nodeWidth === lp.sizes.nodeWidth &&
+        curOpts.nodeHeight === lp.sizes.nodeHeight;
+
+      if (layoutActive) {
+        btn.classList.add('layout-active');
+      }
 
       btn.addEventListener('mouseenter', () => {
         btn.style.borderColor = 'var(--accent)';
         btn.style.background = 'var(--bg-hover)';
       });
       btn.addEventListener('mouseleave', () => {
-        btn.style.borderColor = 'var(--border-default)';
-        btn.style.background = 'var(--bg-elevated)';
+        btn.style.borderColor = layoutActive ? 'var(--accent)' : 'var(--border-default)';
+        btn.style.background = layoutActive ? 'var(--accent-muted)' : 'var(--bg-elevated)';
       });
 
       btn.addEventListener('click', () => {
@@ -1232,93 +1271,6 @@ export class SettingsEditor {
 
     wrapper.appendChild(layoutGrid);
 
-    // Save as Preset button + inline name input
-    const saveRow = document.createElement('div');
-    saveRow.className = 'flex-row';
-    saveRow.style.cssText = 'gap:6px;';
-
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.placeholder = 'Preset name…';
-    nameInput.setAttribute('aria-label', 'Custom preset name');
-    nameInput.style.cssText =
-      'flex:1;padding:4px 8px;font-size:11px;font-family:var(--font-sans);' +
-      'border:1px solid var(--border-default);border-radius:var(--radius-sm);' +
-      'background:var(--bg-surface);color:var(--text-primary);display:none;';
-
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'btn btn-secondary save-preset-btn w-full';
-    saveBtn.textContent = '💾 Save as Preset';
-    saveBtn.style.cssText = 'font-size:11px;padding:4px 8px;';
-
-    const confirmBtn = document.createElement('button');
-    confirmBtn.className = 'btn btn-primary';
-    confirmBtn.textContent = 'Save';
-    confirmBtn.style.cssText = 'font-size:11px;padding:4px 10px;display:none;';
-
-    saveBtn.addEventListener('click', () => {
-      nameInput.style.display = 'block';
-      confirmBtn.style.display = 'block';
-      saveBtn.style.display = 'none';
-      nameInput.focus();
-    });
-
-    const doSave = () => {
-      const presetName = nameInput.value.trim();
-      if (!presetName) return;
-
-      const opts = this.renderer.getOptions();
-      const newPreset: CombinedPreset = {
-        id: 'custom-' + generateId(),
-        name: presetName,
-        colors: {
-          cardFill: String(opts.cardFill),
-          cardStroke: String(opts.cardStroke),
-          cardStrokeWidth: Number(opts.cardStrokeWidth),
-          linkColor: String(opts.linkColor),
-          linkWidth: Number(opts.linkWidth),
-          icContainerFill: String(opts.icContainerFill),
-          nameColor: String(opts.nameColor),
-          titleColor: String(opts.titleColor),
-        },
-        sizes: {
-          nodeWidth: Number(opts.nodeWidth),
-          nodeHeight: Number(opts.nodeHeight),
-          horizontalSpacing: Number(opts.horizontalSpacing),
-          branchSpacing: Number(opts.branchSpacing),
-          topVerticalSpacing: Number(opts.topVerticalSpacing),
-          bottomVerticalSpacing: Number(opts.bottomVerticalSpacing),
-          icNodeWidth: Number(opts.icNodeWidth),
-          icGap: Number(opts.icGap),
-          icContainerPadding: Number(opts.icContainerPadding),
-          palTopGap: Number(opts.palTopGap),
-          palBottomGap: Number(opts.palBottomGap),
-          palRowGap: Number(opts.palRowGap),
-          palCenterGap: Number(opts.palCenterGap),
-          nameFontSize: Number(opts.nameFontSize),
-          titleFontSize: Number(opts.titleFontSize),
-          textPaddingTop: Number(opts.textPaddingTop),
-          textGap: Number(opts.textGap),
-        },
-        isCustom: true,
-      };
-
-      const customs = this.loadCustomPresets();
-      customs.push(newPreset);
-      this.saveCustomPresets(customs);
-      this.build();
-    };
-
-    confirmBtn.addEventListener('click', doSave);
-    nameInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') doSave();
-    });
-
-    saveRow.appendChild(saveBtn);
-    saveRow.appendChild(nameInput);
-    saveRow.appendChild(confirmBtn);
-    wrapper.appendChild(saveRow);
-
     return wrapper;
   }
 
@@ -1327,24 +1279,64 @@ export class SettingsEditor {
     wrapper.className = 'setting-row';
     const inputId = `setting-${setting.key}`;
 
+    const defaultValue = DEFAULT_SETTINGS[setting.key];
+    const isModified = defaultValue !== undefined && currentValue !== defaultValue;
+
     const info = document.createElement('div');
     info.className = 'setting-info';
 
     const label = document.createElement('label');
     label.className = 'setting-label';
     label.htmlFor = inputId;
-    label.textContent = setting.label;
+
+    // Modified dot — always created, visibility toggled
+    const dot = document.createElement('span');
+    dot.className = 'setting-modified-dot';
+    dot.style.display = isModified ? '' : 'none';
+    label.appendChild(dot);
+
+    label.appendChild(document.createTextNode(setting.label));
     info.appendChild(label);
 
-    if (setting.description) {
+    // Description from i18n if available, fallback to inline description
+    const descKey = `settings.desc.${setting.key.replace(/([A-Z])/g, '_$1').toLowerCase()}` as string;
+    const descText = setting.description || '';
+    if (descText) {
       const desc = document.createElement('div');
       desc.className = 'setting-desc';
-      desc.textContent = setting.description;
+      desc.textContent = descText;
       info.appendChild(desc);
     }
 
     const control = document.createElement('div');
     control.className = 'setting-control';
+
+    // Reset button — always created, visibility toggled
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'setting-reset-btn';
+    if (isModified) resetBtn.classList.add('visible');
+    resetBtn.textContent = '↺';
+    if (defaultValue !== undefined) {
+      resetBtn.setAttribute('aria-label', `Reset ${setting.label} to default (${defaultValue})`);
+      resetBtn.setAttribute('data-tooltip', `Default: ${defaultValue}${setting.unit ? ' ' + setting.unit : ''}`);
+    }
+
+    const updateModifiedState = (newValue: number | string | boolean) => {
+      const modified = defaultValue !== undefined && newValue !== defaultValue;
+      dot.style.display = modified ? '' : 'none';
+      if (modified) {
+        resetBtn.classList.add('visible');
+      } else {
+        resetBtn.classList.remove('visible');
+      }
+    };
+
+    resetBtn.addEventListener('click', () => {
+      if (defaultValue === undefined) return;
+      this.renderer.updateOptions({ [setting.key]: defaultValue } as Partial<RendererOptions>);
+      this.rerenderCallback();
+      this.build();
+    });
 
     if (setting.type === 'checkbox') {
       const input = document.createElement('input');
@@ -1355,6 +1347,7 @@ export class SettingsEditor {
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.checked } as Partial<RendererOptions>);
         this.rerenderCallback();
+        updateModifiedState(input.checked);
       });
 
       control.appendChild(input);
@@ -1371,11 +1364,31 @@ export class SettingsEditor {
       valueSpan.className = 'setting-value';
       valueSpan.textContent = String(currentValue);
 
+      if (setting.unit) {
+        const unitSpan = document.createElement('span');
+        unitSpan.className = 'setting-unit';
+        unitSpan.textContent = setting.unit;
+        valueSpan.appendChild(document.createTextNode(' '));
+        valueSpan.textContent = String(currentValue);
+        valueSpan.appendChild(document.createTextNode(' '));
+        valueSpan.appendChild(unitSpan);
+      }
+
       input.addEventListener('input', () => {
         const val = parseFloat(input.value);
-        valueSpan.textContent = String(val);
+        if (setting.unit) {
+          valueSpan.textContent = '';
+          valueSpan.appendChild(document.createTextNode(String(val) + ' '));
+          const unitSpan = document.createElement('span');
+          unitSpan.className = 'setting-unit';
+          unitSpan.textContent = setting.unit;
+          valueSpan.appendChild(unitSpan);
+        } else {
+          valueSpan.textContent = String(val);
+        }
         this.renderer.updateOptions({ [setting.key]: val } as Partial<RendererOptions>);
         this.rerenderCallback();
+        updateModifiedState(val);
       });
 
       control.appendChild(input);
@@ -1395,6 +1408,7 @@ export class SettingsEditor {
       select.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: select.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        updateModifiedState(select.value);
       });
 
       control.appendChild(select);
@@ -1407,6 +1421,7 @@ export class SettingsEditor {
       input.addEventListener('change', () => {
         this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        updateModifiedState(input.value);
       });
 
       control.appendChild(input);
@@ -1420,10 +1435,13 @@ export class SettingsEditor {
       input.addEventListener('input', () => {
         this.renderer.updateOptions({ [setting.key]: input.value } as Partial<RendererOptions>);
         this.rerenderCallback();
+        updateModifiedState(input.value);
       });
 
       control.appendChild(input);
     }
+
+    control.appendChild(resetBtn);
 
     wrapper.appendChild(info);
     wrapper.appendChild(control);

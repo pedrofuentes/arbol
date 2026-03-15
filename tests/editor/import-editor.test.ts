@@ -704,6 +704,38 @@ describe('ImportEditor — Chart bundle import', () => {
     expect(store.getTree().id).toBe('x');
   });
 
+  describe('file type mismatch detection', () => {
+    it('shows error when pasting a backup file as import data', () => {
+      const backupJson = JSON.stringify({
+        formatVersion: 1,
+        appVersion: '3.0.0',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        data: { charts: [], versions: [], settings: null, theme: null, csvMappings: null },
+      });
+      getTextarea().value = backupJson;
+      getParseBtn().click();
+
+      const error = getError();
+      expect(error.textContent).toContain('backup');
+      expect(error.textContent).toContain('Restore');
+    });
+
+    it('shows error when pasting a settings file as import data', () => {
+      const settingsJson = JSON.stringify({
+        version: 1,
+        name: 'my-theme',
+        timestamp: '2026-01-01T00:00:00.000Z',
+        settings: { nodeWidth: 200, nodeHeight: 80 },
+      });
+      getTextarea().value = settingsJson;
+      getParseBtn().click();
+
+      const error = getError();
+      expect(error.textContent).toContain('settings');
+      expect(error.textContent).toContain('Settings');
+    });
+  });
+
   describe('drop zone keyboard accessibility', () => {
     function getDropZone(): HTMLDivElement {
       const allDivs = container.querySelectorAll('div');

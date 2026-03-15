@@ -9,11 +9,13 @@ export interface SettingsTab {
 export interface SettingsModalOptions {
   onClose: () => void;
   onApply: () => void;
+  onDone?: () => Promise<void> | void;
+  onCancel?: () => void;
   onTabChange?: (tabId: string) => void;
 }
 
 const DEFAULT_TABS: SettingsTab[] = [
-  { id: 'presets', label: 'Theme & Presets', icon: '🎨' },
+  { id: 'presets', label: 'Presets', icon: '🎨' },
   { id: 'layout', label: 'Layout', icon: '📐' },
   { id: 'typography', label: 'Typography', icon: '🔤' },
   { id: 'cards', label: 'Cards', icon: '🃏' },
@@ -35,6 +37,7 @@ export class SettingsModal {
   private previousFocus: HTMLElement | null = null;
   private mounted = false;
   private keyHandler: (e: KeyboardEvent) => void;
+  private footerLeft: HTMLDivElement = null!;
 
   constructor(options: SettingsModalOptions, tabs?: SettingsTab[]) {
     this.options = options;
@@ -45,7 +48,7 @@ export class SettingsModal {
     this.overlay = document.createElement('div');
     this.overlay.className = 'settings-modal-overlay';
     this.overlay.addEventListener('click', (e) => {
-      if (e.target === this.overlay) this.close();
+      if (e.target === this.overlay) this.cancel();
     });
 
     // Modal container
@@ -68,7 +71,7 @@ export class SettingsModal {
     closeBtn.className = 'settings-modal-close';
     closeBtn.setAttribute('aria-label', t('settings_modal.close_aria'));
     closeBtn.textContent = '✕';
-    closeBtn.addEventListener('click', () => this.close());
+    closeBtn.addEventListener('click', () => this.cancel());
 
     header.appendChild(title);
     header.appendChild(closeBtn);
@@ -133,21 +136,30 @@ export class SettingsModal {
     const footer = document.createElement('div');
     footer.className = 'settings-modal-footer';
 
+    const footerLeft = document.createElement('div');
+    footerLeft.className = 'settings-footer-left';
+    this.footerLeft = footerLeft;
+
+    const footerRight = document.createElement('div');
+    footerRight.className = 'settings-footer-right';
+
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'settings-cancel-btn';
     cancelBtn.textContent = t('settings_modal.cancel');
-    cancelBtn.addEventListener('click', () => this.close());
+    cancelBtn.addEventListener('click', () => this.cancel());
 
     const applyBtn = document.createElement('button');
     applyBtn.className = 'settings-apply-btn';
     applyBtn.textContent = t('settings_modal.apply');
-    applyBtn.addEventListener('click', () => {
-      options.onApply();
+    applyBtn.addEventListener('click', async () => {
+      await this.options.onDone?.();
       this.close();
     });
 
-    footer.appendChild(cancelBtn);
-    footer.appendChild(applyBtn);
+    footerRight.appendChild(cancelBtn);
+    footerRight.appendChild(applyBtn);
+    footer.appendChild(footerLeft);
+    footer.appendChild(footerRight);
 
     modal.appendChild(header);
     modal.appendChild(body);
@@ -159,7 +171,7 @@ export class SettingsModal {
       if (this.isOpen() && e.key === 'Escape') {
         e.preventDefault();
         e.stopPropagation();
-        this.close();
+        this.cancel();
       }
     };
   }
@@ -210,6 +222,33 @@ export class SettingsModal {
       btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
     }
     this.options.onTabChange?.(tabId);
+  }
+
+  cancel(): void {
+    this.options.onCancel?.();
+    this.close();
+  }
+
+  updateTabBadge(tabId: string, count: number): void {
+    const btn = this.tabButtons.find(
+      (b) => b.getAttribute('data-tab') === tabId,
+    );
+    if (!btn) return;
+    let badge = btn.querySelector('.settings-tab-badge') as HTMLElement;
+    if (count > 0) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'settings-tab-badge';
+        btn.appendChild(badge);
+      }
+      badge.textContent = String(count);
+    } else if (badge) {
+      badge.remove();
+    }
+  }
+
+  getFooterLeft(): HTMLElement {
+    return this.footerLeft;
   }
 
   destroy(): void {
