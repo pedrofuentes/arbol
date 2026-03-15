@@ -1,6 +1,6 @@
 {
   "name": "arbol",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "An interactive org chart editor for the browser",
   "directories": {
     "doc": "docs"

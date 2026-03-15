@@ -497,7 +497,7 @@ export class SettingsEditor {
     });
 
     resetBtn.addEventListener('click', () => {
-      zm.centerAtRealSize(8);
+      zm.centerAtRealSize();
       updatePct();
     });
 

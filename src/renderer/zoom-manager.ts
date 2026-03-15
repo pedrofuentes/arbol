@@ -66,13 +66,13 @@ export class ZoomManager {
       MAX_FIT_SCALE,
     );
     const tx = svgWidth / 2 - (bbox.x + bbox.width / 2) * scale;
-    const ty = padding - bbox.y * scale;
+    const ty = svgHeight / 2 - (bbox.y + bbox.height / 2) * scale;
 
     const transform = zoomIdentity.translate(tx, ty).scale(scale);
     this.svgSelection.call(this.zoom.transform, transform);
   }
 
-  centerAtRealSize(padding: number = DEFAULT_FIT_PADDING): void {
+  centerAtRealSize(): void {
     const gNode = this.g;
     if (typeof gNode.getBBox !== 'function') return;
 
@@ -86,10 +86,11 @@ export class ZoomManager {
     if (bbox.width === 0 || bbox.height === 0) return;
 
     const svgWidth = this.svg.clientWidth || this.svg.getBoundingClientRect().width;
-    if (svgWidth === 0) return;
+    const svgHeight = this.svg.clientHeight || this.svg.getBoundingClientRect().height;
+    if (svgWidth === 0 || svgHeight === 0) return;
 
     const tx = svgWidth / 2 - (bbox.x + bbox.width / 2);
-    const ty = padding - bbox.y;
+    const ty = svgHeight / 2 - (bbox.y + bbox.height / 2);
 
     const transform = zoomIdentity.translate(tx, ty);
     this.svgSelection.call(this.zoom.transform, transform);
