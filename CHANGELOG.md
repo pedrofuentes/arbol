@@ -5,13 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.1.1] — 2026-03-15
 
 ### Added
 - **File type mismatch warnings** — when restoring a backup, importing settings, or importing org data, the app now detects if you selected the wrong file type and shows a helpful message directing you to the correct feature
 
 ### Fixed
 - **Category preview readability** — enlarged preview card (52×28 → 64×34px) and increased font sizes; title now displays uppercase
+
+### Testing
+- 1,744 tests across 69 files — all passing
 
 ## [3.1.0] — 2026-03-15
 
