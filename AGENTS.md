@@ -51,6 +51,7 @@ src/
 │   ├── chart-renderer.ts      # Main D3 SVG renderer — draws cards, links, IC/Advisor stacks
 │   ├── keyboard-nav.ts        # SVG chart keyboard navigation (arrow keys, Enter, Space, Shift+F10)
 │   ├── layout-engine.ts       # Computes x/y positions, bounding box, IC containers, Advisor assignments
+│   ├── preview-renderer.ts      # Lightweight SVG preview — uses computeLayout() + vanilla DOM, no D3
 │   ├── side-by-side-renderer.ts # Side-by-side comparison renderer for version diffs
 │   └── zoom-manager.ts        # d3-zoom integration, fitToContent(), resetZoom(), transform persistence
 ├── store/
@@ -354,7 +355,7 @@ The app follows WCAG 2.1 AA guidelines:
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **1,755 tests across 69 files** — all must pass before committing
+- **1,780 tests across 70 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure
@@ -391,6 +392,7 @@ The app follows WCAG 2.1 AA guidelines:
 | `tests/renderer/accessibility.test.ts` | SVG ARIA attributes — role="tree", role="treeitem", aria-label, aria-level |
 | `tests/renderer/comparison-integration.test.ts` | Side-by-side version comparison rendering |
 | `tests/renderer/side-by-side-renderer.test.ts` | Dual-tree comparison renderer output |
+| `tests/renderer/preview-renderer.test.ts` | Preview SVG generation, options responsiveness, sample tree |
 | `tests/renderer/keyboard-nav.test.ts` | SVG keyboard navigation — arrow keys, Enter, Space, Home/End, Shift+F10 |
 | `tests/renderer/zoom-manager.test.ts` | Zoom/pan, fitToContent, resetZoom |
 | `tests/export/chart-exporter.test.ts` | Chart export orchestration, format selection |

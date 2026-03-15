@@ -991,4 +991,35 @@ describe('SettingsEditor', () => {
     });
   });
 
+  describe('preview area wiring', () => {
+    it('setPreviewArea renders SVG into the preview element', () => {
+      const editor = new SettingsEditor(container, renderer, rerenderCb);
+      const previewArea = document.createElement('div');
+      editor.setPreviewArea(previewArea);
+      const svg = previewArea.querySelector('svg.preview-svg');
+      expect(svg).not.toBeNull();
+    });
+
+    it('preview SVG contains expected nodes from sample tree', () => {
+      const editor = new SettingsEditor(container, renderer, rerenderCb);
+      const previewArea = document.createElement('div');
+      editor.setPreviewArea(previewArea);
+      const textContent = previewArea.textContent ?? '';
+      expect(textContent).toContain('Sarah Chen');
+      expect(textContent).toContain('Alex Kim');
+    });
+
+    it('preview updates on refresh()', () => {
+      const editor = new SettingsEditor(container, renderer, rerenderCb);
+      const previewArea = document.createElement('div');
+      editor.setPreviewArea(previewArea);
+      const firstSVG = previewArea.querySelector('svg');
+      editor.refresh();
+      const secondSVG = previewArea.querySelector('svg');
+      // Should be a new SVG (replaced)
+      expect(secondSVG).not.toBeNull();
+      expect(secondSVG).not.toBe(firstSVG);
+    });
+  });
+
 });

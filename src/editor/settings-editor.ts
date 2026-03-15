@@ -1,4 +1,4 @@
-import { ChartRenderer, RendererOptions } from '../renderer/chart-renderer';
+import { ChartRenderer, RendererOptions, type ResolvedOptions } from '../renderer/chart-renderer';
 import { CHART_THEME_PRESETS, ChartThemePreset, addCustomPreset } from '../store/theme-presets';
 import { SettingsStore, type PersistableSettings } from '../store/settings-store';
 import { CategoryStore } from '../store/category-store';
@@ -17,6 +17,7 @@ import {
 import { showRestoreStrategyDialog } from '../ui/restore-dialog';
 import { type IStorage, browserStorage } from '../utils/storage';
 import { detectArbolFileType } from '../utils/file-type';
+import { renderPreview } from '../renderer/preview-renderer';
 import { t } from '../i18n';
 
 const ARBOL_STORAGE_KEYS = [
@@ -442,6 +443,7 @@ export class SettingsEditor {
   private chartDB: ChartDB | null;
   private storage: IStorage;
   private onBuildCallback: (() => void) | null = null;
+  private previewArea: HTMLElement | null = null;
 
   private static CUSTOM_PRESETS_KEY= 'arbol-custom-presets';
 
@@ -462,6 +464,11 @@ export class SettingsEditor {
     this.chartDB = chartDB ?? null;
     this.storage = storage;
     this.build();
+  }
+
+  setPreviewArea(area: HTMLElement): void {
+    this.previewArea = area;
+    this.updatePreview();
   }
 
   onBuild(callback: () => void): void {
@@ -899,6 +906,7 @@ export class SettingsEditor {
       );
     }
 
+    this.updatePreview();
     this.onBuildCallback?.();
   }
 
@@ -1451,6 +1459,17 @@ export class SettingsEditor {
 
   refresh(): void {
     this.build();
+  }
+
+  private updatePreview(): void {
+    if (!this.previewArea) return;
+    this.previewArea.innerHTML = '';
+    const opts = this.renderer.getOptions();
+    const categories = this.categoryStore?.getAll() ?? [];
+    const svg = renderPreview({
+      rendererOptions: { ...opts, categories } as Partial<ResolvedOptions>,
+    });
+    this.previewArea.appendChild(svg);
   }
 
   destroy(): void {

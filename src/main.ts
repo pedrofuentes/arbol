@@ -495,6 +495,7 @@ async function main(): Promise<void> {
         categoryStore,
         chartDB,
       );
+      settingsEditorInstance.setPreviewArea(settingsModal.getPreviewArea());
       settingsEditorInstance.onBuild(() => {
         filterSettingsSections(settingsModal.getActiveTab());
       });
