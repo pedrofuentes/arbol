@@ -3,6 +3,7 @@ import type { ChartStore } from '../store/chart-store';
 import { showConfirmDialog } from '../ui/confirm-dialog';
 import { showExportDialog } from '../ui/export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../export/chart-exporter';
+import { flattenTree } from '../utils/tree';
 import { t } from '../i18n';
 
 export interface ChartEditorOptions {
@@ -23,9 +24,6 @@ const HEADING_STYLE =
 
 const INLINE_BTN_EXTRA = 'font-size:10px;padding:3px 8px;';
 
-const ITEM_STYLE =
-  'padding:8px 10px;border-bottom:1px solid var(--border-subtle);';
-
 const ERROR_TIMEOUT_MS = 3000;
 
 export class ChartEditor {
@@ -42,9 +40,11 @@ export class ChartEditor {
   private chartListEl!: HTMLDivElement;
   private versionListEl!: HTMLDivElement;
   private chartNameInput!: HTMLInputElement;
+  private chartSearchInput!: HTMLInputElement;
   private versionNameInput!: HTMLInputElement;
   private chartErrorEl!: HTMLDivElement;
   private versionErrorEl!: HTMLDivElement;
+  private chartSearchTerm = '';
 
   private unsubscribe: (() => void) | null = null;
   private errorTimers: ReturnType<typeof setTimeout>[] = [];
@@ -101,6 +101,15 @@ export class ChartEditor {
     // Charts section
     this.container.appendChild(this.createHeading('Charts'));
     this.container.appendChild(this.buildChartInputRow());
+    this.chartSearchInput = document.createElement('input');
+    this.chartSearchInput.type = 'text';
+    this.chartSearchInput.className = 'chart-search';
+    this.chartSearchInput.placeholder = t('chart_editor.search_placeholder');
+    this.chartSearchInput.addEventListener('input', () => {
+      this.chartSearchTerm = this.chartSearchInput.value.trim().toLowerCase();
+      this.renderChartList();
+    });
+    this.container.appendChild(this.chartSearchInput);
     this.chartErrorEl = this.createErrorArea();
     this.container.appendChild(this.chartErrorEl);
     this.chartListEl = document.createElement('div');
@@ -215,7 +224,11 @@ export class ChartEditor {
     const charts = await this.chartStore.getCharts();
     const activeId = this.chartStore.getActiveChartId();
 
-    if (charts.length === 0) {
+    const filtered = this.chartSearchTerm
+      ? charts.filter((c) => c.name.toLowerCase().includes(this.chartSearchTerm))
+      : charts;
+
+    if (filtered.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'text-sm text-tertiary';
       empty.style.cssText = 'padding:8px 0;font-family:var(--font-sans);';
@@ -224,7 +237,7 @@ export class ChartEditor {
       return;
     }
 
-    for (const chart of charts) {
+    for (const chart of filtered) {
       const isActive = chart.id === activeId;
       this.chartListEl.appendChild(this.createChartItem(chart, isActive));
     }
@@ -232,18 +245,9 @@ export class ChartEditor {
 
   private createChartItem(chart: ChartRecord, isActive: boolean): HTMLDivElement {
     const item = document.createElement('div');
+    item.className = 'chart-item' + (isActive ? ' active' : '');
     item.setAttribute('role', 'listitem');
     item.dataset.chartId = chart.id;
-    item.style.cssText =
-      ITEM_STYLE +
-      (isActive ? 'border-left:3px solid var(--accent);' : 'border-left:3px solid transparent;') +
-      'cursor:pointer;';
-    item.addEventListener('mouseenter', () => {
-      item.style.background = 'var(--bg-elevated)';
-    });
-    item.addEventListener('mouseleave', () => {
-      item.style.background = '';
-    });
     item.addEventListener('click', (e) => {
       if (!isActive && !(e.target as HTMLElement).closest('button')) {
         this.handleSwitchChart(chart.id);
@@ -260,45 +264,39 @@ export class ChartEditor {
       });
     }
 
-    // Name row
-    const nameRow = document.createElement('div');
-    nameRow.className = 'flex-row';
-    nameRow.style.cssText = 'gap:6px;';
+    // Icon
+    const iconEl = document.createElement('div');
+    iconEl.className = 'chart-item-icon';
+    iconEl.textContent = '🌳';
+    item.appendChild(iconEl);
 
-    if (isActive) {
-      const dot = document.createElement('span');
-      dot.textContent = t('chart_editor.active_dot');
-      dot.style.cssText = 'color:var(--accent);font-size:10px;flex-shrink:0;';
-      nameRow.appendChild(dot);
-    }
+    // Info container
+    const infoEl = document.createElement('div');
+    infoEl.className = 'chart-item-info';
 
-    const nameEl = document.createElement('span');
-    nameEl.style.cssText =
-      'font-size:13px;font-weight:' + (isActive ? '600' : '400') + ';' +
-      'color:var(--text-primary);font-family:var(--font-sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'chart-item-name';
     nameEl.textContent = chart.name;
-    nameRow.appendChild(nameEl);
 
-    if (isActive) {
-      const badge = document.createElement('span');
-      badge.textContent = t('chart_editor.active_badge');
-      badge.className = 'text-xs text-tertiary';
-      badge.style.cssText = 'flex-shrink:0;';
-      nameRow.appendChild(badge);
+    if (isActive && this.chartStore.isDirty(this.getCurrentTree())) {
+      const dirty = document.createElement('span');
+      dirty.className = 'chart-dirty';
+      dirty.textContent = ' ' + t('chart_editor.active_dot');
+      nameEl.appendChild(dirty);
     }
+    infoEl.appendChild(nameEl);
 
-    item.appendChild(nameRow);
+    const metaEl = document.createElement('div');
+    metaEl.className = 'chart-item-meta';
+    const peopleCount = flattenTree(chart.workingTree).length;
+    metaEl.textContent = `${peopleCount} ${t('chart_editor.people_suffix')}`;
+    infoEl.appendChild(metaEl);
 
-    // Date row
-    const dateEl = document.createElement('div');
-    dateEl.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:2px;font-family:var(--font-sans);';
-    dateEl.textContent = t('chart_editor.updated_prefix') + new Date(chart.updatedAt).toLocaleString();
-    item.appendChild(dateEl);
+    item.appendChild(infoEl);
 
-    // Action buttons
+    // Action buttons (hidden by default, shown on hover via CSS)
     const actions = document.createElement('div');
-    actions.className = 'flex-row mt-1';
-    actions.style.cssText = 'gap:6px;';
+    actions.className = 'chart-item-actions';
 
     const renameBtn = this.createInlineButton(t('chart_editor.rename'));
     renameBtn.addEventListener('click', (e) => {
@@ -355,29 +353,35 @@ export class ChartEditor {
 
   private createVersionItem(version: VersionRecord): HTMLDivElement {
     const item = document.createElement('div');
+    item.className = 'version-item';
     item.setAttribute('role', 'listitem');
     item.dataset.versionId = version.id;
-    item.style.cssText = ITEM_STYLE;
-    item.addEventListener('mouseenter', () => {
-      item.style.background = 'var(--bg-elevated)';
-    });
-    item.addEventListener('mouseleave', () => {
-      item.style.background = '';
-    });
+
+    // Icon
+    const iconEl = document.createElement('span');
+    iconEl.className = 'version-item-icon';
+    iconEl.textContent = '📋';
+    item.appendChild(iconEl);
+
+    // Info
+    const infoEl = document.createElement('div');
+    infoEl.className = 'version-item-info';
 
     const nameEl = document.createElement('div');
-    nameEl.style.cssText = 'font-size:13px;color:var(--text-primary);font-family:var(--font-sans);';
+    nameEl.className = 'version-item-name';
     nameEl.textContent = version.name;
-    item.appendChild(nameEl);
+    infoEl.appendChild(nameEl);
 
     const dateEl = document.createElement('div');
-    dateEl.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-top:2px;font-family:var(--font-sans);';
+    dateEl.className = 'version-item-date';
     dateEl.textContent = t('chart_editor.saved_prefix') + new Date(version.createdAt).toLocaleString();
-    item.appendChild(dateEl);
+    infoEl.appendChild(dateEl);
 
+    item.appendChild(infoEl);
+
+    // Action buttons (hover-reveal)
     const actions = document.createElement('div');
-    actions.className = 'flex-row mt-1';
-    actions.style.cssText = 'gap:6px;';
+    actions.className = 'version-item-actions';
 
     const viewBtn = this.createInlineButton(t('chart_editor.view'));
     viewBtn.addEventListener('click', () => this.onVersionView(version));

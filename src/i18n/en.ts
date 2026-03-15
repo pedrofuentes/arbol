@@ -287,6 +287,10 @@ const en: Record<string, string> = {
   'chart_editor.restore': 'Restore',
   'chart_editor.name_required': 'Please enter a chart name',
   'chart_editor.version_name_required': 'Please enter a version name',
+  'chart_editor.search_placeholder': 'Search charts…',
+  'chart_editor.people_suffix': 'people',
+  'chart_editor.versions_suffix': 'versions',
+  'chart_editor.version_suffix': 'version',
 
   // ─── JSON Editor ───────────────────────────────────────────────────
   'json_editor.aria': 'Org chart JSON data',
