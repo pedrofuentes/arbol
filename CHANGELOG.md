@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] — 2026-03-15
+
+### Changed
+- **Settings panel redesign** — row-based layout matching mockup (label+description left, control+value right)
+- Setting groups rendered as flat sections instead of accordions (sidebar tab nav handles grouping)
+- Custom styled range sliders (teal thumb, thin track) and color swatch pickers
+- 23 settings now have descriptive help text
+- Mono-font value display next to range controls
+
+### Testing
+- 1,711 tests across 68 files — all passing
+
 ## [3.0.2] — 2026-03-15
 
 ### Added
