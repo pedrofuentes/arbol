@@ -79,14 +79,14 @@ describe('ThemeManager', () => {
     expect(document.documentElement.classList.contains('theme-light')).toBe(true);
   });
 
-  it('onChange listener fires on theme change', () => {
+  it('onChange listener fires on theme change with no arguments', () => {
     const tm = new ThemeManager();
     const listener = vi.fn();
     tm.onChange(listener);
     tm.setTheme('light');
-    expect(listener).toHaveBeenCalledWith('light');
+    expect(listener).toHaveBeenCalledWith();
     tm.setTheme('dark');
-    expect(listener).toHaveBeenCalledWith('dark');
+    expect(listener).toHaveBeenCalledWith();
     expect(listener).toHaveBeenCalledTimes(2);
   });
 

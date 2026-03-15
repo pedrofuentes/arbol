@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as d3 from 'd3';
 import { ZoomManager } from '../../src/renderer/zoom-manager';
 
@@ -183,5 +183,28 @@ describe('ZoomManager', () => {
     expect(t.x).toBe(300);
     // Vertical: ty = 600/2 - (-100 + 800/2) = 300 - 300 = 0
     expect(t.y).toBe(0);
+  });
+
+  describe('destroy()', () => {
+    it('removes D3 zoom event handlers from the SVG', () => {
+      const zm = new ZoomManager(svgEl, gEl);
+      // Before destroy, zoom handler is attached
+      expect((svgEl as any).__zoom).toBeDefined();
+      zm.destroy();
+      // After destroy, zoom event listeners are removed
+      const sel = d3.select(svgEl);
+      expect(sel.on('zoom')).toBeUndefined();
+      expect(sel.on('wheel.zoom')).toBeUndefined();
+    });
+
+    it('clears zoom listeners set', () => {
+      const zm = new ZoomManager(svgEl, gEl);
+      const spy = vi.fn();
+      zm.onZoom(spy);
+      zm.destroy();
+      // After destroy, applying a transform should not trigger the listener
+      zm.applyTransform(d3.zoomIdentity.translate(100, 200).scale(2));
+      expect(spy).not.toHaveBeenCalled();
+    });
   });
 });

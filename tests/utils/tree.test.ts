@@ -166,6 +166,139 @@ describe('isM1', () => {
   it('returns false for a leaf node', () => {
     expect(isM1({ id: '1', name: 'A', title: 'T' })).toBe(false);
   });
+
+  it('returns true for manager with exactly 1 leaf child', () => {
+    const node: OrgNode = {
+      id: 'm',
+      name: 'M',
+      title: 'Mgr',
+      children: [{ id: 'ic', name: 'IC', title: 'Eng' }],
+    };
+    expect(isM1(node)).toBe(true);
+  });
+
+  it('returns false for manager with exactly 1 non-leaf child', () => {
+    const node: OrgNode = {
+      id: 'm',
+      name: 'M',
+      title: 'Mgr',
+      children: [
+        {
+          id: 'sub',
+          name: 'Sub',
+          title: 'Sub',
+          children: [{ id: 'ic', name: 'IC', title: 'Eng' }],
+        },
+      ],
+    };
+    expect(isM1(node)).toBe(false);
+  });
+
+  it('returns false for node with no children (undefined)', () => {
+    expect(isM1({ id: '1', name: 'A', title: 'T' })).toBe(false);
+  });
+
+  it('returns false for node with empty children array', () => {
+    expect(isM1({ id: '1', name: 'A', title: 'T', children: [] })).toBe(false);
+  });
+
+  it('returns false when one child among many has children', () => {
+    const node: OrgNode = {
+      id: 'm',
+      name: 'M',
+      title: 'Mgr',
+      children: [
+        { id: 'ic1', name: 'IC1', title: 'Eng' },
+        { id: 'ic2', name: 'IC2', title: 'Eng' },
+        {
+          id: 'sub',
+          name: 'Sub',
+          title: 'Sub',
+          children: [{ id: 'ic3', name: 'IC3', title: 'Eng' }],
+        },
+      ],
+    };
+    expect(isM1(node)).toBe(false);
+  });
+
+  it('converts from M1 to regular when a grandchild is added', () => {
+    const node: OrgNode = {
+      id: 'm',
+      name: 'M',
+      title: 'Mgr',
+      children: [
+        { id: 'ic1', name: 'IC1', title: 'Eng' },
+        { id: 'ic2', name: 'IC2', title: 'Eng' },
+      ],
+    };
+    expect(isM1(node)).toBe(true);
+    // Add a grandchild under ic1 → ic1 is no longer a leaf
+    node.children![0].children = [{ id: 'gc', name: 'GC', title: 'Jr' }];
+    expect(isM1(node)).toBe(false);
+  });
+
+  it('converts from regular to M1 when all grandchildren are removed', () => {
+    const node: OrgNode = {
+      id: 'm',
+      name: 'M',
+      title: 'Mgr',
+      children: [
+        {
+          id: 'sub',
+          name: 'Sub',
+          title: 'Sub',
+          children: [{ id: 'gc', name: 'GC', title: 'Jr' }],
+        },
+        { id: 'ic', name: 'IC', title: 'Eng' },
+      ],
+    };
+    expect(isM1(node)).toBe(false);
+    // Remove grandchild → sub becomes a leaf
+    node.children![0].children = [];
+    expect(isM1(node)).toBe(true);
+  });
+
+  it('returns true for root node with only leaf children', () => {
+    const root: OrgNode = {
+      id: 'root',
+      name: 'CEO',
+      title: 'CEO',
+      children: [
+        { id: 'a', name: 'A', title: 'IC' },
+        { id: 'b', name: 'B', title: 'IC' },
+        { id: 'c', name: 'C', title: 'IC' },
+      ],
+    };
+    expect(isM1(root)).toBe(true);
+  });
+
+  it('checks only direct children, not deeper descendants', () => {
+    // m has 2 children that are both non-leaf (managers), so m is not M1
+    // Even though the grandchildren (ic1, ic2) are leaves
+    const node: OrgNode = {
+      id: 'm',
+      name: 'M',
+      title: 'VP',
+      children: [
+        {
+          id: 'sub1',
+          name: 'Sub1',
+          title: 'Dir',
+          children: [{ id: 'ic1', name: 'IC1', title: 'Eng' }],
+        },
+        {
+          id: 'sub2',
+          name: 'Sub2',
+          title: 'Dir',
+          children: [{ id: 'ic2', name: 'IC2', title: 'Eng' }],
+        },
+      ],
+    };
+    expect(isM1(node)).toBe(false);
+    // But the direct children (sub1, sub2) ARE M1
+    expect(isM1(node.children![0])).toBe(true);
+    expect(isM1(node.children![1])).toBe(true);
+  });
 });
 
 describe('manager counting via flattenTree + isLeaf', () => {

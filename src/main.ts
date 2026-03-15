@@ -5,7 +5,7 @@ import { ChartRenderer, type RendererOptions } from './renderer/chart-renderer';
 import { FormEditor } from './editor/form-editor';
 import { JsonEditor } from './editor/json-editor';
 import { exportToPptx } from './export/pptx-exporter';
-import { ThemeManager, Theme } from './store/theme-manager';
+import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { MappingStore } from './store/mapping-store';
 import { CategoryStore } from './store/category-store';
@@ -318,7 +318,7 @@ async function main(): Promise<void> {
     renderer.render(treeToRender);
     const opts = renderer.getOptions();
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
-    chartStore.saveWorkingTree(fullTree, categoryStore.getAll()).catch(() => {
+    chartStore.saveWorkingTree(fullTree, categoryStore.getAll(), store.mutationVersion).catch(() => {
       showToast(t('footer.save_failed'), 'error');
     });
 
@@ -354,7 +354,8 @@ async function main(): Promise<void> {
   themeBtn.addEventListener('click', () => {
     themeManager.toggle();
   });
-  themeManager.onChange((theme: Theme) => {
+  themeManager.onChange(() => {
+    const theme = themeManager.getTheme();
     themeIcon.textContent = theme === 'dark' ? t('toolbar.theme_icon_dark') : t('toolbar.theme_icon_light');
     announce(t('toolbar.theme_switched', { theme }));
   });
@@ -652,7 +653,7 @@ async function main(): Promise<void> {
         maxLength: 100,
       });
       if (name?.trim()) {
-        chartStore.saveVersion(name.trim(), store.getTree());
+        chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
         announce(t('announce.chart_saved'));
       }
     },
@@ -660,7 +661,7 @@ async function main(): Promise<void> {
 
   // Update dirty indicator on every store change
   store.onChange(() => {
-    chartNameHeader.setDirty(chartStore.isDirty(store.getTree()));
+    chartNameHeader.setDirty(chartStore.isDirty(store.getTree(), store.mutationVersion));
   });
 
   // Mobile sidebar toggle (hamburger menu)
@@ -791,7 +792,7 @@ async function main(): Promise<void> {
 
   // Charts — mounted directly in sidebar (no tabs)
   const handleBeforeSwitch = async (): Promise<boolean> => {
-    if (!chartStore.isDirty(store.getTree())) return true;
+    if (!chartStore.isDirty(store.getTree(), store.mutationVersion)) return true;
     const confirmed = await showConfirmDialog({
       title: t('dialog.unsaved.title'),
       message: t('dialog.unsaved.message'),
@@ -1788,7 +1789,7 @@ async function main(): Promise<void> {
             maxLength: 100,
           });
           if (name?.trim()) {
-            chartStore.saveVersion(name.trim(), store.getTree());
+            chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
             announce(t('announce.chart_saved'));
           }
         },
@@ -1897,7 +1898,7 @@ async function main(): Promise<void> {
   });
 
   window.addEventListener('beforeunload', (e) => {
-    if (chartStore.isDirty(store.getTree())) {
+    if (chartStore.isDirty(store.getTree(), store.mutationVersion)) {
       e.preventDefault();
     }
   });

@@ -3,7 +3,7 @@ import { EventEmitter } from '../utils/event-emitter';
 
 export type Theme = 'dark' | 'light';
 
-export class ThemeManager extends EventEmitter<Theme> {
+export class ThemeManager extends EventEmitter {
   private static STORAGE_KEY = 'arbol-theme';
   private currentTheme: Theme;
   private storage: IStorage;
@@ -24,7 +24,7 @@ export class ThemeManager extends EventEmitter<Theme> {
     this.currentTheme = theme;
     this.storage.setItem(ThemeManager.STORAGE_KEY, theme);
     this.apply();
-    this.emit(this.currentTheme);
+    this.emit();
   }
 
   toggle(): void {

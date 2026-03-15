@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { computeLayout, LayoutResult, LayoutNode } from '../../src/renderer/layout-engine';
+import {
+  computeLayout,
+  LayoutResult,
+  LayoutNode,
+  precomputeDescendantCounts,
+  ADVISORS_PER_ROW,
+} from '../../src/renderer/layout-engine';
 import { ResolvedOptions } from '../../src/renderer/chart-renderer';
 import { OrgNode } from '../../src/types';
 
@@ -565,6 +571,81 @@ describe('computeLayout', () => {
       expect(layout!.nodes.length).toBeGreaterThan(0);
       renderer.destroy();
       document.body.removeChild(container);
+    });
+  });
+
+  describe('precomputeDescendantCounts', () => {
+    it('returns 0 for a leaf node', () => {
+      const leaf: OrgNode = { id: 'a', name: 'A', title: 'T' };
+      const counts = precomputeDescendantCounts(leaf);
+      expect(counts.get('a')).toBe(0);
+    });
+
+    it('counts direct children', () => {
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'R',
+        title: 'T',
+        children: [
+          { id: 'c1', name: 'C1', title: 'T' },
+          { id: 'c2', name: 'C2', title: 'T' },
+        ],
+      };
+      const counts = precomputeDescendantCounts(tree);
+      expect(counts.get('root')).toBe(2);
+      expect(counts.get('c1')).toBe(0);
+      expect(counts.get('c2')).toBe(0);
+    });
+
+    it('counts nested descendants recursively', () => {
+      const counts = precomputeDescendantCounts(mixedTree());
+      // root → pal1, cto, cfo; cto → pal-cto, vp; vp → ic1, ic2; cfo → ic3, ic4 = 9
+      expect(counts.get('root')).toBe(9);
+      expect(counts.get('cto')).toBe(4);
+      expect(counts.get('vp')).toBe(2);
+      expect(counts.get('cfo')).toBe(2);
+    });
+
+    it('produces same results as computeLayout descendantCount', () => {
+      const tree = mixedTree();
+      const counts = precomputeDescendantCounts(tree);
+      const result = computeLayout(tree, defaultOpts());
+      const managers = nodesByType(result, 'manager');
+      for (const mgr of managers) {
+        expect(mgr.descendantCount).toBe(counts.get(mgr.id));
+      }
+    });
+  });
+
+  describe('ADVISORS_PER_ROW constant', () => {
+    it('is exported and equals 2', () => {
+      expect(ADVISORS_PER_ROW).toBe(2);
+    });
+
+    it('advisor layout uses the constant (3 advisors produce 2 rows)', () => {
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          { id: 'pal1', name: 'Advisor 1', title: 'A' },
+          { id: 'pal2', name: 'Advisor 2', title: 'A' },
+          { id: 'pal3', name: 'Advisor 3', title: 'A' },
+          {
+            id: 'mgr1',
+            name: 'CTO',
+            title: 'CTO',
+            children: [{ id: 'ic1', name: 'IC', title: 'Eng' }],
+          },
+        ],
+      };
+      const result = computeLayout(tree, defaultOpts());
+      const pals = nodesByType(result, 'pal');
+      expect(pals).toHaveLength(3);
+      // With ADVISORS_PER_ROW=2: row 0 has pals 0,1; row 1 has pal 2
+      // Pals in the same row share the same Y; pal in row 1 has a different Y
+      expect(pals[0].y).toBe(pals[1].y);
+      expect(pals[2].y).toBeGreaterThan(pals[0].y);
     });
   });
 });

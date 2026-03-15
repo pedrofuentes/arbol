@@ -124,4 +124,9 @@ export class ZoomManager {
     const currentScale = this.getCurrentTransform().k;
     return Math.round(currentScale * 100);
   }
+
+  destroy(): void {
+    select(this.svg).on('.zoom', null);
+    this.zoomListeners.clear();
+  }
 }

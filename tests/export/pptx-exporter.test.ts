@@ -308,7 +308,10 @@ describe('pptx-exporter', () => {
         const opts = call[1];
         return opts && opts.line && opts.line.dashType === 'dash';
       });
-      expect(lineWithDash).toBeDefined();
+      expect(lineWithDash).not.toBeUndefined();
+      expect(lineWithDash![1].line.color).toBe('94A3B8');
+      expect(lineWithDash![1].line.width).toBeCloseTo(1.5 * PX_TO_PT);
+      expect(lineWithDash![1].line.dashType).toBe('dash');
     });
 
     it('does not add dashType to line shapes for regular links', async () => {
@@ -348,7 +351,12 @@ describe('pptx-exporter', () => {
         const opts = call[1];
         return opts && opts.fill && opts.fill.color === '3B82F6' && opts.line;
       });
-      expect(cardRect).toBeDefined();
+      expect(cardRect).not.toBeUndefined();
+      expect(cardRect![1].fill.color).toBe('3B82F6');
+      expect(cardRect![1].line.color).toBe('22C55E');
+      expect(cardRect![1].line.width).toBeCloseTo(1 * PX_TO_PT);
+      expect(cardRect![1].w).toBeCloseTo(110 * PX_TO_INCHES);
+      expect(cardRect![1].h).toBeCloseTo(22 * PX_TO_INCHES);
     });
 
     it('uses default fill for nodes without categoryId', async () => {
@@ -362,7 +370,10 @@ describe('pptx-exporter', () => {
         const opts = call[1];
         return opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line;
       });
-      expect(cardRect).toBeDefined();
+      expect(cardRect).not.toBeUndefined();
+      expect(cardRect![1].fill.color).toBe('FFFFFF');
+      expect(cardRect![1].line.color).toBe('22C55E');
+      expect(cardRect![1].line.width).toBeCloseTo(1 * PX_TO_PT);
     });
 
     it('uses default fill when categoryId does not match any category', async () => {
@@ -376,7 +387,10 @@ describe('pptx-exporter', () => {
         const opts = call[1];
         return opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line;
       });
-      expect(cardRect).toBeDefined();
+      expect(cardRect).not.toBeUndefined();
+      expect(cardRect![1].fill.color).toBe('FFFFFF');
+      expect(cardRect![1].line.color).toBe('22C55E');
+      expect(cardRect![1].line.width).toBeCloseTo(1 * PX_TO_PT);
     });
   });
 
@@ -405,7 +419,10 @@ describe('pptx-exporter', () => {
           opts.line.color === 'E2E8F0'
         );
       });
-      expect(legendBg).toBeDefined();
+      expect(legendBg).not.toBeUndefined();
+      expect(legendBg![1].fill.color).toBe('FFFFFF');
+      expect(legendBg![1].line.color).toBe('E2E8F0');
+      expect(legendBg![1].line.width).toBe(0.5);
 
       // Legend swatch rects
       const swatchCalls = shapeCalls.filter((call: any) => {
@@ -619,14 +636,20 @@ describe('pptx-exporter', () => {
 
       const shapeCalls = mockAddShape.mock.calls;
       const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
-      expect(roundRect).toBeDefined();
+      expect(roundRect).not.toBeUndefined();
       expect(roundRect![1].fill.color).toBe('9CA3AF');
+      expect(roundRect![1].w).toBeGreaterThan(0);
+      expect(roundRect![1].h).toBeGreaterThan(0);
 
       const textCalls = mockAddText.mock.calls;
       const badgeText = textCalls.find((call: any) => call[0] === '12');
-      expect(badgeText).toBeDefined();
+      expect(badgeText).not.toBeUndefined();
       expect(badgeText![1].bold).toBe(true);
       expect(badgeText![1].color).toBe('1E293B');
+      expect(badgeText![1].align).toBe('center');
+      expect(badgeText![1].valign).toBe('middle');
+      expect(badgeText![1].fontFace).toBe('Calibri');
+      expect(badgeText![1].fontSize).toBeGreaterThanOrEqual(3);
     });
 
     it('does not render badge when showHeadcount is false', async () => {
@@ -685,13 +708,18 @@ describe('pptx-exporter', () => {
 
       const shapeCalls = mockAddShape.mock.calls;
       const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
-      expect(roundRect).toBeDefined();
+      expect(roundRect).not.toBeUndefined();
       expect(roundRect![1].fill.color).toBe('FF0000');
+      expect(roundRect![1].w).toBeGreaterThan(0);
+      expect(roundRect![1].h).toBeGreaterThan(0);
 
       const textCalls = mockAddText.mock.calls;
       const badgeText = textCalls.find((call: any) => call[0] === '5');
-      expect(badgeText).toBeDefined();
+      expect(badgeText).not.toBeUndefined();
       expect(badgeText![1].color).toBe('00FF00');
+      expect(badgeText![1].bold).toBe(true);
+      expect(badgeText![1].align).toBe('center');
+      expect(badgeText![1].fontFace).toBe('Calibri');
     });
   });
 
@@ -792,10 +820,12 @@ describe('pptx-exporter', () => {
         const opts = call[1];
         return opts && opts.fill && opts.w;
       });
-      expect(cardRect).toBeDefined();
+      expect(cardRect).not.toBeUndefined();
       const opts = cardRect![1] as any;
       expect(opts.w).toBeCloseTo(110 * PX_TO_INCHES);
       expect(opts.h).toBeCloseTo(22 * PX_TO_INCHES);
+      expect(opts.fill).toBeDefined();
+      expect(opts.line).toBeDefined();
     });
 
     it('scales down when chart exceeds max slide dimension (56")', async () => {
@@ -809,9 +839,12 @@ describe('pptx-exporter', () => {
         const opts = call[1];
         return opts && opts.fill && opts.w;
       });
-      expect(cardRect).toBeDefined();
+      expect(cardRect).not.toBeUndefined();
       const opts = cardRect![1] as any;
       expect(opts.w).toBeLessThan(6000 * PX_TO_INCHES);
+      expect(opts.w).toBeGreaterThan(0);
+      expect(opts.fill.color).toBe('FFFFFF');
+      expect(opts.line.color).toBe('22C55E');
     });
 
     it('uses fit-to-slide when slideWidth/slideHeight explicitly provided', async () => {
@@ -826,9 +859,11 @@ describe('pptx-exporter', () => {
         const opts = call[1];
         return opts && opts.fill && opts.w;
       });
-      expect(cardRect).toBeDefined();
+      expect(cardRect).not.toBeUndefined();
       const opts = cardRect![1] as any;
       expect(opts.w).toBeGreaterThan(110 * PX_TO_INCHES);
+      expect(opts.fill.color).toBe('FFFFFF');
+      expect(opts.line.color).toBe('22C55E');
     });
   });
 
@@ -840,9 +875,12 @@ describe('pptx-exporter', () => {
 
       const textCalls = mockAddText.mock.calls;
       const nodeText = textCalls.find((call: any) => Array.isArray(call[0]));
-      expect(nodeText).toBeDefined();
+      expect(nodeText).not.toBeUndefined();
       const blocks = nodeText![0] as any[];
+      expect(blocks[0].text).toBe('Alice');
+      expect(blocks[0].options.bold).toBe(true);
       expect(blocks[0].options.fontSize).toBe(Math.round(12 * PX_TO_PT));
+      expect(blocks[1].text).toBe('Manager');
       expect(blocks[1].options.fontSize).toBe(Math.round(10 * PX_TO_PT));
     });
 
@@ -855,8 +893,10 @@ describe('pptx-exporter', () => {
         const opts = call[1];
         return opts && opts.fill && opts.fill.color === 'ff0000';
       });
-      expect(cardRect).toBeDefined();
+      expect(cardRect).not.toBeUndefined();
+      expect((cardRect![1] as any).fill.color).toBe('ff0000');
       expect((cardRect![1] as any).line.color).toBe('00ff00');
+      expect((cardRect![1] as any).line.width).toBeCloseTo(1 * PX_TO_PT);
     });
 
     it('uses provided IC container fill', async () => {
@@ -869,7 +909,10 @@ describe('pptx-exporter', () => {
         const opts = call[1];
         return opts && opts.fill && opts.fill.color === 'aabbcc';
       });
-      expect(containerRect).toBeDefined();
+      expect(containerRect).not.toBeUndefined();
+      expect(containerRect![1].fill.color).toBe('aabbcc');
+      expect(containerRect![1].w).toBeCloseTo(100 * PX_TO_INCHES);
+      expect(containerRect![1].h).toBeCloseTo(60 * PX_TO_INCHES);
     });
 
     it('uses provided link color and width', async () => {
@@ -885,8 +928,10 @@ describe('pptx-exporter', () => {
         const opts = call[1];
         return opts && opts.line && opts.line.color === 'ff00ff';
       });
-      expect(lineShape).toBeDefined();
+      expect(lineShape).not.toBeUndefined();
+      expect((lineShape![1] as any).line.color).toBe('ff00ff');
       expect((lineShape![1] as any).line.width).toBeCloseTo(3 * PX_TO_PT);
+      expect((lineShape![1] as any).line.dashType).toBeUndefined();
     });
   });
 
@@ -902,8 +947,11 @@ describe('pptx-exporter', () => {
         return Array.isArray(textBlocks) &&
           textBlocks.some((t: any) => t.text === 'Boss');
       });
-      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall).not.toBeUndefined();
       expect(nodeTextCall![1].align).toBe('center');
+      expect(nodeTextCall![1].valign).toBe('middle');
+      expect(nodeTextCall![1].fontFace).toBe('Calibri');
+      expect(nodeTextCall![1].color).toBe('1E293B');
     });
 
     it('uses left alignment when specified', async () => {
@@ -917,8 +965,11 @@ describe('pptx-exporter', () => {
         return Array.isArray(textBlocks) &&
           textBlocks.some((t: any) => t.text === 'Boss');
       });
-      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall).not.toBeUndefined();
       expect(nodeTextCall![1].align).toBe('left');
+      expect(nodeTextCall![1].valign).toBe('middle');
+      expect(nodeTextCall![1].fontFace).toBe('Calibri');
+      expect(nodeTextCall![1].color).toBe('1E293B');
     });
 
     it('uses right alignment when specified', async () => {
@@ -932,8 +983,11 @@ describe('pptx-exporter', () => {
         return Array.isArray(textBlocks) &&
           textBlocks.some((t: any) => t.text === 'Boss');
       });
-      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall).not.toBeUndefined();
       expect(nodeTextCall![1].align).toBe('right');
+      expect(nodeTextCall![1].valign).toBe('middle');
+      expect(nodeTextCall![1].fontFace).toBe('Calibri');
+      expect(nodeTextCall![1].color).toBe('1E293B');
     });
   });
 
@@ -945,7 +999,10 @@ describe('pptx-exporter', () => {
       await exportToPptx(layout, { cardBorderRadius: 0 });
       const shapeCalls = mockAddShape.mock.calls;
       const rectCall = shapeCalls.find((call: any) => call[0] === 'rect');
-      expect(rectCall).toBeDefined();
+      expect(rectCall).not.toBeUndefined();
+      expect(rectCall![1].fill.color).toBe('FFFFFF');
+      expect(rectCall![1].line.color).toBe('22C55E');
+      expect(rectCall![1].rectRadius).toBeUndefined();
     });
 
     it('uses roundRect shape when cardBorderRadius > 0', async () => {
@@ -955,8 +1012,10 @@ describe('pptx-exporter', () => {
       await exportToPptx(layout, { cardBorderRadius: 6 });
       const shapeCalls = mockAddShape.mock.calls;
       const roundRectCall = shapeCalls.find((call: any) => call[0] === 'roundRect');
-      expect(roundRectCall).toBeDefined();
+      expect(roundRectCall).not.toBeUndefined();
       expect(roundRectCall![1].rectRadius).toBeGreaterThan(0);
+      expect(roundRectCall![1].fill.color).toBe('FFFFFF');
+      expect(roundRectCall![1].line.color).toBe('22C55E');
     });
   });
 
@@ -972,8 +1031,10 @@ describe('pptx-exporter', () => {
         return Array.isArray(textBlocks) &&
           textBlocks.some((t: any) => t.text === 'Boss');
       });
-      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall).not.toBeUndefined();
       expect(nodeTextCall![1].fontFace).toBe('Calibri');
+      expect(nodeTextCall![1].valign).toBe('middle');
+      expect(nodeTextCall![1].color).toBe('1E293B');
     });
 
     it('uses custom font family when specified', async () => {
@@ -987,8 +1048,10 @@ describe('pptx-exporter', () => {
         return Array.isArray(textBlocks) &&
           textBlocks.some((t: any) => t.text === 'Boss');
       });
-      expect(nodeTextCall).toBeDefined();
+      expect(nodeTextCall).not.toBeUndefined();
       expect(nodeTextCall![1].fontFace).toBe('Segoe UI');
+      expect(nodeTextCall![1].valign).toBe('middle');
+      expect(nodeTextCall![1].color).toBe('1E293B');
     });
   });
 });
