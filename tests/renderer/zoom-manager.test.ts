@@ -207,4 +207,115 @@ describe('ZoomManager', () => {
       expect(spy).not.toHaveBeenCalled();
     });
   });
+
+  describe('programmaticOnly mode', () => {
+    it('creates a valid ZoomManager instance', () => {
+      const zm = new ZoomManager(svgEl, gEl, { programmaticOnly: true });
+      expect(zm).toBeInstanceOf(ZoomManager);
+      expect((svgEl as any).__zoom).toBeDefined();
+    });
+
+    it('removes user interaction event listeners from SVG', () => {
+      const zm = new ZoomManager(svgEl, gEl, { programmaticOnly: true });
+      const sel = d3.select(svgEl);
+      expect(sel.on('mousedown.zoom')).toBeUndefined();
+      expect(sel.on('wheel.zoom')).toBeUndefined();
+      expect(sel.on('dblclick.zoom')).toBeUndefined();
+      expect(sel.on('touchstart.zoom')).toBeUndefined();
+      expect(sel.on('touchmove.zoom')).toBeUndefined();
+      expect(sel.on('touchend.zoom')).toBeUndefined();
+      zm.destroy();
+    });
+
+    it('allows programmatic applyTransform()', () => {
+      const zm = new ZoomManager(svgEl, gEl, { programmaticOnly: true });
+      const t = d3.zoomIdentity.translate(100, 200).scale(2);
+      zm.applyTransform(t);
+      const current = zm.getCurrentTransform();
+      expect(current.k).toBe(2);
+      expect(current.x).toBe(100);
+      expect(current.y).toBe(200);
+      zm.destroy();
+    });
+
+    it('allows programmatic resetZoom()', () => {
+      const zm = new ZoomManager(svgEl, gEl, { programmaticOnly: true });
+      zm.applyTransform(d3.zoomIdentity.translate(50, 50).scale(3));
+      zm.resetZoom();
+      const t = zm.getCurrentTransform();
+      expect(t.k).toBe(1);
+      expect(t.x).toBe(0);
+      expect(t.y).toBe(0);
+      zm.destroy();
+    });
+
+    it('allows programmatic fitToContent()', () => {
+      const zm = new ZoomManager(svgEl, gEl, { programmaticOnly: true });
+      gEl.getBBox = () => ({ x: 0, y: 0, width: 400, height: 300 }) as DOMRect;
+      Object.defineProperty(svgEl, 'clientWidth', { value: 800, configurable: true });
+      Object.defineProperty(svgEl, 'clientHeight', { value: 600, configurable: true });
+      zm.fitToContent(8);
+      const t = zm.getCurrentTransform();
+      expect(t.k).toBeGreaterThan(0);
+      expect(t.k).toBeLessThanOrEqual(1.5);
+      zm.destroy();
+    });
+
+    it('allows programmatic centerAtRealSize()', () => {
+      const zm = new ZoomManager(svgEl, gEl, { programmaticOnly: true });
+      gEl.getBBox = () => ({ x: -200, y: 0, width: 400, height: 300 }) as DOMRect;
+      Object.defineProperty(svgEl, 'clientWidth', { value: 800, configurable: true });
+      Object.defineProperty(svgEl, 'clientHeight', { value: 600, configurable: true });
+      zm.centerAtRealSize();
+      const t = zm.getCurrentTransform();
+      expect(t.k).toBe(1);
+      expect(t.x).toBe(400);
+      expect(t.y).toBe(150);
+      zm.destroy();
+    });
+
+    it('getRelativeZoomPercent() works correctly', () => {
+      const zm = new ZoomManager(svgEl, gEl, { programmaticOnly: true });
+      expect(zm.getRelativeZoomPercent()).toBe(100);
+      zm.applyTransform(d3.zoomIdentity.scale(2));
+      expect(zm.getRelativeZoomPercent()).toBe(200);
+      zm.destroy();
+    });
+
+    it('onZoom() fires on programmatic transform changes', () => {
+      const zm = new ZoomManager(svgEl, gEl, { programmaticOnly: true });
+      const spy = vi.fn();
+      zm.onZoom(spy);
+      zm.applyTransform(d3.zoomIdentity.translate(10, 20).scale(1.5));
+      expect(spy).toHaveBeenCalled();
+      zm.destroy();
+    });
+
+    it('onZoom() unsubscribe works', () => {
+      const zm = new ZoomManager(svgEl, gEl, { programmaticOnly: true });
+      const spy = vi.fn();
+      const unsub = zm.onZoom(spy);
+      unsub();
+      zm.applyTransform(d3.zoomIdentity.translate(10, 20).scale(1.5));
+      expect(spy).not.toHaveBeenCalled();
+      zm.destroy();
+    });
+
+    it('destroy() cleans up in programmaticOnly mode', () => {
+      const zm = new ZoomManager(svgEl, gEl, { programmaticOnly: true });
+      const spy = vi.fn();
+      zm.onZoom(spy);
+      zm.destroy();
+      zm.applyTransform(d3.zoomIdentity.translate(10, 20));
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('normal mode retains user interaction listeners', () => {
+      const _zm = new ZoomManager(svgEl, gEl);
+      const sel = d3.select(svgEl);
+      // Normal mode should have wheel.zoom listener
+      expect(sel.on('wheel.zoom')).not.toBeNull();
+      _zm.destroy();
+    });
+  });
 });

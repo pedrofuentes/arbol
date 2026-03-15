@@ -731,6 +731,7 @@ export class SettingsEditor {
   }
 
   destroy(): void {
+    this.previewRenderer?.destroy();
     this.container.innerHTML = '';
   }
 }

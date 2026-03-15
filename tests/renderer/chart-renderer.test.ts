@@ -1643,7 +1643,7 @@ describe('ChartRenderer', () => {
       previewContainer.remove();
     });
 
-    it('getZoomManager() returns null in preview mode (no zoom handlers)', () => {
+    it('getZoomManager() returns ZoomManager in preview mode', () => {
       const previewContainer = document.createElement('div');
       document.body.appendChild(previewContainer);
       const previewRenderer = new ChartRenderer({
@@ -1653,7 +1653,7 @@ describe('ChartRenderer', () => {
         horizontalSpacing: 50,
         preview: true,
       });
-      expect(previewRenderer.getZoomManager()).toBeNull();
+      expect(previewRenderer.getZoomManager()).not.toBeNull();
       previewRenderer.destroy();
       previewContainer.remove();
     });
@@ -1689,7 +1689,7 @@ describe('ChartRenderer', () => {
       c.remove();
     });
 
-    it('destroy() does not throw in preview mode (no ZoomManager)', () => {
+    it('destroy() does not throw in preview mode', () => {
       const c = document.createElement('div');
       document.body.appendChild(c);
       const r = new ChartRenderer({
@@ -1699,7 +1699,7 @@ describe('ChartRenderer', () => {
         horizontalSpacing: 50,
         preview: true,
       });
-      expect(r.getZoomManager()).toBeNull();
+      expect(r.getZoomManager()).not.toBeNull();
       expect(() => r.destroy()).not.toThrow();
       c.remove();
     });

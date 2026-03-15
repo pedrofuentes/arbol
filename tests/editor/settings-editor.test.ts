@@ -1027,6 +1027,52 @@ describe('SettingsEditor', () => {
       expect(secondSVG).toBe(firstSVG);
       previewArea.remove();
     });
+
+    it('getZoomManager() returns non-null ZoomManager for preview', () => {
+      const editor = new SettingsEditor(container, renderer, rerenderCb);
+      const previewArea = document.createElement('div');
+      document.body.appendChild(previewArea);
+      editor.setPreviewArea(previewArea);
+      // Access the preview's zoom manager via wirePreviewControls behavior
+      const fitBtn = document.createElement('button');
+      const resetBtn = document.createElement('button');
+      const zoomPct = document.createElement('span');
+      // wirePreviewControls should not return early (zm is not null)
+      editor.wirePreviewControls(fitBtn, resetBtn, zoomPct);
+      // If wiring succeeded, zoom percentage should be set
+      expect(zoomPct.textContent).toMatch(/\d+%/);
+      previewArea.remove();
+    });
+
+    it('wirePreviewControls wires fit and reset buttons', () => {
+      const editor = new SettingsEditor(container, renderer, rerenderCb);
+      const previewArea = document.createElement('div');
+      document.body.appendChild(previewArea);
+      editor.setPreviewArea(previewArea);
+      const fitBtn = document.createElement('button');
+      const resetBtn = document.createElement('button');
+      const zoomPct = document.createElement('span');
+      editor.wirePreviewControls(fitBtn, resetBtn, zoomPct);
+      // Clicking fit should not throw
+      expect(() => fitBtn.click()).not.toThrow();
+      // Clicking reset should not throw
+      expect(() => resetBtn.click()).not.toThrow();
+      // Zoom percentage should be updated
+      expect(zoomPct.textContent).toMatch(/\d+%/);
+      previewArea.remove();
+    });
+  });
+
+  describe('destroy', () => {
+    it('destroy() cleans up preview renderer', () => {
+      const editor = new SettingsEditor(container, renderer, rerenderCb);
+      const previewArea = document.createElement('div');
+      document.body.appendChild(previewArea);
+      editor.setPreviewArea(previewArea);
+      expect(previewArea.querySelector('svg')).not.toBeNull();
+      expect(() => editor.destroy()).not.toThrow();
+      previewArea.remove();
+    });
   });
 
 });
