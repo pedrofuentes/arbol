@@ -1,6 +1,8 @@
 import type { ColumnMapping, MappingPreset, OrgNode, TextNormalization } from '../types';
 import { t } from '../i18n';
 import { extractHeaders, parseCsvToTree } from '../utils/csv-parser';
+import { normalizeText } from '../utils/text-normalize';
+import { flattenTree } from '../utils/tree';
 import { ColumnMapper } from './column-mapper';
 
 export interface WizardState {
@@ -278,8 +280,89 @@ export function renderPreviewStep(
     });
     container.appendChild(success);
 
-    renderNormDropdown(container, 'name', t('import_wizard.norm_label_name'), state);
-    renderNormDropdown(container, 'title', t('import_wizard.norm_label_title'), state);
+    // Sample table showing first 5 people
+    const sampleNodes = flattenTree(state.tree!).slice(0, 5);
+    const tableWrap = document.createElement('div');
+    tableWrap.className = 'wizard-sample-table-wrap';
+
+    const table = document.createElement('table');
+    table.className = 'wizard-sample-table';
+    table.setAttribute('aria-label', t('import_wizard.preview_sample_aria'));
+
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    for (const col of [t('import_wizard.preview_col_name'), t('import_wizard.preview_col_title')]) {
+      const th = document.createElement('th');
+      th.textContent = col;
+      headRow.appendChild(th);
+    }
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    tbody.setAttribute('data-testid', 'preview-tbody');
+
+    const renderRows = () => {
+      tbody.textContent = '';
+      const nameMode = state.nameNormalization ?? 'none';
+      const titleMode = state.titleNormalization ?? 'none';
+      for (const node of sampleNodes) {
+        const tr = document.createElement('tr');
+        const nameTd = document.createElement('td');
+        const titleTd = document.createElement('td');
+        const normalizedName = normalizeText(node.name, nameMode);
+        const normalizedTitle = normalizeText(node.title, titleMode);
+        nameTd.textContent = normalizedName;
+        titleTd.textContent = normalizedTitle;
+        // Show original vs normalized if different
+        if (nameMode !== 'none' && normalizedName !== node.name) {
+          nameTd.textContent = '';
+          const original = document.createElement('span');
+          original.className = 'wizard-sample-original';
+          original.textContent = node.name;
+          const arrow = document.createTextNode(' → ');
+          const normalized = document.createElement('span');
+          normalized.className = 'wizard-sample-normalized';
+          normalized.textContent = normalizedName;
+          nameTd.appendChild(original);
+          nameTd.appendChild(arrow);
+          nameTd.appendChild(normalized);
+        }
+        if (titleMode !== 'none' && normalizedTitle !== node.title) {
+          titleTd.textContent = '';
+          const original = document.createElement('span');
+          original.className = 'wizard-sample-original';
+          original.textContent = node.title;
+          const arrow = document.createTextNode(' → ');
+          const normalized = document.createElement('span');
+          normalized.className = 'wizard-sample-normalized';
+          normalized.textContent = normalizedTitle;
+          titleTd.appendChild(original);
+          titleTd.appendChild(arrow);
+          titleTd.appendChild(normalized);
+        }
+        tr.appendChild(nameTd);
+        tr.appendChild(titleTd);
+        tbody.appendChild(tr);
+      }
+    };
+
+    renderRows();
+    table.appendChild(tbody);
+    tableWrap.appendChild(table);
+
+    if (sampleNodes.length < state.nodeCount!) {
+      const more = document.createElement('p');
+      more.className = 'wizard-sample-more';
+      more.textContent = t('import_wizard.preview_more', { count: String(state.nodeCount! - sampleNodes.length) });
+      tableWrap.appendChild(more);
+    }
+
+    container.appendChild(tableWrap);
+
+    // Normalization dropdowns — re-render sample on change
+    renderNormDropdown(container, 'name', t('import_wizard.norm_label_name'), state, renderRows);
+    renderNormDropdown(container, 'title', t('import_wizard.norm_label_title'), state, renderRows);
 
     onReady(true);
   } catch (e) {
@@ -298,6 +381,7 @@ function renderNormDropdown(
   field: 'name' | 'title',
   label: string,
   state: WizardState,
+  onChangeCallback?: () => void,
 ): void {
   const div = document.createElement('div');
   div.className = 'wizard-field';
@@ -328,6 +412,7 @@ function renderNormDropdown(
 
   select.addEventListener('change', () => {
     state[stateKey] = select.value as TextNormalization;
+    if (onChangeCallback) onChangeCallback();
   });
 
   div.appendChild(select);
