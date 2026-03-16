@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.2] — 2026-03-16
+
+### Removed
+- **Unused sample-org.ts** — `src/data/sample-org.ts` was never imported; deleted
+- **Stale PPTX artifact** — removed accidentally committed `202603121439-org-chart.pptx` from repo root
+- **Completed plan doc** — deleted `docs/plans/2026-03-14-import-wizard-content.md` (fully implemented)
+
+### Changed
+- **.gitignore** — added `*.pptx` and `npm-tree.json` to prevent future accidental commits
+
+### Testing
+- 1,945 tests across 74 files — all passing
+
 ## [3.4.1] — 2026-03-15
 
 ### Fixed

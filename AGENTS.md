@@ -38,12 +38,11 @@ Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 
 
 ## Project Structure
 
-72 TypeScript source files in `src/`, organized by concern:
+81 TypeScript source files in `src/`, organized by concern:
 
 ```
 src/
 ├── controllers/     # focus-mode, search-controller, selection-manager
-├── data/            # sample-org (72-node default tree)
 ├── i18n/            # i18n system (t(), tp(), setLocale()) + en.ts (850+ translation keys)
 ├── editor/          # Sidebar tabs: chart-editor, form-editor, import-editor, json-editor, settings-editor, tab-switcher, utilities-editor
 ├── export/          # chart-exporter (orchestration), pptx-exporter (PowerPoint generation)
