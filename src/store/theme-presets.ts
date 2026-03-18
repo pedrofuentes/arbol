@@ -192,6 +192,25 @@ export const CHART_THEME_PRESETS: ChartThemePreset[] = [
       fontFamily: 'Microsoft Sans Serif',
     },
   },
+  {
+    id: 'stone',
+    name: t('theme.stone.name'),
+    description: t('theme.stone.description'),
+    colors: {
+      cardFill: '#ffffff',
+      cardStroke: '#00b050',
+      cardStrokeWidth: 1,
+      linkColor: '#3e67af',
+      linkWidth: 1,
+      icContainerFill: '#858585',
+      icContainerBorderRadius: 0,
+      nameColor: '#1e293b',
+      titleColor: '#64748b',
+      textAlign: 'center',
+      cardBorderRadius: 0,
+      fontFamily: 'Calibri',
+    },
+  },
 ];
 
 export function getPresetById(id: string): ChartThemePreset | undefined {

@@ -117,7 +117,19 @@ export const COMBINED_PRESETS: CombinedPreset[] = CHART_THEME_PRESETS.map((theme
   id: theme.id,
   name: theme.name,
   colors: theme.colors,
-  sizes: DEFAULT_LAYOUT_SIZES,
+  sizes: theme.id === 'stone'
+    ? {
+        ...DEFAULT_LAYOUT_SIZES,
+        dottedLineDash: '6,4',
+        showHeadcount: true,
+        headcountBadgeColor: '#c5c3c3',
+        headcountBadgeTextColor: '#1e293b',
+        headcountBadgeFontSize: 11,
+        headcountBadgeRadius: 4,
+        headcountBadgePadding: 8,
+        headcountBadgeHeight: 22,
+      }
+    : DEFAULT_LAYOUT_SIZES,
 }));
 
 export interface PresetPanelDeps {

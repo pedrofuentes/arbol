@@ -622,6 +622,8 @@ const en: Record<string, string> = {
   'theme.high_contrast.description': 'Maximum-accessibility theme with bold borders and stark contrasts',
   'theme.ocean_teal.name': 'Ocean Teal',
   'theme.ocean_teal.description': 'Modern teal-accented theme with left-aligned text',
+  'theme.stone.name': 'Stone',
+  'theme.stone.description': 'Green borders on white with grey IC containers and blue connectors',
 
   // ─── Category Defaults ─────────────────────────────────────────────
   'category.open_position': 'Open Position',

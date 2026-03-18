@@ -112,6 +112,20 @@ describe('getPresetById', () => {
     expect(teal!.colors.icContainerBorderRadius).toBe(8);
   });
 
+  it('returns the stone preset', () => {
+    const stone = getPresetById('stone');
+    expect(stone).toBeDefined();
+    expect(stone!.id).toBe('stone');
+    expect(stone!.name).toBe('Stone');
+    expect(stone!.colors.cardFill).toBe('#ffffff');
+    expect(stone!.colors.cardStroke).toBe('#00b050');
+    expect(stone!.colors.linkColor).toBe('#3e67af');
+    expect(stone!.colors.linkWidth).toBe(1);
+    expect(stone!.colors.icContainerFill).toBe('#858585');
+    expect(stone!.colors.cardBorderRadius).toBe(0);
+    expect(stone!.colors.fontFamily).toBe('Calibri');
+  });
+
   it('returns undefined for nonexistent id', () => {
     expect(getPresetById('nonexistent')).toBeUndefined();
   });
