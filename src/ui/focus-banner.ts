@@ -68,6 +68,7 @@ export function showFocusBanner(options: FocusBannerOptions): void {
   const exitBtn = document.createElement('button');
   exitBtn.setAttribute('data-testid', 'focus-banner-exit');
   exitBtn.textContent = t('focus.show_full');
+  exitBtn.setAttribute('aria-label', t('focus.show_full_aria'));
   exitBtn.style.cssText = [
     'border:none',
     'background:transparent',

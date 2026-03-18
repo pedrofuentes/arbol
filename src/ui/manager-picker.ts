@@ -57,6 +57,7 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<Manage
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
     searchInput.placeholder = t('picker.search_placeholder');
+    searchInput.setAttribute('aria-label', t('picker.search_managers_aria'));
     searchInput.style.cssText = `
       width:100%;box-sizing:border-box;
       padding:8px 12px;margin-bottom:12px;

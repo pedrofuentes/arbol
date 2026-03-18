@@ -113,4 +113,13 @@ describe('WelcomeBanner', () => {
       expect(styleEl!.textContent).toContain('welcomeBannerIn');
     });
   });
+
+  describe('aria-labels', () => {
+    it('dismiss button has descriptive aria-label', () => {
+      showWelcomeBanner(container);
+      const dismiss = getDismissButton()!;
+      expect(dismiss.getAttribute('aria-label')).toBe('Dismiss welcome message');
+    });
+  });
+
 });

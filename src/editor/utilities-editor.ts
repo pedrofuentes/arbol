@@ -72,11 +72,14 @@ export class UtilitiesEditor {
     const group = document.createElement('div');
     group.className = 'form-group';
 
+    const id = 'norm-' + labelText.toLowerCase().replace(/\s+/g, '-');
     const label = document.createElement('label');
     label.textContent = labelText;
+    label.htmlFor = id;
     group.appendChild(label);
 
     const select = document.createElement('select');
+    select.id = id;
     select.dataset.normField = labelText.toLowerCase().replace(/\s+/g, '-');
     for (const opt of NORM_OPTIONS) {
       const option = document.createElement('option');

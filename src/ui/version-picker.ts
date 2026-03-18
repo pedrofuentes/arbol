@@ -1,6 +1,7 @@
 import { VersionRecord } from '../types';
 import { t } from '../i18n';
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
+import { t } from '../i18n';
 
 export type VersionPickerResult =
   | { type: 'version'; version: VersionRecord }
@@ -51,6 +52,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
     searchInput.type = 'text';
     searchInput.placeholder = t('version_picker.search_placeholder');
     searchInput.dataset.testid = 'version-picker-search';
+    searchInput.setAttribute('aria-label', t('picker.search_versions_aria'));
     searchInput.style.cssText = `
       width:100%;box-sizing:border-box;
       padding:8px 12px;margin-bottom:12px;

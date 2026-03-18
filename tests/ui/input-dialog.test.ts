@@ -167,4 +167,15 @@ describe('showInputDialog', () => {
     const result = await promise;
     expect(result).toBeNull();
   });
+
+  it('label and input are programmatically associated via htmlFor and id', () => {
+    showInputDialog({ title: 'Test', label: 'Name' });
+    const dialog = document.querySelector('[role="dialog"]');
+    const label = dialog.querySelector('label');
+    const input = dialog.querySelector('input');
+    expect(label.htmlFor).toBeTruthy();
+    expect(input.id).toBeTruthy();
+    expect(label.htmlFor).toBe(input.id);
+  });
+
 });
