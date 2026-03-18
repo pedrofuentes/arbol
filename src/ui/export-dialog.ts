@@ -1,6 +1,7 @@
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
 import { t } from '../i18n';
 import type { VersionRecord } from '../types';
+import { t } from '../i18n';
 
 export interface ExportDialogOptions {
   chartName: string;
@@ -54,6 +55,14 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
       toggleLink.textContent = allChecked ? t('export_dialog.select_all') : t('export_dialog.deselect_all');
     });
     dialog.appendChild(toggleLink);
+
+    const hintParagraph = document.createElement('p');
+    hintParagraph.textContent = t('export_dialog.versions_hint');
+    hintParagraph.style.cssText = `
+      margin:0 0 8px;font-size:13px;
+      color:var(--text-secondary);font-family:var(--font-sans);
+    `;
+    dialog.appendChild(hintParagraph);
 
     const list = document.createElement('div');
     list.setAttribute('role', 'list');

@@ -168,6 +168,10 @@ function getHelpSections(): HelpSection[] {
           { tag: 'strong', text: t('help.interactions.search_label') },
           t('help.interactions.search_desc'),
         ],
+        [
+          { tag: 'strong', text: t('help.interactions.dotted_label') },
+          t('help.interactions.dotted_desc'),
+        ],
       ],
     },
     {
@@ -224,6 +228,12 @@ function getHelpSections(): HelpSection[] {
           t('help.headcount.enable_3'),
         ],
         [t('help.headcount.customize')],
+      ],
+    },
+    {
+      titleKey: 'help.comparison.title',
+      items: [
+        [t('help.comparison.desc')],
       ],
     },
     {

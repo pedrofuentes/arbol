@@ -49,7 +49,7 @@ const en: Record<string, string> = {
   'menu.add_icon': '➕',
   'menu.focus': 'Focus',
   'menu.focus_icon': '🔎',
-  'menu.category': 'Tag',
+  'menu.category': 'Category',
   'menu.category_icon': '🏷️',
   'menu.category_none': 'None (default)',
   'menu.category_check': '✓',
@@ -88,7 +88,7 @@ const en: Record<string, string> = {
 
   // ─── Property Panel ─────────────────────────────────────────────────
   'property_panel.title': 'Properties',
-  'property_panel.aria_label': 'Node properties panel',
+  'property_panel.aria_label': 'Person properties panel',
   'property_panel.close_aria': 'Close properties panel',
   'property_panel.reports_to': 'Reports to:',
   'property_panel.root_node': 'Root',
@@ -771,9 +771,9 @@ const en: Record<string, string> = {
   'help.interactions.search_desc': ' — Type in the search bar to highlight matching people. Non-matches are dimmed.',
 
   // Help: Color Categories
-  'help.categories.title': 'Tags & Color Categories',
-  'help.categories.assign_1': 'Assign a color tag to any person by right-clicking their card and choosing ',
-  'help.categories.assign_strong': 'Tag',
+  'help.categories.title': 'Color Categories',
+  'help.categories.assign_1': 'Assign a color category to any person by right-clicking their card and choosing ',
+  'help.categories.assign_strong': 'Category',
   'help.categories.assign_2': '.',
   'help.categories.defaults_1': 'Each chart has its own set of categories. Default categories: ',
   'help.categories.defaults_open': 'Open Position',
@@ -1081,6 +1081,15 @@ const en: Record<string, string> = {
   'app.fatal_error': 'Failed to start Arbol',
   'app.unexpected_error': 'An unexpected error occurred',
   'app.refresh_hint': 'Try refreshing the page. If the issue persists, clear your browser data for this site.',
+
+  // ─── Help & Docs ──────────────────────────────────────────────────
+  'column_mapper.parent_ref_help': 'By Name matches the parent column to people\'s names. By ID matches a unique identifier.',
+  'footer.ics_tooltip': 'Individual Contributors \u2014 employees without direct reports',
+  'help.comparison.title': 'Version Comparison',
+  'help.comparison.desc': 'Use the side-by-side comparison view to see what changed between two versions of your chart. Added, removed, and moved people are highlighted.',
+  'help.interactions.dotted_label': 'Dotted lines',
+  'help.interactions.dotted_desc': ' \u2014 Toggle any link to a dotted line via right-click \u2192 Dotted/Solid. Useful for indicating temporary or informal reporting relationships.',
+  'export_dialog.versions_hint': 'Select which saved versions to include as additional slides.',
 };
 
 export default en;
