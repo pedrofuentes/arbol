@@ -26,6 +26,7 @@ interface HelpSection {
   shortcuts?: ShortcutEntry[];
   items?: HelpFragment[][];
   hasClearData?: boolean;
+  hasSampleOrg?: boolean;
 }
 
 function getHelpSections(): HelpSection[] {
@@ -51,6 +52,7 @@ function getHelpSections(): HelpSection[] {
     },
     {
       titleKey: 'help.getting_started.title',
+      hasSampleOrg: true,
       items: [
         [t('help.getting_started.pan_zoom')],
         [t('help.getting_started.right_click')],
@@ -357,7 +359,48 @@ function buildClearDataButton(storage: IStorage): HTMLButtonElement {
   return clearBtn;
 }
 
-export function showHelpDialog(storage: IStorage = browserStorage): void {
+function buildSampleOrgButton(onLoad: () => void, closeDialog: () => void): HTMLButtonElement {
+  const btn = document.createElement('button');
+  btn.textContent = t('help.sample_org_button');
+  btn.setAttribute('aria-label', t('help.sample_org_aria'));
+  btn.style.cssText = `
+    margin-top:10px;margin-bottom:6px;padding:5px 14px;font-size:12px;
+    font-family:var(--font-sans);cursor:pointer;display:block;margin-left:auto;margin-right:auto;
+    background:transparent;color:var(--text-tertiary);
+    border:1px solid var(--border-default);border-radius:var(--radius-md);
+    transition:background var(--transition-fast),color var(--transition-fast),border-color var(--transition-fast);
+  `;
+  btn.addEventListener('mouseenter', () => {
+    btn.style.background = 'var(--bg-accent, #f0fdf4)';
+    btn.style.color = 'var(--accent, #22c55e)';
+    btn.style.borderColor = 'var(--accent, #22c55e)';
+  });
+  btn.addEventListener('mouseleave', () => {
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--text-tertiary)';
+    btn.style.borderColor = 'var(--border-default)';
+  });
+  btn.addEventListener('click', async () => {
+    const confirmed = await showConfirmDialog({
+      title: t('help.sample_org_confirm_title'),
+      message: t('help.sample_org_confirm_message'),
+      confirmLabel: t('help.sample_org_button'),
+    });
+    if (confirmed) {
+      onLoad();
+      closeDialog();
+    }
+  });
+  return btn;
+}
+
+export interface HelpDialogOptions {
+  storage?: IStorage;
+  onLoadSample?: () => void;
+}
+
+export function showHelpDialog(options: HelpDialogOptions = {}): void {
+  const storage = options.storage ?? browserStorage;
   const previouslyFocused = document.activeElement;
   const overlay = createOverlay();
   overlay.style.background = 'rgba(0,0,0,0.6)';
@@ -411,6 +454,7 @@ export function showHelpDialog(storage: IStorage = browserStorage): void {
   content.style.scrollbarWidth = 'thin';
 
   const sections = getHelpSections();
+  const closeRef = { fn: () => {} };
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i];
     const isFirst = i === 0;
@@ -481,6 +525,10 @@ export function showHelpDialog(storage: IStorage = browserStorage): void {
       body.appendChild(buildClearDataButton(storage));
     }
 
+    if (section.hasSampleOrg && options.onLoadSample) {
+      body.appendChild(buildSampleOrgButton(options.onLoadSample, () => closeRef.fn()));
+    }
+
     sectionEl.appendChild(body);
     content.appendChild(sectionEl);
   }
@@ -518,6 +566,7 @@ export function showHelpDialog(storage: IStorage = browserStorage): void {
       previouslyFocused.focus();
     }
   };
+  closeRef.fn = close;
 
   closeBtn.addEventListener('click', close);
   overlay.addEventListener('click', (e) => {

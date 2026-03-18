@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5] — 2026-03-18
+
+### Added
+- **Load Sample Org Chart** — button in Help dialog's "Getting Started" section loads a ~20-node demo org showcasing managers, M1s, ICs, advisors, and dotted-line relationships
+
+### Testing
+- 1,965 tests across 76 files — all passing
+
 ## [3.4.4] — 2026-03-18
 
 ### Fixed

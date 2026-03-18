@@ -1,7 +1,8 @@
 import { t } from '../i18n';
 import { ShortcutManager } from '../utils/shortcuts';
 import { CommandPalette, type CommandItem } from '../ui/command-palette';
-import { showHelpDialog } from '../ui/help-dialog';
+import { showHelpDialog, type HelpDialogOptions } from '../ui/help-dialog';
+import { SAMPLE_ORG } from '../data/sample-org';
 import { showInputDialog } from '../ui/input-dialog';
 import { dismissVersionViewer, isVersionViewerActive } from '../ui/version-viewer';
 import { isComparisonBannerActive } from '../ui/comparison-banner';
@@ -156,7 +157,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
         icon: '❓',
         shortcut: '?',
         group: t('command_palette.group_navigation'),
-        action: () => { showHelpDialog(); },
+        action: () => { showHelpDialog({ onLoadSample: () => store.fromJSON(JSON.stringify(SAMPLE_ORG)) }); },
       },
       {
         id: 'theme',
@@ -295,7 +296,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
 
   shortcuts.register({
     key: '?',
-    handler: () => showHelpDialog(),
+    handler: () => showHelpDialog({ onLoadSample: () => store.fromJSON(JSON.stringify(SAMPLE_ORG)) }),
     description: t('shortcut.help'),
   });
 
