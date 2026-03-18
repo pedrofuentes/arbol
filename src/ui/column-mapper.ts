@@ -1,4 +1,5 @@
 import type { ColumnMapping } from '../types';
+import { t } from '../i18n';
 
 let formIdCounter = 0;
 function uniqueId(prefix: string): string {
@@ -137,6 +138,12 @@ export class ColumnMapper {
     radioGroup.appendChild(nameLabel);
     radioGroup.appendChild(idLabel);
     group.appendChild(radioGroup);
+
+    const helpText = document.createElement('small');
+    helpText.textContent = t('column_mapper.parent_ref_help');
+    helpText.style.cssText = 'display:block;margin-top:4px;font-size:11px;color:var(--text-tertiary);';
+    group.appendChild(helpText);
+
     this.container.appendChild(group);
 
     // Update Reports To label when toggle changes
