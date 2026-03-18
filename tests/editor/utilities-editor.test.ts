@@ -162,4 +162,15 @@ describe('UtilitiesEditor', () => {
     editor.destroy();
     expect(container.innerHTML).toBe('');
   });
+
+  it('label and select in normalization dropdowns are programmatically associated', () => {
+    const selects = container.querySelectorAll('select');
+    expect(selects.length).toBeGreaterThan(0);
+    for (const select of selects) {
+      expect(select.id).toBeTruthy();
+      const label = container.querySelector('label[for="' + select.id + '"]');
+      expect(label).not.toBeNull();
+    }
+  });
+
 });

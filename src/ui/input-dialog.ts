@@ -31,8 +31,10 @@ export function showInputDialog(options: InputDialogOptions): Promise<string | n
     `;
     dialog.appendChild(title);
 
+    const inputId = 'input-dialog-' + crypto.randomUUID().slice(0, 8);
     const label = document.createElement('label');
     label.textContent = options.label;
+    label.htmlFor = inputId;
     label.style.cssText = `
       display:block;font-size:13px;font-weight:500;
       color:var(--text-secondary);font-family:var(--font-sans);
@@ -42,6 +44,7 @@ export function showInputDialog(options: InputDialogOptions): Promise<string | n
 
     const input = document.createElement('input');
     input.type = 'text';
+    input.id = inputId;
     if (options.placeholder) input.placeholder = options.placeholder;
     if (options.initialValue) input.value = options.initialValue;
     if (options.maxLength) input.maxLength = options.maxLength;

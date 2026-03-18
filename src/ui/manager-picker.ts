@@ -1,4 +1,5 @@
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
+import { t } from '../i18n';
 
 export interface ManagerPickerItem {
   id: string;
@@ -56,6 +57,7 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<Manage
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
     searchInput.placeholder = 'Search managers…';
+    searchInput.setAttribute('aria-label', t('picker.search_managers_aria'));
     searchInput.style.cssText = `
       width:100%;box-sizing:border-box;
       padding:8px 12px;margin-bottom:12px;

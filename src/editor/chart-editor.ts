@@ -126,6 +126,7 @@ export class ChartEditor {
     this.chartSearchInput.type = 'text';
     this.chartSearchInput.className = 'chart-search';
     this.chartSearchInput.placeholder = t('chart_editor.search_placeholder');
+    this.chartSearchInput.setAttribute('aria-label', t('chart_editor.search_aria'));
     this.chartSearchInput.addEventListener('input', () => {
       this.chartSearchTerm = this.chartSearchInput.value.trim().toLowerCase();
       this.renderChartList();

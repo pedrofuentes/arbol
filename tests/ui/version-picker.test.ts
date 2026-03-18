@@ -199,4 +199,12 @@ describe('showVersionPicker', () => {
     const options = document.querySelectorAll('[role="option"]');
     expect(options.length).toBe(3);
   });
+
+  it('search input has aria-label for screen readers', () => {
+    showVersionPicker({ versions: sampleVersions, includeWorkingTree: false });
+    const input = document.querySelector('[data-testid="version-picker-search"]');
+    expect(input).not.toBeNull();
+    expect(input.getAttribute('aria-label')).toBe('Search for a version');
+  });
+
 });

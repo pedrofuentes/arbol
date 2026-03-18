@@ -68,3 +68,17 @@ export function contrastingTitleColor(
 ): string {
   return relativeLuminance(bgHex) > 0.179 ? darkColor : lightColor;
 }
+
+/**
+ * WCAG 2.1 contrast ratio between two hex colors.
+ * Returns a value between 1 (identical) and 21 (black vs white).
+ *
+ * @see https://www.w3.org/TR/WCAG21/#dfn-contrast-ratio
+ */
+export function contrastRatio(hex1: string, hex2: string): number {
+  const L1 = relativeLuminance(hex1);
+  const L2 = relativeLuminance(hex2);
+  const lighter = Math.max(L1, L2);
+  const darker = Math.min(L1, L2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
