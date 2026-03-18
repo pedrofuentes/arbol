@@ -195,4 +195,57 @@ describe('AddPopover', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(onCancel).not.toHaveBeenCalled();
   });
+
+  describe('required field indicators', () => {
+    it('displays a required indicator span on the name label', () => {
+      const popover = openPopover();
+      const indicator = popover.querySelector('.required-indicator');
+      expect(indicator).not.toBeNull();
+      expect(indicator!.textContent).toBe(' *');
+    });
+
+    it('hides the required indicator from screen readers', () => {
+      const popover = openPopover();
+      const indicator = popover.querySelector('.required-indicator');
+      expect(indicator!.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('sets aria-required on the name input', () => {
+      const popover = openPopover();
+      const nameInput = popover.querySelector('input')!;
+      expect(nameInput.getAttribute('aria-required')).toBe('true');
+    });
+
+    it('shows error on blur when name is empty', () => {
+      const popover = openPopover();
+      const nameInput = popover.querySelector('input')!;
+      nameInput.value = '';
+      nameInput.dispatchEvent(new Event('blur'));
+      const errorMsg = popover.querySelector('.error-msg');
+      expect(errorMsg!.textContent).toBe('Name is required');
+      expect(nameInput.style.borderColor).toBe('var(--danger, #e53e3e)');
+    });
+
+    it('does not show error on blur when name has a value', () => {
+      const popover = openPopover();
+      const nameInput = popover.querySelector('input')!;
+      nameInput.value = 'Alice';
+      nameInput.dispatchEvent(new Event('blur'));
+      const errorMsg = popover.querySelector('.error-msg');
+      expect(errorMsg!.textContent).toBe('');
+    });
+
+    it('clears error when user types after blur validation', () => {
+      const popover = openPopover();
+      const nameInput = popover.querySelector('input')!;
+      nameInput.value = '';
+      nameInput.dispatchEvent(new Event('blur'));
+      const errorMsg = popover.querySelector('.error-msg');
+      expect(errorMsg!.textContent).toBe('Name is required');
+      nameInput.value = 'A';
+      nameInput.dispatchEvent(new Event('input'));
+      expect(errorMsg!.textContent).toBe('');
+      expect(nameInput.style.borderColor).toBe('var(--border-default)');
+    });
+  });
 });

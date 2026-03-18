@@ -52,7 +52,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
   const versionSeparator = document.createElement('span');
   versionSeparator.style.cssText =
     'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
-  versionSeparator.textContent = '·';
+  versionSeparator.textContent = t('footer.separator').trim();
   footerLeft.appendChild(versionSeparator);
 
   const statusText = document.createElement('span');
@@ -94,7 +94,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
     for (const [depth, count] of sortedLevels) {
       parts.push(t('footer.manager_level', { count, depth }));
     }
-    statusText.textContent = parts.join(' · ');
+    statusText.textContent = parts.join(t('footer.separator'));
   };
   store.onChange(updateStatus);
   updateStatus();
@@ -118,7 +118,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
 
   const centerSeparator = document.createElement('span');
   centerSeparator.style.color = 'var(--text-tertiary)';
-  centerSeparator.textContent = '·';
+  centerSeparator.textContent = t('footer.separator').trim();
   footerCenter.appendChild(centerSeparator);
 
   const issuesLink = document.createElement('a');

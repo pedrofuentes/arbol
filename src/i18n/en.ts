@@ -281,7 +281,7 @@ const en: Record<string, string> = {
 
   // ─── Welcome Banner ────────────────────────────────────────────────
   'welcome.message': 'Welcome to Arbol! Tap, click, or right-click any card to edit, add, or move people. Click ❓ for help.',
-  'welcome.dismiss': 'Got it',
+  'welcome.dismiss': 'Got it \u2014 click \u2753 anytime for help',
   'welcome.aria': 'Welcome guide',
   'welcome.dismiss_aria': 'Dismiss welcome message',
   'welcome.dismiss_aria': 'Dismiss welcome message',

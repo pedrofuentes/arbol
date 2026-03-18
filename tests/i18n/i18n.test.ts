@@ -156,5 +156,61 @@ describe('i18n', () => {
         expect(typeof value, `Non-string value for key "${key}"`).toBe('string');
       }
     });
+
+    it('search.placeholder tells users what is searchable', () => {
+      expect(en['search.placeholder']).toBe('Search by name or title\u2026 (Ctrl+F)');
+    });
+
+    it('search.no_results gives helpful guidance', () => {
+      expect(en['search.no_results']).toBe('No people found. Try different keywords.');
+    });
+
+    it('has form.required_indicator key', () => {
+      expect(en['form.required_indicator']).toBe('*');
+    });
+
+    it('has loading indicator i18n keys', () => {
+      expect(en['loading.switching_chart']).toBe('Switching chart\u2026');
+      expect(en['loading.restoring_version']).toBe('Restoring version\u2026');
+      expect(en['loading.deleting_chart']).toBe('Deleting chart\u2026');
+      expect(en['loading.importing']).toBe('Importing\u2026');
+    });
+
+    it('welcome.dismiss hints at help recovery', () => {
+      expect(en['welcome.dismiss']).toContain('Got it');
+      expect(en['welcome.dismiss']).toContain('\u2753');
+    });
+
+    it('has footer.separator key for localization', () => {
+      expect(en['footer.separator']).toBe(' \u00b7 ');
+    });
+
+    it('search.placeholder tells users what is searchable', () => {
+      expect(en['search.placeholder']).toBe('Search by name or title\u2026 (Ctrl+F)');
+    });
+
+    it('search.no_results gives helpful guidance', () => {
+      expect(en['search.no_results']).toBe('No people found. Try different keywords.');
+    });
+
+    it('has form.required_indicator key', () => {
+      expect(en['form.required_indicator']).toBe('*');
+    });
+
+    it('has loading indicator i18n keys', () => {
+      expect(en['loading.switching_chart']).toBe('Switching chart\u2026');
+      expect(en['loading.restoring_version']).toBe('Restoring version\u2026');
+      expect(en['loading.deleting_chart']).toBe('Deleting chart\u2026');
+      expect(en['loading.importing']).toBe('Importing\u2026');
+    });
+
+    it('welcome.dismiss hints at help recovery', () => {
+      expect(en['welcome.dismiss']).toContain('Got it');
+      expect(en['welcome.dismiss']).toContain('\u2753');
+    });
+
+    it('has footer.separator key for localization', () => {
+      expect(en['footer.separator']).toBe(' \u00b7 ');
+    });
   });
 });

@@ -58,7 +58,7 @@ describe('WelcomeBanner', () => {
       showWelcomeBanner(container);
       const btn = getDismissButton();
       expect(btn).not.toBeNull();
-      expect(btn!.textContent).toBe('Got it');
+      expect(btn!.textContent).toContain('Got it');
     });
   });
 
