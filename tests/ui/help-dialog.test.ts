@@ -239,4 +239,28 @@ describe('showHelpDialog', () => {
     const chevrons = document.querySelectorAll('.help-chevron');
     expect(chevrons.length).toBeGreaterThan(0);
   });
+
+  it('renders sample org button when onLoadSample is provided', () => {
+    showHelpDialog({ onLoadSample: vi.fn() });
+    const btn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent?.includes('Load Sample Org Chart'),
+    );
+    expect(btn).toBeDefined();
+  });
+
+  it('does not render sample org button when onLoadSample is omitted', () => {
+    showHelpDialog();
+    const btn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent?.includes('Load Sample Org Chart'),
+    );
+    expect(btn).toBeUndefined();
+  });
+
+  it('sample org button has accessible aria-label', () => {
+    showHelpDialog({ onLoadSample: vi.fn() });
+    const btn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent?.includes('Load Sample Org Chart'),
+    );
+    expect(btn!.getAttribute('aria-label')).toBe('Load a sample organization chart');
+  });
 });

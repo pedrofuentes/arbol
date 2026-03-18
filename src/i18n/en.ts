@@ -684,6 +684,10 @@ const en: Record<string, string> = {
   'help.dialog_aria': 'Keyboard shortcuts and help',
   'help.clear_data_button': '🗑 Clear All Data',
   'help.clear_data_aria': 'Clear all local data',
+  'help.sample_org_button': '🌳 Load Sample Org Chart',
+  'help.sample_org_aria': 'Load a sample organization chart',
+  'help.sample_org_confirm_title': 'Load Sample Org?',
+  'help.sample_org_confirm_message': 'This will replace the current chart with a sample organization. You can undo this action.',
   'help.section_toggle_aria': 'Toggle {section} section',
 
   // Help: Getting Started
