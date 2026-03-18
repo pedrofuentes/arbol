@@ -8,7 +8,7 @@ These rules are **absolute requirements**. Violating any one will break the proj
 
 1. **TDD is mandatory.** Write a failing test FIRST, then implement. Red → Green → Refactor. No exceptions.
 2. **Never commit to `main`.** All work happens on feature branches (`feat/`, `fix/`, `refactor/`, etc.).
-3. **All 2,062 tests must pass** (`npm run test`) before any commit.
+3. **All 2,063 tests must pass** (`npm run test`) before any commit.
 4. **Merge only with explicit user approval.** Never auto-merge, rebase, or push to `main` without the user saying yes.
 5. **No hardcoded values.** All spacing, sizing, color, and style values go through options/parameters — zero magic numbers.
 6. **No `innerHTML` with dynamic data.** Use `textContent`, `createElement`, `appendChild` only.
@@ -38,7 +38,7 @@ Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 
 
 ## Project Structure
 
-81 TypeScript source files in `src/`, organized by concern:
+83 TypeScript source files in `src/`, organized by concern:
 
 ```
 src/
@@ -48,7 +48,7 @@ src/
 ├── export/          # chart-exporter (orchestration), pptx-exporter (PowerPoint generation)
 ├── renderer/        # chart-renderer (D3 SVG), layout-engine, keyboard-nav, preview-renderer (vanilla DOM, no D3), side-by-side-renderer, zoom-manager
 ├── store/           # org-store, chart-store, chart-db, category-store, settings-store, mapping-store, backup-manager, theme-manager, theme-presets
-├── ui/              # 27 components: context-menu, inline-editor, command-palette, property-panel, settings-modal, import-wizard, confirm-dialog, manager-picker, toast, etc.
+├── ui/              # 28 components: context-menu, inline-editor, command-palette, property-panel, settings-modal, import-wizard, confirm-dialog, manager-picker, toast, loading-overlay, etc.
 ├── utils/           # tree helpers (find/flatten/clone/isM1), csv-parser, contrast, shortcuts, event-emitter, filename, file-type, id, search, storage, text-normalize, tree-diff
 ├── types.ts         # All interfaces: OrgNode, ColumnMapping, ColorCategory, ChartRecord, VersionRecord, DiffStatus
 ├── main.ts          # App entry — wires stores, renderer, editors, menus, shortcuts
@@ -181,9 +181,9 @@ Charts are independent org trees stored in IndexedDB (`arbol-db`), each with the
 
 ### Context Menu
 
-**Single-card menu** (right-click on unselected card): Edit (inline editor), Add (child popover), Focus (disabled on leaves), Tag (submenu), Dotted/Solid toggle, Move (disabled on root, opens manager picker), Remove (disabled on root; managers require child reassignment).
+**Single-card menu** (right-click on unselected card): Edit (inline editor), Add (child popover), Focus (disabled on leaves), Category (submenu), Dotted/Solid toggle, Move (disabled on root, opens manager picker), Remove (disabled on root; managers require child reassignment).
 
-**Multi-select menu** (right-click on one of N selected cards): Tag (N people) → `bulkSetCategory()`, Move all (N people) → `bulkMoveNodes()`, Remove all (N people) → managers reassign first, then `bulkRemoveNodes()`.
+**Multi-select menu** (right-click on one of N selected cards): Category (N people) → `bulkSetCategory()`, Move all (N people) → `bulkMoveNodes()`, Remove all (N people) → managers reassign first, then `bulkRemoveNodes()`.
 
 ### Focus Mode
 
@@ -311,7 +311,7 @@ The version in `package.json` is the single source of truth — injected into th
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **2,062 tests across 85 files** — all must pass before committing
+- **2,063 tests across 85 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure exactly (e.g., `src/store/org-store.ts` → `tests/store/org-store.test.ts`)
@@ -323,7 +323,7 @@ The version in `package.json` is the single source of truth — injected into th
 ```bash
 npm install          # Install dependencies
 npm run dev          # Start dev server (Vite HMR)
-npm run test         # Run all tests (1,786 across 69 files)
+npm run test         # Run all tests (2,063 across 85 files)
 npm run test:watch   # Watch mode
 npm run build        # Production build (tsc + vite build)
 ```

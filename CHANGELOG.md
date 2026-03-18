@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Footer separator** — extracted `' · '` to i18n key `footer.separator`; footer stats now use `<span>` elements with tooltips
 
 ### Testing
-- 2,062 tests across 85 files — all passing
+- 2,063 tests across 85 files — all passing
 
 ## [3.4.5] — 2026-03-18
 

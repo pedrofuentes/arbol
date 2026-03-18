@@ -33,7 +33,7 @@ An interactive org chart editor for the browser — manage multiple org charts w
 - Advisor role support with special 2-column layout
 - Smart M1 detection (compact layout for manager groups)
 - 20+ customizable renderer settings (dimensions, spacing, typography, colors, rounded corners, font family, text alignment)
-- Dark/light theme with 9 presets (including Ocean Teal)
+- Dark/light theme with 10 presets (including Ocean Teal and Stone)
 - Full undo/redo (50-entry stack)
 - Search & highlight by name/title
 - Keyboard shortcuts (Ctrl+Z, Ctrl+E, Ctrl+F, etc.) and full chart keyboard navigation

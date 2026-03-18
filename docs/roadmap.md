@@ -16,7 +16,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Add ZoomManager `programmaticOnly` option for future use
 
 ### Testing
-- [x] **2,062 tests across 85 files** — all passing
+- [x] **2,063 tests across 85 files** — all passing
 - [x] 14 new tests: zoom-manager, chart-renderer, settings-editor
 
 ---
