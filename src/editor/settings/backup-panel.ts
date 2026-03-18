@@ -12,7 +12,7 @@ import { showRestoreStrategyDialog } from '../../ui/restore-dialog';
 import { showToast } from '../../ui/toast';
 import { type IStorage } from '../../utils/storage';
 import { detectArbolFileType } from '../../utils/file-type';
-import { t } from '../../i18n';
+import { t, getLocale } from '../../i18n';
 
 const ARBOL_STORAGE_KEYS = [
   'arbol-org-data',
@@ -91,7 +91,7 @@ export class BackupPanel {
 
           const backup = await readBackupFile(file);
           const summary = getBackupSummary(backup);
-          const date = new Date(summary.createdAt).toLocaleString();
+          const date = new Date(summary.createdAt).toLocaleString(getLocale());
 
           const strategy = await showRestoreStrategyDialog({
             chartCount: summary.chartCount,

@@ -53,3 +53,13 @@ export function tp(key: string, count: number, params?: Record<string, string | 
   const pluralKey = count === 1 ? `${key}.one` : `${key}.other`;
   return t(pluralKey, { count, ...params });
 }
+
+/** Format a date using the current locale. */
+export function td(date: Date, options?: Intl.DateTimeFormatOptions): string {
+  return new Intl.DateTimeFormat(currentLocale, options).format(date);
+}
+
+/** Format a number using the current locale. */
+export function tn(value: number, options?: Intl.NumberFormatOptions): string {
+  return new Intl.NumberFormat(currentLocale, options).format(value);
+}

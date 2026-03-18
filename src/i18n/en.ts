@@ -154,7 +154,6 @@ const en: Record<string, string> = {
   'focus.entered': 'Focused on {name} org',
   'focus.exited': 'Showing full org',
   'focus.show_full_aria': 'Exit focus mode and show full organization chart',
-  'focus.show_full_aria': 'Exit focus mode and show full organization chart',
 
   // ─── Announcements ─────────────────────────────────────────────────
   'announce.undo': 'Undo',
@@ -231,8 +230,6 @@ const en: Record<string, string> = {
   'picker.dotted_line_option': 'Dotted line (reports elsewhere)',
   'picker.search_managers_aria': 'Search for a manager',
   'picker.search_versions_aria': 'Search for a version',
-  'picker.search_managers_aria': 'Search for a manager',
-  'picker.search_versions_aria': 'Search for a version',
 
   // ─── Inline Editor ─────────────────────────────────────────────────
   'inline_editor.aria': 'Edit person',
@@ -280,10 +277,9 @@ const en: Record<string, string> = {
   'version_viewer.close': '✕ Close',
 
   // ─── Welcome Banner ────────────────────────────────────────────────
-  'welcome.message': 'Welcome to Arbol! Tap, click, or right-click any card to edit, add, or move people. Click ❓ for help.',
+  'welcome.message': 'Welcome to Arbol! This is a sample chart \u2014 tap, click, or right-click any card to edit, add, or move people. Click \u2753 for help.',
   'welcome.dismiss': 'Got it \u2014 click \u2753 anytime for help',
   'welcome.aria': 'Welcome guide',
-  'welcome.dismiss_aria': 'Dismiss welcome message',
   'welcome.dismiss_aria': 'Dismiss welcome message',
 
   // ─── Chart Editor ──────────────────────────────────────────────────
@@ -320,7 +316,6 @@ const en: Record<string, string> = {
   'chart_editor.working_tree': 'Working tree',
   'chart_editor.working_tree_dirty': 'Current · unsaved changes',
   'chart_editor.working_tree_saved': 'Current · saved',
-  'chart_editor.search_aria': 'Search charts',
   'chart_editor.search_aria': 'Search charts',
 
   // ─── JSON Editor ───────────────────────────────────────────────────
@@ -495,7 +490,7 @@ const en: Record<string, string> = {
   'settings.collapse_all': 'Collapse all',
   'settings.expand_all': 'Expand all',
   'settings.presets_section': 'Presets',
-  'settings.categories_section': 'Node Categories',
+  'settings.categories_section': 'Color Categories',
   'settings.settings_section': 'Settings',
   'settings.backup_section': 'Backup & Restore',
   'settings.reset_aria': 'Reset {title} to defaults',
@@ -714,7 +709,7 @@ const en: Record<string, string> = {
   'help.chart_works.ics_label': 'ICs (Individual Contributors)',
   'help.chart_works.ics_desc': ' — Employees without direct reports. Shown in compact vertical stacks under their manager.',
   'help.chart_works.advisors_label': 'Advisors',
-  'help.chart_works.advisors_desc': ' — Staff who report directly to a senior manager (one who manages other managers). Shown in a special 2-column layout beside the manager\'s card.',
+  'help.chart_works.advisors_desc': ' \u2014 Staff who report directly to a senior manager (one who manages other managers), such as a Chief of Staff or Executive Assistant. Shown in a special 2-column layout beside the manager\'s card.',
   'help.chart_works.auto_detect': 'The chart automatically detects these roles based on the hierarchy — no manual configuration needed.',
 
   // Help: Toolbar & Sidebar
@@ -760,9 +755,9 @@ const en: Record<string, string> = {
   'help.interactions.click_label': 'Click',
   'help.interactions.click_desc': ' — Select and highlight a card.',
   'help.interactions.right_click_label': 'Right-click',
-  'help.interactions.right_click_desc': ' — Context menu with Edit, Add, Focus, Tag, Dotted/Solid, Move, and Remove.',
+  'help.interactions.right_click_desc': ' \u2014 Context menu with Edit, Add, Focus, Category, Dotted/Solid, Move, and Remove.',
   'help.interactions.shift_click_label': 'Shift+click',
-  'help.interactions.shift_click_desc': ' — Multi-select cards, then right-click for bulk Tag, Move all, or Remove all.',
+  'help.interactions.shift_click_desc': ' \u2014 Multi-select cards, then right-click for bulk Category, Move all, or Remove all.',
   'help.interactions.escape_label': 'Escape',
   'help.interactions.escape_desc': ' — Dismiss version viewer, clear search, exit focus mode, clear multi-selection, or deselect (in that priority order).',
   'help.interactions.inline_label': 'Inline editing',
@@ -858,9 +853,6 @@ const en: Record<string, string> = {
 
   // ─── Comparison Banner ─────────────────────────────────────────────
   'comparison.working_tree': 'Working tree',
-  'comparison.dim_aria': 'Toggle dim unchanged nodes',
-  'comparison.toggle_view_aria': 'Toggle comparison view mode',
-  'comparison.exit_aria': 'Exit comparison mode',
   'comparison.dim_aria': 'Toggle dim unchanged nodes',
   'comparison.toggle_view_aria': 'Toggle comparison view mode',
   'comparison.exit_aria': 'Exit comparison mode',
@@ -982,7 +974,7 @@ const en: Record<string, string> = {
   // ─── Settings: Category Enhancements ────────────────────────────────
   'settings.category_text_colors': 'Text colors:',
   'settings.category_confirm_delete': 'Delete "{label}"?',
-  'settings.category_confirm_delete_message': 'Nodes using this category will revert to the default card color.',
+  'settings.category_confirm_delete_message': 'People using this category will revert to the default card color.',
   'settings.category_preview_name': 'Name',
   'settings.category_preview_title': 'Title',
 

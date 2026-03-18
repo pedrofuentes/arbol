@@ -1,7 +1,6 @@
 import { VersionRecord } from '../types';
-import { t } from '../i18n';
+import { t, getLocale } from '../i18n';
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
-import { t } from '../i18n';
 
 export type VersionPickerResult =
   | { type: 'version'; version: VersionRecord }
@@ -173,7 +172,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
         item.appendChild(nameEl);
 
         const dateEl = document.createElement('span');
-        dateEl.textContent = new Date(version.createdAt).toLocaleDateString();
+        dateEl.textContent = new Date(version.createdAt).toLocaleDateString(getLocale());
         dateEl.style.cssText = `
           font-size:12px;
           color:var(--text-tertiary);

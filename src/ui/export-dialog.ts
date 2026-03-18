@@ -1,7 +1,6 @@
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
-import { t } from '../i18n';
+import { t, getLocale } from '../i18n';
 import type { VersionRecord } from '../types';
-import { t } from '../i18n';
 
 export interface ExportDialogOptions {
   chartName: string;
@@ -101,7 +100,7 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
       `;
 
       const dateSpan = document.createElement('span');
-      dateSpan.textContent = new Date(version.createdAt).toLocaleString();
+      dateSpan.textContent = new Date(version.createdAt).toLocaleString(getLocale());
       dateSpan.style.cssText = `
         font-size:11px;color:var(--text-tertiary);
       `;
