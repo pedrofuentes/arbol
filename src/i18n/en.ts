@@ -31,8 +31,8 @@ const en: Record<string, string> = {
 
   // ─── Search ────────────────────────────────────────────────────────
   'search.aria': 'Search people by name or title',
-  'search.placeholder': 'Search people... (Ctrl+F)',
-  'search.no_results': 'No results found',
+  'search.placeholder': 'Search by name or title\u2026 (Ctrl+F)',
+  'search.no_results': 'No people found. Try different keywords.',
   'search.results_found': '{count} results found',
 
   // ─── Tabs ──────────────────────────────────────────────────────────
@@ -466,6 +466,7 @@ const en: Record<string, string> = {
   'footer.save_failed': 'Failed to save changes',
   'footer.operation_failed': 'Operation failed',
   'footer.imported': 'Imported successfully',
+  'footer.separator': ' \u00b7 ',
 
   // ─── Keyboard Shortcuts ────────────────────────────────────────────
   'shortcut.undo': 'Undo',
@@ -975,6 +976,15 @@ const en: Record<string, string> = {
 
   // ─── Errors ────────────────────────────────────────────────────────
   'error.file_read_failed': 'Failed to read file',
+
+  // --- Form ---
+  'form.required_indicator': '*',
+
+  // --- Loading Indicators ---
+  'loading.switching_chart': 'Switching chart\u2026',
+  'loading.restoring_version': 'Restoring version\u2026',
+  'loading.deleting_chart': 'Deleting chart\u2026',
+  'loading.importing': 'Importing\u2026',
 };
 
 export default en;
