@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.3] — 2026-03-18
+
+### Added
+- **Tree favicon** — SVG primary favicon with PNG fallbacks (32×32, 16×16) and Apple touch icon (180×180); minimal green tree silhouette on dark background matching theme-color
+- **Grab cursor on settings preview** — preview area now shows a hand cursor to indicate drag-to-pan is available
+
+### Testing
+- 1,945 tests across 74 files — all passing
+
 ## [3.4.2] — 2026-03-16
 
 ### Removed
