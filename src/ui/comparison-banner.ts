@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 export interface ComparisonBannerOptions {
   container: HTMLElement;
   oldLabel: string;
@@ -125,10 +127,10 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   dimBtn.className = 'btn btn-secondary';
   dimBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
   let dimState = options.dimUnchanged;
-  dimBtn.textContent = dimState ? 'Dim: On' : 'Dim: Off';
+  dimBtn.textContent = dimState ? t('comparison.dim_on') : t('comparison.dim_off');
   dimBtn.addEventListener('click', () => {
     dimState = !dimState;
-    dimBtn.textContent = dimState ? 'Dim: On' : 'Dim: Off';
+    dimBtn.textContent = dimState ? t('comparison.dim_on') : t('comparison.dim_off');
     options.onToggleDimUnchanged(dimState);
   });
   banner.appendChild(dimBtn);
@@ -138,7 +140,7 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   toggleBtn.setAttribute('data-testid', 'comparison-banner-toggle');
   toggleBtn.className = 'btn btn-secondary';
   toggleBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
-  toggleBtn.textContent = options.viewMode === 'merged' ? 'Side by side' : 'Merged';
+  toggleBtn.textContent = options.viewMode === 'merged' ? t('comparison.side_by_side') : t('comparison.merged');
   toggleBtn.addEventListener('click', () => {
     options.onToggleView();
   });
@@ -149,7 +151,7 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   exitBtn.setAttribute('data-testid', 'comparison-banner-exit');
   exitBtn.className = 'btn btn-secondary';
   exitBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
-  exitBtn.textContent = '✕ Exit';
+  exitBtn.textContent = t('comparison.exit');
   exitBtn.addEventListener('click', () => {
     options.onExit();
   });

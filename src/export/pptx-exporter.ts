@@ -7,6 +7,7 @@ import type {
 } from '../renderer/layout-engine';
 import type { ColorCategory } from '../types';
 import { timestampedFilename } from '../utils/filename';
+import { t } from '../i18n';
 
 export const PX_TO_INCHES = 1 / 96;
 export const PX_TO_PT = 72 / 96;
@@ -17,7 +18,7 @@ const DEFAULT_PADDING = 0.5;
 const MAX_SLIDE_DIMENSION = 56;
 
 function generateFileName(): string {
-  return timestampedFilename('org-chart.pptx');
+  return timestampedFilename(t('export.default_filename') + '.pptx');
 }
 
 const DEFAULT_CARD_STROKE = '22C55E';

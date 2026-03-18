@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 export interface VersionViewerOptions {
   versionName: string;
   container: HTMLElement;
@@ -78,7 +80,7 @@ export function showVersionViewer(options: VersionViewerOptions): void {
   // Read-only tag
   const readOnly = document.createElement('span');
   readOnly.setAttribute('data-testid', 'version-viewer-readonly');
-  readOnly.textContent = '(read-only)';
+  readOnly.textContent = t('version_viewer.read_only');
   readOnly.style.cssText = 'font-size:11px;color:var(--text-tertiary);font-style:italic;';
   banner.appendChild(readOnly);
 
@@ -92,7 +94,7 @@ export function showVersionViewer(options: VersionViewerOptions): void {
     const compareBtn = document.createElement('button');
     compareBtn.setAttribute('data-testid', 'version-viewer-compare');
     compareBtn.className = 'btn btn-primary';
-    compareBtn.textContent = 'Compare';
+    compareBtn.textContent = t('version_viewer.compare');
     compareBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
     compareBtn.addEventListener('click', () => {
       options.onCompare!();
@@ -104,7 +106,7 @@ export function showVersionViewer(options: VersionViewerOptions): void {
   const restoreBtn = document.createElement('button');
   restoreBtn.setAttribute('data-testid', 'version-viewer-restore');
   restoreBtn.className = 'btn btn-primary';
-  restoreBtn.textContent = 'Restore';
+  restoreBtn.textContent = t('version_viewer.restore');
   restoreBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
   restoreBtn.addEventListener('click', () => {
     options.onRestore();
@@ -115,7 +117,7 @@ export function showVersionViewer(options: VersionViewerOptions): void {
   const closeBtn = document.createElement('button');
   closeBtn.setAttribute('data-testid', 'version-viewer-close');
   closeBtn.className = 'btn btn-secondary';
-  closeBtn.textContent = '✕ Close';
+  closeBtn.textContent = t('version_viewer.close');
   closeBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
   closeBtn.addEventListener('click', () => {
     options.onClose();

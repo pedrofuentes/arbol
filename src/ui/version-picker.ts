@@ -1,4 +1,5 @@
 import { VersionRecord } from '../types';
+import { t } from '../i18n';
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
 
 export type VersionPickerResult =
@@ -39,7 +40,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
     const titleEl = document.createElement('h3');
     titleEl.id = dialogTitleId;
     titleEl.dataset.testid = 'version-picker-title';
-    titleEl.textContent = 'Compare against\u2026';
+    titleEl.textContent = t('version_picker.title');
     titleEl.style.cssText = `
       margin:0 0 12px;font-size:16px;font-weight:600;
       color:var(--text-primary);font-family:var(--font-sans);
@@ -48,7 +49,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
 
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
-    searchInput.placeholder = 'Search versions\u2026';
+    searchInput.placeholder = t('version_picker.search_placeholder');
     searchInput.dataset.testid = 'version-picker-search';
     searchInput.style.cssText = `
       width:100%;box-sizing:border-box;
@@ -77,7 +78,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
     );
 
     const noMatchesEl = document.createElement('div');
-    noMatchesEl.textContent = 'No matching versions';
+    noMatchesEl.textContent = t('version_picker.no_matches');
     noMatchesEl.style.cssText = `
       padding:16px;text-align:center;
       font-size:14px;font-family:var(--font-sans);
@@ -104,7 +105,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
       });
 
       const nameEl = document.createElement('span');
-      nameEl.textContent = 'Current working tree';
+      nameEl.textContent = t('version_picker.working_tree');
       nameEl.style.cssText = `
         font-size:14px;font-weight:600;
         color:var(--text-primary);
@@ -112,7 +113,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
       item.appendChild(nameEl);
 
       const descEl = document.createElement('span');
-      descEl.textContent = 'Compare against live changes';
+      descEl.textContent = t('version_picker.working_tree_desc');
       descEl.style.cssText = `
         font-size:12px;
         color:var(--text-tertiary);
@@ -195,7 +196,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-secondary';
     cancelBtn.dataset.testid = 'version-picker-cancel';
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = t('version_picker.cancel');
     cancelBtn.addEventListener('click', () => dismiss(null));
     btnGroup.appendChild(cancelBtn);
 

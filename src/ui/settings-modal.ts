@@ -28,18 +28,20 @@ export interface SettingsModalOptions {
   onTabChange?: (tabId: string) => void;
 }
 
-const DEFAULT_TABS: SettingsTab[] = [
-  { id: 'presets', label: 'Presets', icon: '🎨' },
-  { id: 'layout', label: 'Layout', icon: '📐' },
-  { id: 'typography', label: 'Typography', icon: '🔤' },
-  { id: 'cards', label: 'Cards', icon: '🃏' },
-  { id: 'connectors', label: 'Connectors', icon: '🔗' },
-  { id: 'ic', label: 'IC Options', icon: '👤' },
-  { id: 'advisors', label: 'Advisors', icon: '📎' },
-  { id: 'badges', label: 'Badges', icon: '🔢' },
-  { id: 'categories', label: 'Categories', icon: '🏷️' },
-  { id: 'backup', label: 'Backup', icon: '💾' },
-];
+function getDefaultTabs(): SettingsTab[] {
+  return [
+    { id: 'presets', label: t('settings_modal.tab.presets'), icon: '🎨' },
+    { id: 'layout', label: t('settings_modal.tab.layout'), icon: '📐' },
+    { id: 'typography', label: t('settings_modal.tab.typography'), icon: '🔤' },
+    { id: 'cards', label: t('settings_modal.tab.cards'), icon: '🃏' },
+    { id: 'connectors', label: t('settings_modal.tab.connectors'), icon: '🔗' },
+    { id: 'ic', label: t('settings_modal.tab.ic'), icon: '👤' },
+    { id: 'advisors', label: t('settings_modal.tab.advisors'), icon: '📎' },
+    { id: 'badges', label: t('settings_modal.tab.badges'), icon: '🔢' },
+    { id: 'categories', label: t('settings_modal.tab.categories'), icon: '🏷️' },
+    { id: 'backup', label: t('settings_modal.tab.backup'), icon: '💾' },
+  ];
+}
 
 export class SettingsModal {
   private overlay: HTMLDivElement;
@@ -62,7 +64,7 @@ export class SettingsModal {
 
   constructor(options: SettingsModalOptions, tabs?: SettingsTab[]) {
     this.options = options;
-    this.tabs = tabs ?? DEFAULT_TABS;
+    this.tabs = tabs ?? getDefaultTabs();
     this.activeTab = this.tabs[0]?.id ?? '';
 
     // Overlay

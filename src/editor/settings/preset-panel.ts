@@ -337,7 +337,7 @@ export class PresetPanel {
 
     // Layout preset buttons (4-column grid)
     const layoutHeading = document.createElement('div');
-    layoutHeading.textContent = 'Layout';
+    layoutHeading.textContent = t('settings.layout_heading');
     layoutHeading.className = 'setting-section-title';
     wrapper.appendChild(layoutHeading);
 
