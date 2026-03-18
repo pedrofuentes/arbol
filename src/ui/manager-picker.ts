@@ -1,4 +1,5 @@
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
+import { t } from '../i18n';
 
 export interface ManagerPickerItem {
   id: string;
@@ -55,7 +56,7 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<Manage
 
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
-    searchInput.placeholder = 'Search managers…';
+    searchInput.placeholder = t('picker.search_placeholder');
     searchInput.style.cssText = `
       width:100%;box-sizing:border-box;
       padding:8px 12px;margin-bottom:12px;
@@ -81,7 +82,7 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<Manage
     const availableManagers = options.managers.filter((m) => !excludeIds.has(m.id));
 
     const noMatchesEl = document.createElement('div');
-    noMatchesEl.textContent = 'No matches';
+    noMatchesEl.textContent = t('picker.no_matches');
     noMatchesEl.style.cssText = `
       padding:16px;text-align:center;
       font-size:14px;font-family:var(--font-sans);
@@ -198,7 +199,7 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<Manage
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-secondary';
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = t('picker.cancel');
     cancelBtn.addEventListener('click', () => dismiss(null));
     btnGroup.appendChild(cancelBtn);
 
@@ -220,7 +221,7 @@ export function showManagerPicker(options: ManagerPickerOptions): Promise<Manage
       checkboxGroup.appendChild(checkbox);
 
       const labelText = document.createElement('span');
-      labelText.textContent = 'Dotted line (reports elsewhere)';
+      labelText.textContent = t('picker.dotted_line_option');
       checkboxGroup.appendChild(labelText);
 
       dialog.appendChild(checkboxGroup);
