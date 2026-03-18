@@ -1,4 +1,5 @@
 import type { ColorCategory } from '../types';
+import { t } from '../i18n';
 
 export interface CategoryLegendOptions {
   categories: ColorCategory[];
@@ -69,7 +70,7 @@ export function showCategoryLegend(options: CategoryLegendOptions): void {
   const headerLabel = document.createElement('span');
   headerLabel.style.cssText =
     'font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);';
-  headerLabel.textContent = 'Categories';
+  headerLabel.textContent = t('category_legend.title');
   headerRow.appendChild(headerLabel);
 
   const toggleBtn = document.createElement('button');

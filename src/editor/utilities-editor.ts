@@ -1,6 +1,7 @@
 import { OrgStore } from '../store/org-store';
 import { normalizeTreeText } from '../utils/text-normalize';
 import type { TextNormalization } from '../types';
+import { t } from '../i18n';
 
 const NORM_OPTIONS: { value: TextNormalization; label: string }[] = [
   { value: 'none', label: 'As is (no change)' },
@@ -32,7 +33,7 @@ export class UtilitiesEditor {
 
     // --- Text Normalization Section ---
     const heading = document.createElement('h4');
-    heading.textContent = 'Text Normalization';
+    heading.textContent = t('utilities.heading');
     heading.style.cssText =
       'margin:0 0 4px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
     this.container.appendChild(heading);
@@ -61,7 +62,7 @@ export class UtilitiesEditor {
     this.applyBtn = document.createElement('button');
     this.applyBtn.className = 'btn btn-primary';
     this.applyBtn.dataset.action = 'applyNorm';
-    this.applyBtn.textContent = 'Apply to Org Chart';
+    this.applyBtn.textContent = t('utilities.apply_btn');
     this.applyBtn.disabled = true;
     this.applyBtn.addEventListener('click', () => this.applyNormalization());
     this.container.appendChild(this.applyBtn);
@@ -71,11 +72,14 @@ export class UtilitiesEditor {
     const group = document.createElement('div');
     group.className = 'form-group';
 
+    const id = 'norm-' + labelText.toLowerCase().replace(/\s+/g, '-');
     const label = document.createElement('label');
     label.textContent = labelText;
+    label.htmlFor = id;
     group.appendChild(label);
 
     const select = document.createElement('select');
+    select.id = id;
     select.dataset.normField = labelText.toLowerCase().replace(/\s+/g, '-');
     for (const opt of NORM_OPTIONS) {
       const option = document.createElement('option');

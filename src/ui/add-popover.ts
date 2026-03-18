@@ -75,9 +75,16 @@ export function showAddPopover(options: AddPopoverOptions): void {
     margin-bottom:var(--space-1);
   `;
 
+  const required = document.createElement('span');
+  required.className = 'required-indicator';
+  required.textContent = ' *';
+  required.setAttribute('aria-hidden', 'true');
+  nameLabel.appendChild(required);
+
   const nameInput = document.createElement('input');
   nameInput.id = nameId;
   nameInput.type = 'text';
+  nameInput.setAttribute('aria-required', 'true');
   nameInput.placeholder = t('add_popover.name_placeholder');
   nameInput.style.cssText = `
     width:100%;box-sizing:border-box;
@@ -157,6 +164,14 @@ export function showAddPopover(options: AddPopoverOptions): void {
     onAdd(name, title);
     dismissAddPopover();
   }
+
+  // Validate on blur
+  nameInput.addEventListener('blur', () => {
+    if (!nameInput.value.trim()) {
+      nameInput.style.borderColor = 'var(--danger, #e53e3e)';
+      nameError.textContent = t('add_popover.name_required');
+    }
+  });
 
   // Clear validation on input
   nameInput.addEventListener('input', () => {

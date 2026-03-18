@@ -31,8 +31,8 @@ const en: Record<string, string> = {
 
   // ─── Search ────────────────────────────────────────────────────────
   'search.aria': 'Search people by name or title',
-  'search.placeholder': 'Search people... (Ctrl+F)',
-  'search.no_results': 'No results found',
+  'search.placeholder': 'Search by name or title\u2026 (Ctrl+F)',
+  'search.no_results': 'No people found. Try different keywords.',
   'search.results_found': '{count} results found',
 
   // ─── Tabs ──────────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ const en: Record<string, string> = {
   'menu.add_icon': '➕',
   'menu.focus': 'Focus',
   'menu.focus_icon': '🔎',
-  'menu.category': 'Tag',
+  'menu.category': 'Category',
   'menu.category_icon': '🏷️',
   'menu.category_none': 'None (default)',
   'menu.category_check': '✓',
@@ -88,7 +88,7 @@ const en: Record<string, string> = {
 
   // ─── Property Panel ─────────────────────────────────────────────────
   'property_panel.title': 'Properties',
-  'property_panel.aria_label': 'Node properties panel',
+  'property_panel.aria_label': 'Person properties panel',
   'property_panel.close_aria': 'Close properties panel',
   'property_panel.reports_to': 'Reports to:',
   'property_panel.root_node': 'Root',
@@ -153,6 +153,7 @@ const en: Record<string, string> = {
   'focus.show_full': 'Show full org',
   'focus.entered': 'Focused on {name} org',
   'focus.exited': 'Showing full org',
+  'focus.show_full_aria': 'Exit focus mode and show full organization chart',
 
   // ─── Announcements ─────────────────────────────────────────────────
   'announce.undo': 'Undo',
@@ -227,6 +228,8 @@ const en: Record<string, string> = {
   'picker.no_matches': 'No matches',
   'picker.cancel': 'Cancel',
   'picker.dotted_line_option': 'Dotted line (reports elsewhere)',
+  'picker.search_managers_aria': 'Search for a manager',
+  'picker.search_versions_aria': 'Search for a version',
 
   // ─── Inline Editor ─────────────────────────────────────────────────
   'inline_editor.aria': 'Edit person',
@@ -274,9 +277,10 @@ const en: Record<string, string> = {
   'version_viewer.close': '✕ Close',
 
   // ─── Welcome Banner ────────────────────────────────────────────────
-  'welcome.message': 'Welcome to Arbol! Tap, click, or right-click any card to edit, add, or move people. Click ❓ for help.',
-  'welcome.dismiss': 'Got it',
+  'welcome.message': 'Welcome to Arbol! This is a sample chart \u2014 tap, click, or right-click any card to edit, add, or move people. Click \u2753 for help.',
+  'welcome.dismiss': 'Got it \u2014 click \u2753 anytime for help',
   'welcome.aria': 'Welcome guide',
+  'welcome.dismiss_aria': 'Dismiss welcome message',
 
   // ─── Chart Editor ──────────────────────────────────────────────────
   'chart_editor.new_chart_placeholder': 'New chart name',
@@ -312,6 +316,7 @@ const en: Record<string, string> = {
   'chart_editor.working_tree': 'Working tree',
   'chart_editor.working_tree_dirty': 'Current · unsaved changes',
   'chart_editor.working_tree_saved': 'Current · saved',
+  'chart_editor.search_aria': 'Search charts',
 
   // ─── JSON Editor ───────────────────────────────────────────────────
   'json_editor.aria': 'Org chart JSON data',
@@ -466,6 +471,7 @@ const en: Record<string, string> = {
   'footer.save_failed': 'Failed to save changes',
   'footer.operation_failed': 'Operation failed',
   'footer.imported': 'Imported successfully',
+  'footer.separator': ' \u00b7 ',
 
   // ─── Keyboard Shortcuts ────────────────────────────────────────────
   'shortcut.undo': 'Undo',
@@ -484,7 +490,7 @@ const en: Record<string, string> = {
   'settings.collapse_all': 'Collapse all',
   'settings.expand_all': 'Expand all',
   'settings.presets_section': 'Presets',
-  'settings.categories_section': 'Node Categories',
+  'settings.categories_section': 'Color Categories',
   'settings.settings_section': 'Settings',
   'settings.backup_section': 'Backup & Restore',
   'settings.reset_aria': 'Reset {title} to defaults',
@@ -703,7 +709,7 @@ const en: Record<string, string> = {
   'help.chart_works.ics_label': 'ICs (Individual Contributors)',
   'help.chart_works.ics_desc': ' — Employees without direct reports. Shown in compact vertical stacks under their manager.',
   'help.chart_works.advisors_label': 'Advisors',
-  'help.chart_works.advisors_desc': ' — Staff who report directly to a senior manager (one who manages other managers). Shown in a special 2-column layout beside the manager\'s card.',
+  'help.chart_works.advisors_desc': ' \u2014 Staff who report directly to a senior manager (one who manages other managers), such as a Chief of Staff or Executive Assistant. Shown in a special 2-column layout beside the manager\'s card.',
   'help.chart_works.auto_detect': 'The chart automatically detects these roles based on the hierarchy — no manual configuration needed.',
 
   // Help: Toolbar & Sidebar
@@ -749,9 +755,9 @@ const en: Record<string, string> = {
   'help.interactions.click_label': 'Click',
   'help.interactions.click_desc': ' — Select and highlight a card.',
   'help.interactions.right_click_label': 'Right-click',
-  'help.interactions.right_click_desc': ' — Context menu with Edit, Add, Focus, Tag, Dotted/Solid, Move, and Remove.',
+  'help.interactions.right_click_desc': ' \u2014 Context menu with Edit, Add, Focus, Category, Dotted/Solid, Move, and Remove.',
   'help.interactions.shift_click_label': 'Shift+click',
-  'help.interactions.shift_click_desc': ' — Multi-select cards, then right-click for bulk Tag, Move all, or Remove all.',
+  'help.interactions.shift_click_desc': ' \u2014 Multi-select cards, then right-click for bulk Category, Move all, or Remove all.',
   'help.interactions.escape_label': 'Escape',
   'help.interactions.escape_desc': ' — Dismiss version viewer, clear search, exit focus mode, clear multi-selection, or deselect (in that priority order).',
   'help.interactions.inline_label': 'Inline editing',
@@ -760,9 +766,9 @@ const en: Record<string, string> = {
   'help.interactions.search_desc': ' — Type in the search bar to highlight matching people. Non-matches are dimmed.',
 
   // Help: Color Categories
-  'help.categories.title': 'Tags & Color Categories',
-  'help.categories.assign_1': 'Assign a color tag to any person by right-clicking their card and choosing ',
-  'help.categories.assign_strong': 'Tag',
+  'help.categories.title': 'Color Categories',
+  'help.categories.assign_1': 'Assign a color category to any person by right-clicking their card and choosing ',
+  'help.categories.assign_strong': 'Category',
   'help.categories.assign_2': '.',
   'help.categories.defaults_1': 'Each chart has its own set of categories. Default categories: ',
   'help.categories.defaults_open': 'Open Position',
@@ -847,6 +853,9 @@ const en: Record<string, string> = {
 
   // ─── Comparison Banner ─────────────────────────────────────────────
   'comparison.working_tree': 'Working tree',
+  'comparison.dim_aria': 'Toggle dim unchanged nodes',
+  'comparison.toggle_view_aria': 'Toggle comparison view mode',
+  'comparison.exit_aria': 'Exit comparison mode',
 
   // ─── Plurals ───────────────────────────────────────────────────────
   'people.one': '{count} person',
@@ -965,7 +974,7 @@ const en: Record<string, string> = {
   // ─── Settings: Category Enhancements ────────────────────────────────
   'settings.category_text_colors': 'Text colors:',
   'settings.category_confirm_delete': 'Delete "{label}"?',
-  'settings.category_confirm_delete_message': 'Nodes using this category will revert to the default card color.',
+  'settings.category_confirm_delete_message': 'People using this category will revert to the default card color.',
   'settings.category_preview_name': 'Name',
   'settings.category_preview_title': 'Title',
 
@@ -975,6 +984,104 @@ const en: Record<string, string> = {
 
   // ─── Errors ────────────────────────────────────────────────────────
   'error.file_read_failed': 'Failed to read file',
+
+  // --- Form ---
+  'form.required_indicator': '*',
+
+  // --- Loading Indicators ---
+  'loading.switching_chart': 'Switching chart\u2026',
+  'loading.restoring_version': 'Restoring version\u2026',
+  'loading.deleting_chart': 'Deleting chart\u2026',
+  'loading.importing': 'Importing\u2026',
+
+  // ─── Export Dialog ─────────────────────────────────────────────────
+  'export_dialog.title': 'Export Chart',
+  'export_dialog.deselect_all': 'Deselect all',
+  'export_dialog.select_all': 'Select all',
+  'export_dialog.no_versions': 'No saved versions to include.',
+  'export_dialog.cancel': 'Cancel',
+  'export_dialog.export': 'Export',
+  'restore_dialog.title': 'Restore from Backup',
+  'restore_dialog.summary': '{chartCount} chart(s), {versionCount} version(s) \u00b7 Created {backupDate} \u00b7 v{appVersion}',
+  'restore_dialog.how': 'How would you like to restore?',
+  'restore_dialog.replace_all': '\ud83d\udd04 Replace All \u2014 wipe current data and restore from backup',
+  'restore_dialog.merge': '\u2795 Merge \u2014 add new charts, keep existing ones',
+  'restore_dialog.cancel': 'Cancel',
+  'comparison.dim_on': 'Dim: On',
+  'comparison.dim_off': 'Dim: Off',
+  'comparison.side_by_side': 'Side by side',
+  'comparison.merged': 'Merged',
+  'comparison.exit': '\u2715 Exit',
+  'version_picker.title': 'Compare against\u2026',
+  'version_picker.search_placeholder': 'Search versions\u2026',
+  'version_picker.no_matches': 'No matching versions',
+  'version_picker.working_tree': 'Current working tree',
+  'version_picker.working_tree_desc': 'Compare against live changes',
+  'version_picker.cancel': 'Cancel',
+  'version_viewer.compare': 'Compare',
+  'category_legend.title': 'Categories',
+  'import_wizard.file_selected': '\u2713 {name}',
+  'import_wizard.json_root_error': 'Root node must have id, name, and title fields',
+  'settings_modal.tab.presets': 'Presets',
+  'settings_modal.tab.layout': 'Layout',
+  'settings_modal.tab.typography': 'Typography',
+  'settings_modal.tab.cards': 'Cards',
+  'settings_modal.tab.connectors': 'Connectors',
+  'settings_modal.tab.ic': 'IC Options',
+  'settings_modal.tab.advisors': 'Advisors',
+  'settings_modal.tab.badges': 'Badges',
+  'settings_modal.tab.categories': 'Categories',
+  'settings_modal.tab.backup': 'Backup',
+  'utilities.heading': 'Text Normalization',
+  'utilities.desc': 'Normalize the text casing of all names and titles in the current org chart.',
+  'utilities.name_format': 'Name Format',
+  'utilities.title_format': 'Title Format',
+  'utilities.apply_btn': 'Apply to Org Chart',
+  'utilities.success': '\u2713 Org chart text normalized successfully.',
+  'utilities.norm_as_is': 'As is (no change)',
+  'utilities.norm_title_case': 'Title Case',
+  'utilities.norm_uppercase': 'UPPERCASE',
+  'utilities.norm_lowercase': 'lowercase',
+  'backup.create_btn': '\ud83d\udcbe Create Backup',
+  'backup.backup_failed': 'Backup failed: {message}',
+  'backup.restore_btn': '\ud83d\udcc2 Restore',
+  'backup.replace_title': 'Replace All Data',
+  'backup.replace_message': 'This will permanently replace all existing charts, versions, and settings with the backup data. A backup of your current data has been downloaded.\n\nContinue?',
+  'backup.replace_confirm': 'Replace everything',
+  'backup.merge_title': 'Merge Complete',
+  'backup.merge_message': 'Added {chartsAdded} chart(s) and {versionsAdded} version(s). Skipped {chartsSkipped} chart(s) that already existed.\n\nThe page will reload to apply changes.',
+  'backup.merge_confirm': 'OK',
+  'backup.restore_failed': 'Restore failed: {message}',
+  'backup.clear_btn': '\ud83d\uddd1 Clear All Data',
+  'backup.clear_aria': 'Clear all local data',
+  'backup.clear_title': 'Clear All Data',
+  'backup.clear_message': 'This will permanently delete all your org charts, versions, settings, themes, and preferences. This cannot be undone.\n\nAre you sure?',
+  'backup.clear_confirm': 'Delete everything',
+  'settings_io.export_btn': '\ud83d\udcbe Export',
+  'settings_io.import_btn': '\ud83d\udcc2 Import',
+  'settings_io.file_too_large': 'Settings file too large (max 1MB).',
+  'settings_io.imported_theme': 'Imported custom theme',
+  'settings_io.import_failed': 'Import failed: {message}',
+  'settings.layout_heading': 'Layout',
+  'chart.aria_label': 'Organization chart',
+  'diff.added': 'Added',
+  'diff.removed': 'Removed',
+  'diff.moved': 'Moved',
+  'diff.modified': 'Modified',
+  'diff.unchanged': 'Unchanged',
+  'export.default_filename': 'org-chart',
+  'app.fatal_error': 'Failed to start Arbol',
+  'app.unexpected_error': 'An unexpected error occurred',
+  'app.refresh_hint': 'Try refreshing the page. If the issue persists, clear your browser data for this site.',
+
+  // ─── Help & Docs ──────────────────────────────────────────────────
+  'column_mapper.parent_ref_help': 'By Name matches the parent column to people\'s names. By ID matches a unique identifier.',
+  'footer.ics_tooltip': 'Individual Contributors \u2014 employees without direct reports',
+  'help.comparison.title': 'Version Comparison',
+  'help.comparison.desc': 'Use the side-by-side comparison view to see what changed between two versions of your chart. Added, removed, and moved people are highlighted.',
+  'help.interactions.dotted_label': 'Dotted lines',
+  'help.interactions.dotted_desc': ' \u2014 Toggle any link to a dotted line via right-click \u2192 Dotted/Solid. Useful for indicating temporary or informal reporting relationships.',
+  'export_dialog.versions_hint': 'Select which saved versions to include as additional slides.',
 };
 
 export default en;

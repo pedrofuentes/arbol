@@ -1,4 +1,5 @@
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
+import { t, getLocale } from '../i18n';
 import type { VersionRecord } from '../types';
 
 export interface ExportDialogOptions {
@@ -18,7 +19,7 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
 
   const title = document.createElement('h3');
   title.id = dialogTitleId;
-  title.textContent = 'Export Chart';
+  title.textContent = t('export_dialog.title');
   title.style.cssText = `
     margin:0 0 8px;font-size:16px;font-weight:600;
     color:var(--text-primary);font-family:var(--font-sans);
@@ -38,7 +39,7 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
   if (options.versions.length > 0) {
     const toggleLink = document.createElement('a');
     toggleLink.href = '#';
-    toggleLink.textContent = 'Deselect all';
+    toggleLink.textContent = t('export_dialog.deselect_all');
     toggleLink.style.cssText = `
       display:inline-block;margin-bottom:8px;font-size:12px;
       color:var(--accent);cursor:pointer;font-family:var(--font-sans);
@@ -50,9 +51,17 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
       checkboxes.forEach((cb) => {
         cb.checked = !allChecked;
       });
-      toggleLink.textContent = allChecked ? 'Select all' : 'Deselect all';
+      toggleLink.textContent = allChecked ? t('export_dialog.select_all') : t('export_dialog.deselect_all');
     });
     dialog.appendChild(toggleLink);
+
+    const hintParagraph = document.createElement('p');
+    hintParagraph.textContent = t('export_dialog.versions_hint');
+    hintParagraph.style.cssText = `
+      margin:0 0 8px;font-size:13px;
+      color:var(--text-secondary);font-family:var(--font-sans);
+    `;
+    dialog.appendChild(hintParagraph);
 
     const list = document.createElement('div');
     list.setAttribute('role', 'list');
@@ -91,7 +100,7 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
       `;
 
       const dateSpan = document.createElement('span');
-      dateSpan.textContent = new Date(version.createdAt).toLocaleString();
+      dateSpan.textContent = new Date(version.createdAt).toLocaleString(getLocale());
       dateSpan.style.cssText = `
         font-size:11px;color:var(--text-tertiary);
       `;
@@ -106,7 +115,7 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
     dialog.appendChild(list);
   } else {
     const noVersions = document.createElement('p');
-    noVersions.textContent = 'No saved versions to include.';
+    noVersions.textContent = t('export_dialog.no_versions');
     noVersions.style.cssText = `
       margin:0 0 16px;font-size:13px;
       color:var(--text-tertiary);font-family:var(--font-sans);
@@ -120,12 +129,12 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
 
   const cancelBtn = document.createElement('button');
   cancelBtn.className = 'btn btn-secondary';
-  cancelBtn.textContent = 'Cancel';
+  cancelBtn.textContent = t('export_dialog.cancel');
   btnGroup.appendChild(cancelBtn);
 
   const exportBtn = document.createElement('button');
   exportBtn.className = 'btn btn-primary';
-  exportBtn.textContent = 'Export';
+  exportBtn.textContent = t('export_dialog.export');
   btnGroup.appendChild(exportBtn);
 
   dialog.appendChild(btnGroup);

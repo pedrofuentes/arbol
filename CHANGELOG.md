@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.6] — 2026-03-18
+
+### Fixed
+- **i18n hardcoded strings** — wrapped 60+ user-facing strings in `t()` across UI components, editors, renderer, and main.ts fatal error handler
+- **CSS RTL readiness** — converted 30 physical direction properties (`left:`, `margin-left:`, `text-align: left`, etc.) to CSS logical equivalents (`inset-inline-start:`, `margin-inline-start:`, `text-align: start`)
+- **Dark theme contrast** — changed `--text-tertiary` from `#64748b` (3.9:1) to `#94a3b8` (7.3:1), meeting WCAG AA 4.5:1 minimum
+- **Touch targets** — added mobile overrides for zoom buttons, sidebar toggle, close buttons, and preview controls to meet 44×44px WCAG minimum
+- **Missing ARIA labels** — added `aria-label` to 3 search inputs (manager picker, version picker, chart search) and 5 banner buttons (comparison, focus, welcome)
+- **Label associations** — linked `<label>` to `<input>`/`<select>` via `htmlFor`/`id` in input dialog and utilities editor
+- **Date formatting** — added `getLocale()` parameter to 4 `.toLocaleString()` calls for locale-aware dates
+- **Terminology consistency** — standardized "Tag" → "Category" and "Node" → "Person" across all user-facing strings
+- **Duplicate i18n keys** — removed 8 duplicate aria key entries in `en.ts`
+
+### Added
+- **`contrastRatio()` utility** — WCAG contrast ratio calculator exported from `src/utils/contrast.ts`
+- **`td()` / `tn()` i18n helpers** — locale-aware date and number formatting via `Intl.DateTimeFormat` / `Intl.NumberFormat`
+- **Loading overlay** — reusable `showLoading()` / `hideLoading()` component for async operations
+- **Required field indicators** — visual asterisk and `aria-required` on Name field with on-blur validation
+- **Search UX** — placeholder now says "Search by name or title" ; no-results message gives guidance
+- **Help content** — added dotted lines explanation, version comparison section, improved advisor description
+- **Discoverability** — welcome banner mentions sample chart; column mapper help text for non-technical users; ICs tooltip in footer
+- **Export dialog** — version checkbox description text
+
+### Changed
+- **Welcome banner** — dismiss button now hints at help recovery: "Got it — click ❓ anytime for help"
+- **Footer separator** — extracted `' · '` to i18n key `footer.separator`; footer stats now use `<span>` elements with tooltips
+
+### Testing
+- 2,062 tests across 85 files — all passing
+
 ## [3.4.5] — 2026-03-18
 
 ### Added

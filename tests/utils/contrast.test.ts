@@ -4,6 +4,7 @@ import {
   relativeLuminance,
   contrastingTextColor,
   contrastingTitleColor,
+  contrastRatio,
 } from '../../src/utils/contrast';
 
 describe('parseHex', () => {
@@ -116,5 +117,30 @@ describe('contrastingTitleColor', () => {
   it('accepts custom colors', () => {
     expect(contrastingTitleColor('#ffffff', '#333333', '#cccccc')).toBe('#333333');
     expect(contrastingTitleColor('#000000', '#333333', '#cccccc')).toBe('#cccccc');
+  });
+});
+
+describe('contrastRatio', () => {
+  it('returns ~21 for black vs white', () => {
+    expect(contrastRatio('#000000', '#ffffff')).toBeCloseTo(21, 0);
+  });
+
+  it('returns 1 for identical colors', () => {
+    expect(contrastRatio('#ffffff', '#ffffff')).toBeCloseTo(1, 5);
+  });
+
+  it('slate-500 on dark background fails WCAG AA (< 4.5)', () => {
+    expect(contrastRatio('#64748b', '#0c1222')).toBeLessThan(4.5);
+  });
+
+  it('is symmetric: contrastRatio(a, b) === contrastRatio(b, a)', () => {
+    expect(contrastRatio('#ff0000', '#0000ff')).toBeCloseTo(
+      contrastRatio('#0000ff', '#ff0000'),
+      10,
+    );
+    expect(contrastRatio('#000000', '#ffffff')).toBeCloseTo(
+      contrastRatio('#ffffff', '#000000'),
+      10,
+    );
   });
 });

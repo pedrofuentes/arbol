@@ -4,6 +4,7 @@ import { OrgNode, ColorCategory, DiffEntry, DiffStatus } from '../types';
 import { computeLayout, LayoutResult, LayoutNode } from './layout-engine';
 import { ZoomManager } from './zoom-manager';
 import { KeyboardNav } from './keyboard-nav';
+import { t } from '../i18n';
 
 interface CardDatum {
   data: {
@@ -144,8 +145,8 @@ export class ChartRenderer {
     if (isPreview) {
       this.svg.attr('aria-hidden', 'true').attr('class', 'preview-svg');
     } else {
-      this.svg.attr('role', 'tree').attr('aria-label', 'Organization chart');
-      this.svg.append('title').text('Organization chart');
+      this.svg.attr('role', 'tree').attr('aria-label', t('chart.aria_label'));
+      this.svg.append('title').text(t('chart.aria_label'));
     }
 
     this.g = this.svg.append('g').attr('class', 'chart-group');
@@ -628,13 +629,16 @@ export class ChartRenderer {
     unchanged: '#64748b',
   };
 
-  private static readonly DIFF_LABELS: Record<DiffStatus, string> = {
-    added: 'Added',
-    removed: 'Removed',
-    moved: 'Moved',
-    modified: 'Modified',
-    unchanged: 'Unchanged',
-  };
+  private static getDiffLabel(status: DiffStatus): string {
+    const labels: Record<DiffStatus, string> = {
+      added: t('diff.added'),
+      removed: t('diff.removed'),
+      moved: t('diff.moved'),
+      modified: t('diff.modified'),
+      unchanged: t('diff.unchanged'),
+    };
+    return labels[status];
+  }
 
   private renderDiffBadges(): void {
     if (!this.diffMap) return;
@@ -650,7 +654,7 @@ export class ChartRenderer {
       if (!entry || entry.status === 'unchanged') return;
 
       const color = ChartRenderer.DIFF_COLORS[entry.status];
-      const label = ChartRenderer.DIFF_LABELS[entry.status];
+      const label = ChartRenderer.getDiffLabel(entry.status);
 
       // Get card width from the first rect child
       const rectEl = el.select('rect');
@@ -755,7 +759,7 @@ export class ChartRenderer {
     for (const status of statusOrder) {
       if (counts[status] > 0) {
         items.push({
-          label: `${ChartRenderer.DIFF_LABELS[status]} (${counts[status]})`,
+          label: `${ChartRenderer.getDiffLabel(status)} (${counts[status]})`,
           color: ChartRenderer.DIFF_COLORS[status],
         });
       }

@@ -886,11 +886,11 @@ document.addEventListener('DOMContentLoaded', () => {
       errorDiv.className = 'fatal-error';
       errorDiv.setAttribute('role', 'alert');
       const heading = document.createElement('h2');
-      heading.textContent = 'Failed to start Arbol';
+      heading.textContent = t('app.fatal_error') || 'Failed to start Arbol';
       const message = document.createElement('p');
       message.textContent = e instanceof Error ? e.message : 'An unexpected error occurred';
       const hint = document.createElement('p');
-      hint.textContent = 'Try refreshing the page. If the issue persists, clear your browser data for this site.';
+      hint.textContent = t('app.refresh_hint') || 'Try refreshing the page. If the issue persists, clear your browser data for this site.';
       errorDiv.appendChild(heading);
       errorDiv.appendChild(message);
       errorDiv.appendChild(hint);

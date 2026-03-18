@@ -5,7 +5,7 @@ import { showInputDialog } from '../ui/input-dialog';
 import { showExportDialog } from '../ui/export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../export/chart-exporter';
 import { flattenTree } from '../utils/tree';
-import { t } from '../i18n';
+import { t, getLocale } from '../i18n';
 import { createButton } from '../utils/dom-builder';
 
 export interface ChartEditorOptions {
@@ -126,6 +126,7 @@ export class ChartEditor {
     this.chartSearchInput.type = 'text';
     this.chartSearchInput.className = 'chart-search';
     this.chartSearchInput.placeholder = t('chart_editor.search_placeholder');
+    this.chartSearchInput.setAttribute('aria-label', t('chart_editor.search_aria'));
     this.chartSearchInput.addEventListener('input', () => {
       this.chartSearchTerm = this.chartSearchInput.value.trim().toLowerCase();
       this.renderChartList();
@@ -384,7 +385,7 @@ export class ChartEditor {
 
     const dateEl = document.createElement('div');
     dateEl.className = 'version-item-date';
-    dateEl.textContent = t('chart_editor.saved_prefix') + new Date(version.createdAt).toLocaleString();
+    dateEl.textContent = t('chart_editor.saved_prefix') + new Date(version.createdAt).toLocaleString(getLocale());
     infoEl.appendChild(dateEl);
 
     item.appendChild(infoEl);

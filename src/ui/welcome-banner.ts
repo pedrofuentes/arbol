@@ -54,7 +54,9 @@ export function showWelcomeBanner(container: HTMLElement): void {
 
   const dismiss = document.createElement('button');
   dismiss.setAttribute('data-testid', 'welcome-banner-dismiss');
+  dismiss.setAttribute('aria-label', t('welcome.dismiss'));
   dismiss.textContent = t('welcome.dismiss');
+  dismiss.setAttribute('aria-label', t('welcome.dismiss_aria'));
   dismiss.style.cssText = [
     'border:none',
     'background:transparent',

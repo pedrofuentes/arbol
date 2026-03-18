@@ -1,4 +1,5 @@
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
+import { t } from '../i18n';
 
 export type RestoreStrategy = 'replace' | 'merge' | 'cancel';
 
@@ -23,7 +24,7 @@ export function showRestoreStrategyDialog(
 
     const title = document.createElement('h3');
     title.id = titleId;
-    title.textContent = 'Restore from Backup';
+    title.textContent = t('restore_dialog.title');
     title.style.cssText = `
       margin:0 0 12px;font-size:16px;font-weight:600;
       color:var(--text-primary);font-family:var(--font-sans);
@@ -37,14 +38,17 @@ export function showRestoreStrategyDialog(
       color:var(--text-secondary);font-family:var(--font-sans);
       background:var(--bg-subtle);border-radius:var(--radius-md);
     `;
-    summary.textContent =
-      `${options.chartCount} chart(s), ${options.versionCount} version(s) · ` +
-      `Created ${options.backupDate} · v${options.appVersion}`;
+    summary.textContent = t('restore_dialog.summary', {
+      chartCount: String(options.chartCount),
+      versionCount: String(options.versionCount),
+      backupDate: options.backupDate,
+      appVersion: options.appVersion,
+    });
     dialog.appendChild(summary);
 
     // Strategy description
     const desc = document.createElement('p');
-    desc.textContent = 'How would you like to restore?';
+    desc.textContent = t('restore_dialog.how');
     desc.style.cssText = `
       margin:0 0 16px;font-size:14px;
       color:var(--text-primary);font-family:var(--font-sans);
@@ -56,19 +60,19 @@ export function showRestoreStrategyDialog(
 
     const replaceBtn = document.createElement('button');
     replaceBtn.className = 'btn btn-danger';
-    replaceBtn.textContent = '🔄 Replace All — wipe current data and restore from backup';
+    replaceBtn.textContent = t('restore_dialog.replace_all');
     replaceBtn.style.cssText += ';text-align:start;padding:10px 14px;font-size:13px;';
     btnGroup.appendChild(replaceBtn);
 
     const mergeBtn = document.createElement('button');
     mergeBtn.className = 'btn btn-primary';
-    mergeBtn.textContent = '➕ Merge — add new charts, keep existing ones';
+    mergeBtn.textContent = t('restore_dialog.merge');
     mergeBtn.style.cssText += ';text-align:start;padding:10px 14px;font-size:13px;';
     btnGroup.appendChild(mergeBtn);
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-secondary';
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = t('restore_dialog.cancel');
     cancelBtn.style.cssText += ';margin-top:4px;';
     btnGroup.appendChild(cancelBtn);
 

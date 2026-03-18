@@ -52,7 +52,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
   const versionSeparator = document.createElement('span');
   versionSeparator.style.cssText =
     'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
-  versionSeparator.textContent = '·';
+  versionSeparator.textContent = t('footer.separator').trim();
   footerLeft.appendChild(versionSeparator);
 
   const statusText = document.createElement('span');
@@ -87,14 +87,26 @@ export function buildFooter(deps: FooterDeps): FooterElements {
     const icCount = countLeaves(tree);
     const levels = countManagersByLevel(tree);
 
+    statusText.textContent = '';
+
     const activeChartName = getChartName();
     const prefix = activeChartName ? `${activeChartName} · ` : '';
-    const parts = [`${prefix}${t('footer.people', { count: total })}`, t('footer.managers', { count: managerCount }), t('footer.ics', { count: icCount })];
+    const segments: { text: string; title?: string }[] = [
+      { text: `${prefix}${t('footer.people', { count: total })}` },
+      { text: t('footer.managers', { count: managerCount }) },
+      { text: t('footer.ics', { count: icCount }), title: t('footer.ics_tooltip') },
+    ];
     const sortedLevels = Array.from(levels.entries()).sort((a, b) => a[0] - b[0]);
     for (const [depth, count] of sortedLevels) {
-      parts.push(t('footer.manager_level', { count, depth }));
+      segments.push({ text: t('footer.manager_level', { count, depth }) });
     }
-    statusText.textContent = parts.join(' · ');
+    segments.forEach((seg, i) => {
+      if (i > 0) statusText.appendChild(document.createTextNode(t('footer.separator')));
+      const span = document.createElement('span');
+      span.textContent = seg.text;
+      if (seg.title) span.title = seg.title;
+      statusText.appendChild(span);
+    });
   };
   store.onChange(updateStatus);
   updateStatus();
@@ -118,7 +130,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
 
   const centerSeparator = document.createElement('span');
   centerSeparator.style.color = 'var(--text-tertiary)';
-  centerSeparator.textContent = '·';
+  centerSeparator.textContent = t('footer.separator').trim();
   footerCenter.appendChild(centerSeparator);
 
   const issuesLink = document.createElement('a');

@@ -366,4 +366,12 @@ describe('showManagerPicker', () => {
       expect(result).toBeNull();
     });
   });
+
+  it('search input has aria-label for screen readers', () => {
+    showManagerPicker({ title: 'Pick', managers: sampleManagers });
+    const input = document.querySelector('input[type="text"]');
+    expect(input).not.toBeNull();
+    expect(input.getAttribute('aria-label')).toBe('Search for a manager');
+  });
+
 });
