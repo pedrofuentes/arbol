@@ -1879,7 +1879,9 @@ textarea:focus-visible {
   height: 140px;
   position: relative;
   z-index: 1;
+  cursor: grab;
 }
+.preview-area:active { cursor: grabbing; }
 .preview-area svg { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
 
 .settings-content { flex: 1; overflow-y: auto; padding: var(--space-5); }
