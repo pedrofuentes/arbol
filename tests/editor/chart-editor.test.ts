@@ -565,7 +565,7 @@ describe('ChartEditor – rename via dialog', () => {
   it('chart search input has aria-label for screen readers', async () => {
     const searchInput = container.querySelector('.chart-search');
     expect(searchInput).not.toBeNull();
-    expect(searchInput.getAttribute('aria-label')).toBe('Search charts');
+    expect(searchInput!.getAttribute('aria-label')).toBe('Search charts');
   });
 
 });

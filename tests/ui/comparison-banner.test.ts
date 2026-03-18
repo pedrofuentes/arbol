@@ -278,19 +278,19 @@ describe('ComparisonBanner', () => {
     it('dim toggle button has aria-label', () => {
       showComparisonBanner(defaultOptions());
       const dimBtn = document.querySelector('[data-testid="comparison-banner-dim-toggle"]');
-      expect(dimBtn.getAttribute('aria-label')).toBe('Toggle dim unchanged nodes');
+      expect(dimBtn!.getAttribute('aria-label')).toBe('Toggle dim unchanged nodes');
     });
 
     it('view toggle button has aria-label', () => {
       showComparisonBanner(defaultOptions());
       const toggleBtn = getToggle();
-      expect(toggleBtn.getAttribute('aria-label')).toBe('Toggle comparison view mode');
+      expect(toggleBtn!.getAttribute('aria-label')).toBe('Toggle comparison view mode');
     });
 
     it('exit button has aria-label', () => {
       showComparisonBanner(defaultOptions());
       const exitBtn = getExit();
-      expect(exitBtn.getAttribute('aria-label')).toBe('Exit comparison mode');
+      expect(exitBtn!.getAttribute('aria-label')).toBe('Exit comparison mode');
     });
   });
 

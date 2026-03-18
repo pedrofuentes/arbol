@@ -11,6 +11,6 @@ function makeDeps(): any { const footer = document.createElement('footer'); docu
 describe('footer ICs tooltip', () => {
   beforeEach(() => { document.body.innerHTML = ''; });
   afterEach(() => { document.body.innerHTML = ''; });
-  it('tooltip', () => { const d = makeDeps(); buildFooter(d); const t = d.footer.querySelectorAll('[title]'); const ic = Array.from(t).find((el: Element) => el.getAttribute('title')!.includes('Individual Contributors')); expect(ic).toBeTruthy(); });
+  it('tooltip', () => { const d = makeDeps(); buildFooter(d); const t = d.footer.querySelectorAll('[title]'); const ic = Array.from(t).find((el) => (el as Element).getAttribute('title')!.includes('Individual Contributors')); expect(ic).toBeTruthy(); });
   it('count', () => { const d = makeDeps(); buildFooter(d); expect(d.footer.querySelector('.footer-status')!.textContent).toContain('ICs'); });
 });

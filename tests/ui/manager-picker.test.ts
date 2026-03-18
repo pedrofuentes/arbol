@@ -371,7 +371,7 @@ describe('showManagerPicker', () => {
     showManagerPicker({ title: 'Pick', managers: sampleManagers });
     const input = document.querySelector('input[type="text"]');
     expect(input).not.toBeNull();
-    expect(input.getAttribute('aria-label')).toBe('Search for a manager');
+    expect(input!.getAttribute('aria-label')).toBe('Search for a manager');
   });
 
 });

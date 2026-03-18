@@ -204,7 +204,7 @@ describe('showVersionPicker', () => {
     showVersionPicker({ versions: sampleVersions, includeWorkingTree: false });
     const input = document.querySelector('[data-testid="version-picker-search"]');
     expect(input).not.toBeNull();
-    expect(input.getAttribute('aria-label')).toBe('Search for a version');
+    expect(input!.getAttribute('aria-label')).toBe('Search for a version');
   });
 
 });

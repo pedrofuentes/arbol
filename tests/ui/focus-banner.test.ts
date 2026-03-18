@@ -109,7 +109,7 @@ describe('FocusBanner', () => {
     it('exit button has descriptive aria-label', () => {
       showFocusBanner({ name: 'Eve', container, onExit: vi.fn() });
       const exitBtn = getExitButton();
-      expect(exitBtn.getAttribute('aria-label')).toBe('Exit focus mode and show full organization chart');
+      expect(exitBtn!.getAttribute('aria-label')).toBe('Exit focus mode and show full organization chart');
     });
   });
 
