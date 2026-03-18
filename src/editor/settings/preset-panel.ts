@@ -166,15 +166,15 @@ export class PresetPanel {
   matchesExistingPreset(): boolean {
     const opts = this.renderer.getOptions();
     const allPresets = [...COMBINED_PRESETS, ...this.loadCustomPresets()];
-    return allPresets.some((p) =>
-      opts.cardFill === p.colors.cardFill &&
-      opts.cardStroke === p.colors.cardStroke &&
-      opts.linkColor === p.colors.linkColor &&
-      opts.cardStrokeWidth === p.colors.cardStrokeWidth &&
-      opts.icContainerFill === p.colors.icContainerFill &&
-      opts.nodeWidth === p.sizes.nodeWidth &&
-      opts.nodeHeight === p.sizes.nodeHeight,
-    );
+    return allPresets.some((p) => {
+      for (const [key, value] of Object.entries(p.colors)) {
+        if (opts[key as keyof typeof opts] !== value) return false;
+      }
+      for (const [key, value] of Object.entries(p.sizes)) {
+        if (opts[key as keyof typeof opts] !== value) return false;
+      }
+      return true;
+    });
   }
 
   saveCurrentAsPreset(name: string): void {
