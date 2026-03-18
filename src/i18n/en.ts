@@ -31,8 +31,8 @@ const en: Record<string, string> = {
 
   // ─── Search ────────────────────────────────────────────────────────
   'search.aria': 'Search people by name or title',
-  'search.placeholder': 'Search people... (Ctrl+F)',
-  'search.no_results': 'No results found',
+  'search.placeholder': 'Search by name or title\u2026 (Ctrl+F)',
+  'search.no_results': 'No people found. Try different keywords.',
   'search.results_found': '{count} results found',
 
   // ─── Tabs ──────────────────────────────────────────────────────────
@@ -153,6 +153,7 @@ const en: Record<string, string> = {
   'focus.show_full': 'Show full org',
   'focus.entered': 'Focused on {name} org',
   'focus.exited': 'Showing full org',
+  'focus.show_full_aria': 'Exit focus mode and show full organization chart',
 
   // ─── Announcements ─────────────────────────────────────────────────
   'announce.undo': 'Undo',
@@ -227,6 +228,8 @@ const en: Record<string, string> = {
   'picker.no_matches': 'No matches',
   'picker.cancel': 'Cancel',
   'picker.dotted_line_option': 'Dotted line (reports elsewhere)',
+  'picker.search_managers_aria': 'Search for a manager',
+  'picker.search_versions_aria': 'Search for a version',
 
   // ─── Inline Editor ─────────────────────────────────────────────────
   'inline_editor.aria': 'Edit person',
@@ -275,8 +278,9 @@ const en: Record<string, string> = {
 
   // ─── Welcome Banner ────────────────────────────────────────────────
   'welcome.message': 'Welcome to Arbol! Tap, click, or right-click any card to edit, add, or move people. Click ❓ for help.',
-  'welcome.dismiss': 'Got it',
+  'welcome.dismiss': 'Got it \u2014 click \u2753 anytime for help',
   'welcome.aria': 'Welcome guide',
+  'welcome.dismiss_aria': 'Dismiss welcome message',
 
   // ─── Chart Editor ──────────────────────────────────────────────────
   'chart_editor.new_chart_placeholder': 'New chart name',
@@ -312,6 +316,7 @@ const en: Record<string, string> = {
   'chart_editor.working_tree': 'Working tree',
   'chart_editor.working_tree_dirty': 'Current · unsaved changes',
   'chart_editor.working_tree_saved': 'Current · saved',
+  'chart_editor.search_aria': 'Search charts',
 
   // ─── JSON Editor ───────────────────────────────────────────────────
   'json_editor.aria': 'Org chart JSON data',
@@ -466,6 +471,12 @@ const en: Record<string, string> = {
   'footer.save_failed': 'Failed to save changes',
   'footer.operation_failed': 'Operation failed',
   'footer.imported': 'Imported successfully',
+  'footer.separator': ' \u00b7 ',
+  'form.required_indicator': '*',
+  'loading.switching_chart': 'Switching chart\u2026',
+  'loading.restoring_version': 'Restoring version\u2026',
+  'loading.deleting_chart': 'Deleting chart\u2026',
+  'loading.importing': 'Importing\u2026',
 
   // ─── Keyboard Shortcuts ────────────────────────────────────────────
   'shortcut.undo': 'Undo',
@@ -847,6 +858,9 @@ const en: Record<string, string> = {
 
   // ─── Comparison Banner ─────────────────────────────────────────────
   'comparison.working_tree': 'Working tree',
+  'comparison.dim_aria': 'Toggle dim unchanged nodes',
+  'comparison.toggle_view_aria': 'Toggle comparison view mode',
+  'comparison.exit_aria': 'Exit comparison mode',
 
   // ─── Plurals ───────────────────────────────────────────────────────
   'people.one': '{count} person',

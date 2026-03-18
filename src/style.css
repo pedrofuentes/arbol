@@ -1102,6 +1102,38 @@ textarea:focus-visible {
   pointer-events: none;
 }
 
+/* -- Required field indicator -- */
+
+.required-indicator {
+  color: var(--danger, #e53e3e);
+}
+
+/* -- Loading overlay -- */
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  gap: var(--space-3, 12px);
+}
+
+.loading-overlay .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+.loading-text {
+  color: var(--text-primary, #fff);
+  font-size: 14px;
+  font-family: var(--font-sans);
+}
+
 /* ── Chart Navigator header ───────────────────────────── */
 
 .chart-nav-header {
