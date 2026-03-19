@@ -213,6 +213,17 @@ export function buildFooter(deps: FooterDeps): FooterElements {
             }
 
             const rendererOpts = renderer.getOptions();
+            const additionalLayouts: { layout: import('../renderer/layout-engine').LayoutResult; title: string }[] = [];
+            if (selectedVersionIds.length > 0) {
+              const { computeLayout } = await import('../renderer/layout-engine');
+              for (const vId of selectedVersionIds) {
+                const version = versions.find(v => v.id === vId);
+                if (version?.tree) {
+                  const vLayout = computeLayout(version.tree, rendererOpts);
+                  additionalLayouts.push({ layout: vLayout, title: version.name });
+                }
+              }
+            }
             await exportToPptx(layout, {
               fileName: timestampedFilename(`${safeChartName}.pptx`),
               categories: categoryStore.getAll(),
@@ -237,6 +248,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
               textAlign: rendererOpts.textAlign as 'left' | 'center' | 'right',
               cardBorderRadius: rendererOpts.cardBorderRadius as number,
               fontFamily: rendererOpts.fontFamily as string,
+              additionalLayouts,
             });
             showToast(t('footer.exported'), 'success');
           } else if (format === 'svg') {

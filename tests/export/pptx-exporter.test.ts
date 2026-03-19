@@ -1054,4 +1054,118 @@ describe('pptx-exporter', () => {
       expect(nodeTextCall![1].color).toBe('1E293B');
     });
   });
+
+  describe('additional version slides', () => {
+    it('creates one slide when no additionalLayouts provided', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode()],
+      });
+      await exportToPptx(layout);
+      expect(mockAddSlide).toHaveBeenCalledTimes(1);
+    });
+
+    it('creates additional slides for each additionalLayout', async () => {
+      const mainLayout = makeLayout({
+        nodes: [makeNode({ id: 'main', name: 'Main CEO', x: 0, y: 0 })],
+      });
+      const versionLayout1 = makeLayout({
+        nodes: [makeNode({ id: 'v1', name: 'V1 CEO', x: 50, y: 10 })],
+      });
+      const versionLayout2 = makeLayout({
+        nodes: [makeNode({ id: 'v2', name: 'V2 CEO', x: 100, y: 20 })],
+      });
+      await exportToPptx(mainLayout, {
+        additionalLayouts: [
+          { layout: versionLayout1, title: 'Q1 Snapshot' },
+          { layout: versionLayout2, title: 'Q2 Snapshot' },
+        ],
+      });
+      expect(mockAddSlide).toHaveBeenCalledTimes(3);
+    });
+
+    it('renders nodes on each additional slide', async () => {
+      const mainLayout = makeLayout({
+        nodes: [makeNode({ id: 'main', name: 'Main Boss' })],
+      });
+      const versionLayout = makeLayout({
+        nodes: [
+          makeNode({ id: 'v-n1', name: 'Version Alice', x: 0, y: 0 }),
+          makeNode({ id: 'v-n2', name: 'Version Bob', x: 200, y: 50 }),
+        ],
+      });
+      await exportToPptx(mainLayout, {
+        additionalLayouts: [{ layout: versionLayout, title: 'Snapshot' }],
+      });
+
+      // Second addSlide call is the version slide
+      const versionSlide = mockAddSlide.mock.calls[1][0];
+      const versionTextCalls = versionSlide.addText.mock.calls;
+      const nodeTexts = versionTextCalls
+        .filter((call: any) => Array.isArray(call[0]))
+        .flatMap((call: any) => call[0].map((block: any) => block.text));
+      expect(nodeTexts).toContain('Version Alice');
+      expect(nodeTexts).toContain('Version Bob');
+    });
+
+    it('adds version title text on the additional slide', async () => {
+      const mainLayout = makeLayout({
+        nodes: [makeNode()],
+      });
+      const versionLayout = makeLayout({
+        nodes: [makeNode({ id: 'v1', name: 'VP' })],
+      });
+      await exportToPptx(mainLayout, {
+        additionalLayouts: [{ layout: versionLayout, title: 'Q3 Reorg' }],
+      });
+
+      const versionSlide = mockAddSlide.mock.calls[1][0];
+      const titleCall = versionSlide.addText.mock.calls.find(
+        (call: any) => typeof call[0] === 'string' && call[0] === 'Q3 Reorg',
+      );
+      expect(titleCall).toBeDefined();
+      expect(titleCall![1].fontSize).toBe(10);
+    });
+
+    it('skips additionalLayouts with zero nodes', async () => {
+      const mainLayout = makeLayout({
+        nodes: [makeNode()],
+      });
+      const emptyLayout = makeLayout({ nodes: [] });
+      const validLayout = makeLayout({
+        nodes: [makeNode({ id: 'v1', name: 'VP' })],
+      });
+      await exportToPptx(mainLayout, {
+        additionalLayouts: [
+          { layout: emptyLayout, title: 'Empty' },
+          { layout: validLayout, title: 'Valid' },
+        ],
+      });
+      // 1 main + 1 valid version (empty skipped)
+      expect(mockAddSlide).toHaveBeenCalledTimes(2);
+    });
+
+    it('renders legend on additional slides when categories provided', async () => {
+      const categories: ColorCategory[] = [
+        { id: 'c1', label: 'Engineering', color: '#22C55E' },
+      ];
+      const mainLayout = makeLayout({
+        nodes: [makeNode()],
+      });
+      const versionLayout = makeLayout({
+        nodes: [makeNode({ id: 'v1', name: 'VP', categoryId: 'c1' })],
+      });
+      await exportToPptx(mainLayout, {
+        categories,
+        additionalLayouts: [{ layout: versionLayout }],
+      });
+
+      const versionSlide = mockAddSlide.mock.calls[1][0];
+      // Legend adds shape calls (background rect + swatch rect) and text calls (label)
+      const shapeCalls = versionSlide.addShape.mock.calls;
+      const legendBg = shapeCalls.find(
+        (call: any) => call[0] === 'rect' && call[1]?.fill?.color === 'FFFFFF' && call[1]?.line?.color === 'E2E8F0',
+      );
+      expect(legendBg).toBeDefined();
+    });
+  });
 });

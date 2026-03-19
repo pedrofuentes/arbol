@@ -56,6 +56,7 @@ export interface PptxExportOptions {
   textAlign?: 'left' | 'center' | 'right' | 'start' | 'end';
   cardBorderRadius?: number;
   fontFamily?: string;
+  additionalLayouts?: { layout: LayoutResult; title?: string }[];
 }
 
 export interface Point {
@@ -423,6 +424,52 @@ export async function exportToPptx(
   // Layer 4: Legend
   if (categories && categories.length > 0) {
     addLegend(slide, categories, slideWidth, slideHeight, padding, options?.legendRows, styles.fontFamily);
+  }
+
+  // Additional slides for selected versions
+  if (options?.additionalLayouts) {
+    for (const { layout: vLayout, title: vTitle } of options.additionalLayouts) {
+      if (vLayout.nodes.length === 0) continue;
+
+      const vChartW = vLayout.boundingBox.width * PX_TO_INCHES + padding * 2;
+      const vChartH = vLayout.boundingBox.height * PX_TO_INCHES + padding * 2;
+      const vSlideW = Math.min(vChartW, MAX_SLIDE_DIMENSION) || slideWidth;
+      const vSlideH = Math.min(vChartH, MAX_SLIDE_DIMENSION) || slideHeight;
+      const vScale =
+        vLayout.nodes.length > 0
+          ? computeScale(vLayout.boundingBox, vSlideW, vSlideH, padding)
+          : 1;
+
+      const vSlide = pres.addSlide();
+      const vOffsetX = vLayout.boundingBox.minX;
+      const vOffsetY = vLayout.boundingBox.minY;
+
+      if (vTitle) {
+        vSlide.addText(vTitle, {
+          x: padding,
+          y: 0.1,
+          w: vSlideW - padding * 2,
+          h: 0.3,
+          fontSize: 10,
+          color: '64748b',
+          fontFace: styles.fontFamily,
+          align: 'left',
+        });
+      }
+
+      for (const container of vLayout.icContainers) {
+        addICContainer(vSlide, container, vOffsetX, vOffsetY, vScale, padding, styles);
+      }
+      for (const link of vLayout.links) {
+        addLinkLines(vSlide, link, vOffsetX, vOffsetY, vScale, padding, styles);
+      }
+      for (const node of vLayout.nodes) {
+        addNodeShape(vSlide, node, vOffsetX, vOffsetY, vScale, padding, styles, categories);
+      }
+      if (categories && categories.length > 0) {
+        addLegend(vSlide, categories, vSlideW, vSlideH, padding, options?.legendRows, styles.fontFamily);
+      }
+    }
   }
 
   await pres.writeFile({ fileName });

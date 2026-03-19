@@ -15,9 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Version selection shown only when PPTX format selected
 - Respects focus mode — exports only the visible sub-org
 
+### Fixed
+- **PPTX version slides** — selected versions now render as additional PowerPoint slides (was silently dropped)
+
 ### Testing
-- **2,141 tests across 89 files** — all passing
-- 21 new tests: SVG/PNG exporter (15), export dialog format picker (6)
+- **2,147 tests across 89 files** — all passing
+- 27 new tests: SVG/PNG exporter (15), export dialog format picker (6), PPTX version slides (6)
 
 ## [3.6.0] — 2026-03-19
 

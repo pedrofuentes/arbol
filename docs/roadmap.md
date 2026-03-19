@@ -20,8 +20,8 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] SVG/PNG exporters code-split via dynamic import
 
 ### Testing
-- [x] **2,141 tests across 89 files** — all passing
-- [x] 21 new tests: SVG/PNG exporter (15), export dialog format picker (6)
+- [x] **2,147 tests across 89 files** — all passing
+- [x] 27 new tests: SVG/PNG exporter (15), export dialog format picker (6), PPTX version slides (6)
 
 ---
 
