@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.7] — 2026-03-19
+
+### Fixed
+- **Styled tooltips on chart/version actions** — chart action buttons (Rename, Duplicate, Export, Delete) and version action buttons (View, Compare, Restore, Delete) now use the styled `data-tooltip` CSS tooltips instead of the native browser `title` attribute, matching the toolbar tooltip style
+
 ## [3.4.6] — 2026-03-18
 
 ### Fixed

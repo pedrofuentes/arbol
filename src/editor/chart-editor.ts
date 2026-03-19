@@ -429,9 +429,9 @@ export class ChartEditor {
     const btn = createButton({
       className: danger ? 'btn btn-danger' : 'btn btn-ghost',
       label: icon,
-      title: label,
       ariaLabel: label,
     });
+    btn.setAttribute('data-tooltip', label);
     btn.style.cssText = ACTION_BTN_STYLE;
     return btn;
   }
