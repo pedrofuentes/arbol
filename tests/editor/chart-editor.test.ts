@@ -154,7 +154,7 @@ describe('ChartEditor – Export button', () => {
     const dialogOpts = (showExportDialog as ReturnType<typeof vi.fn>).mock.calls[0][0];
 
     // Simulate user selecting ver-1 only
-    dialogOpts.onExport(['ver-1']);
+    dialogOpts.onExport('pptx', ['ver-1']);
 
     expect(buildChartBundle).toHaveBeenCalledWith(chart, [versions[0]]);
     expect(downloadChartBundle).toHaveBeenCalledWith(

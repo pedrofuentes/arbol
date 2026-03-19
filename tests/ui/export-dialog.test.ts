@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { showExportDialog } from '../../src/ui/export-dialog';
+import type { ExportFormat } from '../../src/ui/export-dialog';
 import type { VersionRecord } from '../../src/types';
 
 function makeVersion(overrides: Partial<VersionRecord> = {}): VersionRecord {
@@ -19,12 +20,12 @@ const sampleVersions: VersionRecord[] = [
 ];
 
 describe('showExportDialog', () => {
-  let onExport: (selectedVersionIds: string[]) => void;
+  let onExport: (format: ExportFormat, selectedVersionIds: string[], pngScale?: number) => void;
   let onCancel: () => void;
 
   beforeEach(() => {
     document.body.innerHTML = '';
-    onExport = vi.fn<(selectedVersionIds: string[]) => void>();
+    onExport = vi.fn<(format: ExportFormat, selectedVersionIds: string[], pngScale?: number) => void>();
     onCancel = vi.fn<() => void>();
   });
 
@@ -106,7 +107,7 @@ describe('showExportDialog', () => {
     expect(checkboxes.length).toBe(0);
   });
 
-  it('export button calls onExport with all version IDs when all checked', () => {
+  it('export button calls onExport with format and all version IDs when all checked', () => {
     showExportDialog({
       chartName: 'My Org',
       versions: sampleVersions,
@@ -120,7 +121,7 @@ describe('showExportDialog', () => {
     exportBtn!.click();
 
     expect(onExport).toHaveBeenCalledOnce();
-    expect(onExport).toHaveBeenCalledWith(['v-1', 'v-2', 'v-3']);
+    expect(onExport).toHaveBeenCalledWith('pptx', ['v-1', 'v-2', 'v-3'], undefined);
   });
 
   it('export button calls onExport with subset of IDs when some unchecked', () => {
@@ -140,7 +141,7 @@ describe('showExportDialog', () => {
     exportBtn!.click();
 
     expect(onExport).toHaveBeenCalledOnce();
-    expect(onExport).toHaveBeenCalledWith(['v-1', 'v-3']);
+    expect(onExport).toHaveBeenCalledWith('pptx', ['v-1', 'v-3'], undefined);
   });
 
   it('export button calls onExport with empty array when all unchecked', () => {
@@ -162,7 +163,7 @@ describe('showExportDialog', () => {
     exportBtn!.click();
 
     expect(onExport).toHaveBeenCalledOnce();
-    expect(onExport).toHaveBeenCalledWith([]);
+    expect(onExport).toHaveBeenCalledWith('pptx', [], undefined);
   });
 
   it('cancel button calls onCancel', () => {
@@ -271,5 +272,152 @@ describe('showExportDialog', () => {
     const title = document.getElementById('export-dialog-title');
     expect(title).not.toBeNull();
     expect(title!.textContent).toBe('Export Chart');
+  });
+
+  // --- Format picker tests ---
+
+  it('renders format radio buttons (PPTX, SVG, PNG)', () => {
+    showExportDialog({
+      chartName: 'My Org',
+      versions: sampleVersions,
+      onExport,
+      onCancel,
+    });
+
+    const radios = document.querySelectorAll<HTMLInputElement>('input[type="radio"][name="export-format"]');
+    expect(radios.length).toBe(3);
+
+    const values = Array.from(radios).map((r) => r.value);
+    expect(values).toEqual(['pptx', 'svg', 'png']);
+
+    // PPTX is checked by default
+    expect(radios[0].checked).toBe(true);
+    expect(radios[1].checked).toBe(false);
+    expect(radios[2].checked).toBe(false);
+  });
+
+  it('shows version selection only when PPTX selected', () => {
+    showExportDialog({
+      chartName: 'My Org',
+      versions: sampleVersions,
+      onExport,
+      onCancel,
+    });
+
+    const versionSection = document.querySelector('.export-version-section') as HTMLElement;
+    const scaleGroup = document.querySelector('.export-scale-group') as HTMLElement;
+    const radios = document.querySelectorAll<HTMLInputElement>('input[type="radio"][name="export-format"]');
+
+    // PPTX selected by default: version section visible, scale hidden
+    expect(versionSection.style.display).not.toBe('none');
+    expect(scaleGroup.style.display).toBe('none');
+
+    // Switch to SVG: version section hidden, scale hidden
+    radios[1].checked = true;
+    radios[1].dispatchEvent(new Event('change', { bubbles: true }));
+    expect(versionSection.style.display).toBe('none');
+    expect(scaleGroup.style.display).toBe('none');
+
+    // Switch back to PPTX: version section visible again
+    radios[0].checked = true;
+    radios[0].dispatchEvent(new Event('change', { bubbles: true }));
+    expect(versionSection.style.display).not.toBe('none');
+  });
+
+  it('shows scale selector only when PNG selected', () => {
+    showExportDialog({
+      chartName: 'My Org',
+      versions: sampleVersions,
+      onExport,
+      onCancel,
+    });
+
+    const scaleGroup = document.querySelector('.export-scale-group') as HTMLElement;
+    const radios = document.querySelectorAll<HTMLInputElement>('input[type="radio"][name="export-format"]');
+
+    // PPTX selected by default: scale hidden
+    expect(scaleGroup.style.display).toBe('none');
+
+    // Switch to PNG: scale visible
+    radios[2].checked = true;
+    radios[2].dispatchEvent(new Event('change', { bubbles: true }));
+    expect(scaleGroup.style.display).not.toBe('none');
+
+    // Switch to SVG: scale hidden
+    radios[1].checked = true;
+    radios[1].dispatchEvent(new Event('change', { bubbles: true }));
+    expect(scaleGroup.style.display).toBe('none');
+  });
+
+  it('passes format to onExport callback', () => {
+    showExportDialog({
+      chartName: 'My Org',
+      versions: [],
+      onExport,
+      onCancel,
+    });
+
+    const radios = document.querySelectorAll<HTMLInputElement>('input[type="radio"][name="export-format"]');
+
+    // Select SVG
+    radios[1].checked = true;
+    radios[1].dispatchEvent(new Event('change', { bubbles: true }));
+
+    const exportBtn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent === 'Export',
+    );
+    exportBtn!.click();
+
+    expect(onExport).toHaveBeenCalledOnce();
+    expect(onExport).toHaveBeenCalledWith('svg', [], undefined);
+  });
+
+  it('passes scale for PNG exports', () => {
+    showExportDialog({
+      chartName: 'My Org',
+      versions: [],
+      onExport,
+      onCancel,
+    });
+
+    const radios = document.querySelectorAll<HTMLInputElement>('input[type="radio"][name="export-format"]');
+
+    // Select PNG
+    radios[2].checked = true;
+    radios[2].dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Default scale is 2
+    const exportBtn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent === 'Export',
+    );
+    exportBtn!.click();
+
+    expect(onExport).toHaveBeenCalledOnce();
+    expect(onExport).toHaveBeenCalledWith('png', [], 2);
+  });
+
+  it('passes selected scale value for PNG exports', () => {
+    showExportDialog({
+      chartName: 'My Org',
+      versions: [],
+      onExport,
+      onCancel,
+    });
+
+    const radios = document.querySelectorAll<HTMLInputElement>('input[type="radio"][name="export-format"]');
+    radios[2].checked = true;
+    radios[2].dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Change scale to 3
+    const scaleSelect = document.querySelector('.export-scale-group select') as HTMLSelectElement;
+    scaleSelect.value = '3';
+
+    const exportBtn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent === 'Export',
+    );
+    exportBtn!.click();
+
+    expect(onExport).toHaveBeenCalledOnce();
+    expect(onExport).toHaveBeenCalledWith('png', [], 3);
   });
 });

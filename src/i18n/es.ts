@@ -1113,6 +1113,16 @@ const es: Record<string, string> = {
   'help.interactions.dotted_label': 'Líneas punteadas',
   'help.interactions.dotted_desc': ' \u2014 Toggle any link to a dotted line via right-click \u2192 Dotted/Solid. Useful for indicating temporary or informal reporting relationships.',
   'export_dialog.versions_hint': 'Seleccione qué versiones guardadas incluir como diapositivas adicionales.',
+  'export.format_label': 'Formato',
+  'export.format_pptx': 'PowerPoint (.pptx)',
+  'export.format_svg': 'Imagen SVG (.svg)',
+  'export.format_png': 'Imagen PNG (.png)',
+  'export.scale_label': 'Resolución',
+  'export.scale_1x': '1× (Estándar)',
+  'export.scale_2x': '2× (Alta calidad)',
+  'export.scale_3x': '3× (Ultra alta)',
+  'export.exported_svg': 'Exportado como SVG',
+  'export.exported_png': 'Exportado como PNG',
 };
 
 export default es;

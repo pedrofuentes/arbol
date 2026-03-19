@@ -2,10 +2,12 @@ import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
 import { t, getLocale } from '../i18n';
 import type { VersionRecord } from '../types';
 
+export type ExportFormat = 'pptx' | 'svg' | 'png';
+
 export interface ExportDialogOptions {
   chartName: string;
   versions: VersionRecord[];
-  onExport: (selectedVersionIds: string[]) => void;
+  onExport: (format: ExportFormat, selectedVersionIds: string[], pngScale?: number) => void;
   onCancel: () => void;
 }
 
@@ -34,6 +36,71 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
   `;
   dialog.appendChild(chartNameEl);
 
+  // --- Format selector ---
+  let selectedFormat: ExportFormat = 'pptx';
+
+  const formatGroup = document.createElement('div');
+  formatGroup.className = 'export-format-group';
+
+  const formatLabel = document.createElement('label');
+  formatLabel.textContent = t('export.format_label');
+  formatGroup.appendChild(formatLabel);
+
+  const formatOptions = document.createElement('div');
+  formatOptions.className = 'export-format-options';
+
+  const formatChoices: { value: ExportFormat; labelKey: string }[] = [
+    { value: 'pptx', labelKey: 'export.format_pptx' },
+    { value: 'svg', labelKey: 'export.format_svg' },
+    { value: 'png', labelKey: 'export.format_png' },
+  ];
+
+  const formatRadios: HTMLInputElement[] = [];
+  for (const choice of formatChoices) {
+    const radioLabel = document.createElement('label');
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'export-format';
+    radio.value = choice.value;
+    if (choice.value === 'pptx') radio.checked = true;
+    formatRadios.push(radio);
+    radioLabel.appendChild(radio);
+    radioLabel.appendChild(document.createTextNode(t(choice.labelKey)));
+    formatOptions.appendChild(radioLabel);
+  }
+
+  formatGroup.appendChild(formatOptions);
+  dialog.appendChild(formatGroup);
+
+  // --- Scale selector (PNG only) ---
+  const scaleGroup = document.createElement('div');
+  scaleGroup.className = 'export-scale-group';
+  scaleGroup.style.display = 'none';
+
+  const scaleLabel = document.createElement('label');
+  scaleLabel.textContent = t('export.scale_label');
+  scaleGroup.appendChild(scaleLabel);
+
+  const scaleSelect = document.createElement('select');
+  const scaleChoices: { value: string; labelKey: string; selected?: boolean }[] = [
+    { value: '1', labelKey: 'export.scale_1x' },
+    { value: '2', labelKey: 'export.scale_2x', selected: true },
+    { value: '3', labelKey: 'export.scale_3x' },
+  ];
+  for (const sc of scaleChoices) {
+    const opt = document.createElement('option');
+    opt.value = sc.value;
+    opt.textContent = t(sc.labelKey);
+    if (sc.selected) opt.selected = true;
+    scaleSelect.appendChild(opt);
+  }
+  scaleGroup.appendChild(scaleSelect);
+  dialog.appendChild(scaleGroup);
+
+  // --- Version selection (PPTX only) ---
+  const versionSection = document.createElement('div');
+  versionSection.className = 'export-version-section';
+
   const checkboxes: HTMLInputElement[] = [];
 
   if (options.versions.length > 0) {
@@ -53,7 +120,7 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
       });
       toggleLink.textContent = allChecked ? t('export_dialog.select_all') : t('export_dialog.deselect_all');
     });
-    dialog.appendChild(toggleLink);
+    versionSection.appendChild(toggleLink);
 
     const hintParagraph = document.createElement('p');
     hintParagraph.textContent = t('export_dialog.versions_hint');
@@ -61,7 +128,7 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
       margin:0 0 8px;font-size:13px;
       color:var(--text-secondary);font-family:var(--font-sans);
     `;
-    dialog.appendChild(hintParagraph);
+    versionSection.appendChild(hintParagraph);
 
     const list = document.createElement('div');
     list.setAttribute('role', 'list');
@@ -112,7 +179,7 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
       list.appendChild(item);
     });
 
-    dialog.appendChild(list);
+    versionSection.appendChild(list);
   } else {
     const noVersions = document.createElement('p');
     noVersions.textContent = t('export_dialog.no_versions');
@@ -121,9 +188,28 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
       color:var(--text-tertiary);font-family:var(--font-sans);
       font-style:italic;
     `;
-    dialog.appendChild(noVersions);
+    versionSection.appendChild(noVersions);
   }
 
+  dialog.appendChild(versionSection);
+
+  // --- Visibility toggling on format change ---
+  const updateVisibility = () => {
+    versionSection.style.display = selectedFormat === 'pptx' ? '' : 'none';
+    scaleGroup.style.display = selectedFormat === 'png' ? '' : 'none';
+  };
+
+  for (const radio of formatRadios) {
+    radio.addEventListener('change', () => {
+      if (radio.checked) {
+        selectedFormat = radio.value as ExportFormat;
+        updateVisibility();
+      }
+    });
+  }
+  updateVisibility();
+
+  // --- Action buttons ---
   const btnGroup = document.createElement('div');
   btnGroup.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;';
 
@@ -157,8 +243,9 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
 
   exportBtn.addEventListener('click', () => {
     const selectedIds = checkboxes.filter((cb) => cb.checked).map((cb) => cb.value);
+    const pngScale = selectedFormat === 'png' ? Number(scaleSelect.value) : undefined;
     cleanup();
-    options.onExport(selectedIds);
+    options.onExport(selectedFormat, selectedIds, pngScale);
   });
 
   overlay.addEventListener('click', (e) => {

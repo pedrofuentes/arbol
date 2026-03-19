@@ -2710,3 +2710,34 @@ textarea:focus-visible {
     border: 1px solid CanvasText;
   }
 }
+
+/* Export dialog — format picker & scale selector */
+.export-format-group { margin-bottom: var(--space-3); }
+.export-format-group > label {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: var(--font-bold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-1);
+}
+.export-format-options label {
+  display: block;
+  padding: 4px 0;
+  cursor: pointer;
+  font-size: var(--text-sm);
+}
+.export-format-options input[type="radio"] {
+  margin-inline-end: var(--space-1);
+}
+.export-scale-group { margin-bottom: var(--space-3); }
+.export-scale-group > label {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: var(--font-bold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-1);
+}

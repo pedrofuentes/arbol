@@ -1113,6 +1113,16 @@ const en: Record<string, string> = {
   'help.interactions.dotted_label': 'Dotted lines',
   'help.interactions.dotted_desc': ' \u2014 Toggle any link to a dotted line via right-click \u2192 Dotted/Solid. Useful for indicating temporary or informal reporting relationships.',
   'export_dialog.versions_hint': 'Select which saved versions to include as additional slides.',
+  'export.format_label': 'Format',
+  'export.format_pptx': 'PowerPoint (.pptx)',
+  'export.format_svg': 'SVG Image (.svg)',
+  'export.format_png': 'PNG Image (.png)',
+  'export.scale_label': 'Resolution',
+  'export.scale_1x': '1× (Standard)',
+  'export.scale_2x': '2× (High quality)',
+  'export.scale_3x': '3× (Ultra high)',
+  'export.exported_svg': 'Exported as SVG',
+  'export.exported_png': 'Exported as PNG',
 };
 
 export default en;
