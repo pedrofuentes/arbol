@@ -495,7 +495,7 @@ export class ChartEditor {
       showExportDialog({
         chartName: chart.name,
         versions,
-        onExport: (selectedVersionIds) => {
+        onExport: (_format, selectedVersionIds) => {
           const selectedVersions = versions.filter((v) => selectedVersionIds.includes(v.id));
           const bundle = buildChartBundle(chart, selectedVersions);
           downloadChartBundle(bundle, chart.name);

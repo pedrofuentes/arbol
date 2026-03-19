@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0] — 2026-03-19
+
+### Added
+- **SVG export** — download org chart as `.svg` with proper viewBox, cleaned of ARIA attributes
+- **PNG export** — download org chart as `.png` at configurable resolution (1×, 2×, 3×)
+- **Export format picker** — radio buttons in export dialog to choose PPTX, SVG, or PNG
+- PNG scale selector (1×/2×/3×) shown only when PNG format selected
+- Version selection shown only when PPTX format selected
+- Respects focus mode — exports only the visible sub-org
+
+### Fixed
+- **PPTX version slides** — selected versions now render as additional PowerPoint slides (was silently dropped)
+
+### Testing
+- **2,147 tests across 89 files** — all passing
+- 27 new tests: SVG/PNG exporter (15), export dialog format picker (6), PPTX version slides (6)
+
 ## [3.6.0] — 2026-03-19
 
 ### Added

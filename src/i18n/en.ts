@@ -917,7 +917,7 @@ const en: Record<string, string> = {
   'import_wizard.original_version': 'Original',
 
   // ─── Toolbar (Step 6) ──────────────────────────────────────────────
-  'toolbar.export_tooltip': 'Export to PowerPoint (Ctrl+E)',
+  'toolbar.export_tooltip': 'Export (Ctrl+E)',
   'toolbar.export_aria': 'Export chart to PowerPoint',
   'toolbar.export_label': 'Export',
 
@@ -1022,7 +1022,7 @@ const en: Record<string, string> = {
   'loading.importing': 'Importing\u2026',
 
   // ─── Export Dialog ─────────────────────────────────────────────────
-  'export_dialog.title': 'Export Chart',
+  'export_dialog.title': 'Export to PowerPoint, SVG, or PNG',
   'export_dialog.deselect_all': 'Deselect all',
   'export_dialog.select_all': 'Select all',
   'export_dialog.no_versions': 'No saved versions to include.',
@@ -1113,6 +1113,16 @@ const en: Record<string, string> = {
   'help.interactions.dotted_label': 'Dotted lines',
   'help.interactions.dotted_desc': ' \u2014 Toggle any link to a dotted line via right-click \u2192 Dotted/Solid. Useful for indicating temporary or informal reporting relationships.',
   'export_dialog.versions_hint': 'Select which saved versions to include as additional slides.',
+  'export.format_label': 'Format',
+  'export.format_pptx': 'PowerPoint (.pptx)',
+  'export.format_svg': 'SVG Image (.svg)',
+  'export.format_png': 'PNG Image (.png)',
+  'export.scale_label': 'Resolution',
+  'export.scale_1x': '1× (Standard)',
+  'export.scale_2x': '2× (High quality)',
+  'export.scale_3x': '3× (Ultra high)',
+  'export.exported_svg': 'Exported as SVG',
+  'export.exported_png': 'Exported as PNG',
 };
 
 export default en;

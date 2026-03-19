@@ -3,8 +3,10 @@ import { flattenTree, isLeaf, countLeaves, countManagersByLevel } from '../utils
 import { exportToPptx } from '../export/pptx-exporter';
 import { timestampedFilename } from '../utils/filename';
 import { showConfirmDialog } from '../ui/confirm-dialog';
+import { showExportDialog } from '../ui/export-dialog';
 import { showToast } from '../ui/toast';
 import { APP_VERSION } from '../version';
+import type { ExportFormat } from '../ui/export-dialog';
 import type { OrgStore } from '../store/org-store';
 import type { ChartRenderer } from '../renderer/chart-renderer';
 import type { CategoryStore } from '../store/category-store';
@@ -182,58 +184,95 @@ export function buildFooter(deps: FooterDeps): FooterElements {
   footer.appendChild(footerRight);
 
   const exportCurrentChart = async () => {
-    const layout = renderer.getLastLayout();
-    if (!layout) return;
+    const activeChart = await chartStore.getActiveChart();
+    const chartName = activeChart?.name ?? 'org-chart';
+    const safeChartName = chartName.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').toLowerCase();
+    const versions = activeChart ? await chartStore.getVersions(activeChart.id) : [];
 
-    // Warn if chart will be scaled down due to PowerPoint's 56" limit
-    const PX_TO_IN = 1 / 96;
-    const MAX_SLIDE = 56;
-    const chartW = layout.boundingBox.width * PX_TO_IN + 1;
-    const chartH = layout.boundingBox.height * PX_TO_IN + 1;
-    if (chartW > MAX_SLIDE || chartH > MAX_SLIDE) {
-      const confirmed = await showConfirmDialog({
-        title: t('dialog.large_export.title'),
-        message: t('dialog.large_export.message'),
-        confirmLabel: t('dialog.large_export.confirm'),
-        danger: false,
-      });
-      if (!confirmed) return;
-    }
+    showExportDialog({
+      chartName,
+      versions,
+      onExport: async (format: ExportFormat, selectedVersionIds: string[], pngScale?: number) => {
+        try {
+          if (format === 'pptx') {
+            const layout = renderer.getLastLayout();
+            if (!layout) return;
 
-    try {
-      const rendererOpts = renderer.getOptions();
-      const activeChart = await chartStore.getActiveChart();
-      const chartName = activeChart?.name ?? 'org-chart';
-      const safeChartName = chartName.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').toLowerCase();
-      await exportToPptx(layout, {
-        fileName: timestampedFilename(`${safeChartName}.pptx`),
-        categories: categoryStore.getAll(),
-        nameFontSize: rendererOpts.nameFontSize,
-        titleFontSize: rendererOpts.titleFontSize,
-        cardFill: rendererOpts.cardFill,
-        cardStroke: rendererOpts.cardStroke,
-        cardStrokeWidth: rendererOpts.cardStrokeWidth,
-        icContainerFill: rendererOpts.icContainerFill,
-        linkColor: rendererOpts.linkColor,
-        linkWidth: rendererOpts.linkWidth,
-        nameColor: rendererOpts.nameColor,
-        titleColor: rendererOpts.titleColor,
-        showHeadcount: rendererOpts.showHeadcount,
-        headcountBadgeColor: rendererOpts.headcountBadgeColor,
-        headcountBadgeTextColor: rendererOpts.headcountBadgeTextColor,
-        headcountBadgeFontSize: rendererOpts.headcountBadgeFontSize,
-        headcountBadgeRadius: rendererOpts.headcountBadgeRadius,
-        headcountBadgePadding: rendererOpts.headcountBadgePadding,
-        headcountBadgeHeight: rendererOpts.headcountBadgeHeight,
-        legendRows: rendererOpts.legendRows,
-        textAlign: rendererOpts.textAlign as 'left' | 'center' | 'right',
-        cardBorderRadius: rendererOpts.cardBorderRadius as number,
-        fontFamily: rendererOpts.fontFamily as string,
-      });
-      showToast(t('footer.exported'), 'success');
-    } catch (e) {
-      showToast(t('footer.export_failed', { error: e instanceof Error ? e.message : String(e) }), 'error');
-    }
+            const PX_TO_IN = 1 / 96;
+            const MAX_SLIDE = 56;
+            const chartW = layout.boundingBox.width * PX_TO_IN + 1;
+            const chartH = layout.boundingBox.height * PX_TO_IN + 1;
+            if (chartW > MAX_SLIDE || chartH > MAX_SLIDE) {
+              const confirmed = await showConfirmDialog({
+                title: t('dialog.large_export.title'),
+                message: t('dialog.large_export.message'),
+                confirmLabel: t('dialog.large_export.confirm'),
+                danger: false,
+              });
+              if (!confirmed) return;
+            }
+
+            const rendererOpts = renderer.getOptions();
+            const additionalLayouts: { layout: import('../renderer/layout-engine').LayoutResult; title: string }[] = [];
+            if (selectedVersionIds.length > 0) {
+              const { computeLayout } = await import('../renderer/layout-engine');
+              for (const vId of selectedVersionIds) {
+                const version = versions.find(v => v.id === vId);
+                if (version?.tree) {
+                  const vLayout = computeLayout(version.tree, rendererOpts);
+                  additionalLayouts.push({ layout: vLayout, title: version.name });
+                }
+              }
+            }
+            await exportToPptx(layout, {
+              fileName: timestampedFilename(`${safeChartName}.pptx`),
+              categories: categoryStore.getAll(),
+              nameFontSize: rendererOpts.nameFontSize,
+              titleFontSize: rendererOpts.titleFontSize,
+              cardFill: rendererOpts.cardFill,
+              cardStroke: rendererOpts.cardStroke,
+              cardStrokeWidth: rendererOpts.cardStrokeWidth,
+              icContainerFill: rendererOpts.icContainerFill,
+              linkColor: rendererOpts.linkColor,
+              linkWidth: rendererOpts.linkWidth,
+              nameColor: rendererOpts.nameColor,
+              titleColor: rendererOpts.titleColor,
+              showHeadcount: rendererOpts.showHeadcount,
+              headcountBadgeColor: rendererOpts.headcountBadgeColor,
+              headcountBadgeTextColor: rendererOpts.headcountBadgeTextColor,
+              headcountBadgeFontSize: rendererOpts.headcountBadgeFontSize,
+              headcountBadgeRadius: rendererOpts.headcountBadgeRadius,
+              headcountBadgePadding: rendererOpts.headcountBadgePadding,
+              headcountBadgeHeight: rendererOpts.headcountBadgeHeight,
+              legendRows: rendererOpts.legendRows,
+              textAlign: rendererOpts.textAlign as 'left' | 'center' | 'right',
+              cardBorderRadius: rendererOpts.cardBorderRadius as number,
+              fontFamily: rendererOpts.fontFamily as string,
+              additionalLayouts,
+            });
+            showToast(t('footer.exported'), 'success');
+          } else if (format === 'svg') {
+            const { exportSvg } = await import('../export/svg-png-exporter');
+            exportSvg({
+              svgElement: renderer.getSvgElement(),
+              fileName: timestampedFilename(`${safeChartName}.svg`),
+            });
+            showToast(t('export.exported_svg'), 'success');
+          } else if (format === 'png') {
+            const { exportPng } = await import('../export/svg-png-exporter');
+            await exportPng({
+              svgElement: renderer.getSvgElement(),
+              fileName: timestampedFilename(`${safeChartName}.png`),
+              scale: pngScale,
+            });
+            showToast(t('export.exported_png'), 'success');
+          }
+        } catch (e) {
+          showToast(t('footer.export_failed', { error: e instanceof Error ? e.message : String(e) }), 'error');
+        }
+      },
+      onCancel: () => {},
+    });
   };
 
   const fitBtn = document.createElement('button');
