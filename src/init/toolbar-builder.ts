@@ -101,7 +101,7 @@ export function buildToolbar(deps: ToolbarDeps): ToolbarElements {
     ariaLabel: t('toolbar.import_aria'),
     onClick: deps.onImportClick,
   });
-  importBtn.appendChild(document.createTextNode(' Import'));
+  importBtn.appendChild(document.createTextNode(' ' + t('toolbar.import_label')));
   headerRight.insertBefore(importBtn, settingsBtn);
 
   // Export button (icon + text label)
@@ -112,7 +112,7 @@ export function buildToolbar(deps: ToolbarDeps): ToolbarElements {
     ariaKeyshortcuts: 'Control+e',
     onClick: deps.onExportClick,
   });
-  exportBtn.appendChild(document.createTextNode(' Export'));
+  exportBtn.appendChild(document.createTextNode(' ' + t('toolbar.export_label')));
   headerRight.insertBefore(exportBtn, settingsBtn);
 
   // Reposition divider: between Export and Settings

@@ -146,6 +146,7 @@ const es: Record<string, string> = {
   'import_wizard.step_import': 'Importar',
   'toolbar.import_tooltip': 'Importar datos',
   'toolbar.import_aria': 'Importar datos',
+  'toolbar.import_label': 'Importar',
 
 
   // ─── Focus Mode ────────────────────────────────────────────────────
@@ -918,6 +919,7 @@ const es: Record<string, string> = {
   // ─── Toolbar (Step 6) ──────────────────────────────────────────────
   'toolbar.export_tooltip': 'Exportar a PowerPoint (Ctrl+E)',
   'toolbar.export_aria': 'Exportar organigrama a PowerPoint',
+  'toolbar.export_label': 'Exportar',
 
   // ─── Settings: Descriptions ─────────────────────────────────────────
   'settings.desc.node_width': 'Ancho de la tarjeta de cada persona en el organigrama',
@@ -980,6 +982,11 @@ const es: Record<string, string> = {
   'settings.layout_default_desc': 'Tamaño predeterminado equilibrado',
   'settings.layout_spacious_desc': 'Espacio adicional entre tarjetas',
   'settings.layout_presentation_desc': 'Tarjetas grandes para diapositivas y pantallas',
+  'settings.layout_compact': 'Compacto',
+  'settings.layout_default': 'Predeterminado',
+  'settings.layout_spacious': 'Espacioso',
+  'settings.layout_presentation': 'Presentación',
+  'settings.imported_custom_theme': 'Tema personalizado importado',
 
   // ─── Settings: Modified Indicators ──────────────────────────────────
   'settings.modified_tooltip': 'Modificado del valor predeterminado ({default})',
@@ -1067,16 +1074,16 @@ const es: Record<string, string> = {
   'backup.backup_failed': 'Error al crear respaldo: {message}',
   'backup.restore_btn': '📂 Restaurar',
   'backup.replace_title': 'Reemplazar todos los datos',
-  'backup.replace_message': 'This will permanently replace all existing charts, versions, and settings with the backup data. A backup of your current data has been downloaded.\n\nContinue?',
+  'backup.replace_message': 'Esto reemplazará permanentemente todos los organigramas, versiones y configuraciones existentes con los datos del respaldo. Se ha descargado un respaldo de sus datos actuales.\n\n¿Continuar?',
   'backup.replace_confirm': 'Reemplazar todo',
   'backup.merge_title': 'Combinación completa',
-  'backup.merge_message': 'Added {chartsAdded} chart(s) and {versionsAdded} version(s). Skipped {chartsSkipped} chart(s) that already existed.\n\nThe page will reload to apply changes.',
+  'backup.merge_message': 'Se agregaron {chartsAdded} organigrama(s) y {versionsAdded} versión(es). Se omitieron {chartsSkipped} organigrama(s) que ya existían.\n\nLa página se recargará para aplicar los cambios.',
   'backup.merge_confirm': 'OK',
   'backup.restore_failed': 'Error al restaurar: {message}',
   'backup.clear_btn': '🗑 Borrar todos los datos',
   'backup.clear_aria': 'Borrar todos los datos locales',
   'backup.clear_title': 'Borrar todos los datos',
-  'backup.clear_message': 'This will permanently delete all your org charts, versions, settings, themes, and preferences. This cannot be undone.\n\nAre you sure?',
+  'backup.clear_message': 'Esto eliminará permanentemente todos sus organigramas, versiones, configuraciones, temas y preferencias. Esta acción no se puede deshacer.\n\n¿Está seguro?',
   'backup.clear_confirm': 'Borrar todo',
   'settings_io.export_btn': '\ud83d\udcbe Export',
   'settings_io.import_btn': '\ud83d\udcc2 Import',

@@ -152,7 +152,7 @@ describe('SettingsEditor', () => {
       const catStore = new CategoryStore();
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
       const titles = getAccordionTitles(container);
-      expect(titles).toContain('Node Categories');
+      expect(titles).toContain('Color Categories');
     });
 
     it('does not render categories section when categoryStore is null', () => {
@@ -330,7 +330,7 @@ describe('SettingsEditor', () => {
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
       const titles = getAccordionTitles(container);
       const presetsIdx = titles.indexOf('Presets');
-      const catIdx = titles.indexOf('Node Categories');
+      const catIdx = titles.indexOf('Color Categories');
       expect(presetsIdx).toBeLessThan(catIdx);
     });
   });

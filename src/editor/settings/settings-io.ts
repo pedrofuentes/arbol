@@ -32,7 +32,7 @@ export class SettingsIOPanel {
     const exportSettingsBtn = document.createElement('button');
     exportSettingsBtn.className = 'btn btn-secondary';
     exportSettingsBtn.style.cssText = 'flex:1;';
-    exportSettingsBtn.textContent = '💾 Export';
+    exportSettingsBtn.textContent = t('settings.export');
     exportSettingsBtn.addEventListener('click', () => {
       if (this.settingsStore) {
         const currentOpts = this.renderer.getOptions();
@@ -45,7 +45,7 @@ export class SettingsIOPanel {
     const importSettingsBtn = document.createElement('button');
     importSettingsBtn.className = 'btn btn-secondary';
     importSettingsBtn.style.cssText = 'flex:1;';
-    importSettingsBtn.textContent = '📂 Import';
+    importSettingsBtn.textContent = t('settings.import');
     importSettingsBtn.addEventListener('click', () => {
       const input = document.createElement('input');
       input.type = 'file';
@@ -55,7 +55,7 @@ export class SettingsIOPanel {
         const file = input.files?.[0];
         if (!file || !this.settingsStore) return;
         if (file.size > 1 * 1024 * 1024) {
-          showToast('Settings file too large (max 1MB).', 'error');
+          showToast(t('settings.file_too_large'), 'error');
           return;
         }
         const reader = new FileReader();
@@ -85,7 +85,7 @@ export class SettingsIOPanel {
             addCustomPreset({
               id: presetId,
               name: '⭐ ' + presetName,
-              description: 'Imported custom theme',
+              description: t('settings.imported_custom_theme'),
               colors: {
                 cardFill: settings.cardFill,
                 cardStroke: settings.cardStroke,
@@ -101,7 +101,7 @@ export class SettingsIOPanel {
             this.rerenderCallback();
             this.rebuildCallback();
           } catch (e) {
-            showToast(`Import failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
+            showToast(t('settings.import_failed', { error: e instanceof Error ? e.message : String(e) }), 'error');
           }
         };
         reader.onerror = () => {

@@ -259,8 +259,11 @@ export class SettingsModal {
       location.reload();
     });
 
-    footerLeft.appendChild(localeLabel);
-    footerLeft.appendChild(localeSelect);
+    const localeGroup = document.createElement('div');
+    localeGroup.className = 'form-group';
+    localeGroup.appendChild(localeLabel);
+    localeGroup.appendChild(localeSelect);
+    footerLeft.appendChild(localeGroup);
 
     const footerRight = document.createElement('div');
     footerRight.className = 'settings-footer-right';

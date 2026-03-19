@@ -49,7 +49,7 @@ export class BackupPanel {
         const backup = await createBackup(this.chartDB);
         downloadBackup(backup);
       } catch (e) {
-        showToast(`Backup failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
+        showToast(t('settings.backup_failed', { error: e instanceof Error ? e.message : String(e) }), 'error');
       }
     });
     backupBtnGroup.appendChild(backupBtn);
@@ -112,12 +112,9 @@ export class BackupPanel {
             }
 
             const confirmed = await showConfirmDialog({
-              title: 'Replace All Data',
-              message:
-                'This will permanently replace all existing charts, versions, and settings ' +
-                'with the backup data. A backup of your current data has been downloaded.\n\n' +
-                'Continue?',
-              confirmLabel: 'Replace everything',
+              title: t('backup.replace_title'),
+              message: t('backup.replace_message'),
+              confirmLabel: t('backup.replace_confirm'),
               danger: true,
             });
             if (!confirmed) return;
@@ -127,17 +124,18 @@ export class BackupPanel {
           } else {
             const result = await restoreMerge(this.chartDB, backup);
             await showConfirmDialog({
-              title: 'Merge Complete',
-              message:
-                `Added ${result.chartsAdded} chart(s) and ${result.versionsAdded} version(s). ` +
-                `Skipped ${result.chartsSkipped} chart(s) that already existed.\n\n` +
-                'The page will reload to apply changes.',
-              confirmLabel: 'OK',
+              title: t('backup.merge_title'),
+              message: t('backup.merge_message', {
+                chartsAdded: String(result.chartsAdded),
+                versionsAdded: String(result.versionsAdded),
+                chartsSkipped: String(result.chartsSkipped),
+              }),
+              confirmLabel: t('backup.merge_confirm'),
             });
             window.location.reload();
           }
         } catch (e) {
-          showToast(`Restore failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
+          showToast(t('settings.restore_failed', { error: e instanceof Error ? e.message : String(e) }), 'error');
         }
       });
       document.body.appendChild(input);
@@ -155,7 +153,7 @@ export class BackupPanel {
     const clearDataBtn = document.createElement('button');
     clearDataBtn.className = 'btn';
     clearDataBtn.textContent = t('backup.clear_btn');
-    clearDataBtn.setAttribute('aria-label', 'Clear all local data');
+    clearDataBtn.setAttribute('aria-label', t('backup.clear_aria'));
     clearDataBtn.style.cssText =
       'background:rgba(244,63,94,0.1);color:var(--danger);border:1px solid rgba(244,63,94,0.2);';
     clearDataBtn.addEventListener('click', async () => {
@@ -168,11 +166,9 @@ export class BackupPanel {
       }
 
       const confirmed = await showConfirmDialog({
-        title: 'Clear All Data',
-        message:
-          'This will permanently delete all your org charts, versions, settings, themes, and preferences. ' +
-          'This cannot be undone.\n\nAre you sure?',
-        confirmLabel: 'Delete everything',
+        title: t('backup.clear_title'),
+        message: t('backup.clear_message'),
+        confirmLabel: t('backup.clear_confirm'),
         danger: true,
       });
       if (confirmed) {

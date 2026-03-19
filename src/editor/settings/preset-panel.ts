@@ -278,7 +278,7 @@ export class PresetPanel {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'preset-delete';
         deleteBtn.textContent = '×';
-        deleteBtn.setAttribute('aria-label', `Delete preset ${preset.name}`);
+        deleteBtn.setAttribute('aria-label', t('settings.delete_preset_aria', { name: preset.name }));
         deleteBtn.style.cssText = `
           position:absolute;top:2px;right:4px;font-size:13px;line-height:1;
           color:var(--text-tertiary);cursor:pointer;opacity:0;
@@ -367,7 +367,7 @@ export class PresetPanel {
       btn.appendChild(icon);
 
       const label = document.createElement('span');
-      label.textContent = lp.name;
+      label.textContent = t(`settings.layout_${lp.name.toLowerCase()}`);
       label.className = 'layout-preset-name';
       btn.appendChild(label);
 

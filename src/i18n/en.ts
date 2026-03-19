@@ -146,6 +146,7 @@ const en: Record<string, string> = {
   'import_wizard.step_import': 'Import',
   'toolbar.import_tooltip': 'Import data',
   'toolbar.import_aria': 'Import data',
+  'toolbar.import_label': 'Import',
 
 
   // ─── Focus Mode ────────────────────────────────────────────────────
@@ -918,6 +919,7 @@ const en: Record<string, string> = {
   // ─── Toolbar (Step 6) ──────────────────────────────────────────────
   'toolbar.export_tooltip': 'Export to PowerPoint (Ctrl+E)',
   'toolbar.export_aria': 'Export chart to PowerPoint',
+  'toolbar.export_label': 'Export',
 
   // ─── Settings: Descriptions ─────────────────────────────────────────
   'settings.desc.node_width': 'Width of each person\'s card in the chart',
@@ -980,6 +982,11 @@ const en: Record<string, string> = {
   'settings.layout_default_desc': 'Balanced default sizing',
   'settings.layout_spacious_desc': 'Extra room between cards',
   'settings.layout_presentation_desc': 'Large cards for slides and screens',
+  'settings.layout_compact': 'Compact',
+  'settings.layout_default': 'Default',
+  'settings.layout_spacious': 'Spacious',
+  'settings.layout_presentation': 'Presentation',
+  'settings.imported_custom_theme': 'Imported custom theme',
 
   // ─── Settings: Modified Indicators ──────────────────────────────────
   'settings.modified_tooltip': 'Modified from default ({default})',

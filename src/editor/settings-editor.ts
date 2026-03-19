@@ -33,32 +33,32 @@ interface SettingGroup {
 
 const SETTING_GROUPS: SettingGroup[] = [
   {
-    title: 'Card Dimensions',
+    title: 'settings.group.card_dimensions',
     description: 'settings.section_desc.card_dimensions',
     settings: [
-      { key: 'nodeWidth', label: 'Node Width', description: 'Width of each card in pixels', type: 'range', min: 50, max: 250, step: 1, unit: 'px' },
-      { key: 'nodeHeight', label: 'Node Height', description: 'Height of each card in pixels', type: 'range', min: 16, max: 60, step: 1, unit: 'px' },
+      { key: 'nodeWidth', label: 'settings.label.node_width', description: 'settings.desc.node_width', type: 'range', min: 50, max: 250, step: 1, unit: 'px' },
+      { key: 'nodeHeight', label: 'settings.label.node_height', description: 'settings.desc.node_height', type: 'range', min: 16, max: 60, step: 1, unit: 'px' },
     ],
   },
   {
-    title: 'Tree Spacing',
+    title: 'settings.group.tree_spacing',
     description: 'settings.section_desc.tree_spacing',
     settings: [
       {
         key: 'horizontalSpacing',
-        label: 'Horizontal Spacing',
-        description: 'Minimum gap between adjacent cards',
+        label: 'settings.label.horizontal_spacing',
+        description: 'settings.desc.horizontal_spacing',
         type: 'range',
         min: 5,
         max: 100,
         step: 1,
         unit: 'px',
       },
-      { key: 'branchSpacing', label: 'Branch Spacing', description: 'Gap between sibling subtrees', type: 'range', min: 0, max: 60, step: 1, unit: 'px' },
+      { key: 'branchSpacing', label: 'settings.label.branch_spacing', description: 'settings.desc.branch_spacing', type: 'range', min: 0, max: 60, step: 1, unit: 'px' },
       {
         key: 'topVerticalSpacing',
-        label: 'Top Vertical Spacing',
-        description: 'Manager to connector line gap',
+        label: 'settings.label.top_vertical_spacing',
+        description: 'settings.desc.top_vertical_spacing',
         type: 'range',
         min: 0,
         max: 50,
@@ -67,8 +67,8 @@ const SETTING_GROUPS: SettingGroup[] = [
       },
       {
         key: 'bottomVerticalSpacing',
-        label: 'Bottom Vertical Spacing',
-        description: 'Connector line to child gap',
+        label: 'settings.label.bottom_vertical_spacing',
+        description: 'settings.desc.bottom_vertical_spacing',
         type: 'range',
         min: 0,
         max: 50,
@@ -78,24 +78,26 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
-    title: 'IC Options',
+    title: 'settings.group.ic_options',
     description: 'settings.section_desc.ic_options',
     settings: [
-      { key: 'icNodeWidth', label: 'IC Node Width', description: 'Width of IC cards', type: 'range', min: 40, max: 220, step: 1, unit: 'px' },
-      { key: 'icGap', label: 'IC Gap', description: 'Spacing between stacked ICs', type: 'range', min: 0, max: 20, step: 1, unit: 'px' },
+      { key: 'icNodeWidth', label: 'settings.label.ic_node_width', description: 'settings.desc.ic_node_width', type: 'range', min: 40, max: 220, step: 1, unit: 'px' },
+      { key: 'icGap', label: 'settings.label.ic_gap', description: 'settings.desc.ic_gap', type: 'range', min: 0, max: 20, step: 1, unit: 'px' },
       {
         key: 'icContainerPadding',
-        label: 'IC Container Padding',
+        label: 'settings.label.ic_container_padding',
+        description: 'settings.desc.ic_container_padding',
         type: 'range',
         min: 0,
         max: 20,
         step: 1,
         unit: 'px',
       },
-      { key: 'icContainerFill', label: 'IC Container Fill', description: 'Background of IC group box', type: 'color' },
+      { key: 'icContainerFill', label: 'settings.label.ic_container_fill', description: 'settings.desc.ic_container_fill', type: 'color' },
       {
         key: 'icContainerBorderRadius',
-        label: 'IC Container Border Radius',
+        label: 'settings.label.ic_container_border_radius',
+        description: 'settings.desc.ic_container_border_radius',
         type: 'range',
         min: 0,
         max: 15,
@@ -105,16 +107,16 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
-    title: 'Advisor Options',
+    title: 'settings.group.advisor_options',
     description: 'settings.section_desc.advisor_options',
     settings: [
-      { key: 'palTopGap', label: 'Advisor Top Gap', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
-      { key: 'palBottomGap', label: 'Advisor Bottom Gap', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
-      { key: 'palRowGap', label: 'Advisor Row Gap', type: 'range', min: 0, max: 20, step: 1, unit: 'px' },
+      { key: 'palTopGap', label: 'settings.label.advisor_top_gap', description: 'settings.desc.advisor_top_gap', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
+      { key: 'palBottomGap', label: 'settings.label.advisor_bottom_gap', description: 'settings.desc.advisor_bottom_gap', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
+      { key: 'palRowGap', label: 'settings.label.advisor_row_gap', description: 'settings.desc.advisor_row_gap', type: 'range', min: 0, max: 20, step: 1, unit: 'px' },
       {
         key: 'palCenterGap',
-        label: 'Advisor Center Gap',
-        description: 'Gap between left/right columns',
+        label: 'settings.label.advisor_center_gap',
+        description: 'settings.desc.advisor_center_gap',
         type: 'range',
         min: 10,
         max: 100,
@@ -124,67 +126,70 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
-    title: 'Typography',
+    title: 'settings.group.typography',
     description: 'settings.section_desc.typography',
     settings: [
-      { key: 'nameFontSize', label: 'Name Font Size', description: 'Font size for person names', type: 'range', min: 5, max: 20, step: 1, unit: 'px' },
-      { key: 'titleFontSize', label: 'Title Font Size', description: 'Font size for job titles', type: 'range', min: 5, max: 20, step: 1, unit: 'px' },
-      { key: 'textPaddingTop', label: 'Text Padding Top', type: 'range', min: 0, max: 15, step: 1, unit: 'px' },
-      { key: 'textGap', label: 'Text Gap', description: 'Space between name and title', type: 'range', min: 0, max: 10, step: 1, unit: 'px' },
+      { key: 'nameFontSize', label: 'settings.label.name_font_size', description: 'settings.desc.name_font_size', type: 'range', min: 5, max: 20, step: 1, unit: 'px' },
+      { key: 'titleFontSize', label: 'settings.label.title_font_size', description: 'settings.desc.title_font_size', type: 'range', min: 5, max: 20, step: 1, unit: 'px' },
+      { key: 'textPaddingTop', label: 'settings.label.text_padding_top', description: 'settings.desc.text_padding_top', type: 'range', min: 0, max: 15, step: 1, unit: 'px' },
+      { key: 'textGap', label: 'settings.label.text_gap', description: 'settings.desc.text_gap', type: 'range', min: 0, max: 10, step: 1, unit: 'px' },
       {
         key: 'textAlign',
-        label: 'Text Alignment',
-        description: 'Text alignment within cards',
+        label: 'settings.label.text_alignment',
+        description: 'settings.desc.text_alignment',
         type: 'select',
         options: ['left', 'center', 'right'],
       },
       {
         key: 'fontFamily',
-        label: 'Font Family',
+        label: 'settings.label.font_family',
+        description: 'settings.desc.font_family',
         type: 'select',
         options: ['Calibri', 'Arial', 'Verdana', 'Georgia', 'Tahoma', 'Trebuchet MS', 'Segoe UI', 'Microsoft Sans Serif'],
       },
       {
         key: 'textPaddingHorizontal',
-        label: 'Text Padding Horizontal',
+        label: 'settings.label.text_padding_horizontal',
+        description: 'settings.desc.text_padding_horizontal',
         type: 'range',
         min: 0,
         max: 20,
         step: 1,
         unit: 'px',
       },
-      { key: 'nameColor', label: 'Name Color', description: 'Color for person names', type: 'color' },
-      { key: 'titleColor', label: 'Title Color', description: 'Color for job titles', type: 'color' },
+      { key: 'nameColor', label: 'settings.label.name_color', description: 'settings.desc.name_color', type: 'color' },
+      { key: 'titleColor', label: 'settings.label.title_color', description: 'settings.desc.title_color', type: 'color' },
     ],
   },
   {
-    title: 'Link Style',
+    title: 'settings.group.link_style',
     description: 'settings.section_desc.link_style',
     settings: [
-      { key: 'linkWidth', label: 'Link Width', type: 'range', min: 0.5, max: 5, step: 0.5, unit: 'px' },
-      { key: 'linkColor', label: 'Link Color', description: 'Color of connector lines', type: 'color' },
-      { key: 'dottedLineDash', label: 'Dotted Line Pattern', description: 'Dash pattern e.g. "6,4"', type: 'text' },
+      { key: 'linkWidth', label: 'settings.label.link_width', description: 'settings.desc.link_width', type: 'range', min: 0.5, max: 5, step: 0.5, unit: 'px' },
+      { key: 'linkColor', label: 'settings.label.link_color', description: 'settings.desc.link_color', type: 'color' },
+      { key: 'dottedLineDash', label: 'settings.label.dotted_line_pattern', description: 'settings.desc.dotted_line_pattern', type: 'text' },
     ],
   },
   {
-    title: 'Card Style',
+    title: 'settings.group.card_style',
     description: 'settings.section_desc.card_style',
     settings: [
       {
         key: 'cardStrokeWidth',
-        label: 'Card Stroke Width',
+        label: 'settings.label.card_stroke_width',
+        description: 'settings.desc.card_stroke_width',
         type: 'range',
         min: 0.5,
         max: 5,
         step: 0.5,
         unit: 'px',
       },
-      { key: 'cardStroke', label: 'Card Stroke', description: 'Card border color', type: 'color' },
-      { key: 'cardFill', label: 'Card Fill', description: 'Background color of cards', type: 'color' },
+      { key: 'cardStroke', label: 'settings.label.card_stroke', description: 'settings.desc.card_stroke', type: 'color' },
+      { key: 'cardFill', label: 'settings.label.card_fill', description: 'settings.desc.card_fill', type: 'color' },
       {
         key: 'cardBorderRadius',
-        label: 'Card Border Radius',
-        description: 'Rounded corner radius',
+        label: 'settings.label.card_border_radius',
+        description: 'settings.desc.card_border_radius',
         type: 'range',
         min: 0,
         max: 15,
@@ -194,13 +199,14 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
-    title: 'Headcount Badge',
+    title: 'settings.group.headcount_badge',
     description: 'settings.section_desc.headcount_badge',
     settings: [
-      { key: 'showHeadcount', label: 'Show Headcount', description: 'Show badges on manager cards', type: 'checkbox' },
+      { key: 'showHeadcount', label: 'settings.label.show_headcount', description: 'settings.desc.show_headcount', type: 'checkbox' },
       {
         key: 'headcountBadgeFontSize',
-        label: 'Badge Font Size',
+        label: 'settings.label.badge_font_size',
+        description: 'settings.desc.badge_font_size',
         type: 'range',
         min: 5,
         max: 16,
@@ -209,7 +215,8 @@ const SETTING_GROUPS: SettingGroup[] = [
       },
       {
         key: 'headcountBadgeHeight',
-        label: 'Badge Height',
+        label: 'settings.label.badge_height',
+        description: 'settings.desc.badge_height',
         type: 'range',
         min: 10,
         max: 30,
@@ -218,7 +225,8 @@ const SETTING_GROUPS: SettingGroup[] = [
       },
       {
         key: 'headcountBadgeRadius',
-        label: 'Badge Radius',
+        label: 'settings.label.badge_radius',
+        description: 'settings.desc.badge_radius',
         type: 'range',
         min: 0,
         max: 15,
@@ -227,25 +235,26 @@ const SETTING_GROUPS: SettingGroup[] = [
       },
       {
         key: 'headcountBadgePadding',
-        label: 'Badge Padding',
+        label: 'settings.label.badge_padding',
+        description: 'settings.desc.badge_padding',
         type: 'range',
         min: 2,
         max: 16,
         step: 1,
         unit: 'px',
       },
-      { key: 'headcountBadgeColor', label: 'Badge Color', type: 'color' },
-      { key: 'headcountBadgeTextColor', label: 'Badge Text Color', type: 'color' },
+      { key: 'headcountBadgeColor', label: 'settings.label.badge_color', description: 'settings.desc.badge_color', type: 'color' },
+      { key: 'headcountBadgeTextColor', label: 'settings.label.badge_text_color', description: 'settings.desc.badge_text_color', type: 'color' },
     ],
   },
   {
-    title: 'Categories Legend',
+    title: 'settings.group.categories_legend',
     description: 'settings.section_desc.categories_legend',
     settings: [
       {
         key: 'legendRows',
-        label: 'Legend Rows (0 = auto)',
-        description: 'Number of rows in the legend',
+        label: 'settings.label.legend_rows',
+        description: 'settings.desc.legend_rows',
         type: 'range',
         min: 0,
         max: 20,
@@ -447,8 +456,8 @@ export class SettingsEditor {
       const resetBtn = document.createElement('button');
       resetBtn.className = 'accordion-reset';
       resetBtn.textContent = '↺';
-      resetBtn.setAttribute('aria-label', `Reset ${title} to defaults`);
-      resetBtn.setAttribute('data-tooltip', 'Reset to defaults');
+      resetBtn.setAttribute('aria-label', t('settings.reset_aria', { title }));
+      resetBtn.setAttribute('data-tooltip', t('settings.reset_tooltip'));
       resetBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         options.resetCallback!();
@@ -483,13 +492,13 @@ export class SettingsEditor {
 
     // Unified Presets section
     this.container.appendChild(
-      this.createAccordionSection('presets', 'Presets', () => this.presetPanel.build()),
+      this.createAccordionSection('presets', t('settings.presets_section'), () => this.presetPanel.build()),
     );
 
     // Node Categories section
     if (this.categoryPanel) {
       this.container.appendChild(
-        this.createAccordionSection('categories', 'Node Categories', () =>
+        this.createAccordionSection('categories', t('settings.categories_section'), () =>
           this.categoryPanel!.build(),
         ),
       );
@@ -504,7 +513,7 @@ export class SettingsEditor {
 
       const title = document.createElement('div');
       title.className = 'setting-section-title';
-      title.textContent = group.title;
+      title.textContent = t(group.title);
       section.appendChild(title);
 
       if (group.description) {
@@ -524,13 +533,13 @@ export class SettingsEditor {
 
     // Settings Import/Export section
     this.container.appendChild(
-      this.createAccordionSection('settings-io', 'Settings', this.settingsIOPanel.build()),
+      this.createAccordionSection('settings-io', t('settings.settings_section'), this.settingsIOPanel.build()),
     );
 
     // Backup & Restore section
     if (this.backupPanel) {
       this.container.appendChild(
-        this.createAccordionSection('backup-restore', 'Backup & Restore', this.backupPanel.build()),
+        this.createAccordionSection('backup-restore', t('settings.backup_section'), this.backupPanel.build()),
       );
     }
 
@@ -559,16 +568,13 @@ export class SettingsEditor {
     dot.style.display = isModified ? '' : 'none';
     label.appendChild(dot);
 
-    label.appendChild(document.createTextNode(setting.label));
+    label.appendChild(document.createTextNode(t(setting.label)));
     info.appendChild(label);
 
-    // Description from i18n if available, fallback to inline description
-    const descKey = `settings.desc.${setting.key.replace(/([A-Z])/g, '_$1').toLowerCase()}` as string;
-    const descText = setting.description || '';
-    if (descText) {
+    if (setting.description) {
       const desc = document.createElement('div');
       desc.className = 'setting-desc';
-      desc.textContent = descText;
+      desc.textContent = t(setting.description);
       info.appendChild(desc);
     }
 
@@ -581,8 +587,8 @@ export class SettingsEditor {
     if (isModified) resetBtn.classList.add('visible');
     resetBtn.textContent = '↺';
     if (defaultValue !== undefined) {
-      resetBtn.setAttribute('aria-label', `Reset ${setting.label} to default (${defaultValue})`);
-      resetBtn.setAttribute('data-tooltip', `Default: ${defaultValue}${setting.unit ? ' ' + setting.unit : ''}`);
+      resetBtn.setAttribute('aria-label', t('settings.reset_setting_aria', { label: t(setting.label), default: String(defaultValue) }));
+      resetBtn.setAttribute('data-tooltip', t('settings.reset_setting_tooltip', { default: String(defaultValue) + (setting.unit ? ' ' + setting.unit : '') }));
     }
 
     const updateModifiedState = (newValue: number | string | boolean) => {
