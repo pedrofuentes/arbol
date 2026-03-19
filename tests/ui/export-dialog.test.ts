@@ -33,7 +33,7 @@ describe('showExportDialog', () => {
     document.body.innerHTML = '';
   });
 
-  it('renders dialog with title "Export Chart"', () => {
+  it('renders dialog with title "Export to PowerPoint, SVG, or PNG"', () => {
     showExportDialog({
       chartName: 'My Org',
       versions: sampleVersions,
@@ -46,7 +46,7 @@ describe('showExportDialog', () => {
 
     const title = dialog!.querySelector('h3');
     expect(title).not.toBeNull();
-    expect(title!.textContent).toBe('Export Chart');
+    expect(title!.textContent).toBe('Export to PowerPoint, SVG, or PNG');
   });
 
   it('displays chart name', () => {
@@ -271,7 +271,7 @@ describe('showExportDialog', () => {
 
     const title = document.getElementById('export-dialog-title');
     expect(title).not.toBeNull();
-    expect(title!.textContent).toBe('Export Chart');
+    expect(title!.textContent).toBe('Export to PowerPoint, SVG, or PNG');
   });
 
   // --- Format picker tests ---

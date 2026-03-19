@@ -917,7 +917,7 @@ const es: Record<string, string> = {
   'import_wizard.original_version': 'Original',
 
   // ─── Toolbar (Step 6) ──────────────────────────────────────────────
-  'toolbar.export_tooltip': 'Exportar a PowerPoint (Ctrl+E)',
+  'toolbar.export_tooltip': 'Exportar (Ctrl+E)',
   'toolbar.export_aria': 'Exportar organigrama a PowerPoint',
   'toolbar.export_label': 'Exportar',
 
@@ -1022,7 +1022,7 @@ const es: Record<string, string> = {
   'loading.importing': 'Importando…',
 
   // ─── Export Dialog ─────────────────────────────────────────────────
-  'export_dialog.title': 'Exportar organigrama',
+  'export_dialog.title': 'Exportar a PowerPoint, SVG o PNG',
   'export_dialog.deselect_all': 'Deseleccionar todo',
   'export_dialog.select_all': 'Seleccionar todo',
   'export_dialog.no_versions': 'No hay versiones guardadas para incluir.',

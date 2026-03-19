@@ -917,7 +917,7 @@ const en: Record<string, string> = {
   'import_wizard.original_version': 'Original',
 
   // ─── Toolbar (Step 6) ──────────────────────────────────────────────
-  'toolbar.export_tooltip': 'Export to PowerPoint (Ctrl+E)',
+  'toolbar.export_tooltip': 'Export (Ctrl+E)',
   'toolbar.export_aria': 'Export chart to PowerPoint',
   'toolbar.export_label': 'Export',
 
@@ -1022,7 +1022,7 @@ const en: Record<string, string> = {
   'loading.importing': 'Importing\u2026',
 
   // ─── Export Dialog ─────────────────────────────────────────────────
-  'export_dialog.title': 'Export Chart',
+  'export_dialog.title': 'Export to PowerPoint, SVG, or PNG',
   'export_dialog.deselect_all': 'Deselect all',
   'export_dialog.select_all': 'Select all',
   'export_dialog.no_versions': 'No saved versions to include.',
