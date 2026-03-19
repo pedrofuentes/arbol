@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.0] — 2026-03-19
+
+### Added
+- **Spanish locale** — complete Spanish translation (967 keys) in Latin American neutral Spanish
+- **Language switcher** — dropdown in settings modal to switch between English and Español
+- **Locale persistence** — language preference saved in localStorage, restored on app load
+- **Dynamic locale loading** — Spanish bundle loaded on demand via dynamic import (code-split)
+
+### Testing
+- **2,120 tests across 88 files** — all passing
+- 7 new tests: locale persistence, settings UI picker, locale switching
+
 ## [3.5.0] — 2026-03-19
 
 ### Fixed

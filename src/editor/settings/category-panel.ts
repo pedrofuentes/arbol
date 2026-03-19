@@ -202,7 +202,7 @@ export class CategoryPanel {
     addBtn.textContent = t('settings.add_category');
     addBtn.style.cssText = 'font-size:11px;padding:6px 8px;margin-top:8px;width:100%;display:flex;align-items:center;justify-content:center;gap:4px;border-style:dashed;';
     addBtn.addEventListener('click', () => {
-      this.categoryStore.add('New Category', '#94a3b8');
+      this.categoryStore.add(t('settings.new_category'), '#94a3b8');
       this.rerenderCallback();
       this.rebuildCallback();
     });

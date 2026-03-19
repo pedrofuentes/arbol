@@ -8,6 +8,22 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
+## 🚀 v3.6.0 — Spanish Locale
+
+### Phase 36 — Internationalization
+- [x] Complete Spanish translation (967 keys, Latin American neutral)
+- [x] Language switcher dropdown in settings modal (English / Español)
+- [x] Locale persistence in localStorage (`arbol-locale` key)
+- [x] Dynamic import of Spanish bundle (code-split, loaded on demand)
+- [x] `saveLocalePreference()` / `getSavedLocale()` API in i18n system
+- [x] Locale-aware date/number formatting (already using `getLocale()`)
+
+### Testing
+- [x] **2,120 tests across 88 files** — all passing
+- [x] 7 new tests: locale persistence (4), settings UI picker (3)
+
+---
+
 ## 🚀 v3.5.0 — Polish Sprint (Bug Fix + i18n + Accessibility + Error Handling + Test Coverage)
 
 ### Phase 35 — Bug Fix + Polish
@@ -410,13 +426,13 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Test coverage: column-mapper branch coverage improvement
 - [x] Test coverage: add performance regression tests (layout time for 500/1,000/5,000 nodes)
 
-### Phase 36 — v3.6.0: Spanish Locale
+### Phase 36 — v3.6.0: Spanish Locale ✅
 
-- [ ] Create `src/i18n/es.ts` — full Spanish translation of all ~1,035 keys
-- [ ] Language switcher UI — locale picker in settings or command palette
-- [ ] Validate all UI strings render correctly in both locales
-- [ ] Locale-aware date/number formatting
-- [ ] Tests for locale switching, fallback behavior, interpolation in Spanish
+- [x] Create `src/i18n/es.ts` — full Spanish translation of all ~1,035 keys
+- [x] Language switcher UI — locale picker in settings or command palette
+- [x] Validate all UI strings render correctly in both locales
+- [x] Locale-aware date/number formatting
+- [x] Tests for locale switching, fallback behavior, interpolation in Spanish
 
 ### Phase 37 — v3.7.0: SVG/PNG Export
 

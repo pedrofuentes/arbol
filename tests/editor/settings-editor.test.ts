@@ -147,12 +147,24 @@ describe('SettingsEditor', () => {
     expect(flatTitles).toContain('Card Style');
   });
 
+  it('flat setting section IDs match expected tab mapping keys', () => {
+    new SettingsEditor(container, renderer, rerenderCb);
+    const sectionIds = Array.from(container.querySelectorAll('.setting-section'))
+      .map((el) => el.getAttribute('data-section-id'));
+    // These IDs must match the SECTION_TAB_MAP keys in main.ts
+    const expectedIds = [
+      'card-dimensions', 'tree-spacing', 'ic-options', 'advisor-options',
+      'typography', 'link-style', 'card-style', 'headcount-badge', 'categories-legend',
+    ];
+    expect(sectionIds).toEqual(expectedIds);
+  });
+
   describe('Node Categories section', () => {
     it('renders categories section when categoryStore is provided', () => {
       const catStore = new CategoryStore();
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
       const titles = getAccordionTitles(container);
-      expect(titles).toContain('Node Categories');
+      expect(titles).toContain('Color Categories');
     });
 
     it('does not render categories section when categoryStore is null', () => {
@@ -330,7 +342,7 @@ describe('SettingsEditor', () => {
       new SettingsEditor(container, renderer, rerenderCb, undefined, catStore);
       const titles = getAccordionTitles(container);
       const presetsIdx = titles.indexOf('Presets');
-      const catIdx = titles.indexOf('Node Categories');
+      const catIdx = titles.indexOf('Color Categories');
       expect(presetsIdx).toBeLessThan(catIdx);
     });
   });
