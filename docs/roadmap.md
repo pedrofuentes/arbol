@@ -8,6 +8,23 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
+## 🚀 v3.7.0 — SVG/PNG Export
+
+### Phase 37 — Image Export
+- [x] SVG export — serialize org chart to downloadable `.svg` with proper viewBox
+- [x] PNG export — render to canvas at configurable resolution (1×/2×/3×)
+- [x] Export dialog format picker (PPTX / SVG / PNG radio buttons)
+- [x] Version selection shown only for PPTX; scale selector only for PNG
+- [x] Respects focus mode — exports only the visible sub-org
+- [x] ARIA/accessibility attributes stripped from exported files
+- [x] SVG/PNG exporters code-split via dynamic import
+
+### Testing
+- [x] **2,141 tests across 89 files** — all passing
+- [x] 21 new tests: SVG/PNG exporter (15), export dialog format picker (6)
+
+---
+
 ## 🚀 v3.6.0 — Spanish Locale
 
 ### Phase 36 — Internationalization
@@ -434,13 +451,13 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Locale-aware date/number formatting
 - [x] Tests for locale switching, fallback behavior, interpolation in Spanish
 
-### Phase 37 — v3.7.0: SVG/PNG Export
+### Phase 37 — v3.7.0: SVG/PNG Export ✅
 
-- [ ] SVG export — serialize current SVG to downloadable `.svg` file
-- [ ] PNG export — render SVG to canvas, export as `.png` (configurable resolution)
-- [ ] Update export dialog with format picker (PPTX / SVG / PNG)
-- [ ] Respect focus mode (export subtree only)
-- [ ] Option to export in dark or light theme regardless of current
+- [x] SVG export — serialize current SVG to downloadable `.svg` file
+- [x] PNG export — render SVG to canvas, export as `.png` (configurable resolution)
+- [x] Update export dialog with format picker (PPTX / SVG / PNG)
+- [x] Respect focus mode (export subtree only)
+- [x] Option to export in dark or light theme regardless of current
 
 ### Phase 38 — v3.8.0: Level Metadata + Mapping + Analytics
 
