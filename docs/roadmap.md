@@ -461,51 +461,167 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ### Phase 38 — v3.8.0: Level Metadata + Mapping + Analytics
 
-- [ ] Extend `OrgNode` with optional `level` field (string, e.g., "12", "L5", "Director")
-- [ ] Level Mapping system (`LevelStore`):
-  - Many-to-one mapping: numeric level → display title (e.g., 10, 11, 12 → "IC")
-  - Configurable display: raw level, mapped title, or both ("L12 — Senior Engineer")
-  - Mapping presets importable from CSV (level,title columns) or manual entry
-  - Per-chart mappings stored alongside categories in `ChartRecord`
-- [ ] Level on cards (below job title), editable via inline editor + property panel
-- [ ] CSV import support for `level` column with auto-detect; apply level mapping on import
-- [ ] Level in PPTX/SVG/PNG export (optional toggle)
-- [ ] Analytics panel (new sidebar tab or modal):
-  - Total headcount
-  - Headcount by level, grouped by mapped title ("Senior: 12 people across L10-L12")
-  - Span of control (avg/min/max direct reports per manager)
-  - Tree depth
-  - Level distribution across teams (via focus mode)
+**Scope:** Add optional `level` field to OrgNode, level mapping system, analytics panel.
+**Complexity:** HIGH — touches 14+ files across data, UI, export, and storage layers.
+
+#### Data Model (types.ts, org-store.ts)
+- [ ] Add `level?: string` to `OrgNode` interface (e.g., "12", "L5", "Director")
+- [ ] Extend `updateNode()` fields to include `level`
+- [ ] Extend `addChild()` data to include `level`
+- [ ] Add level validation to tree validator (string, max 50 chars)
+
+#### Level Mapping System (new: level-store.ts)
+- [ ] Create `LevelStore` extending `EventEmitter` (follows CategoryStore pattern)
+- [ ] `LevelMapping` interface: `{ rawLevel: string, displayTitle: string }`
+- [ ] Many-to-one: multiple raw levels → single display title (e.g., 10, 11, 12 → "IC")
+- [ ] Configurable display mode: raw only, mapped only, or both ("L12 — Senior Engineer")
+- [ ] Per-chart mappings stored alongside categories in `ChartRecord`
+- [ ] Import mapping presets from CSV (level,title columns) or manual entry
+- [ ] Persist to IndexedDB via ChartStore
+
+#### UI — Cards & Editing
+- [ ] Render level on cards below title (chart-renderer.ts line ~574, after title text element)
+- [ ] Add `showLevel` toggle to `RendererOptions` + settings panel
+- [ ] Level editable via inline editor (add 3rd input field)
+- [ ] Level editable via property panel (add number input after title)
+- [ ] Level column in CSV import (extend `ColumnMapping` with `level?: string`)
+- [ ] Column mapper UI: add level dropdown to mapping form
+
+#### Export
+- [ ] Level text in PPTX export (pptx-exporter.ts `addNodeShape()` text array)
+- [ ] Level text in SVG/PNG export (rendered on cards, exports automatically)
+- [ ] Optional toggle to include/exclude level in exports
+
+#### Analytics Panel (new: src/ui/analytics-panel.ts)
+- [ ] New sidebar tab or command palette action
+- [ ] Total headcount
+- [ ] Headcount by level, grouped by mapped title ("Senior: 12 people across L10-L12")
+- [ ] Span of control: avg/min/max direct reports per manager
+- [ ] Tree depth
+- [ ] Level distribution across teams (respects focus mode)
 - [ ] Level-based auto-categories — auto-assign colors based on level ranges or mapped titles
 
 ### Phase 39 — v3.9.0: Collapsible Subtrees
 
-- [ ] Collapse/expand toggle on manager nodes to hide/show children
-- [ ] Persist collapsed node IDs per chart in IndexedDB
-- [ ] Badge showing hidden descendant count on collapsed nodes
-- [ ] Keyboard: Left arrow collapses, Right arrow expands (standard tree pattern)
-- [ ] Bulk collapse/expand via command palette ("Collapse all" / "Expand all")
-- [ ] PPTX/SVG/PNG export only visible (non-collapsed) nodes
+**Scope:** Collapse/expand branches in the org chart, persisted per chart.
+**Complexity:** MEDIUM — new controller + renderer filter + keyboard integration.
+**Pattern:** Follows `FocusModeController` model (rendering-only filter, OrgStore holds full tree).
+
+#### Controller (new: src/controllers/collapse-manager.ts)
+- [ ] `CollapseManager` class with `collapsedIds: Set<string>`
+- [ ] `toggle(nodeId)`, `collapse(nodeId)`, `expand(nodeId)`, `collapseAll()`, `expandAll()`
+- [ ] `isCollapsed(nodeId)` query
+- [ ] `getVisibleTree(tree)` — returns tree with collapsed branches pruned (same pattern as focus-mode.ts:66-70)
+- [ ] Emits `'change'` event for renderer to re-render
+
+#### Persistence
+- [ ] Add `collapsedNodeIds?: string[]` to `ChartRecord` in types.ts
+- [ ] Save collapsed state via `ChartStore` to IndexedDB on change
+- [ ] Restore collapsed state on chart switch / app load
+
+#### Rendering (chart-renderer.ts)
+- [ ] Filter tree through `collapseManager.getVisibleTree()` BEFORE `computeLayout()` (line 190)
+- [ ] Add collapse toggle button (▶/▼) on manager node cards that have children
+- [ ] Badge showing hidden descendant count on collapsed nodes (reuse headcount badge pattern)
+- [ ] `LayoutNode` already has `collapsible?: boolean` and `descendantCount` fields (layout-engine.ts:36-38)
+
+#### Keyboard Navigation (keyboard-nav.ts:85-121)
+- [ ] Left arrow: if node has children and is expanded → collapse; else navigate to parent
+- [ ] Right arrow: if node has children and is collapsed → expand; else navigate to first child
+- [ ] Add `onToggleCollapse(nodeId)` callback
+
+#### Integration
+- [ ] Command palette: "Collapse all" / "Expand all" commands
+- [ ] PPTX/SVG/PNG export: only export visible (non-collapsed) nodes
 - [ ] Collapse state preserved when entering/exiting focus mode
+- [ ] Undo/redo: collapse state is independent of tree mutations (not in undo stack)
 
 ### Phase 40 — v4.0.0: Drag-and-Drop Reorganization
 
-- [ ] Drag initiation — mousedown + 5px movement threshold on cards
-- [ ] Visual feedback — ghost card follows cursor, valid drop targets highlighted
-- [ ] Drop validation — prevent circular drops (can't drop parent onto descendant)
-- [ ] Undo integration — single undo step for drag-move operations
-- [ ] Multi-select drag — drag entire selection group to new parent
-- [ ] Touch support — long-press to initiate drag on mobile
-- [ ] Accessibility — keyboard-accessible move (context menu already works; add Ctrl+arrows)
-- [ ] Smooth animation when tree re-layouts after drop
+**Scope:** Drag cards to rearrange the org hierarchy visually.
+**Complexity:** HIGH — D3 drag behavior + visual feedback + validation + undo.
+**Existing foundation:** `moveNode()` (line 208) and `bulkMoveNodes()` (line 239) in org-store.ts.
+
+#### Drag Behavior (chart-renderer.ts)
+- [ ] Import D3 `drag()` and attach to `.node` group elements
+- [ ] Drag threshold: 5px movement before initiating (prevents accidental drags on click)
+- [ ] Drag initiation: `mousedown` on card → after threshold → enter drag mode
+- [ ] Ghost card: clone the dragged card with reduced opacity, follows cursor
+- [ ] Highlight valid drop targets (all manager cards except descendants of dragged node)
+- [ ] Drop target detection: find nearest card under cursor via `document.elementFromPoint()`
+
+#### Visual Feedback (style.css)
+- [ ] `.dragging` class: reduced opacity (0.5), elevated z-index, cursor `grabbing`
+- [ ] `.drag-over` class: highlighted border (accent color), subtle scale transform
+- [ ] `.invalid-drop` class: red border, `not-allowed` cursor
+- [ ] Drop line indicator showing where node will be inserted
+
+#### Validation
+- [ ] Prevent circular drops: can't drop parent onto its own descendant (use `isDescendant()` from org-store)
+- [ ] Prevent root drag: root node is not draggable
+- [ ] Prevent drop on self: can't drop node onto itself
+
+#### Undo Integration
+- [ ] Single `snapshot()` call before the move (already in `moveNode()` / `bulkMoveNodes()`)
+- [ ] Ctrl+Z after drag reverts the move
+
+#### Multi-Select Drag
+- [ ] If dragged node is part of multi-selection → drag all selected nodes
+- [ ] Use `bulkMoveNodes(selectedIds, newParentId)` for batch operation
+- [ ] If dragged node is NOT selected → clear selection, drag only that node
+
+#### Touch Support
+- [ ] Long-press (500ms) to initiate drag on touch devices
+- [ ] `touchmove` follows finger, `touchend` completes drop
+- [ ] Cancel drag on `touchcancel` event
+
+#### Accessibility
+- [ ] Keyboard move already works via context menu → "Move" → manager picker
+- [ ] Consider adding Ctrl+Arrow shortcuts as an enhancement
 
 ### Phase 41 — v4.1.0: PWA + Offline Support
 
-- [ ] Service worker — cache app shell + assets for offline use
-- [ ] Web app manifest — installable PWA with icon and splash screen
-- [ ] Offline indicator — subtle banner when offline
-- [ ] Auto-update prompt when new version is available
-- [ ] GitHub Pages compatible service worker
+**Scope:** Make Arbol installable as a Progressive Web App with offline capability.
+**Complexity:** LOW-MEDIUM — mostly config/assets, minimal code changes.
+**Key insight:** IndexedDB persistence already works offline — data layer is ready.
+
+#### Dependencies
+- [ ] Install `vite-plugin-pwa` as devDependency
+- [ ] Configure in `vite.config.ts` with Workbox strategies
+
+#### Web App Manifest (new: public/manifest.json)
+- [ ] App name: "Arbol", short_name: "Arbol"
+- [ ] Display: "standalone"
+- [ ] Theme color: match `--bg-base` (#0c1222 dark / #ffffff light)
+- [ ] Background color: match theme
+- [ ] Icons: 192×192 and 512×512 PNG (generate from existing favicon.svg)
+- [ ] Start URL: "/"
+- [ ] Scope: "/"
+- [ ] Description: reuse `app.meta_description` i18n key value
+
+#### Icons
+- [ ] Generate 192×192 PNG from favicon.svg
+- [ ] Generate 512×512 PNG from favicon.svg
+- [ ] Optionally: maskable icon variant for Android adaptive icons
+
+#### Service Worker (via vite-plugin-pwa)
+- [ ] Precache: index.html, CSS, JS bundles, favicon assets
+- [ ] Runtime cache: no external resources to cache (fully self-contained)
+- [ ] Strategy: CacheFirst for assets, NetworkFirst for index.html (for updates)
+- [ ] GitHub Pages compatible: service worker scope must match deployment path
+
+#### Registration & UI
+- [ ] Add `<link rel="manifest" href="/manifest.json">` to index.html
+- [ ] Service worker auto-registered by vite-plugin-pwa
+- [ ] Offline indicator: subtle banner when `navigator.onLine === false` (new: src/ui/offline-banner.ts)
+- [ ] Auto-update prompt: detect new SW version → show "Update available" toast → reload on confirm
+- [ ] i18n keys for offline banner and update prompt (en.ts + es.ts)
+
+#### Testing
+- [ ] Verify build includes manifest and service worker
+- [ ] Verify app installs on Chrome/Edge (Lighthouse PWA audit)
+- [ ] Verify offline mode: disconnect network → app still loads from cache
+- [ ] Verify auto-update: deploy new version → existing users see update prompt
 
 ### Phase 42 — v4.2.0: Additional Exports + CSV Export
 
