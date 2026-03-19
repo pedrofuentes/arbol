@@ -48,7 +48,16 @@ async function main(): Promise<void> {
   offscreenHost.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden;';
   document.body.appendChild(offscreenHost);
 
-  setLocale('en', en);
+  // Load saved locale preference, default to 'en'
+  const { getSavedLocale } = await import('./i18n');
+  const savedLocale = getSavedLocale() ?? 'en';
+
+  if (savedLocale === 'es') {
+    const { default: es } = await import('./i18n/es');
+    setLocale('es', es);
+  } else {
+    setLocale('en', en);
+  }
 
   // Show loading state during IndexedDB initialization
   const appLoadingEl = document.createElement('div');

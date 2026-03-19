@@ -1,4 +1,4 @@
-import { t } from '../i18n';
+import { t, getLocale, setLocale as i18nSetLocale } from '../i18n';
 
 const PREVIEW_HINT_KEYS: Record<string, string> = {
   presets: 'settings_modal.preview_hint.presets',
@@ -223,6 +223,44 @@ export class SettingsModal {
     const footerLeft = document.createElement('div');
     footerLeft.className = 'settings-footer-left';
     this.footerLeft = footerLeft;
+
+    // Language picker
+    const localeLabel = document.createElement('label');
+    localeLabel.setAttribute('for', 'locale-select');
+    localeLabel.textContent = t('settings.language');
+
+    const localeSelect = document.createElement('select');
+    localeSelect.id = 'locale-select';
+    localeSelect.setAttribute('aria-label', t('settings.language_aria'));
+
+    const enOpt = document.createElement('option');
+    enOpt.value = 'en';
+    enOpt.textContent = 'English';
+
+    const esOpt = document.createElement('option');
+    esOpt.value = 'es';
+    esOpt.textContent = 'Español';
+
+    localeSelect.appendChild(enOpt);
+    localeSelect.appendChild(esOpt);
+    localeSelect.value = getLocale();
+
+    localeSelect.addEventListener('change', async () => {
+      const selected = localeSelect.value;
+      if (selected === 'es') {
+        const { default: es } = await import('../i18n/es');
+        i18nSetLocale('es', es);
+      } else {
+        const { default: en } = await import('../i18n/en');
+        i18nSetLocale('en', en);
+      }
+      const { showToast } = await import('./toast');
+      showToast(t('settings.locale_changed'));
+      location.reload();
+    });
+
+    footerLeft.appendChild(localeLabel);
+    footerLeft.appendChild(localeSelect);
 
     const footerRight = document.createElement('div');
     footerRight.className = 'settings-footer-right';

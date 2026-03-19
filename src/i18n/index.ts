@@ -15,10 +15,23 @@ export function getDirection(locale?: string): 'ltr' | 'rtl' {
   return RTL_LOCALES.has(l) ? 'rtl' : 'ltr';
 }
 
+const LOCALE_STORAGE_KEY = 'arbol-locale';
+
+/** Save the user's locale preference to localStorage. */
+export function saveLocalePreference(locale: string): void {
+  try { localStorage.setItem(LOCALE_STORAGE_KEY, locale); } catch { /* quota / SSR */ }
+}
+
+/** Read the user's saved locale preference from localStorage. */
+export function getSavedLocale(): string | null {
+  try { return localStorage.getItem(LOCALE_STORAGE_KEY); } catch { return null; }
+}
+
 /** Load a locale's translations and update document direction + lang. */
 export function setLocale(locale: string, messages: Translations): void {
   currentLocale = locale;
   translations = messages;
+  saveLocalePreference(locale);
   if (typeof document !== 'undefined') {
     document.documentElement.dir = getDirection(locale);
     document.documentElement.lang = locale;
