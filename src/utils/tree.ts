@@ -26,6 +26,7 @@ export function filterVisibleTree(node: OrgNode): OrgNode {
   const clone: OrgNode = { id: node.id, name: node.name, title: node.title };
   if (node.categoryId !== undefined) clone.categoryId = node.categoryId;
   if (node.dottedLine !== undefined) clone.dottedLine = node.dottedLine;
+  if (node.level !== undefined) clone.level = node.level;
   if (node.children && node.children.length > 0) {
     clone.children = node.children.map((child) => filterVisibleTree(child));
   }
@@ -96,6 +97,7 @@ export function stripM1Children(node: OrgNode): {
     const c: OrgNode = { id: n.id, name: n.name, title: n.title };
     if (n.categoryId !== undefined) c.categoryId = n.categoryId;
     if (n.dottedLine !== undefined) c.dottedLine = n.dottedLine;
+    if (n.level !== undefined) c.level = n.level;
     return c;
   }
 

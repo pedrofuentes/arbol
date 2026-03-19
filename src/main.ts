@@ -125,6 +125,11 @@ async function main(): Promise<void> {
     headcountBadgeRadius: 4,
     headcountBadgePadding: 8,
     headcountBadgeHeight: 22,
+    showLevel: false,
+    levelBadgeColor: '#6366f1',
+    levelBadgeTextColor: '#ffffff',
+    levelBadgeFontSize: 11,
+    levelBadgeSize: 22,
     legendRows: 0,
   };
   const savedSettings = settingsStore.load(defaultSettings);
@@ -214,6 +219,7 @@ async function main(): Promise<void> {
     'link-style': 'connectors',
     'card-style': 'cards',
     'headcount-badge': 'badges',
+    'level-badge': 'badges',
     'categories-legend': 'categories',
     'settings-io': 'backup',
     'backup-restore': 'backup',
@@ -736,6 +742,9 @@ async function main(): Promise<void> {
     },
     onCategoryChange: (nodeId, categoryId) => {
       store.setNodeCategory(nodeId, categoryId);
+    },
+    onLevelChange: (nodeId, level) => {
+      store.setNodeLevel(nodeId, level);
     },
     onToggleDottedLine: (nodeId) => {
       const node = findNodeById(store.getTree(), nodeId);

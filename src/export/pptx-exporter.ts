@@ -52,6 +52,11 @@ export interface PptxExportOptions {
   headcountBadgeRadius?: number;
   headcountBadgePadding?: number;
   headcountBadgeHeight?: number;
+  showLevel?: boolean;
+  levelBadgeColor?: string;
+  levelBadgeTextColor?: string;
+  levelBadgeFontSize?: number;
+  levelBadgeSize?: number;
   legendRows?: number;
   textAlign?: 'left' | 'center' | 'right' | 'start' | 'end';
   cardBorderRadius?: number;
@@ -82,6 +87,11 @@ interface ResolvedStyles {
   headcountBadgeHeight: number;
   headcountBadgePadding: number;
   headcountBadgeRadius: number;
+  showLevel: boolean;
+  levelBadgeColor: string;
+  levelBadgeTextColor: string;
+  levelBadgeFontSize: number;
+  levelBadgeSize: number;
   textAlign: 'left' | 'center' | 'right';
   cardBorderRadius: number;
   fontFamily: string;
@@ -110,7 +120,12 @@ export function resolveStyles(options?: PptxExportOptions): ResolvedStyles {
     headcountBadgeHeight: options?.headcountBadgeHeight ?? 22,
     headcountBadgePadding: options?.headcountBadgePadding ?? 8,
     headcountBadgeRadius: options?.headcountBadgeRadius ?? 4,
-    textAlign: options?.textAlign === 'start' ? 'left' : options?.textAlign === 'end' ? 'right' : options?.textAlign ?? 'center',
+    showLevel: options?.showLevel ?? false,
+    levelBadgeColor: stripHash(options?.levelBadgeColor ?? '#6366F1'),
+    levelBadgeTextColor: stripHash(options?.levelBadgeTextColor ?? '#FFFFFF'),
+    levelBadgeFontSize: Math.max(3, Math.round((options?.levelBadgeFontSize ?? 11) * PX_TO_PT)),
+    levelBadgeSize: options?.levelBadgeSize ?? 22,
+    textAlign:options?.textAlign === 'start' ? 'left' : options?.textAlign === 'end' ? 'right' : options?.textAlign ?? 'center',
     cardBorderRadius: options?.cardBorderRadius ?? 0,
     fontFamily: options?.fontFamily ?? 'Calibri',
   };
@@ -275,6 +290,39 @@ function addNodeShape(
       fontSize: badgeFontSize,
       bold: true,
       color: styles.headcountBadgeTextColor,
+      wrap: false,
+    });
+  }
+
+  // Level badge
+  if (styles.showLevel && node.level) {
+    const levelText = node.level;
+    const badgeFontSize = Math.max(3, Math.round(styles.levelBadgeFontSize * scale));
+    const badgeSide = styles.levelBadgeSize * scale * PX_TO_INCHES;
+
+    // Position: inside bottom-left corner of the card
+    const badgeX = topLeft.x;
+    const badgeY = topLeft.y + h - badgeSide;
+
+    slide.addShape('rect', {
+      x: badgeX,
+      y: badgeY,
+      w: badgeSide,
+      h: badgeSide,
+      fill: { color: styles.levelBadgeColor },
+    });
+
+    slide.addText(levelText, {
+      x: badgeX,
+      y: badgeY,
+      w: badgeSide,
+      h: badgeSide,
+      align: 'center',
+      valign: 'middle',
+      fontFace: styles.fontFamily,
+      fontSize: badgeFontSize,
+      bold: true,
+      color: styles.levelBadgeTextColor,
       wrap: false,
     });
   }

@@ -9,20 +9,23 @@ export const PREVIEW_TREE: OrgNode = {
   id: 'prev-root',
   name: 'Root',
   title: 'CEO',
+  level: 'L1',
   children: [
-    { id: 'prev-advisor', name: 'Advisor', title: 'Chief of Staff' },
+    { id: 'prev-advisor', name: 'Advisor', title: 'Chief of Staff', level: 'L2' },
     {
       id: 'prev-mgr1',
       name: 'Manager A',
       title: 'VP Engineering',
-      children: [{ id: 'prev-ic1', name: 'Individual Contributor A', title: 'Staff Engineer' }],
+      level: 'L3',
+      children: [{ id: 'prev-ic1', name: 'Individual Contributor A', title: 'Staff Engineer', level: 'L5' }],
     },
     {
       id: 'prev-mgr2',
       name: 'Manager B',
       title: 'VP Sales',
+      level: 'L3',
       dottedLine: true,
-      children: [{ id: 'prev-ic2', name: 'Individual Contributor B', title: 'Account Executive' }],
+      children: [{ id: 'prev-ic2', name: 'Individual Contributor B', title: 'Account Executive', level: 'L5' }],
     },
   ],
 };

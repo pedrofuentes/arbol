@@ -16,6 +16,7 @@ export interface PropertyPanelOptions {
   onRemove: (nodeId: string) => void;
   onFocus: (nodeId: string) => void;
   onCategoryChange: (nodeId: string, categoryId: string | null) => void;
+  onLevelChange: (nodeId: string, level: string | null) => void;
   onToggleDottedLine: (nodeId: string) => void;
   onClose: () => void;
 }
@@ -32,8 +33,10 @@ export class PropertyPanel {
   private metaDirectReports: HTMLElement;
   private metaTotalOrg: HTMLElement;
   private metaSpanOfControl: HTMLElement;
+  private metaLevel: HTMLElement;
   private nameInput: HTMLInputElement;
   private titleInput: HTMLInputElement;
+  private levelInput: HTMLInputElement;
   private categorySelect: HTMLSelectElement;
   private focusBtn: HTMLButtonElement;
   private dottedBtn: HTMLButtonElement;
@@ -42,6 +45,7 @@ export class PropertyPanel {
 
   private savedName = '';
   private savedTitle = '';
+  private savedLevel = '';
 
   constructor(options: PropertyPanelOptions) {
     this.options = options;
@@ -90,7 +94,9 @@ export class PropertyPanel {
     this.metaDirectReports = this.createMetaRow('👥', t('property_panel.direct_reports'));
     this.metaTotalOrg = this.createMetaRow('📊', t('property_panel.total_org'));
     this.metaSpanOfControl = this.createMetaRow('📐', t('property_panel.span_of_control'));
+    this.metaLevel = this.createMetaRow('🏷️', t('property_panel.level'));
 
+    meta.appendChild(this.metaLevel);
     meta.appendChild(this.metaReportsTo);
     meta.appendChild(this.metaDirectReports);
     meta.appendChild(this.metaTotalOrg);
@@ -120,6 +126,13 @@ export class PropertyPanel {
     this.titleInput = titleField.input;
     editSection.appendChild(titleField.group);
 
+    // Level field
+    const levelField = this.createField('pp-level-input', t('property_panel.level'));
+    this.levelInput = levelField.input;
+    this.levelInput.maxLength = 50;
+    this.levelInput.setAttribute('placeholder', t('property_panel.level_none'));
+    editSection.appendChild(levelField.group);
+
     // Category field
     const catGroup = document.createElement('div');
     catGroup.className = 'pp-field';
@@ -145,10 +158,15 @@ export class PropertyPanel {
         if (!this.nodeId) return;
         const newName = this.nameInput.value.trim();
         const newTitle = this.titleInput.value.trim();
+        const newLevel = this.levelInput.value.trim();
         if (newName !== this.savedName || newTitle !== this.savedTitle) {
           options.onEdit(this.nodeId, newName, newTitle);
           this.savedName = newName;
           this.savedTitle = newTitle;
+        }
+        if (newLevel !== this.savedLevel) {
+          options.onLevelChange(this.nodeId, newLevel || null);
+          this.savedLevel = newLevel;
         }
       },
     });
@@ -268,10 +286,15 @@ export class PropertyPanel {
     this.updateMetaValue(this.metaSpanOfControl, nodeIsLeaf ? '—' : avgSpan.toFixed(1));
     this.metaSpanOfControl.style.display = nodeIsLeaf ? 'none' : '';
 
+    // Level meta
+    this.updateMetaValue(this.metaLevel, node.level ?? t('property_panel.level_none'));
+
     this.savedName = node.name;
     this.savedTitle = node.title;
+    this.savedLevel = node.level ?? '';
     this.nameInput.value = node.name;
     this.titleInput.value = node.title;
+    this.levelInput.value = this.savedLevel;
 
     // Category dropdown
     while (this.categorySelect.firstChild) this.categorySelect.removeChild(this.categorySelect.firstChild);

@@ -53,6 +53,12 @@ const en: Record<string, string> = {
   'menu.category_icon': '🏷️',
   'menu.category_none': 'None (default)',
   'menu.category_check': '✓',
+  'menu.level': 'Level',
+  'menu.level_icon': '📊',
+  'menu.level_none': 'None',
+  'menu.level_check': '✓',
+  'menu.set_level': 'Set Level',
+  'menu.level_clear': 'Clear Level',
   'menu.dotted_line_set': 'Dotted',
   'menu.dotted_line_remove': 'Solid',
   'menu.dotted_line_icon': '┈',
@@ -63,6 +69,7 @@ const en: Record<string, string> = {
   'menu.multi_category': 'Set Category ({count} people)',
   'menu.multi_move': 'Move all ({count} people)',
   'menu.multi_remove': 'Remove all ({count} people)',
+  'menu.multi_level': 'Set Level ({count} people)',
 
   // ─── Command Palette ────────────────────────────────────────────────
   'command_palette.aria_label': 'Command palette',
@@ -100,6 +107,8 @@ const en: Record<string, string> = {
   'property_panel.title_field': 'Title',
   'property_panel.category': 'Category',
   'property_panel.category_none': 'None (default)',
+  'property_panel.level': 'Level',
+  'property_panel.level_none': 'Not set',
   'property_panel.save': 'Save Changes',
   'property_panel.actions': 'Actions',
   'property_panel.add_child': '➕ Add Child',
@@ -239,6 +248,8 @@ const en: Record<string, string> = {
   'inline_editor.save': 'Save',
   'inline_editor.cancel': 'Cancel',
   'inline_editor.name_required': 'Name is required',
+  'inline_editor.level_aria': 'Level',
+  'inline_editor.level_placeholder': 'Level (e.g., L5, Director)',
 
   // ─── Add Popover ───────────────────────────────────────────────────
   'add_popover.aria': 'Add Person',
@@ -566,6 +577,7 @@ const en: Record<string, string> = {
   'settings.group.link_style': 'Link Style',
   'settings.group.card_style': 'Card Style',
   'settings.group.headcount_badge': 'Headcount Badge',
+  'settings.group.level_badge': 'Level Badge',
   'settings.group.categories_legend': 'Categories Legend',
 
   // ─── Setting Labels ────────────────────────────────────────────────
@@ -607,6 +619,11 @@ const en: Record<string, string> = {
   'settings.label.badge_padding': 'Badge Padding',
   'settings.label.badge_color': 'Badge Color',
   'settings.label.badge_text_color': 'Badge Text Color',
+  'settings.label.show_level': 'Show Level Badge',
+  'settings.label.level_badge_font_size': 'Level Badge Font Size',
+  'settings.label.level_badge_size': 'Level Badge Size',
+  'settings.label.level_badge_color': 'Level Badge Color',
+  'settings.label.level_badge_text_color': 'Level Badge Text Color',
   'settings.label.legend_rows': 'Legend Rows (0 = auto)',
 
   // ─── Font Options ──────────────────────────────────────────────────
@@ -960,6 +977,11 @@ const en: Record<string, string> = {
   'settings.desc.badge_padding': 'Horizontal padding inside the headcount badge',
   'settings.desc.badge_color': 'Background color of the headcount badge',
   'settings.desc.badge_text_color': 'Text color of the headcount badge number',
+  'settings.desc.show_level': 'Display a circular level badge on every card',
+  'settings.desc.level_badge_font_size': 'Font size of the level badge text',
+  'settings.desc.level_badge_size': 'Diameter of the circular level badge',
+  'settings.desc.level_badge_color': 'Background color of the level badge',
+  'settings.desc.level_badge_text_color': 'Text color of the level badge',
   'settings.desc.legend_rows': 'Number of rows for the category legend (0 = auto-fit)',
 
   // ─── Settings: Section Descriptions ─────────────────────────────────
@@ -973,6 +995,7 @@ const en: Record<string, string> = {
   'settings.section_desc.link_style': 'Style the connector lines between cards in the org tree.',
   'settings.section_desc.card_style': 'Customize card borders, background color, and corner rounding.',
   'settings.section_desc.headcount_badge': 'Show and style a headcount badge on manager cards.',
+  'settings.section_desc.level_badge': 'Show and style a level indicator badge on all cards.',
   'settings.section_desc.categories_legend': 'Configure how the category color legend appears on the chart.',
   'settings.section_desc.settings_io': 'Export or import your settings configuration as a file.',
   'settings.section_desc.backup_restore': 'Create full backups of all charts, versions, and settings.',

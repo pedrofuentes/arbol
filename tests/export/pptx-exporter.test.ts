@@ -723,6 +723,91 @@ describe('pptx-exporter', () => {
     });
   });
 
+  // --- level badge ---
+  describe('level badge', () => {
+    it('renders rect shape and text when showLevel is true and node has level', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', level: 'L5' })],
+      });
+      await exportToPptx(layout, { showLevel: true });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      // Find the level badge rect (not the card rect — card uses card fill color)
+      const levelBadges = shapeCalls.filter((call: any) => call[1].fill?.color === '6366F1');
+      expect(levelBadges.length).toBeGreaterThanOrEqual(1);
+      const levelBadge = levelBadges[0];
+      expect(levelBadge[0]).toBe('rect');
+      expect(levelBadge[1].w).toBeGreaterThan(0);
+      expect(levelBadge[1].h).toBeGreaterThan(0);
+      // Square: w === h
+      expect(levelBadge[1].w).toBeCloseTo(levelBadge[1].h);
+
+      const textCalls = mockAddText.mock.calls;
+      const badgeText = textCalls.find((call: any) => call[0] === 'L5');
+      expect(badgeText).not.toBeUndefined();
+      expect(badgeText![1].bold).toBe(true);
+      expect(badgeText![1].color).toBe('FFFFFF');
+      expect(badgeText![1].align).toBe('center');
+      expect(badgeText![1].valign).toBe('middle');
+      expect(badgeText![1].fontFace).toBe('Calibri');
+      expect(badgeText![1].fontSize).toBeGreaterThanOrEqual(3);
+    });
+
+    it('does not render level badge when showLevel is false', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', level: 'L5' })],
+      });
+      await exportToPptx(layout);
+
+      const textCalls = mockAddText.mock.calls;
+      const badgeText = textCalls.find((call: any) => call[0] === 'L5');
+      expect(badgeText).toBeUndefined();
+    });
+
+    it('does not render level badge when node has no level', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager' })],
+      });
+      await exportToPptx(layout, { showLevel: true });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const levelBadges = shapeCalls.filter((call: any) => call[1].fill?.color === '6366F1');
+      expect(levelBadges.length).toBe(0);
+    });
+
+    it('level badge text matches node level', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', level: 'Director' })],
+      });
+      await exportToPptx(layout, { showLevel: true });
+
+      const textCalls = mockAddText.mock.calls;
+      const badgeText = textCalls.find((call: any) => call[0] === 'Director');
+      expect(badgeText).not.toBeUndefined();
+      expect(badgeText![1].wrap).toBe(false);
+    });
+
+    it('uses custom level badge colors', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', level: 'L3' })],
+      });
+      await exportToPptx(layout, {
+        showLevel: true,
+        levelBadgeColor: '#FF5500',
+        levelBadgeTextColor: '#00FF55',
+      });
+
+      const shapeCalls = mockAddShape.mock.calls;
+      const levelBadges = shapeCalls.filter((call: any) => call[1].fill?.color === 'FF5500');
+      expect(levelBadges.length).toBeGreaterThanOrEqual(1);
+
+      const textCalls = mockAddText.mock.calls;
+      const badgeText = textCalls.find((call: any) => call[0] === 'L3');
+      expect(badgeText).not.toBeUndefined();
+      expect(badgeText![1].color).toBe('00FF55');
+    });
+  });
+
   // --- resolveStyles ---
   describe('resolveStyles', () => {
     it('converts px font sizes to pt using PX_TO_PT', () => {
@@ -796,6 +881,21 @@ describe('pptx-exporter', () => {
     it('passes through fontFamily', () => {
       const styles = resolveStyles({ fontFamily: 'Segoe UI' });
       expect(styles.fontFamily).toBe('Segoe UI');
+    });
+
+    it('defaults level badge fields', () => {
+      const styles = resolveStyles();
+      expect(styles.showLevel).toBe(false);
+      expect(styles.levelBadgeColor).toBe('6366F1');
+      expect(styles.levelBadgeTextColor).toBe('FFFFFF');
+      expect(styles.levelBadgeFontSize).toBe(Math.max(3, Math.round(11 * PX_TO_PT)));
+      expect(styles.levelBadgeSize).toBe(22);
+    });
+
+    it('strips # from level badge colors', () => {
+      const styles = resolveStyles({ levelBadgeColor: '#AABB00', levelBadgeTextColor: '#112233' });
+      expect(styles.levelBadgeColor).toBe('AABB00');
+      expect(styles.levelBadgeTextColor).toBe('112233');
     });
   });
 

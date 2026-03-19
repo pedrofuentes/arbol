@@ -19,7 +19,7 @@ function createPanel() {
   document.body.appendChild(container);
   const callbacks = {
     onEdit: vi.fn(), onAddChild: vi.fn(), onMove: vi.fn(), onRemove: vi.fn(),
-    onFocus: vi.fn(), onCategoryChange: vi.fn(), onToggleDottedLine: vi.fn(), onClose: vi.fn(),
+    onFocus: vi.fn(), onCategoryChange: vi.fn(), onLevelChange: vi.fn(), onToggleDottedLine: vi.fn(), onClose: vi.fn(),
   };
   const panel = new PropertyPanel({ container, ...callbacks });
   return { container, panel, ...callbacks };

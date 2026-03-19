@@ -10,6 +10,8 @@ export interface OrgNode {
   categoryId?: string;
   /** When true, the link to this node's parent renders as a dotted line. */
   dottedLine?: boolean;
+  /** Optional level/grade label (e.g., 'L5', 'E10'). */
+  level?: string;
   /** Child nodes. Omit or set undefined for leaf nodes. */
   children?: OrgNode[];
 }
