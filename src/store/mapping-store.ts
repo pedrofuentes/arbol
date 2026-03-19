@@ -1,6 +1,8 @@
 import type { MappingPreset } from '../types';
 import { type IStorage, browserStorage } from '../utils/storage';
 import { EventEmitter } from '../utils/event-emitter';
+import { showToast } from '../ui/toast';
+import { t } from '../i18n';
 
 const STORAGE_KEY = 'arbol-csv-mappings';
 
@@ -54,6 +56,7 @@ export class MappingStore extends EventEmitter {
       this.storage.setItem(STORAGE_KEY, JSON.stringify(presets));
     } catch (e) {
       console.error('Failed to save mapping presets to localStorage:', e);
+      showToast(t('error.storage_save_failed'), 'error');
     }
   }
 
@@ -65,6 +68,7 @@ export class MappingStore extends EventEmitter {
       this.emit();
     } catch (e) {
       console.error('Failed to save mapping presets to localStorage:', e);
+      showToast(t('error.storage_save_failed'), 'error');
     }
   }
 

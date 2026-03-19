@@ -248,4 +248,68 @@ describe('AddPopover', () => {
       expect(nameInput.style.borderColor).toBe('var(--border-default)');
     });
   });
+
+  describe('aria-invalid on validation errors', () => {
+    it('nameError element has an id', () => {
+      const popover = openPopover();
+      const errorMsg = popover.querySelector('.error-msg') as HTMLElement;
+      expect(errorMsg.id).toBeTruthy();
+    });
+
+    it('sets aria-invalid and aria-describedby on submit with empty name', () => {
+      const popover = openPopover();
+      const nameInput = popover.querySelector('input')!;
+      const addBtn = popover.querySelector<HTMLButtonElement>('.btn-primary')!;
+
+      nameInput.value = '';
+      addBtn.click();
+
+      expect(nameInput.getAttribute('aria-invalid')).toBe('true');
+      expect(nameInput.getAttribute('aria-describedby')).toBe(
+        popover.querySelector('.error-msg')!.id,
+      );
+    });
+
+    it('clears aria-invalid and aria-describedby on input', () => {
+      const popover = openPopover();
+      const nameInput = popover.querySelector('input')!;
+      const addBtn = popover.querySelector<HTMLButtonElement>('.btn-primary')!;
+
+      nameInput.value = '';
+      addBtn.click();
+      expect(nameInput.getAttribute('aria-invalid')).toBe('true');
+
+      nameInput.value = 'A';
+      nameInput.dispatchEvent(new Event('input'));
+      expect(nameInput.hasAttribute('aria-invalid')).toBe(false);
+      expect(nameInput.hasAttribute('aria-describedby')).toBe(false);
+    });
+
+    it('sets aria-invalid and aria-describedby on blur with empty name', () => {
+      const popover = openPopover();
+      const nameInput = popover.querySelector('input')!;
+
+      nameInput.value = '';
+      nameInput.dispatchEvent(new Event('blur'));
+
+      expect(nameInput.getAttribute('aria-invalid')).toBe('true');
+      expect(nameInput.getAttribute('aria-describedby')).toBe(
+        popover.querySelector('.error-msg')!.id,
+      );
+    });
+
+    it('clears aria-invalid on input after blur validation', () => {
+      const popover = openPopover();
+      const nameInput = popover.querySelector('input')!;
+
+      nameInput.value = '';
+      nameInput.dispatchEvent(new Event('blur'));
+      expect(nameInput.getAttribute('aria-invalid')).toBe('true');
+
+      nameInput.value = 'B';
+      nameInput.dispatchEvent(new Event('input'));
+      expect(nameInput.hasAttribute('aria-invalid')).toBe(false);
+      expect(nameInput.hasAttribute('aria-describedby')).toBe(false);
+    });
+  });
 });

@@ -1,5 +1,7 @@
 import { timestampedFilename } from '../utils/filename';
 import { type IStorage, browserStorage } from '../utils/storage';
+import { showToast } from '../ui/toast';
+import { t } from '../i18n';
 
 export interface PersistableSettings {
   nodeWidth: number;
@@ -290,6 +292,7 @@ export class SettingsStore {
       this.storage.setItem(SettingsStore.STORAGE_KEY, JSON.stringify(envelope));
     } catch (e) {
       console.error('Failed to save settings to localStorage:', e);
+      showToast(t('error.storage_save_failed'), 'error');
     }
   }
 

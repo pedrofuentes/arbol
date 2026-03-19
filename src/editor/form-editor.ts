@@ -79,7 +79,7 @@ export class FormEditor {
     this.nameInput.type = 'text';
     this.nameInput.maxLength = 200;
     this.nameInput.dataset.field = 'name';
-    this.nameInput.setAttribute('aria-label', 'Name');
+    this.nameInput.setAttribute('aria-label', t('form.name_aria'));
     nameGroup.appendChild(this.nameInput);
     this.container.appendChild(nameGroup);
 
@@ -91,7 +91,7 @@ export class FormEditor {
     this.titleInput.type = 'text';
     this.titleInput.maxLength = 200;
     this.titleInput.dataset.field = 'title';
-    this.titleInput.setAttribute('aria-label', 'Title');
+    this.titleInput.setAttribute('aria-label', t('form.title_aria'));
     titleGroup.appendChild(this.titleInput);
     this.container.appendChild(titleGroup);
 

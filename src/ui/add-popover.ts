@@ -103,6 +103,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   const nameError = document.createElement('div');
   nameError.className = 'error-msg';
+  nameError.id = 'add-popover-name-error';
   nameError.setAttribute('role', 'alert');
   nameError.style.marginTop = 'var(--space-1)';
   nameError.style.minHeight = '0';
@@ -158,6 +159,8 @@ export function showAddPopover(options: AddPopoverOptions): void {
     const title = titleInput.value.trim();
     if (!name) {
       nameInput.style.borderColor = 'var(--danger, #e53e3e)';
+      nameInput.setAttribute('aria-invalid', 'true');
+      nameInput.setAttribute('aria-describedby', nameError.id);
       nameError.textContent = t('add_popover.name_required');
       return;
     }
@@ -169,6 +172,8 @@ export function showAddPopover(options: AddPopoverOptions): void {
   nameInput.addEventListener('blur', () => {
     if (!nameInput.value.trim()) {
       nameInput.style.borderColor = 'var(--danger, #e53e3e)';
+      nameInput.setAttribute('aria-invalid', 'true');
+      nameInput.setAttribute('aria-describedby', nameError.id);
       nameError.textContent = t('add_popover.name_required');
     }
   });
@@ -176,6 +181,8 @@ export function showAddPopover(options: AddPopoverOptions): void {
   // Clear validation on input
   nameInput.addEventListener('input', () => {
     nameInput.style.borderColor = 'var(--border-default)';
+    nameInput.removeAttribute('aria-invalid');
+    nameInput.removeAttribute('aria-describedby');
     nameError.textContent = '';
   });
 

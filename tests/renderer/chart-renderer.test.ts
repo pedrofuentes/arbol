@@ -1777,4 +1777,128 @@ describe('ChartRenderer', () => {
       previewContainer.remove();
     });
   });
+
+  describe('getter methods', () => {
+    it('getLastLayout returns null before render', () => {
+      expect(renderer.getLastLayout()).toBeNull();
+    });
+
+    it('getLastLayout returns layout after render', () => {
+      renderer.render(simpleTree());
+      const layout = renderer.getLastLayout();
+      expect(layout).not.toBeNull();
+      expect(layout!.nodes.length).toBeGreaterThan(0);
+      expect(layout!.links).toBeDefined();
+      expect(layout!.icContainers).toBeDefined();
+      expect(layout!.boundingBox).toBeDefined();
+    });
+
+    it('getSvgElement returns SVG element', () => {
+      const svg = renderer.getSvgElement();
+      expect(svg).toBeInstanceOf(SVGSVGElement);
+      expect(svg.tagName).toBe('svg');
+    });
+
+    it('getSvg is alias for getSvgElement', () => {
+      expect(renderer.getSvg()).toBe(renderer.getSvgElement());
+    });
+
+    it('getChartGroup returns g element', () => {
+      const g = renderer.getChartGroup();
+      expect(g).toBeInstanceOf(SVGGElement);
+      expect(g.tagName).toBe('g');
+      expect(g.classList.contains('chart-group')).toBe(true);
+    });
+  });
+
+  describe('setSelectedNode', () => {
+    it('applies selected class to specified node', () => {
+      renderer.render(simpleTree());
+      renderer.setSelectedNode('b');
+      const selected = container.querySelectorAll('.selected');
+      expect(selected.length).toBe(1);
+      expect(selected[0].getAttribute('data-id')).toBe('b');
+    });
+
+    it('clears previous selection on new selection', () => {
+      renderer.render(simpleTree());
+      renderer.setSelectedNode('b');
+      expect(container.querySelectorAll('.selected').length).toBe(1);
+
+      renderer.setSelectedNode('c');
+      const selected = container.querySelectorAll('.selected');
+      expect(selected.length).toBe(1);
+      expect(selected[0].getAttribute('data-id')).toBe('c');
+    });
+
+    it('clears all selections when passed null', () => {
+      renderer.render(simpleTree());
+      renderer.setSelectedNode('b');
+      expect(container.querySelectorAll('.selected').length).toBe(1);
+
+      renderer.setSelectedNode(null);
+      expect(container.querySelectorAll('.selected').length).toBe(0);
+    });
+  });
+
+  describe('setDimUnchanged', () => {
+    it('controls dimming of unchanged nodes in diff mode', () => {
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          { id: 'a', name: 'Alice', title: 'VP' },
+          { id: 'b', name: 'Bob', title: 'VP' },
+        ],
+      };
+      const diffMap = new Map<string, DiffEntry>([
+        ['root', { status: 'unchanged' }],
+        ['a', { status: 'added' }],
+        ['b', { status: 'unchanged' }],
+      ]);
+
+      renderer.setDiffMap(diffMap);
+      renderer.setDimUnchanged(true);
+      renderer.render(tree);
+
+      // With dimUnchanged=true, unchanged nodes get dimmed fill
+      const bNode = container.querySelector('[data-id="b"] rect');
+      const bFill = bNode?.getAttribute('fill');
+
+      // Now disable dimming and re-render
+      renderer.setDimUnchanged(false);
+      renderer.render(tree);
+
+      const bNodeAfter = container.querySelector('[data-id="b"] rect');
+      const bFillAfter = bNodeAfter?.getAttribute('fill');
+
+      // When dimming is off, unchanged nodes should NOT have the dim fill
+      expect(bFill).not.toBe(bFillAfter);
+    });
+
+    it('does not dim unchanged nodes when disabled', () => {
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          { id: 'a', name: 'Alice', title: 'VP' },
+        ],
+      };
+      const diffMap = new Map<string, DiffEntry>([
+        ['root', { status: 'unchanged' }],
+        ['a', { status: 'added' }],
+      ]);
+
+      renderer.setDiffMap(diffMap);
+      renderer.setDimUnchanged(false);
+      renderer.render(tree);
+
+      // Unchanged root should keep its original card fill (not the dim fill)
+      const rootRect = container.querySelector('[data-id="root"] rect');
+      const fill = rootRect?.getAttribute('fill');
+      expect(fill).not.toBe('var(--diff-dim-fill, #d1d5db)');
+    });
+  });
 });

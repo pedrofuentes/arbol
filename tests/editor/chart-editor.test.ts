@@ -569,3 +569,58 @@ describe('ChartEditor – rename via dialog', () => {
   });
 
 });
+
+describe('ChartEditor – shows newly imported chart as active after refresh', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let store: ReturnType<typeof mockChartStore>;
+  const chart1 = makeChart({ id: 'chart-1', name: 'Original Org' });
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = mockChartStore([chart1], []);
+
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-chart-id]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    document.body.removeChild(container);
+  });
+
+  it('shows newly imported chart as active after createChartFromTree', async () => {
+    // Verify initial state: chart-1 is active
+    let activeItems = container.querySelectorAll('.chart-item.active');
+    expect(activeItems.length).toBe(1);
+    expect(activeItems[0]!.textContent).toContain('Original Org');
+
+    // Simulate import: store now has a new chart as active
+    const importedChart = makeChart({ id: 'chart-2', name: 'Imported Org' });
+    store.getCharts = vi.fn().mockResolvedValue([importedChart, chart1]);
+    store.getActiveChartId = vi.fn().mockReturnValue('chart-2');
+
+    // Explicitly refresh (this is what main.ts must do after createChartFromTree)
+    await editor.refresh();
+
+    // The ChartEditor should now show the imported chart as active
+    activeItems = container.querySelectorAll('.chart-item.active');
+    expect(activeItems.length).toBe(1);
+    expect(activeItems[0]!.textContent).toContain('Imported Org');
+  });
+});

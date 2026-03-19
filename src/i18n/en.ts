@@ -263,8 +263,10 @@ const en: Record<string, string> = {
   'form.cancel_button': 'Cancel',
   'form.delete_button': 'Delete',
   'form.delete_aria': 'Delete selected person',
+  'form.name_aria': 'Name',
+  'form.title_aria': 'Title',
 
-  // ─── Chart Name Header ────────────────────────────────────────────
+  // ─── Chart Name Header────────────────────────────────────────────
   'chart_header.save_version_tooltip': 'Save version',
   'chart_header.save_version_aria': 'Save version',
   'chart_header.name_aria': 'Chart name',
@@ -442,7 +444,20 @@ const en: Record<string, string> = {
   'preset_creator.error_columns_required': 'Name, Title, and Reports To columns are required.',
   'preset_creator.error_id_required': 'ID column is required when parent reference type is "By ID".',
 
-  // ─── Footer ────────────────────────────────────────────────────────
+  // ─── Import Editor ─────────────────────────────────────────────────
+  'import_editor.preset_heading': 'Mapping Preset',
+  'import_editor.no_presets': 'No saved presets.',
+  'import_editor.export_btn': 'Export',
+  'import_editor.paste_preset_placeholder': 'Paste preset JSON here...',
+  'import_editor.from_file_heading': 'From File',
+  'import_editor.browse_label': 'browse',
+  'import_editor.paste_heading': 'Or Paste Data',
+  'import_editor.paste_placeholder': 'Paste JSON or CSV here...',
+  'import_editor.parse_preview_btn': 'Parse & Preview',
+  'import_editor.apply_to_chart': 'Apply to Chart',
+  'import_editor.text_normalization': 'Text Normalization',
+
+  // ─── Footer────────────────────────────────────────────────────────
   'footer.version': 'v{version}',
   'footer.saved': '✓ Saved',
   'footer.people': '{count} people',
@@ -986,6 +1001,9 @@ const en: Record<string, string> = {
 
   // ─── Errors ────────────────────────────────────────────────────────
   'error.file_read_failed': 'Failed to read file',
+  'error.unexpected': 'Unexpected error: {message}',
+  'error.storage_save_failed': 'Failed to save. Storage may be full.',
+  'error.render_failed': 'Chart rendering failed. Try refreshing.',
 
   // --- Form ---
   'form.required_indicator': '*',
@@ -1022,6 +1040,7 @@ const en: Record<string, string> = {
   'version_picker.cancel': 'Cancel',
   'version_viewer.compare': 'Compare',
   'category_legend.title': 'Categories',
+  'category_legend.toggle_aria': 'Toggle category legend',
   'import_wizard.file_selected': '\u2713 {name}',
   'import_wizard.json_root_error': 'Root node must have id, name, and title fields',
   'settings_modal.tab.presets': 'Presets',

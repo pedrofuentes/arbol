@@ -176,4 +176,89 @@ describe('PresetCreator', () => {
       },
     });
   });
+
+  describe('aria-invalid on validation errors', () => {
+    it('errorArea has an id', () => {
+      new PresetCreator(container, vi.fn(), vi.fn());
+      const errorArea = container.querySelector('.error-msg') as HTMLElement;
+      expect(errorArea.id).toBeTruthy();
+    });
+
+    it('sets aria-invalid on preset name input when name is empty', () => {
+      new PresetCreator(container, vi.fn(), vi.fn());
+      const inputs = container.querySelectorAll<HTMLInputElement>('input[type="text"]');
+
+      inputs[1].value = 'name';
+      inputs[2].value = 'title';
+      inputs[3].value = 'parent';
+
+      const saveBtn = Array.from(container.querySelectorAll('button')).find(
+        (b) => b.textContent === 'Save',
+      )!;
+      saveBtn.click();
+
+      expect(inputs[0].getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('sets aria-describedby on preset name input referencing error area', () => {
+      new PresetCreator(container, vi.fn(), vi.fn());
+      const inputs = container.querySelectorAll<HTMLInputElement>('input[type="text"]');
+      const errorArea = container.querySelector('.error-msg') as HTMLElement;
+
+      inputs[1].value = 'name';
+      inputs[2].value = 'title';
+      inputs[3].value = 'parent';
+
+      const saveBtn = Array.from(container.querySelectorAll('button')).find(
+        (b) => b.textContent === 'Save',
+      )!;
+      saveBtn.click();
+
+      expect(inputs[0].getAttribute('aria-describedby')).toBe(errorArea.id);
+    });
+
+    it('sets aria-invalid on required column inputs when columns are empty', () => {
+      new PresetCreator(container, vi.fn(), vi.fn());
+      const inputs = container.querySelectorAll<HTMLInputElement>('input[type="text"]');
+
+      inputs[0].value = 'My Preset';
+      // Leave name, title, parentRef empty
+
+      const saveBtn = Array.from(container.querySelectorAll('button')).find(
+        (b) => b.textContent === 'Save',
+      )!;
+      saveBtn.click();
+
+      // name, title, parentRef inputs should be marked invalid
+      expect(inputs[1].getAttribute('aria-invalid')).toBe('true');
+      expect(inputs[2].getAttribute('aria-invalid')).toBe('true');
+      expect(inputs[3].getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('clears aria-invalid at start of handleSave', () => {
+      const onSave = vi.fn();
+      new PresetCreator(container, onSave, vi.fn());
+      const inputs = container.querySelectorAll<HTMLInputElement>('input[type="text"]');
+
+      // First call — triggers error
+      const saveBtn = Array.from(container.querySelectorAll('button')).find(
+        (b) => b.textContent === 'Save',
+      )!;
+      saveBtn.click();
+      expect(inputs[0].getAttribute('aria-invalid')).toBe('true');
+
+      // Fix values and retry
+      inputs[0].value = 'My Preset';
+      inputs[1].value = 'name';
+      inputs[2].value = 'title';
+      inputs[3].value = 'parent';
+      saveBtn.click();
+
+      expect(inputs[0].hasAttribute('aria-invalid')).toBe(false);
+      expect(inputs[1].hasAttribute('aria-invalid')).toBe(false);
+      expect(inputs[2].hasAttribute('aria-invalid')).toBe(false);
+      expect(inputs[3].hasAttribute('aria-invalid')).toBe(false);
+      expect(onSave).toHaveBeenCalled();
+    });
+  });
 });

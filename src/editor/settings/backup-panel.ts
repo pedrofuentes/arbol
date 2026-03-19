@@ -43,7 +43,7 @@ export class BackupPanel {
 
     const backupBtn = document.createElement('button');
     backupBtn.className = 'btn btn-secondary';
-    backupBtn.textContent = '💾 Create Backup';
+    backupBtn.textContent = t('backup.create_btn');
     backupBtn.addEventListener('click', async () => {
       try {
         const backup = await createBackup(this.chartDB);
@@ -56,7 +56,7 @@ export class BackupPanel {
 
     const restoreBtn = document.createElement('button');
     restoreBtn.className = 'btn btn-secondary';
-    restoreBtn.textContent = '📂 Restore';
+    restoreBtn.textContent = t('backup.restore_btn');
     restoreBtn.addEventListener('click', () => {
       const input = document.createElement('input');
       input.type = 'file';
@@ -154,7 +154,7 @@ export class BackupPanel {
     // Clear All Data button — danger styling matching the mock
     const clearDataBtn = document.createElement('button');
     clearDataBtn.className = 'btn';
-    clearDataBtn.textContent = '🗑 Clear All Data';
+    clearDataBtn.textContent = t('backup.clear_btn');
     clearDataBtn.setAttribute('aria-label', 'Clear all local data');
     clearDataBtn.style.cssText =
       'background:rgba(244,63,94,0.1);color:var(--danger);border:1px solid rgba(244,63,94,0.2);';

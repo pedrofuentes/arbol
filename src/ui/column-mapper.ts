@@ -47,14 +47,14 @@ export class ColumnMapper {
 
     // Heading
     const heading = document.createElement('h4');
-    heading.textContent = 'Map CSV Columns';
+    heading.textContent = t('column_mapper.heading');
     heading.style.cssText =
       'margin:0 0 4px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
     this.container.appendChild(heading);
 
     // Description
     const desc = document.createElement('p');
-    desc.textContent = "We couldn't auto-detect your CSV format. Please map each column below.";
+    desc.textContent = t('column_mapper.description');
     desc.style.cssText =
       'margin:0 0 12px;font-size:var(--text-sm);color:var(--text-secondary);line-height:var(--leading-normal);';
     this.container.appendChild(desc);
@@ -76,6 +76,7 @@ export class ColumnMapper {
     // Error area
     this.errorArea = document.createElement('div');
     this.errorArea.className = 'error-msg';
+    this.errorArea.id = 'column-mapper-error';
     this.errorArea.style.cssText = 'min-height:0;';
     this.container.appendChild(this.errorArea);
 
@@ -121,7 +122,7 @@ export class ColumnMapper {
     group.className = 'form-group';
 
     const label = document.createElement('label');
-    label.textContent = 'Parent Reference Type';
+    label.textContent = t('column_mapper.parent_ref_type');
     group.appendChild(label);
 
     const radioGroup = document.createElement('div');
@@ -248,8 +249,24 @@ export class ColumnMapper {
     }
   }
 
+  private clearAriaInvalid(): void {
+    const selects = [this.nameSelect, this.titleSelect, this.parentRefSelect, this.idSelect];
+    for (const select of selects) {
+      select.removeAttribute('aria-invalid');
+      select.removeAttribute('aria-describedby');
+    }
+  }
+
+  private setAriaInvalid(...elements: HTMLElement[]): void {
+    for (const el of elements) {
+      el.setAttribute('aria-invalid', 'true');
+      el.setAttribute('aria-describedby', this.errorArea.id);
+    }
+  }
+
   handleApply(): void {
     this.errorArea.textContent = '';
+    this.clearAriaInvalid();
 
     const name = this.nameSelect.value;
     const title = this.titleSelect.value;
@@ -257,6 +274,8 @@ export class ColumnMapper {
 
     if (!name || !title || !parentRef) {
       this.errorArea.textContent = 'Please select a column for Name, Title, and Reports To.';
+      const empty = [this.nameSelect, this.titleSelect, this.parentRefSelect].filter(s => !s.value);
+      this.setAriaInvalid(...empty);
       return;
     }
 
@@ -266,6 +285,7 @@ export class ColumnMapper {
     if (parentRefType === 'id' && !id) {
       this.errorArea.textContent =
         'When using "By ID" parent references, the Person ID column must be mapped.';
+      this.setAriaInvalid(this.idSelect);
       return;
     }
 
@@ -274,6 +294,7 @@ export class ColumnMapper {
     if (new Set(selected).size !== selected.length) {
       this.errorArea.textContent =
         'Each column can only be mapped to one field. Please remove duplicates.';
+      this.setAriaInvalid(this.nameSelect, this.titleSelect, this.parentRefSelect);
       return;
     }
 
