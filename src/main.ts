@@ -313,6 +313,8 @@ async function main(): Promise<void> {
         if (wizardState.destination === 'new' && wizardState.chartName) {
           const chart = await chartStore.createChartFromTree(wizardState.chartName, finalTree);
           await chartStore.saveVersion(t('import_wizard.original_version'), chart.workingTree);
+          // Ensure sidebar chart list reflects the new active chart before continuing
+          await chartEditor.refresh();
           // Switch the live OrgStore to the new chart's tree
           store.replaceTree(chart.workingTree);
           if (chart.categories.length > 0) {
@@ -875,6 +877,13 @@ async function main(): Promise<void> {
   rerender();
   showWelcomeBanner(chartArea);
 }
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  const message = event.reason instanceof Error ? event.reason.message : String(event.reason);
+  showToast(t('error.unexpected', { message }), 'error');
+  event.preventDefault();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   main().catch((e) => {
