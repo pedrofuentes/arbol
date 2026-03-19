@@ -4,6 +4,7 @@ import { contrastingTextColor, contrastingTitleColor } from '../utils/contrast';
 import { EventEmitter } from '../utils/event-emitter';
 import { type IStorage, browserStorage } from '../utils/storage';
 import { t } from '../i18n';
+import { showToast } from '../ui/toast';
 
 const STORAGE_KEY = 'arbol-categories';
 
@@ -163,6 +164,7 @@ export class CategoryStore extends EventEmitter {
       this.storage.setItem(STORAGE_KEY, JSON.stringify(categories));
     } catch (e) {
       console.error('Failed to save categories to localStorage:', e);
+      showToast(t('error.storage_save_failed'), 'error');
     }
   }
 

@@ -186,6 +186,7 @@ export class ChartRenderer {
   }
 
   render(root: OrgNode): void {
+    try {
     const layout = computeLayout(root, this.opts);
     this.lastLayout = layout;
 
@@ -391,6 +392,9 @@ export class ChartRenderer {
     } else {
       // Preview mode: render at 100% (real size), centered
       this.zoomManager?.centerAtRealSize();
+    }
+    } catch (error) {
+      console.error('Chart render failed:', error);
     }
   }
 
@@ -887,7 +891,14 @@ export class ChartRenderer {
         .text(item.label);
 
       const textNode = text.node();
-      const bbox = textNode && typeof textNode.getBBox === 'function' ? textNode.getBBox() : null;
+      let bbox: DOMRect | null = null;
+      if (textNode && typeof textNode.getBBox === 'function') {
+        try {
+          bbox = textNode.getBBox();
+        } catch {
+          bbox = null;
+        }
+      }
       if (bbox) {
         maxTextWidths[col] = Math.max(maxTextWidths[col], bbox.width);
       } else if (textWidthFallback) {
