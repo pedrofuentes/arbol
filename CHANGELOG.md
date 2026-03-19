@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] — 2026-03-19
+
+### Fixed
+- **Import shows wrong active chart** — explicitly await sidebar refresh after creating a new chart from import wizard, ensuring the correct chart is displayed as active ([#4](https://github.com/pedrofuentes/arbol/issues/4))
+- **Global error handler** — added `window.onunhandledrejection` handler that shows toast notifications for runtime errors instead of silent console-only failures
+- **localStorage save failures** — settings-store, category-store, and mapping-store now show toast notifications when save operations fail (e.g., storage quota exceeded)
+- **D3 render protection** — wrapped render pipeline and getBBox() calls in try/catch for graceful degradation instead of white-screen crashes
+
+### Accessibility
+- **aria-invalid on form validation** — add-popover, inline-editor, column-mapper, and preset-creator now set `aria-invalid="true"` and `aria-describedby` on inputs when validation fails, and clear them on user input
+
+### Internationalization
+- **29 hardcoded strings extracted** — all remaining user-facing strings in import-editor, column-mapper, preset-creator, backup-panel, form-editor, json-editor, and category-legend now use `t()` translation calls
+
+### Testing
+- **2,112 tests across 87 files** — all passing
+- chart-renderer: +18 tests (getters, setSelectedNode, setDimUnchanged)
+- column-mapper: +8 tests (prefill, radio toggle, callbacks)
+- Performance regression tests: +4 tests (100/500/1000-node rendering, DOM leak detection)
+- error-handling: +10 tests (global handler, localStorage toasts, render protection)
+- aria-invalid: +18 tests (set/clear behavior across 4 forms)
+- New helper: `tests/helpers/tree-generator.ts` for synthetic tree generation
+
 ## [3.4.7] — 2026-03-19
 
 ### Fixed

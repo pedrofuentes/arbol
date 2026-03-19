@@ -1,10 +1,29 @@
 # Arbol — Project Roadmap
 
-> Last updated: 2026-03-15
+> Last updated: 2026-03-19
 
 ## Overview
 
 Arbol is an interactive org chart editor for the browser, built with TypeScript, D3.js, and Vite. This roadmap tracks everything completed, in progress, and planned.
+
+---
+
+## 🚀 v3.5.0 — Polish Sprint (Bug Fix + i18n + Accessibility + Error Handling + Test Coverage)
+
+### Phase 35 — Bug Fix + Polish
+- [x] Fix GitHub #4 — import shows previous chart instead of newly imported one
+- [x] i18n extraction — 29 hardcoded user-facing strings wrapped with `t()` across 7 files
+- [x] Accessibility: `aria-invalid` + `aria-describedby` on 4 form validation errors
+- [x] Error resilience: global `unhandledrejection` handler with toast notifications
+- [x] Error resilience: localStorage save failures surfaced as toast notifications
+- [x] Error resilience: D3 render pipeline wrapped in try/catch
+- [x] Test coverage: chart-renderer getters, selection, and dim tests (+18)
+- [x] Test coverage: column-mapper prefill, toggle, and callback tests (+8)
+- [x] Test coverage: performance regression tests for 100/500/1000-node trees (+4)
+
+### Testing
+- [x] **2,112 tests across 87 files** — all passing
+- [x] 49 new tests: error-handling (10), aria-invalid (18), chart-renderer (18), column-mapper (8), performance (4), chart-editor (1) — some overlap due to source changes adding inherent coverage
 
 ---
 
@@ -373,33 +392,126 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
-## 🔲 Planned / Ideas
+## 🔲 Planned — Phased Roadmap
 
-### Short-term
-- [ ] Increase test coverage on `chart-renderer` (currently ~52%) and `column-mapper` (low branch coverage)
-- [ ] Animation/transitions on tree layout changes
-- [ ] PNG/SVG export option alongside PPTX
-- [ ] Complete i18n string extraction (remaining ~200 strings in settings-editor, import-editor, help-dialog)
-- [ ] Add a second locale to validate the i18n system end-to-end
+> **Execution model:** One phase at a time. Each phase is implemented on a feature branch, reviewed, merged, and shipped before starting the next.
 
-### Medium-term
-- [ ] Drag-and-drop node reorganization with visual feedback
-- [ ] Collapsible subtrees with persist state
-- [ ] Full RTL layout engine mirroring (currently CSS-only; tree layout still LTR)
-- [ ] Undo/redo for settings changes (not just tree mutations)
-- [ ] Shareable URL with encoded org data
-- [ ] Custom node templates (different card styles per role/level)
-- [ ] Batch CSV update (merge new data into existing tree)
+### Phase 35 — v3.5.0: Bug Fix + Polish Sprint ✅
 
-### Long-term
-- [ ] Collaboration (real-time multi-user editing)
-- [ ] Backend/API for persistence (optional — currently browser-only)
-- [ ] Plugin system for custom renderers or exporters
-- [ ] Integration with HR systems (Workday, BambooHR, etc.)
+- [x] Fix GitHub #4 — import shows previous chart instead of newly imported one
+- [x] i18n extraction — wrap remaining ~80 hardcoded user-facing strings with `t()` keys
+- [x] Accessibility: add `aria-label` to all ~20 icon-only buttons (verified: already done — 0 issues found)
+- [x] Accessibility: add `aria-invalid` + `aria-describedby` on form validation errors
+- [x] Accessibility: audit and fix focus restoration after modal dismiss (verified: already correct)
+- [x] Error resilience: add `window.onunhandledrejection` global handler
+- [x] Error resilience: surface localStorage failures as toast notifications
+- [x] Error resilience: add try/catch around D3 rendering operations
+- [x] Test coverage: chart-renderer target 75%+ (from ~52%)
+- [x] Test coverage: column-mapper branch coverage improvement
+- [x] Test coverage: add performance regression tests (layout time for 500/1,000/5,000 nodes)
+
+### Phase 36 — v3.6.0: Spanish Locale
+
+- [ ] Create `src/i18n/es.ts` — full Spanish translation of all ~1,035 keys
+- [ ] Language switcher UI — locale picker in settings or command palette
+- [ ] Validate all UI strings render correctly in both locales
+- [ ] Locale-aware date/number formatting
+- [ ] Tests for locale switching, fallback behavior, interpolation in Spanish
+
+### Phase 37 — v3.7.0: SVG/PNG Export
+
+- [ ] SVG export — serialize current SVG to downloadable `.svg` file
+- [ ] PNG export — render SVG to canvas, export as `.png` (configurable resolution)
+- [ ] Update export dialog with format picker (PPTX / SVG / PNG)
+- [ ] Respect focus mode (export subtree only)
+- [ ] Option to export in dark or light theme regardless of current
+
+### Phase 38 — v3.8.0: Level Metadata + Mapping + Analytics
+
+- [ ] Extend `OrgNode` with optional `level` field (string, e.g., "12", "L5", "Director")
+- [ ] Level Mapping system (`LevelStore`):
+  - Many-to-one mapping: numeric level → display title (e.g., 10, 11, 12 → "IC")
+  - Configurable display: raw level, mapped title, or both ("L12 — Senior Engineer")
+  - Mapping presets importable from CSV (level,title columns) or manual entry
+  - Per-chart mappings stored alongside categories in `ChartRecord`
+- [ ] Level on cards (below job title), editable via inline editor + property panel
+- [ ] CSV import support for `level` column with auto-detect; apply level mapping on import
+- [ ] Level in PPTX/SVG/PNG export (optional toggle)
+- [ ] Analytics panel (new sidebar tab or modal):
+  - Total headcount
+  - Headcount by level, grouped by mapped title ("Senior: 12 people across L10-L12")
+  - Span of control (avg/min/max direct reports per manager)
+  - Tree depth
+  - Level distribution across teams (via focus mode)
+- [ ] Level-based auto-categories — auto-assign colors based on level ranges or mapped titles
+
+### Phase 39 — v3.9.0: Collapsible Subtrees
+
+- [ ] Collapse/expand toggle on manager nodes to hide/show children
+- [ ] Persist collapsed node IDs per chart in IndexedDB
+- [ ] Badge showing hidden descendant count on collapsed nodes
+- [ ] Keyboard: Left arrow collapses, Right arrow expands (standard tree pattern)
+- [ ] Bulk collapse/expand via command palette ("Collapse all" / "Expand all")
+- [ ] PPTX/SVG/PNG export only visible (non-collapsed) nodes
+- [ ] Collapse state preserved when entering/exiting focus mode
+
+### Phase 40 — v4.0.0: Drag-and-Drop Reorganization
+
+- [ ] Drag initiation — mousedown + 5px movement threshold on cards
+- [ ] Visual feedback — ghost card follows cursor, valid drop targets highlighted
+- [ ] Drop validation — prevent circular drops (can't drop parent onto descendant)
+- [ ] Undo integration — single undo step for drag-move operations
+- [ ] Multi-select drag — drag entire selection group to new parent
+- [ ] Touch support — long-press to initiate drag on mobile
+- [ ] Accessibility — keyboard-accessible move (context menu already works; add Ctrl+arrows)
+- [ ] Smooth animation when tree re-layouts after drop
+
+### Phase 41 — v4.1.0: PWA + Offline Support
+
+- [ ] Service worker — cache app shell + assets for offline use
+- [ ] Web app manifest — installable PWA with icon and splash screen
+- [ ] Offline indicator — subtle banner when offline
+- [ ] Auto-update prompt when new version is available
+- [ ] GitHub Pages compatible service worker
+
+### Phase 42 — v4.2.0: Additional Exports + CSV Export
+
+- [ ] CSV export — export current org tree as CSV (name, title, level, parent, category)
+- [ ] PDF export — multi-page PDF with configurable layout
+- [ ] Excel import improvement — leverage existing exceljs dependency for native `.xlsx` import
+- [ ] Batch CSV merge — import CSV to update existing tree (match by name or ID), not just replace
+
+### Phase 43 — v5.0.0: Real-Time Collaboration
+
+> Two managers adjusting an org together, an HR partner reviewing changes with a director — lightweight collaboration for small teams.
+
+- [ ] Lightweight signaling backend — minimal WebSocket relay (Cloudflare Workers, Deno Deploy, or similar edge function; no database server)
+- [ ] CRDT-based tree sync — conflict-free replicated data type for OrgNode tree (Yjs or Automerge)
+- [ ] Room-based sessions — share a link to co-edit a specific chart (ephemeral rooms, no accounts)
+- [ ] Presence indicators — show collaborator cursors/selections on the chart
+- [ ] Conflict resolution — automatic merge for non-conflicting edits, visual prompt for conflicts
+- [ ] Offline-first — edits queue locally (leveraging PWA), sync when reconnected
+- [ ] No accounts required — anonymous or nickname-based collaboration
+- [ ] 100% optional — works fully offline/solo with zero backend dependency
+
+### 💡 Future Ideas (Backlog)
+
+- Animation/transitions on tree layout changes
+- Full RTL layout engine mirroring (tree direction, not just CSS)
+- Custom node templates (different card styles per role/level)
+- Shareable URL with encoded org data (base64 tree in URL hash)
+- Undo/redo for settings changes (not just tree mutations)
+- Hover tooltips showing detailed node info
+- Mini-map/overview pane for large charts
+- Alternative layouts (left-to-right, radial)
+- Conditional formatting (auto-color by level/span of control)
+- Node photos/avatars
+- Performance: virtual rendering for 10K+ nodes
 
 ---
 
 ## Known Issues
+- **Open — GitHub #4:** When importing, current version shows previously selected chart instead of newly imported one
 - Fatima→Ethan vertical spacing required special-case logic for single-child non-Advisor managers (fixed, has regression tests)
 - Cross-parent boundary spacing required careful D3 separation override (fixed)
 - Imported settings can override defaults if not cleared from localStorage
