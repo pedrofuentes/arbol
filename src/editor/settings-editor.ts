@@ -26,6 +26,7 @@ interface SettingDef {
 }
 
 interface SettingGroup {
+  sectionId: string;
   title: string;
   description?: string;
   settings: SettingDef[];
@@ -33,6 +34,7 @@ interface SettingGroup {
 
 const SETTING_GROUPS: SettingGroup[] = [
   {
+    sectionId: 'card-dimensions',
     title: 'settings.group.card_dimensions',
     description: 'settings.section_desc.card_dimensions',
     settings: [
@@ -41,6 +43,7 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    sectionId: 'tree-spacing',
     title: 'settings.group.tree_spacing',
     description: 'settings.section_desc.tree_spacing',
     settings: [
@@ -78,6 +81,7 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    sectionId: 'ic-options',
     title: 'settings.group.ic_options',
     description: 'settings.section_desc.ic_options',
     settings: [
@@ -107,6 +111,7 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    sectionId: 'advisor-options',
     title: 'settings.group.advisor_options',
     description: 'settings.section_desc.advisor_options',
     settings: [
@@ -126,6 +131,7 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    sectionId: 'typography',
     title: 'settings.group.typography',
     description: 'settings.section_desc.typography',
     settings: [
@@ -162,6 +168,7 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    sectionId: 'link-style',
     title: 'settings.group.link_style',
     description: 'settings.section_desc.link_style',
     settings: [
@@ -171,6 +178,7 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    sectionId: 'card-style',
     title: 'settings.group.card_style',
     description: 'settings.section_desc.card_style',
     settings: [
@@ -199,6 +207,7 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    sectionId: 'headcount-badge',
     title: 'settings.group.headcount_badge',
     description: 'settings.section_desc.headcount_badge',
     settings: [
@@ -248,6 +257,7 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    sectionId: 'categories-legend',
     title: 'settings.group.categories_legend',
     description: 'settings.section_desc.categories_legend',
     settings: [
@@ -506,7 +516,7 @@ export class SettingsEditor {
 
     // Setting groups — flat sections (no accordion)
     for (const group of SETTING_GROUPS) {
-      const groupId = sectionIdFromTitle(group.title);
+      const groupId = group.sectionId;
       const section = document.createElement('div');
       section.className = 'setting-section';
       section.setAttribute('data-section-id', groupId);

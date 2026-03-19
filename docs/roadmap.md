@@ -19,7 +19,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Locale-aware date/number formatting (already using `getLocale()`)
 
 ### Testing
-- [x] **2,119 tests across 88 files** — all passing
+- [x] **2,120 tests across 88 files** — all passing
 - [x] 7 new tests: locale persistence (4), settings UI picker (3)
 
 ---

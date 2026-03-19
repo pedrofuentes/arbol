@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dynamic locale loading** — Spanish bundle loaded on demand via dynamic import (code-split)
 
 ### Testing
-- **2,119 tests across 88 files** — all passing
+- **2,120 tests across 88 files** — all passing
 - 7 new tests: locale persistence, settings UI picker, locale switching
 
 ## [3.5.0] — 2026-03-19
