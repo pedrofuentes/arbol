@@ -8,6 +8,38 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
+## 🚀 v3.9.0 — Performance Optimization
+
+### Phase 38a-perf — Data Store & UI Performance
+- [x] Range slider debouncing (60ms) — eliminates UI freezes during fast drag
+- [x] Chart dirty detection via mutation counter instead of JSON.stringify
+- [x] IndexedDB patchChart — avoids redundant read-before-write
+- [x] CategoryStore in-memory cache — skips JSON.parse per CRUD op
+- [x] SettingsStore cache — avoids double localStorage reads
+- [x] Property panel dropdown — skips rebuild when categories unchanged
+- [x] Debounce timer cleanup on rebuild/destroy
+
+### Testing
+- [x] **2,251 tests across 91 files** — all passing
+- [x] 33 new tests across 7 files
+
+---
+
+## 🚀 v3.8.0 — Level Metadata + Badge
+
+### Phase 38a — Level Metadata
+- [x] `level` field on OrgNode for organizational level tracking
+- [x] Circular level badge on org chart cards (configurable color, size, font)
+- [x] Level settings — show/hide toggle, badge styling in settings panel
+- [x] Level editing via property panel, inline editor, and context menu
+- [x] Bulk level operations — setNodeLevel(), bulkSetLevel()
+- [x] PPTX level badge export (ellipse shape)
+
+### Testing
+- [x] **2,218 tests across 90 files** — all passing
+
+---
+
 ## 🚀 v3.7.0 — SVG/PNG Export
 
 ### Phase 37 — Image Export

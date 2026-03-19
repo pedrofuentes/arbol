@@ -341,6 +341,40 @@ describe('ChartDB', () => {
     });
   });
 
+  describe('patchChart', () => {
+    it('patchChart updates only specified fields', async () => {
+      const chart = makeChart({ id: 'chart-patch', name: 'Original Name' });
+      await db.putChart(chart);
+
+      const newTree = makeTree({ name: 'Updated Root' });
+      await db.patchChart('chart-patch', { workingTree: newTree, updatedAt: '2025-06-15T00:00:00.000Z' });
+
+      const retrieved = await db.getChart('chart-patch');
+      expect(retrieved!.workingTree.name).toBe('Updated Root');
+      expect(retrieved!.name).toBe('Original Name');
+      expect(retrieved!.updatedAt).toBe('2025-06-15T00:00:00.000Z');
+      expect(retrieved!.createdAt).toBe('2025-01-01T00:00:00.000Z');
+    });
+
+    it('patchChart throws on missing chart', async () => {
+      await expect(db.patchChart('does-not-exist', { name: 'Ghost' })).rejects.toThrow(
+        'Chart not found: does-not-exist',
+      );
+    });
+
+    it('patchChart preserves categories when patching workingTree', async () => {
+      const cats = [{ id: 'cat-1', label: 'Eng', color: '#ff0000' }];
+      const chart = makeChart({ id: 'chart-cats', name: 'With Cats', categories: cats });
+      await db.putChart(chart);
+
+      await db.patchChart('chart-cats', { workingTree: makeTree({ name: 'New Root' }) });
+
+      const retrieved = await db.getChart('chart-cats');
+      expect(retrieved!.categories).toEqual(cats);
+      expect(retrieved!.workingTree.name).toBe('New Root');
+    });
+  });
+
   describe('Chart name uniqueness', () => {
     it('isChartNameTaken returns false when name is not taken', async () => {
       const result = await db.isChartNameTaken('Unused Name');

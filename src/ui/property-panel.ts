@@ -46,6 +46,7 @@ export class PropertyPanel {
   private savedName = '';
   private savedTitle = '';
   private savedLevel = '';
+  private lastCategoryKey = '';
 
   constructor(options: PropertyPanelOptions) {
     this.options = options;
@@ -296,17 +297,23 @@ export class PropertyPanel {
     this.titleInput.value = node.title;
     this.levelInput.value = this.savedLevel;
 
-    // Category dropdown
-    while (this.categorySelect.firstChild) this.categorySelect.removeChild(this.categorySelect.firstChild);
-    const noneOpt = document.createElement('option');
-    noneOpt.value = '';
-    noneOpt.textContent = t('property_panel.category_none');
-    this.categorySelect.appendChild(noneOpt);
-    for (const cat of categories) {
-      const opt = document.createElement('option');
-      opt.value = cat.id;
-      opt.textContent = cat.label;
-      this.categorySelect.appendChild(opt);
+    // Category dropdown — only rebuild if categories changed
+    const categoryKey = categories.map((c) => c.id + ':' + c.label).join(',');
+    if (categoryKey !== this.lastCategoryKey) {
+      const frag = document.createDocumentFragment();
+      const noneOpt = document.createElement('option');
+      noneOpt.value = '';
+      noneOpt.textContent = t('property_panel.category_none');
+      frag.appendChild(noneOpt);
+      for (const cat of categories) {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.label;
+        frag.appendChild(opt);
+      }
+      while (this.categorySelect.firstChild) this.categorySelect.removeChild(this.categorySelect.firstChild);
+      this.categorySelect.appendChild(frag);
+      this.lastCategoryKey = categoryKey;
     }
     this.categorySelect.value = node.categoryId ?? '';
 

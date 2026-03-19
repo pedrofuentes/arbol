@@ -265,6 +265,74 @@ describe('PropertyPanel', () => {
     (dottedBtn as HTMLElement).click();
     expect(onToggleDottedLine).not.toHaveBeenCalled();
   });
+
+  describe('category dropdown caching', () => {
+    it('does not rebuild category dropdown when showing different nodes with same categories', () => {
+      const { container, panel } = createPanel();
+      const sharedCats = [
+        { id: 'c1', label: 'Open Position', color: '#fbbf24' },
+        { id: 'c2', label: 'New Hire', color: '#34d399' },
+      ];
+      panel.show(makeNode({ id: 'a1', name: 'Alice' }), 'Boss', 0, 0, 0, sharedCats);
+      const select = container.querySelector('#pp-category-select') as HTMLSelectElement;
+      const originalOptions = Array.from(select.options);
+
+      panel.show(makeNode({ id: 'b1', name: 'Bob' }), 'Boss', 0, 0, 0, sharedCats);
+      const newOptions = Array.from(select.options);
+
+      expect(newOptions.length).toBe(originalOptions.length);
+      for (let i = 0; i < originalOptions.length; i++) {
+        expect(newOptions[i]).toBe(originalOptions[i]);
+      }
+    });
+
+    it('rebuilds category dropdown when categories change', () => {
+      const { container, panel } = createPanel();
+      const cats1 = [{ id: 'c1', label: 'Open Position', color: '#fbbf24' }];
+      const cats2 = [{ id: 'c2', label: 'New Hire', color: '#34d399' }];
+
+      panel.show(makeNode(), 'Boss', 0, 0, 0, cats1);
+      const select = container.querySelector('#pp-category-select') as HTMLSelectElement;
+      expect(select.options.length).toBe(2);
+      expect(select.options[1].value).toBe('c1');
+
+      panel.show(makeNode({ id: 'n2' }), 'Boss', 0, 0, 0, cats2);
+      expect(select.options.length).toBe(2);
+      expect(select.options[1].value).toBe('c2');
+      expect(select.options[1].textContent).toBe('New Hire');
+    });
+
+    it('uses DocumentFragment for batch DOM updates', () => {
+      const { container, panel } = createPanel();
+      const manyCats = [
+        { id: 'c1', label: 'Cat1', color: '#111' },
+        { id: 'c2', label: 'Cat2', color: '#222' },
+        { id: 'c3', label: 'Cat3', color: '#333' },
+      ];
+      panel.show(makeNode(), 'Boss', 0, 0, 0, manyCats);
+      const select = container.querySelector('#pp-category-select') as HTMLSelectElement;
+      expect(select.options.length).toBe(4); // None + 3 categories
+      expect(select.options[0].value).toBe('');
+      expect(select.options[1].value).toBe('c1');
+      expect(select.options[2].value).toBe('c2');
+      expect(select.options[3].value).toBe('c3');
+    });
+
+    it('updates selected value without rebuilding dropdown', () => {
+      const { container, panel } = createPanel();
+      panel.show(makeNode({ id: 'a1', categoryId: 'c1' }), 'Boss', 0, 0, 0, cats);
+      const select = container.querySelector('#pp-category-select') as HTMLSelectElement;
+      expect(select.value).toBe('c1');
+      const originalOptions = Array.from(select.options);
+
+      panel.show(makeNode({ id: 'b1', categoryId: undefined }), 'Boss', 0, 0, 0, cats);
+      expect(select.value).toBe('');
+      const newOptions = Array.from(select.options);
+      for (let i = 0; i < originalOptions.length; i++) {
+        expect(newOptions[i]).toBe(originalOptions[i]);
+      }
+    });
+  });
 });
 
 

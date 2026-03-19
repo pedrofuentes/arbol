@@ -318,6 +318,83 @@ describe('CategoryStore', () => {
     });
   });
 
+  describe('caching', () => {
+    let getItemSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      getItemSpy = vi.spyOn(localStorage, 'getItem');
+    });
+
+    afterEach(() => {
+      getItemSpy.mockRestore();
+    });
+
+    it('getAll reads from cache on second call', () => {
+      store.getAll(); // populates cache
+      getItemSpy.mockClear();
+
+      store.getAll(); // should use cache
+      expect(getItemSpy).not.toHaveBeenCalled();
+    });
+
+    it('add updates cache without re-reading storage', () => {
+      store.add('New', '#ff0000');
+      getItemSpy.mockClear();
+
+      const all = store.getAll();
+      expect(getItemSpy).not.toHaveBeenCalled();
+      expect(all.find((c) => c.label === 'New')).toBeDefined();
+    });
+
+    it('update updates cache without re-reading storage', () => {
+      store.update('open-position', { label: 'Vacant' });
+      getItemSpy.mockClear();
+
+      const all = store.getAll();
+      expect(getItemSpy).not.toHaveBeenCalled();
+      expect(all.find((c) => c.id === 'open-position')!.label).toBe('Vacant');
+    });
+
+    it('remove updates cache', () => {
+      store.remove('open-position');
+      getItemSpy.mockClear();
+
+      const all = store.getAll();
+      expect(getItemSpy).not.toHaveBeenCalled();
+      expect(all.find((c) => c.id === 'open-position')).toBeUndefined();
+    });
+
+    it('replaceAll updates cache', () => {
+      const custom = [
+        { id: 'x', label: 'X', color: '#abcdef', nameColor: '#111111', titleColor: '#222222' },
+      ];
+      store.replaceAll(custom);
+      getItemSpy.mockClear();
+
+      const all = store.getAll();
+      expect(getItemSpy).not.toHaveBeenCalled();
+      expect(all).toHaveLength(1);
+      expect(all[0].id).toBe('x');
+    });
+
+    it('invalidateCache forces next read from storage', () => {
+      store.getAll(); // populates cache
+      getItemSpy.mockClear();
+
+      store.invalidateCache();
+      store.getAll(); // should re-read from storage
+      expect(getItemSpy).toHaveBeenCalled();
+    });
+
+    it('getAll returns copies so callers cannot mutate the cache', () => {
+      const first = store.getAll();
+      first[0].label = 'MUTATED';
+
+      const second = store.getAll();
+      expect(second[0].label).not.toBe('MUTATED');
+    });
+  });
+
   describe('text color auto-contrast', () => {
     it('add() auto-computes nameColor and titleColor from background', () => {
       const cat = store.add('Dark BG', '#1e293b');

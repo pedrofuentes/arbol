@@ -65,6 +65,41 @@ export class ChartDB {
     return this.put(CHARTS_STORE, chart);
   }
 
+  patchChart(id: string, fields: Partial<Omit<ChartRecord, 'id'>>): Promise<void> {
+    const db = this.requireDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(CHARTS_STORE, 'readwrite');
+      const store = tx.objectStore(CHARTS_STORE);
+      const getReq = store.get(id);
+
+      getReq.onsuccess = () => {
+        const chart = getReq.result as ChartRecord | undefined;
+        if (!chart) {
+          reject(new Error(`Chart not found: ${id}`));
+          return;
+        }
+        Object.assign(chart, fields);
+        store.put(chart);
+      };
+
+      getReq.onerror = () =>
+        reject(new Error(`Failed to get chart for patching: ${getReq.error?.message}`));
+
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => {
+        if (tx.error?.name === 'QuotaExceededError') {
+          reject(
+            new Error(
+              'Storage quota exceeded. Please delete old charts or versions to free up space.',
+            ),
+          );
+        } else {
+          reject(new Error(`Failed to patch chart: ${tx.error?.message}`));
+        }
+      };
+    });
+  }
+
   deleteChart(id: string): Promise<void> {
     const db = this.requireDB();
     return new Promise((resolve, reject) => {

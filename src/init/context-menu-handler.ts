@@ -7,6 +7,7 @@ import { showManagerPicker } from '../ui/manager-picker';
 import { showConfirmDialog } from '../ui/confirm-dialog';
 import { showToast } from '../ui/toast';
 import { announce } from '../ui/announcer';
+import type { OrgNode } from '../types';
 import type { OrgStore } from '../store/org-store';
 import type { CategoryStore } from '../store/category-store';
 import type { ChartRenderer } from '../renderer/chart-renderer';
@@ -32,6 +33,12 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
     const nodeIsLeaf = isLeaf(node);
     const parent = findParent(tree, nodeId);
     const nodeIsIC = nodeIsLeaf && parent !== null && isM1(parent);
+
+    let cachedAllNodes: OrgNode[] | null = null;
+    const getAllNodes = (): OrgNode[] => {
+      if (!cachedAllNodes) cachedAllNodes = flattenTree(tree);
+      return cachedAllNodes;
+    };
 
     showContextMenu({
       x: event.clientX,
@@ -117,7 +124,7 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
           disabled: isRoot,
           action: async () => {
             try {
-              const allNodes = flattenTree(tree);
+              const allNodes = getAllNodes();
               const descendants = flattenTree(node);
               const descendantIds = new Set(descendants.map((n) => n.id));
               const managers = allNodes
@@ -170,7 +177,7 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
                 });
 
                 if (reassign) {
-                  const allNodes = flattenTree(tree);
+                  const allNodes = getAllNodes();
                   const descendantIds = new Set(descendants.map((n) => n.id));
                   const managers = allNodes
                     .filter((n) => !descendantIds.has(n.id))
@@ -212,6 +219,13 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
     const { store, categoryStore, selection } = deps;
     const count = selection.count;
     const selectedArray = selection.toArray();
+    const tree = store.getTree();
+
+    let cachedAllNodes: OrgNode[] | null = null;
+    const getAllNodes = (): OrgNode[] => {
+      if (!cachedAllNodes) cachedAllNodes = flattenTree(tree);
+      return cachedAllNodes;
+    };
 
     showContextMenu({
       x: event.clientX,
@@ -243,8 +257,7 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
           icon: '↗️',
           action: async () => {
             try {
-              const tree = store.getTree();
-              const allNodes = flattenTree(tree);
+              const allNodes = getAllNodes();
               // Exclude selected nodes and their descendants
               const excludeIds = new Set<string>();
               for (const id of selectedArray) {
@@ -275,7 +288,6 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
           danger: true,
           action: async () => {
             try {
-              const tree = store.getTree();
               // Check if any selected nodes have children
               const hasManagers = selectedArray.some((id) => {
                 const n = findNodeById(tree, id);
@@ -284,7 +296,7 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
 
               if (hasManagers) {
                 // Some are managers — ask where to reassign children
-                const allNodes = flattenTree(tree);
+                const allNodes = getAllNodes();
                 const excludeIds = new Set<string>();
                 for (const id of selectedArray) {
                   const n = findNodeById(tree, id);

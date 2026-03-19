@@ -349,6 +349,63 @@ describe('SettingsStore', () => {
     });
   });
 
+  describe('cachedRaw optimization', () => {
+    it('writeToStorage uses cached settings instead of reading storage', () => {
+      const spy = vi.spyOn(localStorage, 'getItem');
+      store.load(DEFAULTS);
+      const loadCalls = spy.mock.calls.filter(([k]) => k === 'arbol-settings').length;
+      spy.mockClear();
+
+      store.saveImmediate({ nodeWidth: 300 });
+
+      const saveCalls = spy.mock.calls.filter(([k]) => k === 'arbol-settings').length;
+      expect(saveCalls).toBe(0);
+    });
+
+    it('cache is populated after load', () => {
+      store.saveImmediate({ nodeWidth: 100 });
+      store.load(DEFAULTS);
+
+      const spy = vi.spyOn(localStorage, 'getItem');
+      spy.mockClear();
+      store.saveImmediate({ nodeHeight: 50 });
+      const getCalls = spy.mock.calls.filter(([k]) => k === 'arbol-settings').length;
+      expect(getCalls).toBe(0);
+
+      spy.mockRestore();
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.nodeWidth).toBe(100);
+      expect(loaded.nodeHeight).toBe(50);
+    });
+
+    it('clear resets the cache', () => {
+      store.load(DEFAULTS);
+      store.clear();
+
+      const spy = vi.spyOn(localStorage, 'getItem');
+      spy.mockClear();
+      store.saveImmediate({ nodeWidth: 400 });
+      const getCalls = spy.mock.calls.filter(([k]) => k === 'arbol-settings').length;
+      expect(getCalls).toBe(1);
+    });
+
+    it('importFromFile updates cache', () => {
+      const exp = store.createExport(DEFAULTS, 'test');
+      const json = JSON.stringify(exp);
+      store.importFromFile(json);
+
+      const spy = vi.spyOn(localStorage, 'getItem');
+      spy.mockClear();
+      store.saveImmediate({ nodeWidth: 500 });
+      const getCalls = spy.mock.calls.filter(([k]) => k === 'arbol-settings').length;
+      expect(getCalls).toBe(0);
+
+      spy.mockRestore();
+      const loaded = store.load(DEFAULTS);
+      expect(loaded.nodeWidth).toBe(500);
+    });
+  });
+
   describe('fontFamily', () => {
     it('persists and loads fontFamily', () => {
       store.saveImmediate({ fontFamily: 'Segoe UI' });

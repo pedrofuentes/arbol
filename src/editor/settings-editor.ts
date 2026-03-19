@@ -371,6 +371,7 @@ export class SettingsEditor {
   private categoryPanel: CategoryPanel | null = null;
   private settingsIOPanel: SettingsIOPanel;
   private backupPanel: BackupPanel | null = null;
+  private rangeDebounceTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
   constructor(
     container: HTMLElement,
@@ -531,6 +532,7 @@ export class SettingsEditor {
   }
 
   private build(): void {
+    this.clearDebounceTimers();
     this.container.innerHTML = '';
 
     const opts = this.renderer.getOptions();
@@ -695,17 +697,26 @@ export class SettingsEditor {
         if (setting.unit) {
           valueSpan.textContent = '';
           valueSpan.appendChild(document.createTextNode(String(val) + ' '));
-          const unitSpan = document.createElement('span');
-          unitSpan.className = 'setting-unit';
-          unitSpan.textContent = setting.unit;
-          valueSpan.appendChild(unitSpan);
+          const unitEl = document.createElement('span');
+          unitEl.className = 'setting-unit';
+          unitEl.textContent = setting.unit;
+          valueSpan.appendChild(unitEl);
         } else {
           valueSpan.textContent = String(val);
         }
-        this.renderer.updateOptions({ [setting.key]: val } as Partial<RendererOptions>);
-        this.rerenderCallback();
-        this.updatePreview();
         updateModifiedState(val);
+
+        const existing = this.rangeDebounceTimers.get(setting.key);
+        if (existing !== undefined) clearTimeout(existing);
+        this.rangeDebounceTimers.set(
+          setting.key,
+          setTimeout(() => {
+            this.rangeDebounceTimers.delete(setting.key);
+            this.renderer.updateOptions({ [setting.key]: val } as Partial<RendererOptions>);
+            this.rerenderCallback();
+            this.updatePreview();
+          }, 60),
+        );
       });
 
       control.appendChild(input);
@@ -782,7 +793,15 @@ export class SettingsEditor {
   }
 
   destroy(): void {
+    this.clearDebounceTimers();
     this.previewRenderer?.destroy();
     this.container.innerHTML = '';
+  }
+
+  private clearDebounceTimers(): void {
+    for (const timer of this.rangeDebounceTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.rangeDebounceTimers.clear();
   }
 }
