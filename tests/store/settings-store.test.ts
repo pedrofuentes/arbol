@@ -40,6 +40,11 @@ const DEFAULTS: PersistableSettings = {
   headcountBadgeRadius: 4,
   headcountBadgePadding: 8,
   headcountBadgeHeight: 22,
+  showLevel: false,
+  levelBadgeColor: '#6366f1',
+  levelBadgeTextColor: '#ffffff',
+  levelBadgeFontSize: 11,
+  levelBadgeSize: 22,
   legendRows: 0,
 };
 

@@ -42,6 +42,11 @@ export interface PersistableSettings {
   headcountBadgeRadius: number;
   headcountBadgePadding: number;
   headcountBadgeHeight: number;
+  showLevel: boolean;
+  levelBadgeColor: string;
+  levelBadgeTextColor: string;
+  levelBadgeFontSize: number;
+  levelBadgeSize: number;
   legendRows: number;
 }
 
@@ -84,6 +89,8 @@ const NUMERIC_KEYS: ReadonlySet<string> = new Set<string>([
   'headcountBadgeRadius',
   'headcountBadgePadding',
   'headcountBadgeHeight',
+  'levelBadgeFontSize',
+  'levelBadgeSize',
   'legendRows',
 ]);
 
@@ -94,13 +101,15 @@ const STRING_KEYS: ReadonlySet<string> = new Set<string>([
   'icContainerFill',
   'headcountBadgeColor',
   'headcountBadgeTextColor',
+  'levelBadgeColor',
+  'levelBadgeTextColor',
   'nameColor',
   'titleColor',
 ]);
 
 const DASH_PATTERN_KEYS: ReadonlySet<string> = new Set<string>(['dottedLineDash']);
 
-const BOOLEAN_KEYS: ReadonlySet<string> = new Set<string>(['showHeadcount']);
+const BOOLEAN_KEYS: ReadonlySet<string> = new Set<string>(['showHeadcount', 'showLevel']);
 
 const ENUM_KEYS: ReadonlyMap<string, readonly string[]> = new Map([
   ['textAlign', ['left', 'center', 'right', 'start', 'end']],

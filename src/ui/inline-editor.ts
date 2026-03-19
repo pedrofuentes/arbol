@@ -5,7 +5,8 @@ export interface InlineEditorOptions {
   rect: DOMRect;
   name: string;
   title: string;
-  onSave: (name: string, title: string) => void;
+  level?: string;
+  onSave: (name: string, title: string, level?: string) => void;
   onCancel: () => void;
 }
 
@@ -34,7 +35,7 @@ export function showInlineEditor(options: InlineEditorOptions): void {
 
   previouslyFocused = document.activeElement;
 
-  const { rect, name, title, onSave, onCancel } = options;
+  const { rect, name, title, level, onSave, onCancel } = options;
 
   const container = document.createElement('div');
   container.setAttribute('role', 'dialog');
@@ -81,6 +82,22 @@ export function showInlineEditor(options: InlineEditorOptions): void {
   titleInput.style.width = '100%';
   titleInput.style.padding = 'var(--space-1) 0';
 
+  const levelInput = document.createElement('input');
+  levelInput.type = 'text';
+  levelInput.value = level ?? '';
+  levelInput.setAttribute('aria-label', t('inline_editor.level_aria'));
+  levelInput.setAttribute('placeholder', t('inline_editor.level_placeholder'));
+  levelInput.maxLength = 50;
+  levelInput.style.border = 'none';
+  levelInput.style.background = 'transparent';
+  levelInput.style.outline = 'none';
+  levelInput.style.fontFamily = 'Calibri, sans-serif';
+  levelInput.style.fontSize = '11px';
+  levelInput.style.color = 'var(--text-tertiary)';
+  levelInput.style.width = '100%';
+  levelInput.style.padding = 'var(--space-1) 0';
+  levelInput.style.fontStyle = 'italic';
+
   const buttonRow = document.createElement('div');
   buttonRow.style.display = 'flex';
   buttonRow.style.gap = 'var(--space-2)';
@@ -104,6 +121,7 @@ export function showInlineEditor(options: InlineEditorOptions): void {
 
   container.appendChild(nameInput);
   container.appendChild(titleInput);
+  container.appendChild(levelInput);
   container.appendChild(buttonRow);
 
   const errorMsg = document.createElement('div');
@@ -133,7 +151,8 @@ export function showInlineEditor(options: InlineEditorOptions): void {
       return;
     }
     dismissed = true;
-    onSave(trimmedName, titleInput.value.trim());
+    const trimmedLevel = levelInput.value.trim() || undefined;
+    onSave(trimmedName, titleInput.value.trim(), trimmedLevel);
     dismissInlineEditor();
   };
 
@@ -162,6 +181,7 @@ export function showInlineEditor(options: InlineEditorOptions): void {
 
   nameInput.addEventListener('keydown', onKeyDown);
   titleInput.addEventListener('keydown', onKeyDown);
+  levelInput.addEventListener('keydown', onKeyDown);
   saveBtn.addEventListener('click', save);
   cancelBtn.addEventListener('click', cancel);
   // Defer so the click that opened the editor doesn't immediately dismiss it
@@ -175,6 +195,7 @@ export function showInlineEditor(options: InlineEditorOptions): void {
     removeTrap();
     nameInput.removeEventListener('keydown', onKeyDown);
     titleInput.removeEventListener('keydown', onKeyDown);
+    levelInput.removeEventListener('keydown', onKeyDown);
     saveBtn.removeEventListener('click', save);
     cancelBtn.removeEventListener('click', cancel);
     document.removeEventListener('mousedown', onClickOutside);

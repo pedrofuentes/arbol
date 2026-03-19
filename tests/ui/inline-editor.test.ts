@@ -49,7 +49,7 @@ describe('InlineEditor', () => {
     showInlineEditor(defaultOptions());
 
     const inputs = document.querySelectorAll('input[type="text"]');
-    expect(inputs.length).toBe(2);
+    expect(inputs.length).toBe(3);
 
     const nameInput = inputs[0] as HTMLInputElement;
     const titleInput = inputs[1] as HTMLInputElement;
@@ -82,7 +82,7 @@ describe('InlineEditor', () => {
     const nameInput = document.querySelector('input[aria-label="Name"]') as HTMLInputElement;
     nameInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
-    expect(onSave).toHaveBeenCalledWith('Alice', 'VP Engineering');
+    expect(onSave).toHaveBeenCalledWith('Alice', 'VP Engineering', undefined);
   });
 
   it('Enter in title input also triggers onSave', () => {
@@ -92,7 +92,7 @@ describe('InlineEditor', () => {
     const titleInput = document.querySelector('input[aria-label="Title"]') as HTMLInputElement;
     titleInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
-    expect(onSave).toHaveBeenCalledWith('Alice', 'VP Engineering');
+    expect(onSave).toHaveBeenCalledWith('Alice', 'VP Engineering', undefined);
   });
 
   it('Escape key triggers onCancel', () => {
@@ -114,7 +114,7 @@ describe('InlineEditor', () => {
 
     document.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 
-    expect(onSave).toHaveBeenCalledWith('Alice', 'VP Engineering');
+    expect(onSave).toHaveBeenCalledWith('Alice', 'VP Engineering', undefined);
   });
 
   it('click inside does not trigger save', () => {
@@ -163,7 +163,7 @@ describe('InlineEditor', () => {
   it('dismissInlineEditor removes the editor from DOM', () => {
     showInlineEditor(defaultOptions());
 
-    expect(document.querySelectorAll('input[type="text"]').length).toBe(2);
+    expect(document.querySelectorAll('input[type="text"]').length).toBe(3);
 
     dismissInlineEditor();
 
@@ -176,12 +176,12 @@ describe('InlineEditor', () => {
     showInlineEditor(defaultOptions({ name: 'First', onSave: onSave1, onCancel: onCancel1 }));
 
     const firstInputs = document.querySelectorAll('input[type="text"]');
-    expect(firstInputs.length).toBe(2);
+    expect(firstInputs.length).toBe(3);
 
     showInlineEditor(defaultOptions({ name: 'Second' }));
 
     const allInputs = document.querySelectorAll('input[type="text"]');
-    expect(allInputs.length).toBe(2);
+    expect(allInputs.length).toBe(3);
     expect((allInputs[0] as HTMLInputElement).value).toBe('Second');
   });
 
@@ -196,7 +196,7 @@ describe('InlineEditor', () => {
     titleInput.value = 'Director';
     nameInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
-    expect(onSave).toHaveBeenCalledWith('Bob', 'Director');
+    expect(onSave).toHaveBeenCalledWith('Bob', 'Director', undefined);
   });
 
   it('trims values before passing to onSave', () => {
@@ -210,7 +210,7 @@ describe('InlineEditor', () => {
     titleInput.value = '  Director  ';
     nameInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
-    expect(onSave).toHaveBeenCalledWith('Bob', 'Director');
+    expect(onSave).toHaveBeenCalledWith('Bob', 'Director', undefined);
   });
 
   it('does not call onSave or onCancel twice on rapid interactions', () => {
@@ -273,7 +273,7 @@ describe('InlineEditor', () => {
     const saveBtn = document.querySelector('button.btn-primary') as HTMLButtonElement;
     saveBtn.click();
 
-    expect(onSave).toHaveBeenCalledWith('Bob', 'Director');
+    expect(onSave).toHaveBeenCalledWith('Bob', 'Director', undefined);
   });
 
   it('Cancel button triggers onCancel', () => {

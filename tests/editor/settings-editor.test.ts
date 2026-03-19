@@ -61,6 +61,11 @@ const DEFAULT_OPTS: ResolvedOptions = {
   headcountBadgeRadius: 4,
   headcountBadgePadding: 8,
   headcountBadgeHeight: 22,
+  showLevel: false,
+  levelBadgeColor: '#6366f1',
+  levelBadgeTextColor: '#ffffff',
+  levelBadgeFontSize: 11,
+  levelBadgeSize: 22,
   legendRows: 0,
   textAlign: 'center',
   textPaddingHorizontal: 8,
@@ -130,11 +135,11 @@ describe('SettingsEditor', () => {
   it('renders setting groups as flat sections with data-section-id', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const allSections = container.querySelectorAll('[data-section-id]');
-    // presets(accordion) + 9 flat groups + settings-io(accordion) = 11 (no categories without store)
-    expect(allSections.length).toBe(11);
-    // 9 flat setting sections
+    // presets(accordion) + 10 flat groups + settings-io(accordion) = 12 (no categories without store)
+    expect(allSections.length).toBe(12);
+    // 10 flat setting sections
     const flatSections = container.querySelectorAll('.setting-section');
-    expect(flatSections.length).toBe(9);
+    expect(flatSections.length).toBe(10);
   });
 
   it('flat setting sections have setting-section-title', () => {
@@ -154,7 +159,7 @@ describe('SettingsEditor', () => {
     // These IDs must match the SECTION_TAB_MAP keys in main.ts
     const expectedIds = [
       'card-dimensions', 'tree-spacing', 'ic-options', 'advisor-options',
-      'typography', 'link-style', 'card-style', 'headcount-badge', 'categories-legend',
+      'typography', 'link-style', 'card-style', 'headcount-badge', 'level-badge', 'categories-legend',
     ];
     expect(sectionIds).toEqual(expectedIds);
   });
@@ -512,6 +517,46 @@ describe('SettingsEditor', () => {
       expect(rangeInputs.length).toBe(4);
       // 2 color inputs: badge color, badge text color
       expect(colorInputs.length).toBe(2);
+    });
+  });
+
+  describe('level badge settings', () => {
+    it('renders level-badge settings group', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const section = findSectionByTitle(container, 'Level Badge')!;
+      expect(section).toBeDefined();
+      expect(section.getAttribute('data-section-id')).toBe('level-badge');
+    });
+
+    it('level-badge group contains showLevel checkbox', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const section = findSectionByTitle(container, 'Level Badge')!;
+      const checkbox = section.querySelector<HTMLInputElement>('input[type="checkbox"]');
+      expect(checkbox).not.toBeNull();
+      expect(checkbox!.checked).toBe(false);
+    });
+
+    it('level-badge group contains range and color inputs', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const section = findSectionByTitle(container, 'Level Badge')!;
+      const rangeInputs = section.querySelectorAll('input[type="range"]');
+      const colorInputs = section.querySelectorAll('input[type="color"]');
+      // 2 range inputs: font size, size
+      expect(rangeInputs.length).toBe(2);
+      // 2 color inputs: badge color, badge text color
+      expect(colorInputs.length).toBe(2);
+    });
+
+    it('showLevel checkbox toggles setting value', () => {
+      new SettingsEditor(container, renderer, rerenderCb);
+      const section = findSectionByTitle(container, 'Level Badge')!;
+      const checkbox = section.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event('change'));
+      expect(renderer.updateOptions as ReturnType<typeof vi.fn>).toHaveBeenCalledWith(
+        expect.objectContaining({ showLevel: true }),
+      );
+      expect(rerenderCb).toHaveBeenCalled();
     });
   });
 

@@ -53,6 +53,12 @@ const es: Record<string, string> = {
   'menu.category_icon': '🏷️',
   'menu.category_none': 'Ninguna (predeterminada)',
   'menu.category_check': '✓',
+  'menu.level': 'Nivel',
+  'menu.level_icon': '📊',
+  'menu.level_none': 'Ninguno',
+  'menu.level_check': '✓',
+  'menu.set_level': 'Establecer nivel',
+  'menu.level_clear': 'Quitar nivel',
   'menu.dotted_line_set': 'Punteada',
   'menu.dotted_line_remove': 'Sólida',
   'menu.dotted_line_icon': '┈',
@@ -63,6 +69,7 @@ const es: Record<string, string> = {
   'menu.multi_category': 'Asignar categoría ({count} personas)',
   'menu.multi_move': 'Mover todos ({count} personas)',
   'menu.multi_remove': 'Eliminar todos ({count} personas)',
+  'menu.multi_level': 'Establecer nivel ({count} personas)',
 
   // ─── Command Palette ────────────────────────────────────────────────
   'command_palette.aria_label': 'Paleta de comandos',
@@ -100,6 +107,8 @@ const es: Record<string, string> = {
   'property_panel.title_field': 'Cargo',
   'property_panel.category': 'Categoría',
   'property_panel.category_none': 'Ninguna',
+  'property_panel.level': 'Nivel',
+  'property_panel.level_none': 'Sin definir',
   'property_panel.save': 'Guardar',
   'property_panel.actions': 'Acciones',
   'property_panel.add_child': '➕ Agregar subordinado',
@@ -239,6 +248,8 @@ const es: Record<string, string> = {
   'inline_editor.save': 'Guardar',
   'inline_editor.cancel': 'Cancelar',
   'inline_editor.name_required': 'El nombre es obligatorio',
+  'inline_editor.level_aria': 'Nivel',
+  'inline_editor.level_placeholder': 'Nivel (ej., L5, Director)',
 
   // ─── Add Popover ───────────────────────────────────────────────────
   'add_popover.aria': 'Agregar nueva persona',
@@ -566,6 +577,7 @@ const es: Record<string, string> = {
   'settings.group.link_style': 'Estilo de líneas',
   'settings.group.card_style': 'Estilo de tarjeta',
   'settings.group.headcount_badge': 'Insignia de personal',
+  'settings.group.level_badge': 'Insignia de nivel',
   'settings.group.categories_legend': 'Leyenda de categorías',
 
   // ─── Setting Labels ────────────────────────────────────────────────
@@ -607,6 +619,11 @@ const es: Record<string, string> = {
   'settings.label.badge_padding': 'Relleno de insignia',
   'settings.label.badge_color': 'Color de insignia',
   'settings.label.badge_text_color': 'Color de texto de insignia',
+  'settings.label.show_level': 'Mostrar insignia de nivel',
+  'settings.label.level_badge_font_size': 'Tamaño de fuente de insignia de nivel',
+  'settings.label.level_badge_size': 'Tamaño de insignia de nivel',
+  'settings.label.level_badge_color': 'Color de insignia de nivel',
+  'settings.label.level_badge_text_color': 'Color de texto de insignia de nivel',
   'settings.label.legend_rows': 'Filas de leyenda (0 = auto)',
 
   // ─── Font Options ──────────────────────────────────────────────────
@@ -960,6 +977,11 @@ const es: Record<string, string> = {
   'settings.desc.badge_padding': 'Relleno horizontal dentro de la insignia de personal',
   'settings.desc.badge_color': 'Color de fondo de la insignia de personal',
   'settings.desc.badge_text_color': 'Color del texto en la insignia de personal',
+  'settings.desc.show_level': 'Mostrar una insignia circular de nivel en cada tarjeta',
+  'settings.desc.level_badge_font_size': 'Tamaño de fuente del texto de la insignia de nivel',
+  'settings.desc.level_badge_size': 'Diámetro de la insignia circular de nivel',
+  'settings.desc.level_badge_color': 'Color de fondo de la insignia de nivel',
+  'settings.desc.level_badge_text_color': 'Color del texto de la insignia de nivel',
   'settings.desc.legend_rows': 'Número de filas para la leyenda de categorías (0 = auto-ajuste)',
 
   // ─── Settings: Section Descriptions ─────────────────────────────────
@@ -973,6 +995,7 @@ const es: Record<string, string> = {
   'settings.section_desc.link_style': 'Estilice las líneas conectoras entre tarjetas del organigrama.',
   'settings.section_desc.card_style': 'Personalice bordes, color de fondo y redondeo de esquinas de las tarjetas.',
   'settings.section_desc.headcount_badge': 'Muestre y estilice una insignia de personal en las tarjetas de gerentes.',
+  'settings.section_desc.level_badge': 'Muestre y estilice una insignia de nivel en todas las tarjetas.',
   'settings.section_desc.categories_legend': 'Configure cómo aparece la leyenda de categorías de color en el organigrama.',
   'settings.section_desc.settings_io': 'Exporte o importe su configuración como un archivo.',
   'settings.section_desc.backup_restore': 'Cree respaldos completos de todos los organigramas, versiones y configuración.',

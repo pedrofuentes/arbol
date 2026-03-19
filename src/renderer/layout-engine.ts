@@ -36,6 +36,7 @@ export interface LayoutNode {
   collapsible?: boolean;
   categoryId?: string;
   descendantCount?: number;
+  level?: string;
 }
 
 export interface LayoutLink {
@@ -300,6 +301,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
           height: nodeHeight,
           type: 'ic',
           categoryId: ic.categoryId,
+          level: ic.level,
         });
       });
     }
@@ -336,6 +338,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
           height: nodeHeight,
           type: 'pal',
           categoryId: pal.categoryId,
+          level: pal.level,
         });
       });
     }
@@ -360,6 +363,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
       collapsible: hasTreeChildren || hasICs,
       categoryId: treeNode.data.categoryId,
       descendantCount: descCount,
+      level: treeNode.data.level,
     });
   }
 

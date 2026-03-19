@@ -50,4 +50,30 @@ describe('SAMPLE_ORG', () => {
       expect(node.name).toMatch(/^(Root|Manager [A-Z]|IC \d+|Advisor [A-Z])$/);
     }
   });
+
+  it('every node has a level value', () => {
+    const nodes = flattenTree(SAMPLE_ORG);
+    for (const node of nodes) {
+      expect(node.level, `${node.id} should have a level`).toBeTruthy();
+      expect(node.level).toMatch(/^L\d+$/);
+    }
+  });
+
+  it('root is L1, VPs are L2, Directors are L3', () => {
+    expect(SAMPLE_ORG.level).toBe('L1');
+    const vpEng = SAMPLE_ORG.children!.find((c) => c.id === 'sample-vp-eng');
+    expect(vpEng!.level).toBe('L2');
+    const dirPlatform = vpEng!.children!.find((c) => c.id === 'sample-dir-platform');
+    expect(dirPlatform!.level).toBe('L3');
+  });
+
+  it('ICs have appropriate levels', () => {
+    const nodes = flattenTree(SAMPLE_ORG);
+    const staffEng = nodes.find((n) => n.id === 'sample-ic-1');
+    expect(staffEng!.level).toBe('L4');
+    const seniorEng = nodes.find((n) => n.id === 'sample-ic-2');
+    expect(seniorEng!.level).toBe('L5');
+    const engineer = nodes.find((n) => n.id === 'sample-ic-3');
+    expect(engineer!.level).toBe('L6');
+  });
 });

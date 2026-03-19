@@ -257,6 +257,36 @@ const SETTING_GROUPS: SettingGroup[] = [
     ],
   },
   {
+    sectionId: 'level-badge',
+    title: 'settings.group.level_badge',
+    description: 'settings.section_desc.level_badge',
+    settings: [
+      { key: 'showLevel', label: 'settings.label.show_level', description: 'settings.desc.show_level', type: 'checkbox' },
+      {
+        key: 'levelBadgeFontSize',
+        label: 'settings.label.level_badge_font_size',
+        description: 'settings.desc.level_badge_font_size',
+        type: 'range',
+        min: 5,
+        max: 16,
+        step: 1,
+        unit: 'px',
+      },
+      {
+        key: 'levelBadgeSize',
+        label: 'settings.label.level_badge_size',
+        description: 'settings.desc.level_badge_size',
+        type: 'range',
+        min: 14,
+        max: 36,
+        step: 1,
+        unit: 'px',
+      },
+      { key: 'levelBadgeColor', label: 'settings.label.level_badge_color', description: 'settings.desc.level_badge_color', type: 'color' },
+      { key: 'levelBadgeTextColor', label: 'settings.label.level_badge_text_color', description: 'settings.desc.level_badge_text_color', type: 'color' },
+    ],
+  },
+  {
     sectionId: 'categories-legend',
     title: 'settings.group.categories_legend',
     description: 'settings.section_desc.categories_legend',
@@ -314,6 +344,11 @@ const DEFAULT_SETTINGS: Record<string, number | string | boolean> = {
   headcountBadgeRadius: 4,
   headcountBadgePadding: 8,
   headcountBadgeHeight: 22,
+  showLevel: false,
+  levelBadgeColor: '#6366f1',
+  levelBadgeTextColor: '#ffffff',
+  levelBadgeFontSize: 11,
+  levelBadgeSize: 22,
   legendRows: 0,
 };
 

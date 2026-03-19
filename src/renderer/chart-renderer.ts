@@ -65,6 +65,12 @@ export interface RendererOptions {
   headcountBadgeRadius?: number;
   headcountBadgePadding?: number;
   headcountBadgeHeight?: number;
+  // Level badge
+  showLevel?: boolean;
+  levelBadgeColor?: string;
+  levelBadgeTextColor?: string;
+  levelBadgeFontSize?: number;
+  levelBadgeSize?: number;
   categories?: ColorCategory[];
   legendRows?: number;
   /** When true, disables zoom/keyboard/interactivity for static preview use. */
@@ -129,6 +135,11 @@ export class ChartRenderer {
       headcountBadgeRadius: 4,
       headcountBadgePadding: 8,
       headcountBadgeHeight: 22,
+      showLevel: false,
+      levelBadgeColor: '#6366f1',
+      levelBadgeTextColor: '#ffffff',
+      levelBadgeFontSize: 11,
+      levelBadgeSize: 22,
       categories: [] as ColorCategory[],
       legendRows: 0,
       preview: false,
@@ -265,6 +276,13 @@ export class ChartRenderer {
               nodeHeight,
               () => d.id,
             );
+
+            if (self.opts.showLevel && d.level) {
+              self.renderLevelBadge(
+                select(this) as Selection<SVGGElement, unknown, null, undefined>,
+                d,
+              );
+            }
           });
           return g;
         },
@@ -272,7 +290,7 @@ export class ChartRenderer {
         (exit) => exit.remove(),
       );
 
-    // Layer 3: Advisor stacks (on top of tree links)
+    // Layer 3: Advisor stacks(on top of tree links)
     const palGroup = this.g.append('g').attr('class', 'pal-stacks').attr('role', 'group');
     const palLinks = layout.links.filter((l) => l.layer === 'pal');
     palGroup
@@ -316,6 +334,13 @@ export class ChartRenderer {
               nodeHeight,
               () => d.id,
             );
+
+            if (self.opts.showLevel && d.level) {
+              self.renderLevelBadge(
+                select(this) as Selection<SVGGElement, unknown, null, undefined>,
+                d,
+              );
+            }
           });
           return g;
         },
@@ -354,6 +379,13 @@ export class ChartRenderer {
 
             if (self.opts.showHeadcount && d.descendantCount && d.descendantCount > 0) {
               self.renderHeadcountBadge(
+                select(this) as Selection<SVGGElement, unknown, null, undefined>,
+                d,
+              );
+            }
+
+            if (self.opts.showLevel && d.level) {
+              self.renderLevelBadge(
                 select(this) as Selection<SVGGElement, unknown, null, undefined>,
                 d,
               );
@@ -621,6 +653,50 @@ export class ChartRenderer {
       .attr('font-size', `${headcountBadgeFontSize}px`)
       .attr('font-weight', 'bold')
       .attr('fill', headcountBadgeTextColor)
+      .attr('pointer-events', 'none')
+      .text(text);
+  }
+
+  private renderLevelBadge(
+    parentGroup: Selection<SVGGElement, unknown, null, undefined>,
+    node: LayoutNode,
+  ): void {
+    const {
+      levelBadgeColor,
+      levelBadgeTextColor,
+      levelBadgeFontSize,
+      levelBadgeSize,
+      nodeHeight,
+    } = this.opts;
+
+    const text = node.level ?? '';
+    if (!text) return;
+
+    // Position: inside bottom-left corner of the card
+    const badgeX = 0;
+    const badgeY = nodeHeight - levelBadgeSize;
+
+    const badgeGroup = parentGroup.append('g').attr('class', 'level-badge');
+
+    badgeGroup
+      .append('rect')
+      .attr('x', badgeX)
+      .attr('y', badgeY)
+      .attr('width', levelBadgeSize)
+      .attr('height', levelBadgeSize)
+      .attr('fill', levelBadgeColor)
+      .attr('pointer-events', 'none');
+
+    badgeGroup
+      .append('text')
+      .attr('x', badgeX + levelBadgeSize / 2)
+      .attr('y', badgeY + levelBadgeSize / 2)
+      .attr('text-anchor', 'middle')
+      .attr('dominant-baseline', 'central')
+      .attr('font-family', `${this.opts.fontFamily}, sans-serif`)
+      .attr('font-size', `${levelBadgeFontSize}px`)
+      .attr('font-weight', 'bold')
+      .attr('fill', levelBadgeTextColor)
       .attr('pointer-events', 'none')
       .text(text);
   }

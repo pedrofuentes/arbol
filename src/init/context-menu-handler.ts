@@ -47,8 +47,9 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
               rect,
               name: node.name,
               title: node.title,
-              onSave: (name, title) => {
-                store.updateNode(nodeId, { name, title });
+              level: node.level,
+              onSave: (name, title, level) => {
+                store.updateNode(nodeId, { name, title, level: level ?? null });
               },
               onCancel: () => {},
             });

@@ -87,7 +87,7 @@ export class OrgStore extends EventEmitter {
     return this.redoStack.length;
   }
 
-  addChild(parentId: string, data: { name: string; title: string }): OrgNode {
+  addChild(parentId: string, data: { name: string; title: string; level?: string }): OrgNode {
     this.snapshot();
     const parent = findNodeById(this.root, parentId);
     if (!parent) throw new Error(`Parent node "${parentId}" not found`);
@@ -95,6 +95,7 @@ export class OrgStore extends EventEmitter {
       id: generateId(),
       name: data.name,
       title: data.title,
+      ...(data.level && { level: data.level }),
     };
     if (!parent.children) parent.children = [];
     parent.children.push(node);
@@ -142,14 +143,50 @@ export class OrgStore extends EventEmitter {
     this.emit();
   }
 
-  updateNode(id: string, fields: { name?: string; title?: string }): OrgNode {
+  updateNode(id: string, fields: { name?: string; title?: string; level?: string | null }): OrgNode {
     this.snapshot();
     const node = findNodeById(this.root, id);
     if (!node) throw new Error(`Node "${id}" not found`);
     if (fields.name !== undefined) node.name = fields.name;
     if (fields.title !== undefined) node.title = fields.title;
+    if (fields.level !== undefined) {
+      if (fields.level === null || fields.level === '') {
+        delete node.level;
+      } else {
+        node.level = fields.level;
+      }
+    }
     this.emit();
     return node;
+  }
+
+  setNodeLevel(nodeId: string, level: string | null): OrgNode {
+    const node = findNodeById(this.root, nodeId);
+    if (!node) throw new Error(`Node "${nodeId}" not found`);
+    this.snapshot();
+    if (level === null || level === '') {
+      delete node.level;
+    } else {
+      node.level = level;
+    }
+    this.emit();
+    return node;
+  }
+
+  bulkSetLevel(nodeIds: string[], level: string | null): void {
+    const validNodes = nodeIds
+      .map((id) => findNodeById(this.root, id))
+      .filter((n): n is OrgNode => n !== null);
+    if (validNodes.length === 0) return;
+    this.snapshot();
+    for (const node of validNodes) {
+      if (level === null || level === '') {
+        delete node.level;
+      } else {
+        node.level = level;
+      }
+    }
+    this.emit();
   }
 
   setNodeCategory(nodeId: string, categoryId: string | null): OrgNode {
