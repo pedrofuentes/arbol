@@ -235,21 +235,20 @@ export class ChartStore extends EventEmitter {
   ): Promise<void> {
     if (!this.activeChartId) throw new Error('No active chart');
 
-    const chart = await this.db.getChart(this.activeChartId);
-    if (!chart) throw new Error(`Chart not found: ${this.activeChartId}`);
-
-    chart.workingTree = tree;
-    chart.categories = categories;
-    chart.updatedAt = new Date().toISOString();
-    await this.db.putChart(chart);
-    this.lastSavedTree = JSON.stringify(tree);
+    await this.db.patchChart(this.activeChartId, {
+      workingTree: tree,
+      categories,
+      updatedAt: new Date().toISOString(),
+    });
     this.savedMutationVersion = mutationVersion ?? null;
+    this.lastSavedTree = mutationVersion !== undefined ? null : JSON.stringify(tree);
   }
 
   isDirty(currentTree: OrgNode, mutationVersion?: number): boolean {
     if (mutationVersion !== undefined && this.savedMutationVersion !== null) {
       return mutationVersion !== this.savedMutationVersion;
     }
+    if (this.lastSavedTree === null) return true;
     return JSON.stringify(currentTree) !== this.lastSavedTree;
   }
 

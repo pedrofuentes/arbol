@@ -572,14 +572,20 @@ describe('SettingsEditor', () => {
     });
 
     it('changing Legend Rows slider updates renderer', () => {
-      new SettingsEditor(container, renderer, rerenderCb);
-      const exportSection = findSectionByTitle(container, 'Categories Legend')!;
-      const rangeInput = exportSection.querySelector<HTMLInputElement>('input[type="range"]')!;
-      rangeInput.value = '3';
-      rangeInput.dispatchEvent(new Event('input'));
-      expect(renderer.updateOptions as ReturnType<typeof vi.fn>).toHaveBeenCalledWith(
-        expect.objectContaining({ legendRows: 3 }),
-      );
+      vi.useFakeTimers();
+      try {
+        new SettingsEditor(container, renderer, rerenderCb);
+        const exportSection = findSectionByTitle(container, 'Categories Legend')!;
+        const rangeInput = exportSection.querySelector<HTMLInputElement>('input[type="range"]')!;
+        rangeInput.value = '3';
+        rangeInput.dispatchEvent(new Event('input'));
+        vi.advanceTimersByTime(100);
+        expect(renderer.updateOptions as ReturnType<typeof vi.fn>).toHaveBeenCalledWith(
+          expect.objectContaining({ legendRows: 3 }),
+        );
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
@@ -1129,6 +1135,108 @@ describe('SettingsEditor', () => {
       expect(previewArea.querySelector('svg')).not.toBeNull();
       expect(() => editor.destroy()).not.toThrow();
       previewArea.remove();
+    });
+  });
+
+  describe('range slider debounce', () => {
+    it('range slider debounces renderer updates', () => {
+      vi.useFakeTimers();
+      try {
+        const editor = new SettingsEditor(container, renderer, rerenderCb);
+        const cardSection = findSectionByTitle(container, 'Card Dimensions')!;
+        expect(cardSection).toBeDefined();
+        const rangeInput = cardSection.querySelector<HTMLInputElement>('input[type="range"]')!;
+        expect(rangeInput).not.toBeNull();
+
+        // Fire multiple rapid input events
+        rerenderCb.mockClear();
+        (renderer.updateOptions as ReturnType<typeof vi.fn>).mockClear();
+        for (let i = 0; i < 5; i++) {
+          rangeInput.value = String(100 + i);
+          rangeInput.dispatchEvent(new Event('input'));
+        }
+
+        // Expensive calls should NOT have fired yet
+        expect(rerenderCb).not.toHaveBeenCalled();
+        expect(renderer.updateOptions).not.toHaveBeenCalled();
+
+        // After the debounce window, they should fire exactly once
+        vi.advanceTimersByTime(100);
+        expect(rerenderCb).toHaveBeenCalledTimes(1);
+        expect(renderer.updateOptions).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('range slider updates display immediately', () => {
+      vi.useFakeTimers();
+      try {
+        const editor = new SettingsEditor(container, renderer, rerenderCb);
+        const cardSection = findSectionByTitle(container, 'Card Dimensions')!;
+        const rangeInput = cardSection.querySelector<HTMLInputElement>('input[type="range"]')!;
+        const valueSpan = rangeInput.closest('.setting-control')!.querySelector('.setting-value')!;
+
+        rangeInput.value = '200';
+        rangeInput.dispatchEvent(new Event('input'));
+
+        // Value display should update immediately (no debounce wait)
+        expect(valueSpan.textContent).toContain('200');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  describe('settings editor listener cleanup', () => {
+    it('build clears pending debounce timers', () => {
+      vi.useFakeTimers();
+      try {
+        const editor = new SettingsEditor(container, renderer, rerenderCb);
+        const cardSection = findSectionByTitle(container, 'Card Dimensions')!;
+        const rangeInput = cardSection.querySelector<HTMLInputElement>('input[type="range"]')!;
+
+        // Fire input to create a pending debounce timer
+        rerenderCb.mockClear();
+        rangeInput.value = '200';
+        rangeInput.dispatchEvent(new Event('input'));
+
+        // Trigger a rebuild (simulates preset change)
+        editor.refresh();
+
+        // Advance timers past the debounce window
+        vi.advanceTimersByTime(200);
+
+        // The OLD debounce callback should NOT have fired
+        expect(rerenderCb).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('destroy clears debounce timers', () => {
+      vi.useFakeTimers();
+      try {
+        const editor = new SettingsEditor(container, renderer, rerenderCb);
+        const cardSection = findSectionByTitle(container, 'Card Dimensions')!;
+        const rangeInput = cardSection.querySelector<HTMLInputElement>('input[type="range"]')!;
+
+        // Fire input to create a pending debounce timer
+        rerenderCb.mockClear();
+        rangeInput.value = '200';
+        rangeInput.dispatchEvent(new Event('input'));
+
+        // Destroy the editor
+        editor.destroy();
+
+        // Advance timers past the debounce window
+        vi.advanceTimersByTime(200);
+
+        // The debounce callback should NOT have fired
+        expect(rerenderCb).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 

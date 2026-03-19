@@ -177,6 +177,7 @@ export class SettingsStore {
   private static CURRENT_VERSION = 1;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private storage: IStorage;
+  private cachedRaw: Partial<PersistableSettings> | null = null;
 
   constructor(storage: IStorage = browserStorage) {
     this.storage = storage;
@@ -203,15 +204,21 @@ export class SettingsStore {
   load(defaults: PersistableSettings): PersistableSettings {
     try {
       const raw = this.storage.getItem(SettingsStore.STORAGE_KEY);
-      if (!raw) return { ...defaults };
+      if (!raw) {
+        this.cachedRaw = {};
+        return { ...defaults };
+      }
       const envelope: StorageEnvelope = JSON.parse(raw);
       if (!envelope || typeof envelope !== 'object' || !envelope.settings) {
+        this.cachedRaw = {};
         return { ...defaults };
       }
       const validated = validateSettings(envelope.settings as Record<string, unknown>);
+      this.cachedRaw = validated;
       return { ...defaults, ...validated };
     } catch (e) {
       console.warn('Failed to load settings from localStorage:', e);
+      this.cachedRaw = {};
       return { ...defaults };
     }
   }
@@ -222,6 +229,7 @@ export class SettingsStore {
 
   clear(): void {
     this.storage.removeItem(SettingsStore.STORAGE_KEY);
+    this.cachedRaw = null;
   }
 
   exportToFile(name?: string): void {
@@ -242,6 +250,7 @@ export class SettingsStore {
 
   importFromFile(jsonContent: string): PersistableSettings {
     const settings = this.parseImport(jsonContent);
+    this.cachedRaw = settings;
     this.writeToStorage(settings);
     return settings;
   }
@@ -291,8 +300,9 @@ export class SettingsStore {
   }
 
   private writeToStorage(settings: Partial<PersistableSettings>): void {
-    const existing = this.loadRaw() ?? {};
+    const existing = this.cachedRaw ?? this.loadRaw() ?? {};
     const merged = { ...existing, ...settings };
+    this.cachedRaw = merged;
     const envelope: StorageEnvelope = {
       version: SettingsStore.CURRENT_VERSION,
       settings: merged,

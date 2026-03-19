@@ -957,4 +957,79 @@ describe('ChartStore', () => {
       expect(store.isDirty(otherChart.workingTree)).toBe(false);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // saveWorkingTree skips JSON.stringify when mutation version provided
+  // ---------------------------------------------------------------------------
+
+  describe('saveWorkingTree dirty detection optimization', () => {
+    beforeEach(async () => {
+      await store.initialize();
+    });
+
+    it('saveWorkingTree skips JSON.stringify for lastSavedTree when mutation version provided', async () => {
+      const tree = makeTree({ name: 'Optimized' });
+      await store.saveWorkingTree(tree, [], 99);
+
+      // When mutation version was provided, lastSavedTree should be null (skipped serialization)
+      // We verify indirectly: isDirty with same mutation version → false (fast path)
+      expect(store.isDirty(tree, 99)).toBe(false);
+
+      // And isDirty WITHOUT mutation version should return true (no lastSavedTree to compare against)
+      expect(store.isDirty(tree)).toBe(true);
+    });
+
+    it('saveWorkingTree keeps JSON.stringify for lastSavedTree when no mutation version', async () => {
+      const tree = makeTree({ name: 'Fallback' });
+      await store.saveWorkingTree(tree, []);
+
+      // Without mutation version, lastSavedTree should be populated for JSON fallback
+      expect(store.isDirty(makeTree({ name: 'Fallback' }))).toBe(false);
+      expect(store.isDirty(makeTree({ name: 'Different' }))).toBe(true);
+    });
+
+    it('isDirty returns true when lastSavedTree is null and no mutation version provided', async () => {
+      const tree = makeTree({ name: 'NullFallback' });
+      // Save with mutation version — lastSavedTree should be null
+      await store.saveWorkingTree(tree, [], 7);
+
+      // Query isDirty without mutation version — no lastSavedTree, should be true
+      expect(store.isDirty(tree)).toBe(true);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // saveWorkingTree uses patchChart (TODO 2)
+  // ---------------------------------------------------------------------------
+
+  describe('saveWorkingTree uses patchChart', () => {
+    beforeEach(async () => {
+      await store.initialize();
+    });
+
+    it('saveWorkingTree uses patchChart instead of getChart+putChart', async () => {
+      const patchSpy = vi.spyOn(db, 'patchChart');
+      const getSpy = vi.spyOn(db, 'getChart');
+
+      const tree = makeTree({ name: 'Patched' });
+      await store.saveWorkingTree(tree, makeCategories());
+
+      expect(patchSpy).toHaveBeenCalledTimes(1);
+      // getChart should NOT be called during saveWorkingTree
+      expect(getSpy).not.toHaveBeenCalled();
+
+      patchSpy.mockRestore();
+      getSpy.mockRestore();
+    });
+
+    it('saveWorkingTree via patchChart correctly persists data', async () => {
+      const tree = makeTree({ name: 'PatchPersist' });
+      const cats = makeCategories();
+      await store.saveWorkingTree(tree, cats);
+
+      const chart = await store.getActiveChart();
+      expect(chart!.workingTree.name).toBe('PatchPersist');
+      expect(chart!.categories).toHaveLength(2);
+    });
+  });
 });

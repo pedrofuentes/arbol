@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.9.0] — 2026-03-19
+
+### Changed
+- **Range slider debouncing** — settings sliders now debounce renderer updates at 60ms; value display updates immediately for smooth UX
+- **Chart dirty detection** — `isDirty()` uses mutation counter instead of `JSON.stringify` when available, eliminating repeated serialization of large trees
+- **IndexedDB patchChart** — `saveWorkingTree()` uses new `patchChart()` method, avoiding redundant read-before-write in IndexedDB
+- **CategoryStore cache** — in-memory cache eliminates `JSON.parse` + type filtering on every CRUD operation; `invalidateCache()` for chart switching
+- **SettingsStore cache** — `writeToStorage()` uses cached settings instead of re-reading from `localStorage` on every debounced save
+- **Property panel dropdown** — category dropdown skips DOM rebuild when categories haven't changed; uses `DocumentFragment` for batch writes when they have
+- **Debounce timer cleanup** — settings editor clears pending debounce timers on rebuild and destroy, preventing zombie callbacks
+
+### Testing
+- **2,251 tests across 91 files** — all passing
+- 33 new tests: settings editor debounce (4), chart-store dirty detection (5), patchChart (3), category cache (7), settings cache (4), property panel dropdown (4), context menu caching (6)
+
+## [3.8.0] — 2026-03-19
+
+### Added
+- **Level metadata** — `level` field on `OrgNode` for organizational level tracking (e.g., L1, L2)
+- **Level badge** — circular indigo badge on org chart cards showing level; configurable color, size, font
+- **Level settings** — show/hide toggle, badge color, text color, font size, badge size in settings panel
+- **Level editing** — set level via property panel, inline editor, and right-click context menu
+- **Bulk level operations** — `setNodeLevel()`, `bulkSetLevel()` on OrgStore
+- **PPTX level badge** — ellipse shape in PowerPoint export for circular badge rendering
+
+### Testing
+- **2,218 tests across 90 files** — all passing
+
 ## [3.7.0] — 2026-03-19
 
 ### Added

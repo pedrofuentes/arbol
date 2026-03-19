@@ -36,6 +36,7 @@ const DEFAULT_CATEGORIES: ColorCategory[] = [
 
 export class CategoryStore extends EventEmitter {
   private storage: IStorage;
+  private cache: ColorCategory[] | null = null;
 
   constructor(storage: IStorage = browserStorage) {
     super();
@@ -43,9 +44,11 @@ export class CategoryStore extends EventEmitter {
   }
 
   getAll(): ColorCategory[] {
+    if (this.cache !== null) return this.cache.map((c) => ({ ...c }));
     const stored = this.loadFromStorage();
     const list = stored.length > 0 ? stored : DEFAULT_CATEGORIES.map((c) => ({ ...c }));
-    return list.map((c) => this.ensureTextColors(c));
+    this.cache = list.map((c) => this.ensureTextColors(c));
+    return this.cache.map((c) => ({ ...c }));
   }
 
   getById(id: string): ColorCategory | undefined {
@@ -67,10 +70,10 @@ export class CategoryStore extends EventEmitter {
       nameColor: contrastingTextColor(color),
       titleColor: contrastingTitleColor(color),
     };
-    const categories = this.loadFromStorage();
-    const list = categories.length > 0 ? categories : DEFAULT_CATEGORIES.map((c) => ({ ...c }));
-    list.push(category);
-    this.saveToStorage(list);
+    const current = this.getAll();
+    current.push(category);
+    this.cache = current;
+    this.saveToStorage(current);
     this.emit();
     return category;
   }
@@ -110,6 +113,7 @@ export class CategoryStore extends EventEmitter {
       category.titleColor = fields.titleColor;
     }
 
+    this.cache = categories;
     this.saveToStorage(categories);
     this.emit();
   }
@@ -117,14 +121,20 @@ export class CategoryStore extends EventEmitter {
   remove(id: string): void {
     const categories = this.getAll();
     const filtered = categories.filter((c) => c.id !== id);
+    this.cache = filtered;
     this.saveToStorage(filtered);
     this.emit();
   }
 
   replaceAll(categories: ColorCategory[]): void {
     const processed = categories.map((c) => this.ensureTextColors(c));
+    this.cache = processed;
     this.saveToStorage(processed);
     this.emit();
+  }
+
+  invalidateCache(): void {
+    this.cache = null;
   }
 
   /** Ensure text colors exist on a category (migration for old data). */
