@@ -80,7 +80,7 @@ export class ImportEditor {
 
     // --- Mapping Preset Section ---
     const presetHeading = document.createElement('h4');
-    presetHeading.textContent = 'Mapping Preset';
+    presetHeading.textContent = t('import_editor.preset_heading');
     presetHeading.style.cssText =
       'margin:0 0 8px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
     this.container.appendChild(presetHeading);
@@ -108,7 +108,7 @@ export class ImportEditor {
       const presets = this.mappingStore.getPresets();
       if (presets.length === 0) {
         const empty = document.createElement('div');
-        empty.textContent = 'No saved presets.';
+        empty.textContent = t('import_editor.no_presets');
         empty.style.cssText =
           'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
         presetListContainer.appendChild(empty);
@@ -128,7 +128,7 @@ export class ImportEditor {
 
         const exportBtn = document.createElement('button');
         exportBtn.className = 'btn btn-secondary';
-        exportBtn.textContent = 'Export';
+        exportBtn.textContent = t('import_editor.export_btn');
         exportBtn.style.cssText = 'font-size:10px;padding:1px 6px;line-height:1;min-width:0;';
         exportBtn.addEventListener('click', () => {
           const json = this.mappingStore.exportPresets([preset.name]);
@@ -220,7 +220,7 @@ export class ImportEditor {
       this.manageSlot.appendChild(heading);
 
       const textarea = document.createElement('textarea');
-      textarea.placeholder = 'Paste preset JSON here...';
+      textarea.placeholder = t('import_editor.paste_preset_placeholder');
       textarea.style.cssText =
         'width:100%;min-height:80px;font-family:var(--font-mono);font-size:11px;' +
         'resize:vertical;padding:8px 10px;line-height:1.5;' +
@@ -329,7 +329,7 @@ export class ImportEditor {
 
     // --- File Upload Section ---
     const fileHeading = document.createElement('h4');
-    fileHeading.textContent = 'From File';
+    fileHeading.textContent = t('import_editor.from_file_heading');
     fileHeading.style.cssText =
       'margin:0 0 8px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
     this.container.appendChild(fileHeading);
@@ -364,7 +364,7 @@ export class ImportEditor {
     const browseLabel = document.createElement('strong');
     browseLabel.style.color = 'var(--accent)';
     browseLabel.style.cursor = 'pointer';
-    browseLabel.textContent = 'browse';
+    browseLabel.textContent = t('import_editor.browse_label');
     dropLabel.append(icon, '\u00A0\u00A0Drop file or ', browseLabel);
     dropLabel.className = 'text-secondary text-sm';
     dropLabel.style.cssText = 'font-family:var(--font-sans);';
@@ -411,13 +411,13 @@ export class ImportEditor {
 
     // --- Paste Section ---
     const pasteHeading = document.createElement('h4');
-    pasteHeading.textContent = 'Or Paste Data';
+    pasteHeading.textContent = t('import_editor.paste_heading');
     pasteHeading.style.cssText =
       'margin:0 0 8px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
     this.container.appendChild(pasteHeading);
 
     this.pasteArea = document.createElement('textarea');
-    this.pasteArea.placeholder = 'Paste JSON or CSV here...';
+    this.pasteArea.placeholder = t('import_editor.paste_placeholder');
     this.pasteArea.setAttribute('aria-label', 'Paste JSON or CSV data');
     this.pasteArea.style.cssText =
       'width:100%;min-height:120px;font-family:var(--font-mono);font-size:11px;' +
@@ -429,7 +429,7 @@ export class ImportEditor {
 
     const pasteBtn = document.createElement('button');
     pasteBtn.className = 'btn btn-primary mt-2';
-    pasteBtn.textContent = 'Parse & Preview';
+    pasteBtn.textContent = t('import_editor.parse_preview_btn');
     pasteBtn.addEventListener('click', () => this.processPaste());
     this.container.appendChild(pasteBtn);
 
@@ -826,7 +826,7 @@ export class ImportEditor {
     const applyBtn = document.createElement('button');
     applyBtn.className = 'btn btn-primary';
     applyBtn.dataset.action = 'apply';
-    applyBtn.textContent = 'Apply to Chart';
+    applyBtn.textContent = t('import_editor.apply_to_chart');
     applyBtn.addEventListener('click', () => this.applyImport());
 
     const cancelBtn = document.createElement('button');
@@ -917,7 +917,7 @@ export class ImportEditor {
     wrapper.className = 'mb-2';
 
     const heading = document.createElement('div');
-    heading.textContent = 'Text Normalization';
+    heading.textContent = t('import_editor.text_normalization');
     heading.style.cssText =
       'font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);margin-bottom:6px;';
     wrapper.appendChild(heading);

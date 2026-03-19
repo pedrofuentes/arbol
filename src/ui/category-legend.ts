@@ -75,7 +75,7 @@ export function showCategoryLegend(options: CategoryLegendOptions): void {
 
   const toggleBtn = document.createElement('button');
   toggleBtn.setAttribute('data-testid', 'category-legend-toggle');
-  toggleBtn.setAttribute('aria-label', 'Toggle category legend');
+  toggleBtn.setAttribute('aria-label', t('category_legend.toggle_aria'));
   toggleBtn.style.cssText = [
     'border:none',
     'background:transparent',

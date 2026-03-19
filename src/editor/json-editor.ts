@@ -1,4 +1,5 @@
 import { OrgStore } from '../store/org-store';
+import { t } from '../i18n';
 
 export class JsonEditor {
   private container: HTMLElement;
@@ -28,7 +29,7 @@ export class JsonEditor {
     textareaGroup.className = 'form-group';
     this.textarea = document.createElement('textarea');
     this.textarea.dataset.field = 'json';
-    this.textarea.setAttribute('aria-label', 'Org chart JSON data');
+    this.textarea.setAttribute('aria-label', t('json_editor.aria'));
     this.textarea.value = this.store.toJSON();
     this.textarea.style.cssText =
       'width:100%;min-height:200px;font-family:Calibri,sans-serif;font-size:12px;resize:vertical;';
@@ -46,7 +47,7 @@ export class JsonEditor {
     const applyBtn = document.createElement('button');
     applyBtn.className = 'btn btn-primary';
     applyBtn.dataset.action = 'apply';
-    applyBtn.textContent = 'Apply';
+    applyBtn.textContent = t('json_editor.apply');
     applyBtn.addEventListener('click', () => this.handleApply());
     this.container.appendChild(applyBtn);
   }

@@ -1,4 +1,5 @@
 import type { ColumnMapping, MappingPreset } from '../types';
+import { t } from '../i18n';
 
 let formIdCounter = 0;
 function uniqueId(prefix: string): string {
@@ -39,14 +40,14 @@ export class PresetCreator {
 
     // Heading
     const heading = document.createElement('h4');
-    heading.textContent = 'Create Mapping Preset';
+    heading.textContent = t('preset_creator.heading');
     heading.style.cssText =
       'margin:0 0 4px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
     this.container.appendChild(heading);
 
     // Description
     const desc = document.createElement('p');
-    desc.textContent = 'Type the column header names from your CSV file.';
+    desc.textContent = t('preset_creator.description');
     desc.style.cssText =
       'margin:0 0 12px;font-size:var(--text-sm);color:var(--text-secondary);line-height:var(--leading-normal);';
     this.container.appendChild(desc);
@@ -64,6 +65,7 @@ export class PresetCreator {
     // Error area
     this.errorArea = document.createElement('div');
     this.errorArea.className = 'error-msg';
+    this.errorArea.id = 'preset-creator-error';
     this.errorArea.style.cssText = 'min-height:0;';
     this.container.appendChild(this.errorArea);
 
@@ -74,12 +76,12 @@ export class PresetCreator {
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-secondary';
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = t('preset_creator.cancel');
     cancelBtn.addEventListener('click', () => this.onCancel());
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'btn btn-primary';
-    saveBtn.textContent = 'Save';
+    saveBtn.textContent = t('preset_creator.save');
     saveBtn.addEventListener('click', () => this.handleSave());
 
     btnGroup.appendChild(cancelBtn);
@@ -117,7 +119,7 @@ export class PresetCreator {
     group.className = 'form-group';
 
     const label = document.createElement('label');
-    label.textContent = 'Parent Reference Type';
+    label.textContent = t('preset_creator.parent_ref_type');
     group.appendChild(label);
 
     const radioGroup = document.createElement('div');
@@ -165,8 +167,24 @@ export class PresetCreator {
     }
   }
 
+  private clearAriaInvalid(): void {
+    const inputs = [this.presetNameInput, this.nameInput, this.titleInput, this.parentRefInput, this.idInput];
+    for (const input of inputs) {
+      input.removeAttribute('aria-invalid');
+      input.removeAttribute('aria-describedby');
+    }
+  }
+
+  private setAriaInvalid(...elements: HTMLElement[]): void {
+    for (const el of elements) {
+      el.setAttribute('aria-invalid', 'true');
+      el.setAttribute('aria-describedby', this.errorArea.id);
+    }
+  }
+
   private handleSave(): void {
     this.errorArea.textContent = '';
+    this.clearAriaInvalid();
 
     const presetName = this.presetNameInput.value.trim();
     const name = this.nameInput.value.trim();
@@ -176,15 +194,23 @@ export class PresetCreator {
     const parentRefType: 'id' | 'name' = this.byIdRadio.checked ? 'id' : 'name';
 
     if (!presetName) {
-      this.errorArea.textContent = 'Preset name is required.';
+      this.errorArea.textContent = t('preset_creator.error_name_required');
+      this.setAriaInvalid(this.presetNameInput);
       return;
     }
     if (!name || !title || !parentRef) {
-      this.errorArea.textContent = 'Name, Title, and Reports To columns are required.';
+      this.errorArea.textContent = t('preset_creator.error_columns_required');
+      const empty = [
+        ...(!name ? [this.nameInput] : []),
+        ...(!title ? [this.titleInput] : []),
+        ...(!parentRef ? [this.parentRefInput] : []),
+      ];
+      this.setAriaInvalid(...empty);
       return;
     }
     if (parentRefType === 'id' && !id) {
       this.errorArea.textContent = 'ID column is required when parent reference type is "By ID".';
+      this.setAriaInvalid(this.idInput);
       return;
     }
 
