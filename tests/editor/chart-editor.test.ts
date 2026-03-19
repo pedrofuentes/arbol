@@ -105,14 +105,14 @@ describe('ChartEditor – Export button', () => {
   it('renders an Export button in each chart item', () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const buttons = chartItem.querySelectorAll('button');
-    const labels = Array.from(buttons).map((b) => b.title);
+    const labels = Array.from(buttons).map((b) => b.getAttribute('data-tooltip'));
     expect(labels).toContain('Export');
   });
 
   it('places Export between Duplicate and Delete', () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const buttons = chartItem.querySelectorAll('button');
-    const labels = Array.from(buttons).map((b) => b.title);
+    const labels = Array.from(buttons).map((b) => b.getAttribute('data-tooltip'));
     const dupIdx = labels.indexOf('Duplicate');
     const expIdx = labels.indexOf('Export');
     const delIdx = labels.indexOf('Delete');
@@ -123,7 +123,7 @@ describe('ChartEditor – Export button', () => {
   it('clicking Export calls showExportDialog with chart name and versions', async () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const exportBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.title === 'Export',
+      (b) => b.getAttribute('data-tooltip') === 'Export',
     )!;
     exportBtn.click();
 
@@ -143,7 +143,7 @@ describe('ChartEditor – Export button', () => {
   it('onExport callback builds and downloads the bundle', async () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const exportBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.title === 'Export',
+      (b) => b.getAttribute('data-tooltip') === 'Export',
     )!;
     exportBtn.click();
 
@@ -168,7 +168,7 @@ describe('ChartEditor – Export button', () => {
 
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const exportBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.title === 'Export',
+      (b) => b.getAttribute('data-tooltip') === 'Export',
     )!;
     exportBtn.click();
 
@@ -184,7 +184,7 @@ describe('ChartEditor – Export button', () => {
   it('Export button has ghost styling, not danger', () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const exportBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.title === 'Export',
+      (b) => b.getAttribute('data-tooltip') === 'Export',
     )!;
     expect(exportBtn.className).toContain('btn-ghost');
     expect(exportBtn.className).not.toContain('btn-danger');
@@ -232,11 +232,11 @@ describe('ChartEditor – Compare button', () => {
     // Expand versions — click the chart item to show version list
     await vi.waitFor(() => {
       const allButtons = Array.from(container.querySelectorAll('button'));
-      const labels = allButtons.map((b) => b.title);
+      const labels = allButtons.map((b) => b.getAttribute('data-tooltip'));
       expect(labels).toContain('Compare');
     });
     const compareButtons = Array.from(container.querySelectorAll('button')).filter(
-      (b) => b.title === 'Compare',
+      (b) => b.getAttribute('data-tooltip') === 'Compare',
     );
     expect(compareButtons.length).toBe(versions.length);
   });
@@ -244,11 +244,11 @@ describe('ChartEditor – Compare button', () => {
   it('calls onVersionCompare when Compare button is clicked', async () => {
     await vi.waitFor(() => {
       const allButtons = Array.from(container.querySelectorAll('button'));
-      expect(allButtons.map((b) => b.title)).toContain('Compare');
+      expect(allButtons.map((b) => b.getAttribute('data-tooltip'))).toContain('Compare');
     });
 
     const compareBtn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.title === 'Compare',
+      (b) => b.getAttribute('data-tooltip') === 'Compare',
     )!;
     compareBtn.click();
 
@@ -263,16 +263,16 @@ describe('ChartEditor – Compare button', () => {
   it('places Compare button between View and Restore', async () => {
     await vi.waitFor(() => {
       const allButtons = Array.from(container.querySelectorAll('button'));
-      expect(allButtons.map((b) => b.title)).toContain('Compare');
+      expect(allButtons.map((b) => b.getAttribute('data-tooltip'))).toContain('Compare');
     });
 
     // Get buttons within the first version item's action row
     const allButtons = Array.from(container.querySelectorAll('button'));
     const versionActionButtons = allButtons.filter(
-      (b) => ['View', 'Compare', 'Restore', 'Delete'].includes(b.title ?? ''),
+      (b) => ['View', 'Compare', 'Restore', 'Delete'].includes(b.getAttribute('data-tooltip') ?? ''),
     );
     // First group of 4 = first version item
-    const labels = versionActionButtons.slice(0, 4).map((b) => b.title);
+    const labels = versionActionButtons.slice(0, 4).map((b) => b.getAttribute('data-tooltip'));
     const viewIdx = labels.indexOf('View');
     const compareIdx = labels.indexOf('Compare');
     const restoreIdx = labels.indexOf('Restore');
@@ -380,14 +380,14 @@ describe('ChartEditor – action button accessibility', () => {
     document.body.removeChild(container);
   });
 
-  it('chart action buttons have title and aria-label attributes', () => {
+  it('chart action buttons have data-tooltip and aria-label attributes', () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const buttons = Array.from(chartItem.querySelectorAll('button'));
     const expectedLabels = ['Rename', 'Duplicate', 'Export', 'Delete'];
 
     for (const label of expectedLabels) {
-      const btn = buttons.find((b) => b.title === label);
-      expect(btn, `button with title "${label}" should exist`).not.toBeUndefined();
+      const btn = buttons.find((b) => b.getAttribute('data-tooltip') === label);
+      expect(btn, `button with data-tooltip "${label}" should exist`).not.toBeUndefined();
       expect(btn!.getAttribute('aria-label')).toBe(label);
     }
   });
@@ -396,7 +396,7 @@ describe('ChartEditor – action button accessibility', () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const buttons = Array.from(chartItem.querySelectorAll('button'));
     const actionBtns = buttons.filter((b) =>
-      ['Rename', 'Duplicate', 'Export', 'Delete'].includes(b.title),
+      ['Rename', 'Duplicate', 'Export', 'Delete'].includes(b.getAttribute('data-tooltip') ?? ''),
     );
     expect(actionBtns.length).toBe(4);
     for (const btn of actionBtns) {
@@ -404,18 +404,18 @@ describe('ChartEditor – action button accessibility', () => {
     }
   });
 
-  it('version action buttons have title and aria-label attributes', async () => {
+  it('version action buttons have data-tooltip and aria-label attributes', async () => {
     await vi.waitFor(() => {
       const buttons = Array.from(container.querySelectorAll('button'));
-      expect(buttons.map((b) => b.title)).toContain('View');
+      expect(buttons.map((b) => b.getAttribute('data-tooltip'))).toContain('View');
     });
 
     const buttons = Array.from(container.querySelectorAll('button'));
     const expectedLabels = ['View', 'Compare', 'Restore', 'Delete'];
 
     for (const label of expectedLabels) {
-      const btn = buttons.find((b) => b.title === label);
-      expect(btn, `button with title "${label}" should exist`).not.toBeUndefined();
+      const btn = buttons.find((b) => b.getAttribute('data-tooltip') === label);
+      expect(btn, `button with data-tooltip "${label}" should exist`).not.toBeUndefined();
       expect(btn!.getAttribute('aria-label')).toBe(label);
     }
   });
@@ -505,7 +505,7 @@ describe('ChartEditor – rename via dialog', () => {
   it('clicking rename button opens input dialog', async () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const renameBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.title === 'Rename',
+      (b) => b.getAttribute('data-tooltip') === 'Rename',
     )!;
     renameBtn.click();
 
@@ -523,7 +523,7 @@ describe('ChartEditor – rename via dialog', () => {
 
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const renameBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.title === 'Rename',
+      (b) => b.getAttribute('data-tooltip') === 'Rename',
     )!;
     renameBtn.click();
 
@@ -537,7 +537,7 @@ describe('ChartEditor – rename via dialog', () => {
 
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const renameBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.title === 'Rename',
+      (b) => b.getAttribute('data-tooltip') === 'Rename',
     )!;
     renameBtn.click();
 
@@ -552,7 +552,7 @@ describe('ChartEditor – rename via dialog', () => {
 
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const renameBtn = Array.from(chartItem.querySelectorAll('button')).find(
-      (b) => b.title === 'Rename',
+      (b) => b.getAttribute('data-tooltip') === 'Rename',
     )!;
     renameBtn.click();
 
