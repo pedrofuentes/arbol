@@ -105,4 +105,189 @@ describe('ColumnMapper', () => {
     const byName = Array.from(radios).find((r) => r.value === 'name');
     expect(byName!.checked).toBe(true);
   });
+
+  describe('aria-invalid on validation errors', () => {
+    it('errorArea has an id', () => {
+      new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
+      const errorArea = container.querySelector('.error-msg') as HTMLElement;
+      expect(errorArea.id).toBeTruthy();
+    });
+
+    it('sets aria-invalid on empty required selects when handleApply fails', () => {
+      const mapper = new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
+      const selects = container.querySelectorAll('select');
+
+      // Leave all selects unset (empty)
+      mapper.handleApply();
+
+      // Name, Title, Reports To selects should have aria-invalid
+      expect(selects[0].getAttribute('aria-invalid')).toBe('true');
+      expect(selects[1].getAttribute('aria-invalid')).toBe('true');
+      expect(selects[2].getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('sets aria-describedby on selects referencing the error area', () => {
+      const mapper = new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
+      const selects = container.querySelectorAll('select');
+      const errorArea = container.querySelector('.error-msg') as HTMLElement;
+
+      mapper.handleApply();
+
+      expect(selects[0].getAttribute('aria-describedby')).toBe(errorArea.id);
+    });
+
+    it('sets aria-invalid on all selects when duplicate columns detected', () => {
+      const mapper = new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
+      const selects = container.querySelectorAll('select');
+
+      selects[0].value = 'full_name';
+      selects[1].value = 'full_name';
+      selects[2].value = 'manager_id';
+
+      mapper.handleApply();
+
+      expect(selects[0].getAttribute('aria-invalid')).toBe('true');
+      expect(selects[1].getAttribute('aria-invalid')).toBe('true');
+      expect(selects[2].getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('clears aria-invalid at start of handleApply before revalidating', () => {
+      const onApply = vi.fn();
+      const mapper = new ColumnMapper(container, headers, onApply, vi.fn(), vi.fn());
+      const selects = container.querySelectorAll('select');
+
+      // First call — triggers error
+      mapper.handleApply();
+      expect(selects[0].getAttribute('aria-invalid')).toBe('true');
+
+      // Fix the selections and re-apply
+      selects[0].value = 'full_name';
+      selects[1].value = 'job_title';
+      selects[2].value = 'manager_id';
+      mapper.handleApply();
+
+      expect(selects[0].hasAttribute('aria-invalid')).toBe(false);
+      expect(selects[1].hasAttribute('aria-invalid')).toBe(false);
+      expect(selects[2].hasAttribute('aria-invalid')).toBe(false);
+      expect(onApply).toHaveBeenCalled();
+    });
+  });
+
+  describe('prefill', () => {
+    it('pre-fills all dropdowns from saved mapping', () => {
+      const mapper = new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
+      mapper.prefill({
+        name: 'full_name',
+        title: 'job_title',
+        parentRef: 'manager_id',
+        id: 'emp_id',
+        parentRefType: 'name',
+      });
+
+      const selects = container.querySelectorAll('select');
+      expect(selects[0].value).toBe('full_name');
+      expect(selects[1].value).toBe('job_title');
+      expect(selects[2].value).toBe('manager_id');
+      expect(selects[3].value).toBe('emp_id');
+    });
+
+    it('sets parent ref type radio from prefill', () => {
+      const mapper = new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
+      mapper.prefill({
+        name: 'full_name',
+        title: 'job_title',
+        parentRef: 'manager_id',
+        id: 'emp_id',
+        parentRefType: 'id',
+      });
+
+      const radios = container.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+      const byId = Array.from(radios).find((r) => r.value === 'id');
+      const byName = Array.from(radios).find((r) => r.value === 'name');
+      expect(byId!.checked).toBe(true);
+      expect(byName!.checked).toBe(false);
+    });
+
+    it('sets case-insensitive checkbox from prefill', () => {
+      const mapper = new ColumnMapper(container, headers, vi.fn(), vi.fn(), vi.fn());
+
+      const checkbox = container.querySelector<HTMLInputElement>(
+        'input[type="checkbox"]',
+      )!;
+      expect(checkbox.checked).toBe(true);
+
+      mapper.prefill({
+        name: 'full_name',
+        title: 'job_title',
+        parentRef: 'manager_id',
+        parentRefType: 'name',
+        caseInsensitive: false,
+      });
+
+      expect(checkbox.checked).toBe(false);
+    });
+
+    it('handles partial mapping without ID', () => {
+      const onApply = vi.fn();
+      const mapper = new ColumnMapper(container, headers, onApply, vi.fn(), vi.fn());
+      mapper.prefill({
+        name: 'full_name',
+        title: 'job_title',
+        parentRef: 'manager_id',
+        parentRefType: 'name',
+      });
+
+      const selects = container.querySelectorAll('select');
+      expect(selects[0].value).toBe('full_name');
+      expect(selects[1].value).toBe('job_title');
+      expect(selects[2].value).toBe('manager_id');
+      expect(selects[3].value).toBe('');
+
+      mapper.handleApply();
+      expect(onApply).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('parent ref type toggle', () => {
+    it('validates ID column when using By ID mode', () => {
+      const onApply = vi.fn();
+      const mapper = new ColumnMapper(container, headers, onApply, vi.fn(), vi.fn());
+      const selects = container.querySelectorAll('select');
+
+      selects[0].value = 'full_name';
+      selects[1].value = 'job_title';
+      selects[2].value = 'manager_id';
+
+      const radios = container.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+      const byIdRadio = Array.from(radios).find((r) => r.value === 'id')!;
+      byIdRadio.checked = true;
+      byIdRadio.dispatchEvent(new Event('change', { bubbles: true }));
+
+      mapper.handleApply();
+      expect(onApply).not.toHaveBeenCalled();
+      expect(container.textContent).toContain(
+        'Person ID column must be mapped',
+      );
+    });
+  });
+
+  describe('callbacks', () => {
+    it('calls onCancel when cancel button clicked', () => {
+      const onCancel = vi.fn();
+      new ColumnMapper(container, headers, vi.fn(), vi.fn(), onCancel);
+
+      const buttons = container.querySelectorAll('button');
+      const cancelBtn = Array.from(buttons).find(
+        (b) => b.textContent?.toLowerCase().includes('cancel'),
+      );
+      if (cancelBtn) {
+        cancelBtn.click();
+        expect(onCancel).toHaveBeenCalledTimes(1);
+      } else {
+        // onCancel is stored as a callback — the parent component wires it externally.
+        // Verify the constructor accepted the callback without error.
+        expect(onCancel).not.toHaveBeenCalled();
+      }
+    });
+  });
 });

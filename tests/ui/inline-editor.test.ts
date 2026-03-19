@@ -285,4 +285,36 @@ describe('InlineEditor', () => {
 
     expect(onCancel).toHaveBeenCalled();
   });
+
+  describe('aria-invalid on validation errors', () => {
+    it('errorMsg element has an id', () => {
+      showInlineEditor(defaultOptions());
+      const errorMsg = document.querySelector('.error-msg') as HTMLElement;
+      expect(errorMsg.id).toBeTruthy();
+    });
+
+    it('sets aria-invalid and aria-describedby on save with empty name', () => {
+      showInlineEditor(defaultOptions());
+      const nameInput = document.querySelector('input[aria-label="Name"]') as HTMLInputElement;
+      nameInput.value = '';
+      nameInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(nameInput.getAttribute('aria-invalid')).toBe('true');
+      const errorMsg = document.querySelector('.error-msg') as HTMLElement;
+      expect(nameInput.getAttribute('aria-describedby')).toBe(errorMsg.id);
+    });
+
+    it('clears aria-invalid and aria-describedby on input after error', () => {
+      showInlineEditor(defaultOptions());
+      const nameInput = document.querySelector('input[aria-label="Name"]') as HTMLInputElement;
+      nameInput.value = '';
+      nameInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      expect(nameInput.getAttribute('aria-invalid')).toBe('true');
+
+      nameInput.value = 'Bob';
+      nameInput.dispatchEvent(new Event('input'));
+      expect(nameInput.hasAttribute('aria-invalid')).toBe(false);
+      expect(nameInput.hasAttribute('aria-describedby')).toBe(false);
+    });
+  });
 });

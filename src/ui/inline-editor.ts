@@ -108,6 +108,7 @@ export function showInlineEditor(options: InlineEditorOptions): void {
 
   const errorMsg = document.createElement('div');
   errorMsg.className = 'error-msg';
+  errorMsg.id = 'inline-editor-error';
   errorMsg.setAttribute('role', 'alert');
   errorMsg.style.marginTop = 'var(--space-1)';
   errorMsg.style.minHeight = '0';
@@ -115,6 +116,8 @@ export function showInlineEditor(options: InlineEditorOptions): void {
 
   nameInput.addEventListener('input', () => {
     errorMsg.textContent = '';
+    nameInput.removeAttribute('aria-invalid');
+    nameInput.removeAttribute('aria-describedby');
   });
 
   let dismissed = false;
@@ -124,6 +127,8 @@ export function showInlineEditor(options: InlineEditorOptions): void {
     const trimmedName = nameInput.value.trim();
     if (!trimmedName) {
       errorMsg.textContent = t('inline_editor.name_required');
+      nameInput.setAttribute('aria-invalid', 'true');
+      nameInput.setAttribute('aria-describedby', errorMsg.id);
       nameInput.focus();
       return;
     }
