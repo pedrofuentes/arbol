@@ -481,3 +481,100 @@ describe('getDiffStats', () => {
     expect(stats.modified).toBe(0);
   });
 });
+
+describe('compareTrees – level tracking', () => {
+  it('detects level change as modified', () => {
+    const oldTree = makeTree();
+    const newTree = makeTree();
+    oldTree.children![0].level = 'L3';
+    newTree.children![0].level = 'L4';
+
+    const diff = compareTrees(oldTree, newTree);
+
+    expect(diff.get('mgr-a')!.status).toBe('modified');
+    expect(diff.get('mgr-a')!.oldLevel).toBe('L3');
+  });
+
+  it('detects level removal as modified', () => {
+    const oldTree = makeTree();
+    const newTree = makeTree();
+    oldTree.children![0].level = 'L3';
+    // newTree has no level
+
+    const diff = compareTrees(oldTree, newTree);
+
+    expect(diff.get('mgr-a')!.status).toBe('modified');
+    expect(diff.get('mgr-a')!.oldLevel).toBe('L3');
+  });
+
+  it('detects level addition as modified', () => {
+    const oldTree = makeTree();
+    const newTree = makeTree();
+    // oldTree has no level
+    newTree.children![0].level = 'L3';
+
+    const diff = compareTrees(oldTree, newTree);
+
+    expect(diff.get('mgr-a')!.status).toBe('modified');
+    expect(diff.get('mgr-a')!.oldLevel).toBeUndefined();
+  });
+
+  it('level + name change both tracked', () => {
+    const oldTree = makeTree();
+    const newTree = makeTree();
+    oldTree.children![0].level = 'L3';
+    newTree.children![0].level = 'L4';
+    newTree.children![0].name = 'Robert';
+
+    const diff = compareTrees(oldTree, newTree);
+
+    const entry = diff.get('mgr-a')!;
+    expect(entry.status).toBe('modified');
+    expect(entry.oldLevel).toBe('L3');
+    expect(entry.oldName).toBe('Bob');
+  });
+
+  it('same level is unchanged', () => {
+    const oldTree = makeTree();
+    const newTree = makeTree();
+    oldTree.children![0].level = 'L3';
+    newTree.children![0].level = 'L3';
+
+    const diff = compareTrees(oldTree, newTree);
+
+    expect(diff.get('mgr-a')!.status).toBe('unchanged');
+  });
+
+  it('level change on moved node', () => {
+    const oldTree = makeTree();
+    const newTree = makeTree();
+    oldTree.children![0].children![0].level = 'L5';
+    // Move ic-1 from mgr-a to mgr-b with level change
+    newTree.children![0].children = newTree.children![0].children!.filter(c => c.id !== 'ic-1');
+    newTree.children![1].children!.push({ id: 'ic-1', name: 'Diana', title: 'Engineer', level: 'L6' });
+
+    const diff = compareTrees(oldTree, newTree);
+
+    const entry = diff.get('ic-1')!;
+    expect(entry.status).toBe('moved');
+    expect(entry.oldLevel).toBe('L5');
+    expect(entry.oldParentId).toBe('mgr-a');
+    expect(entry.newParentId).toBe('mgr-b');
+  });
+});
+
+describe('buildMergedTree – ghost node level', () => {
+  it('ghost node copies level in buildMergedTree', () => {
+    const oldTree = makeTree();
+    oldTree.children![0].children![0].level = 'L5';
+    const newTree = makeTree();
+    newTree.children![0].children = newTree.children![0].children!.filter(c => c.id !== 'ic-1');
+    const diff = compareTrees(oldTree, newTree);
+
+    const merged = buildMergedTree(oldTree, newTree, diff);
+
+    const ghost = findNodeById(merged, 'ic-1')!;
+    expect(ghost).toBeDefined();
+    expect(ghost.level).toBe('L5');
+  });
+});

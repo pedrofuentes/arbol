@@ -92,6 +92,7 @@ export interface DiffEntry {
   oldName?: string;
   oldTitle?: string;
   oldCategoryId?: string;
+  oldLevel?: string;
 }
 
 export interface ComparisonState {

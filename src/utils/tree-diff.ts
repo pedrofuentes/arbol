@@ -47,18 +47,21 @@ export function compareTrees(oldTree: OrgNode, newTree: OrgNode): Map<string, Di
     const nameChanged = node.name !== newNode.name;
     const titleChanged = node.title !== newNode.title;
     const categoryChanged = node.categoryId !== newNode.categoryId;
+    const levelChanged = node.level !== newNode.level;
 
     if (parentChanged) {
       const entry: DiffEntry = { status: 'moved', oldParentId, newParentId };
       if (nameChanged) entry.oldName = node.name;
       if (titleChanged) entry.oldTitle = node.title;
       if (categoryChanged) entry.oldCategoryId = node.categoryId;
+      if (levelChanged) entry.oldLevel = node.level;
       diff.set(id, entry);
-    } else if (nameChanged || titleChanged || categoryChanged) {
+    } else if (nameChanged || titleChanged || categoryChanged || levelChanged) {
       const entry: DiffEntry = { status: 'modified' };
       if (nameChanged) entry.oldName = node.name;
       if (titleChanged) entry.oldTitle = node.title;
       if (categoryChanged) entry.oldCategoryId = node.categoryId;
+      if (levelChanged) entry.oldLevel = node.level;
       diff.set(id, entry);
     } else {
       diff.set(id, { status: 'unchanged' });
@@ -121,6 +124,7 @@ export function buildMergedTree(
     const ghost: OrgNode = { id: oldNode.id, name: oldNode.name, title: oldNode.title };
     if (oldNode.categoryId !== undefined) ghost.categoryId = oldNode.categoryId;
     if (oldNode.dottedLine !== undefined) ghost.dottedLine = oldNode.dottedLine;
+    if (oldNode.level !== undefined) ghost.level = oldNode.level;
 
     // Walk up old-tree ancestors to find one present in merged tree
     let ancestorId = oldParentMap.get(id) ?? null;

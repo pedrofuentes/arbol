@@ -111,6 +111,29 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
           ],
         },
         {
+          label: t('menu.level'),
+          icon: t('menu.level_icon'),
+          submenu: [
+            {
+              label: t('menu.level_none'),
+              icon: !node.level ? t('menu.level_check') : ' ',
+              action: () => {
+                store.setNodeLevel(nodeId, null);
+              },
+            },
+            {
+              label: t('menu.set_level'),
+              icon: node.level ? t('menu.level_check') : ' ',
+              action: () => {
+                const value = prompt(t('menu.set_level'), node.level ?? '');
+                if (value !== null) {
+                  store.setNodeLevel(nodeId, value.trim() || null);
+                }
+              },
+            },
+          ],
+        },
+        {
           label: node.dottedLine ? t('menu.dotted_line_remove') : t('menu.dotted_line_set'),
           icon: t('menu.dotted_line_icon'),
           disabled: isRoot || nodeIsIC,
@@ -250,6 +273,27 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
                 },
               }),
             ),
+          ],
+        },
+        {
+          label: t('menu.multi_level', { count }),
+          icon: t('menu.level_icon'),
+          submenu: [
+            {
+              label: t('menu.level_none'),
+              action: () => {
+                store.bulkSetLevel(selectedArray, null);
+              },
+            },
+            {
+              label: t('menu.set_level'),
+              action: () => {
+                const value = prompt(t('menu.set_level'), '');
+                if (value !== null) {
+                  store.bulkSetLevel(selectedArray, value.trim() || null);
+                }
+              },
+            },
           ],
         },
         {
