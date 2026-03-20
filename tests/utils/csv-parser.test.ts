@@ -743,3 +743,131 @@ describe('circular reference detection', () => {
     expect(() => parseCsvToTree(csv)).toThrow(/Alice.*→.*Carol.*→.*Bob.*→.*Alice/);
   });
 });
+
+describe('level column support', () => {
+  it('parses CSV with level column (format A with id)', () => {
+    const csv = [
+      'id,name,title,parent_id,level',
+      '1,Alice,CEO,,E10',
+      '2,Bob,CTO,1,E9',
+      '3,Carol,Engineer,2,E7',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.level).toBe('E10');
+    expect(result.tree.children![0].level).toBe('E9');
+    expect(result.tree.children![0].children![0].level).toBe('E7');
+  });
+
+  it('parses CSV with level column (format B with manager_name)', () => {
+    const csv = [
+      'name,title,manager_name,level',
+      'Alice,CEO,,L8',
+      'Bob,CTO,Alice,L7',
+      'Carol,Engineer,Bob,L5',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.level).toBe('L8');
+    expect(result.tree.children![0].level).toBe('L7');
+    expect(result.tree.children![0].children![0].level).toBe('L5');
+  });
+
+  it('auto-detects level column header', () => {
+    const csv = [
+      'id,name,title,parent_id,level',
+      '1,Alice,CEO,,Senior',
+      '2,Bob,VP,1,Mid',
+      '3,Carol,Eng,2,Junior',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.level).toBe('Senior');
+  });
+
+  it('auto-detects grade column header', () => {
+    const csv = [
+      'id,name,title,parent_id,grade',
+      '1,Alice,CEO,,G15',
+      '2,Bob,VP,1,G12',
+      '3,Carol,Eng,2,G9',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.level).toBe('G15');
+    expect(result.tree.children![0].level).toBe('G12');
+  });
+
+  it('auto-detects band column header', () => {
+    const csv = [
+      'id,name,title,parent_id,band',
+      '1,Alice,CEO,,Band A',
+      '2,Bob,VP,1,Band B',
+      '3,Carol,Eng,2,Band C',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.level).toBe('Band A');
+    expect(result.tree.children![0].level).toBe('Band B');
+  });
+
+  it('level column via mapping', () => {
+    const csv = [
+      'emp_id,emp_name,emp_title,boss_id,emp_grade',
+      '100,Alice,CEO,,Senior',
+      '200,Bob,VP,100,Mid',
+      '300,Carol,Eng,200,Junior',
+    ].join('\n');
+
+    const mapping: ColumnMapping = {
+      name: 'emp_name',
+      title: 'emp_title',
+      parentRef: 'boss_id',
+      id: 'emp_id',
+      parentRefType: 'id',
+      level: 'emp_grade',
+    };
+
+    const result = parseCsvToTree(csv, mapping);
+    expect(result.tree.level).toBe('Senior');
+    expect(result.tree.children![0].level).toBe('Mid');
+    expect(result.tree.children![0].children![0].level).toBe('Junior');
+  });
+
+  it('missing level column in mapping is ignored', () => {
+    const csv = [
+      'emp_id,emp_name,emp_title,boss_id',
+      '100,Alice,CEO,',
+      '200,Bob,VP,100',
+      '300,Carol,Eng,200',
+    ].join('\n');
+
+    const mapping: ColumnMapping = {
+      name: 'emp_name',
+      title: 'emp_title',
+      parentRef: 'boss_id',
+      id: 'emp_id',
+      parentRefType: 'id',
+      level: 'nonexistent_column',
+    };
+
+    // Should not throw — level is optional
+    const result = parseCsvToTree(csv, mapping);
+    expect(result.tree.level).toBeUndefined();
+    expect(result.tree.children![0].level).toBeUndefined();
+  });
+
+  it('empty level values result in undefined', () => {
+    const csv = [
+      'id,name,title,parent_id,level',
+      '1,Alice,CEO,,',
+      '2,Bob,VP,1,L5',
+      '3,Carol,Eng,2,',
+    ].join('\n');
+
+    const result = parseCsvToTree(csv);
+    expect(result.tree.level).toBeUndefined();
+    expect(result.tree.children![0].level).toBe('L5');
+    expect(result.tree.children![0].children![0].level).toBeUndefined();
+  });
+});

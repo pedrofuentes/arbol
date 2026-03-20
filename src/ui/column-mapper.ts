@@ -17,6 +17,7 @@ export class ColumnMapper {
   private titleSelect!: HTMLSelectElement;
   private parentRefSelect!: HTMLSelectElement;
   private idSelect!: HTMLSelectElement;
+  private levelSelect!: HTMLSelectElement;
   private byIdRadio!: HTMLInputElement;
   private byNameRadio!: HTMLInputElement;
   private caseInsensitiveCheckbox!: HTMLInputElement;
@@ -66,6 +67,7 @@ export class ColumnMapper {
     this.parentRefSelect = parentRefGroup;
     this.parentRefLabel = this.parentRefSelect.parentElement!.querySelector('label')!;
     this.idSelect = this.createDropdown('Person ID Column (optional)', false);
+    this.levelSelect = this.createDropdown(t('column_mapper.level_column'), false);
 
     // Parent Reference Type toggle
     this.buildParentRefTypeToggle();
@@ -211,6 +213,7 @@ export class ColumnMapper {
     const title = this.titleSelect.value;
     const parentRef = this.parentRefSelect.value;
     const id = this.idSelect.value || undefined;
+    const level = this.levelSelect.value || undefined;
     const parentRefType: 'id' | 'name' = this.byIdRadio.checked ? 'id' : 'name';
 
     if (!name || !title || !parentRef) return null;
@@ -218,6 +221,7 @@ export class ColumnMapper {
 
     const selected = [name, title, parentRef];
     if (id) selected.push(id);
+    if (level) selected.push(level);
     if (new Set(selected).size !== selected.length) return null;
 
     return {
@@ -227,6 +231,7 @@ export class ColumnMapper {
       id,
       parentRefType,
       caseInsensitive: this.caseInsensitiveCheckbox.checked,
+      level,
     };
   }
 
@@ -236,6 +241,7 @@ export class ColumnMapper {
     this.titleSelect.value = mapping.title;
     this.parentRefSelect.value = mapping.parentRef;
     if (mapping.id) this.idSelect.value = mapping.id;
+    if (mapping.level) this.levelSelect.value = mapping.level;
     if (mapping.parentRefType === 'id') {
       this.byIdRadio.checked = true;
       this.byNameRadio.checked = false;
@@ -250,7 +256,7 @@ export class ColumnMapper {
   }
 
   private clearAriaInvalid(): void {
-    const selects = [this.nameSelect, this.titleSelect, this.parentRefSelect, this.idSelect];
+    const selects = [this.nameSelect, this.titleSelect, this.parentRefSelect, this.idSelect, this.levelSelect];
     for (const select of selects) {
       select.removeAttribute('aria-invalid');
       select.removeAttribute('aria-describedby');
@@ -281,6 +287,7 @@ export class ColumnMapper {
 
     const parentRefType: 'id' | 'name' = this.byIdRadio.checked ? 'id' : 'name';
     const id = this.idSelect.value || undefined;
+    const level = this.levelSelect.value || undefined;
 
     if (parentRefType === 'id' && !id) {
       this.errorArea.textContent =
@@ -291,6 +298,7 @@ export class ColumnMapper {
 
     const selected = [name, title, parentRef];
     if (id) selected.push(id);
+    if (level) selected.push(level);
     if (new Set(selected).size !== selected.length) {
       this.errorArea.textContent =
         'Each column can only be mapped to one field. Please remove duplicates.';
@@ -305,6 +313,7 @@ export class ColumnMapper {
       id,
       parentRefType,
       caseInsensitive: this.caseInsensitiveCheckbox.checked,
+      level,
     });
   }
 }

@@ -290,4 +290,72 @@ describe('ColumnMapper', () => {
       }
     });
   });
+
+  describe('level column', () => {
+    const headersWithLevel = ['emp_id', 'full_name', 'job_title', 'manager_id', 'grade'];
+
+    it('renders level column dropdown', () => {
+      new ColumnMapper(container, headersWithLevel, vi.fn(), vi.fn(), vi.fn());
+      const labels = Array.from(container.querySelectorAll('label'));
+      const levelLabel = labels.find((l) => l.textContent?.includes('Level'));
+      expect(levelLabel).toBeDefined();
+    });
+
+    it('includes level in mapping output', () => {
+      const onApply = vi.fn();
+      const mapper = new ColumnMapper(container, headersWithLevel, onApply, vi.fn(), vi.fn());
+      const selects = container.querySelectorAll('select');
+
+      // Name, Title, Reports To, ID, Level
+      selects[0].value = 'full_name';
+      selects[1].value = 'job_title';
+      selects[2].value = 'manager_id';
+      selects[3].value = 'emp_id';
+      selects[4].value = 'grade';
+
+      const radios = container.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+      const byIdRadio = Array.from(radios).find((r) => r.value === 'id')!;
+      byIdRadio.checked = true;
+      byIdRadio.dispatchEvent(new Event('change', { bubbles: true }));
+
+      mapper.handleApply();
+
+      expect(onApply).toHaveBeenCalledTimes(1);
+      const mapping = onApply.mock.calls[0][0];
+      expect(mapping.level).toBe('grade');
+    });
+
+    it('prefill restores level selection', () => {
+      const mapper = new ColumnMapper(container, headersWithLevel, vi.fn(), vi.fn(), vi.fn());
+      mapper.prefill({
+        name: 'full_name',
+        title: 'job_title',
+        parentRef: 'manager_id',
+        id: 'emp_id',
+        parentRefType: 'id',
+        level: 'grade',
+      });
+
+      const selects = container.querySelectorAll('select');
+      // Level is the 5th dropdown (index 4)
+      expect(selects[4].value).toBe('grade');
+    });
+
+    it('level column included in duplicate check', () => {
+      const onApply = vi.fn();
+      const mapper = new ColumnMapper(container, headersWithLevel, onApply, vi.fn(), vi.fn());
+      const selects = container.querySelectorAll('select');
+
+      // Set same column for level and name
+      selects[0].value = 'full_name';
+      selects[1].value = 'job_title';
+      selects[2].value = 'manager_id';
+      selects[4].value = 'full_name'; // level same as name
+
+      mapper.handleApply();
+
+      expect(onApply).not.toHaveBeenCalled();
+      expect(container.textContent).toContain('Each column can only be mapped to one field');
+    });
+  });
 });

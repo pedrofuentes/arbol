@@ -1146,6 +1146,7 @@ const en: Record<string, string> = {
   'export.scale_3x': '3× (Ultra high)',
   'export.exported_svg': 'Exported as SVG',
   'export.exported_png': 'Exported as PNG',
+  'column_mapper.level_column': 'Level Column (optional)',
 };
 
 export default en;

@@ -16,6 +16,7 @@ interface ColumnMap {
   title: number;
   id?: number;
   parent?: number;
+  level?: number;
 }
 
 function parseRow(line: string): string[] {
@@ -67,20 +68,26 @@ function detectFormat(headers: string[]): ColumnMap {
   const parentIdIdx = normalized.findIndex((h) => h === 'parent_id');
   const managerIdx = normalized.findIndex((h) => h === 'manager_name');
   const reportsToIdx = normalized.findIndex((h) => h === 'reports_to');
+  const levelIdx = normalized.findIndex((h) => h === 'level' || h === 'grade' || h === 'band');
 
+  let colMap: ColumnMap;
   if (idIdx !== -1 && parentIdIdx !== -1) {
-    return { format: 'A', name: nameIdx, title: titleIdx, id: idIdx, parent: parentIdIdx };
-  }
-  if (managerIdx !== -1) {
-    return { format: 'B', name: nameIdx, title: titleIdx, parent: managerIdx };
-  }
-  if (reportsToIdx !== -1) {
-    return { format: 'C', name: nameIdx, title: titleIdx, parent: reportsToIdx };
+    colMap = { format: 'A', name: nameIdx, title: titleIdx, id: idIdx, parent: parentIdIdx };
+  } else if (managerIdx !== -1) {
+    colMap = { format: 'B', name: nameIdx, title: titleIdx, parent: managerIdx };
+  } else if (reportsToIdx !== -1) {
+    colMap = { format: 'C', name: nameIdx, title: titleIdx, parent: reportsToIdx };
+  } else {
+    throw new Error(
+      'Unrecognizable CSV format: could not find parent reference column (parent_id, manager_name, or reports_to).',
+    );
   }
 
-  throw new Error(
-    'Unrecognizable CSV format: could not find parent reference column (parent_id, manager_name, or reports_to).',
-  );
+  if (levelIdx !== -1) {
+    colMap.level = levelIdx;
+  }
+
+  return colMap;
 }
 
 function stripBom(text: string): string {
@@ -173,6 +180,13 @@ export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvPar
     if (idIdx !== undefined) {
       colMap.id = idIdx;
     }
+
+    if (mapping.level) {
+      const levelIdx = normalized.indexOf(mapping.level.toLowerCase().trim());
+      if (levelIdx !== -1) {
+        colMap.level = levelIdx;
+      }
+    }
   } else {
     colMap = detectFormat(headers);
   }
@@ -189,6 +203,7 @@ export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvPar
     name: string;
     title: string;
     parentRef: string;
+    level?: string;
   }
 
   const nodes: FlatNode[] = [];
@@ -203,8 +218,9 @@ export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvPar
       colMap.format === 'A' && colMap.id !== undefined
         ? (fields[colMap.id] ?? '')
         : generateId();
+    const level = colMap.level !== undefined ? (fields[colMap.level] ?? '').trim() : '';
 
-    nodes.push({ id, name, title, parentRef });
+    nodes.push({ id, name, title, parentRef, level: level || undefined });
   }
 
   if (nodes.length < 2) {
@@ -226,11 +242,11 @@ export function parseCsvToTree(csvText: string, mapping?: ColumnMapping): CsvPar
 }
 
 function buildTreeById(
-  nodes: { id: string; name: string; title: string; parentRef: string }[],
+  nodes: { id: string; name: string; title: string; parentRef: string; level?: string }[],
   caseInsensitive: boolean,
 ): CsvParseResult {
   const normalize = caseInsensitive ? (s: string) => s.toLowerCase() : (s: string) => s;
-  const idMap = new Map<string, { id: string; name: string; title: string; parentRef: string }>();
+  const idMap = new Map<string, { id: string; name: string; title: string; parentRef: string; level?: string }>();
   for (const node of nodes) {
     const key = normalize(node.id);
     const existing = idMap.get(key);
@@ -301,6 +317,7 @@ function buildTreeById(
     count++;
     const childIds = childrenMap.get(normalizedId);
     const result: OrgNode = { id: n.id, name: n.name, title: n.title };
+    if (n.level) result.level = n.level;
     if (childIds && childIds.length > 0) {
       result.children = childIds.map(buildNode);
     }
@@ -312,11 +329,11 @@ function buildTreeById(
 }
 
 function buildTreeByName(
-  nodes: { id: string; name: string; title: string; parentRef: string }[],
+  nodes: { id: string; name: string; title: string; parentRef: string; level?: string }[],
   caseInsensitive: boolean,
 ): CsvParseResult {
   const normalize = caseInsensitive ? (s: string) => s.toLowerCase() : (s: string) => s;
-  const nameMap = new Map<string, { id: string; name: string; title: string; parentRef: string }>();
+  const nameMap = new Map<string, { id: string; name: string; title: string; parentRef: string; level?: string }>();
   for (const node of nodes) {
     const key = normalize(node.name);
     const existing = nameMap.get(key);
@@ -391,6 +408,7 @@ function buildTreeByName(
     count++;
     const childNames = childrenMap.get(normalizedName);
     const result: OrgNode = { id: n.id, name: n.name, title: n.title };
+    if (n.level) result.level = n.level;
     if (childNames && childNames.length > 0) {
       result.children = childNames.map(buildNode);
     }
@@ -402,7 +420,7 @@ function buildTreeByName(
 }
 
 function detectCycles(
-  nodes: { id: string; name: string; title: string; parentRef: string }[],
+  nodes: { id: string; name: string; title: string; parentRef: string; level?: string }[],
   keyField: 'id' | 'name',
   caseInsensitive: boolean,
 ): void {

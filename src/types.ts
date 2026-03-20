@@ -41,6 +41,7 @@ export interface ColumnMapping {
   caseInsensitive?: boolean;
   nameNormalization?: TextNormalization;
   titleNormalization?: TextNormalization;
+  level?: string;
 }
 
 export interface MappingPreset {
