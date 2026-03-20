@@ -41,8 +41,13 @@ const en: Record<string, string> = {
   'tabs.import': 'Import',
   'tabs.settings': 'Settings',
   'tabs.aria': 'Editor tabs',
-  'tabs.org': 'Org',
-  'tabs.analytics': 'Analytics',
+  'analytics.drawer_toggle': 'Analytics',
+  'analytics.drawer_toggle_tooltip': 'Toggle analytics panel (Ctrl+Shift+A)',
+  'analytics.drawer_close': 'Close analytics panel',
+  'analytics.drawer_aria': 'Organization analytics panel',
+  'analytics.benchmark_healthy': 'Healthy range',
+  'analytics.benchmark_caution': 'Outside healthy range',
+  'analytics.alerts_count': '{count} alerts',
 
   // ─── Analytics ─────────────────────────────────────────────────────
   'analytics.title': 'Org Analytics',

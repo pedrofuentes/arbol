@@ -15,22 +15,6 @@ export interface AnalyticsEditorOptions {
   onNodeSelect?: (nodeId: string) => void;
 }
 
-const SECTION_STYLE = 'margin-bottom:16px;';
-const HEADING_STYLE =
-  'margin:0 0 8px;font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.08em;font-weight:700;';
-const STAT_ROW_STYLE =
-  'display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px;color:var(--text-secondary);';
-const BIG_NUMBER_STYLE =
-  'font-size:28px;font-weight:700;color:var(--text-primary);line-height:1.1;';
-const ALERT_BTN_STYLE =
-  'background:none;border:none;padding:2px 0;font-size:12px;color:var(--accent);cursor:pointer;text-align:left;font-family:inherit;text-decoration:underline;';
-const BAR_BG_STYLE =
-  'flex:1;height:8px;background:var(--bg-base);border-radius:4px;overflow:hidden;margin-left:8px;';
-const BAR_FILL_STYLE =
-  'height:100%;background:var(--accent);border-radius:4px;transition:width 150ms ease;';
-const SWATCH_STYLE =
-  'display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:middle;';
-
 export class AnalyticsEditor {
   private container: HTMLElement;
   private options: AnalyticsEditorOptions;
@@ -67,12 +51,11 @@ export class AnalyticsEditor {
       categories: this.options.categoryStore?.getAll(),
     });
 
-    this.buildHeader(focusedName);
-    this.buildHeadcountSection(metrics);
-    this.buildStructureSection(metrics);
-    this.buildSpanSection(metrics);
-    this.buildLevelSection(metrics);
-    this.buildCategorySection(metrics);
+    if (focusedName) {
+      this.buildFocusBanner(focusedName);
+    }
+    this.buildKPIStrip(metrics);
+    this.buildDetailGrid(metrics);
   }
 
   destroy(): void {
@@ -81,184 +64,274 @@ export class AnalyticsEditor {
     this.container.innerHTML = '';
   }
 
-  // ─── Section builders ─────────────────────────────────────────────
+  // ─── KPI Strip ──────────────────────────────────────────────────────
 
-  private buildHeader(focusedName: string | null): void {
-    const heading = document.createElement('h3');
-    heading.style.cssText =
-      'margin:0 0 12px;font-size:15px;font-weight:700;color:var(--text-primary);';
-    heading.textContent = t('analytics.title');
-    this.container.appendChild(heading);
-
-    if (focusedName) {
-      const note = document.createElement('p');
-      note.style.cssText =
-        'margin:0 0 12px;font-size:12px;color:var(--text-secondary);font-style:italic;';
-      note.textContent = t('analytics.focus_note', { name: focusedName });
-      this.container.appendChild(note);
-    }
+  private buildFocusBanner(name: string): void {
+    const banner = document.createElement('div');
+    banner.className = 'analytics-focus-banner';
+    banner.textContent = t('analytics.focus_note', { name });
+    this.container.appendChild(banner);
   }
 
-  private buildHeadcountSection(metrics: OrgMetrics): void {
-    const section = this.createSection(t('analytics.section.headcount'));
+  private buildKPIStrip(metrics: OrgMetrics): void {
+    const strip = document.createElement('div');
+    strip.className = 'analytics-kpi-strip';
 
-    const big = document.createElement('div');
-    big.style.cssText = BIG_NUMBER_STYLE;
-    big.textContent = t('analytics.people', { count: String(metrics.totalHeadcount) });
-    section.appendChild(big);
+    const totalAlerts =
+      metrics.wideSpanManagers.length +
+      metrics.narrowSpanManagers.length +
+      metrics.singleChildManagers.length;
 
-    const spacer = document.createElement('div');
-    spacer.style.cssText = 'height:8px;';
-    section.appendChild(spacer);
+    const ratio =
+      metrics.managerToIcRatio > 0
+        ? Math.round((1 / metrics.managerToIcRatio) * 10) / 10
+        : 0;
 
-    this.addStatRow(section, t('analytics.managers'), String(metrics.managerCount));
-    this.addStatRow(section, t('analytics.ics'), String(metrics.icCount));
-    this.addStatRow(section, t('analytics.advisors'), String(metrics.advisorCount));
+    const cards: {
+      accent: string;
+      label: string;
+      value: string;
+      unit?: string;
+      subtitle?: string;
+    }[] = [
+      {
+        accent: 'teal',
+        label: t('analytics.section.headcount'),
+        value: String(metrics.totalHeadcount),
+        subtitle: `${metrics.managerCount} ${t('analytics.managers')} · ${metrics.icCount} ${t('analytics.ics')} · ${metrics.advisorCount} ${t('analytics.advisors')}`,
+      },
+      {
+        accent: 'blue',
+        label: t('analytics.org_depth'),
+        value: String(metrics.orgDepth),
+        unit: t('analytics.org_depth_value', { count: String(metrics.orgDepth) }).replace(String(metrics.orgDepth), '').trim(),
+        subtitle: `${t('analytics.avg_depth')}: ${t('analytics.avg_depth_value', { value: String(metrics.avgDepth) })}`,
+      },
+      {
+        accent: 'green',
+        label: t('analytics.manager_ic_ratio'),
+        value: ratio > 0 ? t('analytics.ratio_format', { value: String(ratio) }) : '—',
+      },
+      {
+        accent: 'amber',
+        label: t('analytics.section.span'),
+        value: String(metrics.spanOfControl.avg),
+        subtitle: `${t('analytics.span_min')}: ${metrics.spanOfControl.min} · ${t('analytics.span_max')}: ${metrics.spanOfControl.max}`,
+      },
+      {
+        accent: 'rose',
+        label: t('analytics.alerts_count', { count: String(totalAlerts) }),
+        value: String(totalAlerts),
+      },
+    ];
 
-    if (metrics.managerToIcRatio > 0) {
-      const inverted = Math.round((1 / metrics.managerToIcRatio) * 10) / 10;
-      this.addStatRow(
-        section,
-        t('analytics.manager_ic_ratio'),
-        t('analytics.ratio_format', { value: String(inverted) }),
-      );
-    }
+    cards.forEach((card, i) => {
+      const el = document.createElement('div');
+      el.className = 'analytics-kpi-card';
+      el.setAttribute('data-accent', card.accent);
+      el.style.animationDelay = `${i * 50}ms`;
 
-    this.container.appendChild(section);
+      const label = document.createElement('div');
+      label.className = 'analytics-kpi-label';
+      label.textContent = card.label;
+      el.appendChild(label);
+
+      const valueRow = document.createElement('div');
+      const valueEl = document.createElement('span');
+      valueEl.className = 'analytics-kpi-value';
+      valueEl.textContent = card.value;
+      valueRow.appendChild(valueEl);
+
+      if (card.unit) {
+        const unitEl = document.createElement('span');
+        unitEl.className = 'analytics-kpi-unit';
+        unitEl.textContent = card.unit;
+        valueRow.appendChild(unitEl);
+      }
+      el.appendChild(valueRow);
+
+      if (card.subtitle) {
+        const sub = document.createElement('div');
+        sub.className = 'analytics-kpi-subtitle';
+        sub.textContent = card.subtitle;
+        el.appendChild(sub);
+      }
+
+      strip.appendChild(el);
+    });
+
+    this.container.appendChild(strip);
   }
 
-  private buildStructureSection(metrics: OrgMetrics): void {
-    const section = this.createSection(t('analytics.section.structure'));
+  // ─── Detail Grid ────────────────────────────────────────────────────
 
-    this.addStatRow(
-      section,
-      t('analytics.org_depth'),
-      t('analytics.org_depth_value', { count: String(metrics.orgDepth) }),
-    );
-    this.addStatRow(
-      section,
-      t('analytics.avg_depth'),
-      t('analytics.avg_depth_value', { value: String(metrics.avgDepth) }),
-    );
+  private buildDetailGrid(metrics: OrgMetrics): void {
+    const grid = document.createElement('div');
+    grid.className = 'analytics-detail-grid';
 
-    // Layer headcount bars
-    const barLabel = document.createElement('div');
-    barLabel.style.cssText =
-      'font-size:11px;color:var(--text-tertiary);margin-top:8px;margin-bottom:4px;font-weight:600;';
-    barLabel.textContent = t('analytics.layer_headcount');
-    section.appendChild(barLabel);
+    this.buildSpanSection(grid, metrics, 0);
+    this.buildLayerSection(grid, metrics, 1);
+    this.buildLevelSection(grid, metrics, 2);
+    this.buildCategorySection(grid, metrics, 3);
+
+    this.container.appendChild(grid);
+  }
+
+  private buildSpanSection(grid: HTMLElement, metrics: OrgMetrics, index: number): void {
+    const section = this.createDetailSection(t('analytics.section.span'), index);
+
+    // Stat row
+    const stats = document.createElement('div');
+    stats.className = 'analytics-span-stats';
+
+    const statItems = [
+      { label: t('analytics.span_avg'), value: metrics.spanOfControl.avg },
+      { label: t('analytics.span_min'), value: metrics.spanOfControl.min },
+      { label: t('analytics.span_max'), value: metrics.spanOfControl.max },
+      { label: t('analytics.span_median'), value: metrics.spanOfControl.median },
+    ];
+
+    for (const item of statItems) {
+      const stat = document.createElement('div');
+      stat.className = 'analytics-span-stat';
+
+      const labelEl = document.createElement('div');
+      labelEl.className = 'analytics-span-stat-label';
+      labelEl.textContent = item.label;
+      stat.appendChild(labelEl);
+
+      const valueEl = document.createElement('div');
+      valueEl.className = 'analytics-span-stat-value';
+      valueEl.setAttribute('data-health', this.spanHealth(item.value));
+      valueEl.textContent = String(item.value);
+      stat.appendChild(valueEl);
+
+      stats.appendChild(stat);
+    }
+    section.appendChild(stats);
+
+    // Alerts
+    const allAlerts: { alert: ManagerAlert; severity: string }[] = [
+      ...metrics.wideSpanManagers.map(a => ({ alert: a, severity: 'high' })),
+      ...metrics.narrowSpanManagers.map(a => ({ alert: a, severity: 'medium' })),
+      ...metrics.singleChildManagers.map(a => ({ alert: a, severity: 'medium' })),
+    ];
+
+    if (allAlerts.length === 0) {
+      const noAlerts = document.createElement('div');
+      noAlerts.className = 'analytics-kpi-subtitle';
+      noAlerts.textContent = t('analytics.no_alerts');
+      section.appendChild(noAlerts);
+    } else {
+      const list = document.createElement('div');
+      list.className = 'analytics-alert-list';
+
+      for (const { alert, severity } of allAlerts) {
+        const item = document.createElement('div');
+        item.className = 'analytics-alert-item';
+
+        const dot = document.createElement('span');
+        dot.className = 'analytics-alert-dot';
+        dot.setAttribute('data-severity', severity);
+        item.appendChild(dot);
+
+        const btn = document.createElement('button');
+        btn.className = 'analytics-alert-name';
+        btn.textContent = alert.name;
+        btn.addEventListener('click', () => {
+          this.options.onNodeSelect?.(alert.id);
+        });
+        item.appendChild(btn);
+
+        const detail = document.createElement('span');
+        detail.className = 'analytics-alert-detail';
+        detail.textContent = t('analytics.span_direct_reports', {
+          count: String(alert.directReports),
+        });
+        item.appendChild(detail);
+
+        list.appendChild(item);
+      }
+      section.appendChild(list);
+    }
+
+    grid.appendChild(section);
+  }
+
+  private buildLayerSection(grid: HTMLElement, metrics: OrgMetrics, index: number): void {
+    const section = this.createDetailSection(t('analytics.layer_headcount'), index);
 
     const maxCount = Math.max(...metrics.layerCounts, 1);
     for (let i = 0; i < metrics.layerCounts.length; i++) {
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;padding:2px 0;font-size:12px;';
+      row.className = 'analytics-bar-row';
 
       const label = document.createElement('span');
-      label.style.cssText = 'width:28px;color:var(--text-tertiary);font-size:11px;';
+      label.className = 'analytics-bar-label';
       label.textContent = t('analytics.layer_n', { n: String(i) });
       row.appendChild(label);
 
-      const barBg = document.createElement('div');
-      barBg.style.cssText = BAR_BG_STYLE;
-      const barFill = document.createElement('div');
-      barFill.style.cssText = BAR_FILL_STYLE;
-      barFill.style.width = `${(metrics.layerCounts[i] / maxCount) * 100}%`;
-      barBg.appendChild(barFill);
-      row.appendChild(barBg);
+      const track = document.createElement('div');
+      track.className = 'analytics-bar-track';
+
+      const fill = document.createElement('div');
+      fill.className = 'analytics-bar-fill';
+      fill.style.width = `${(metrics.layerCounts[i] / maxCount) * 100}%`;
 
       const count = document.createElement('span');
-      count.style.cssText = 'width:28px;text-align:right;color:var(--text-secondary);font-size:11px;margin-left:6px;';
+      count.className = 'analytics-bar-count';
       count.textContent = String(metrics.layerCounts[i]);
-      row.appendChild(count);
+      fill.appendChild(count);
 
+      track.appendChild(fill);
+      row.appendChild(track);
       section.appendChild(row);
     }
 
-    this.container.appendChild(section);
+    grid.appendChild(section);
   }
 
-  private buildSpanSection(metrics: OrgMetrics): void {
-    const section = this.createSection(t('analytics.section.span'));
-
-    const avg = metrics.spanOfControl.avg;
-    const color = this.spanColor(avg);
-
-    const statsGrid = document.createElement('div');
-    statsGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:8px;';
-
-    this.addGridStat(statsGrid, t('analytics.span_avg'), String(avg), color);
-    this.addGridStat(statsGrid, t('analytics.span_min'), String(metrics.spanOfControl.min));
-    this.addGridStat(statsGrid, t('analytics.span_max'), String(metrics.spanOfControl.max));
-    this.addGridStat(statsGrid, t('analytics.span_median'), String(metrics.spanOfControl.median));
-    section.appendChild(statsGrid);
-
-    // Alerts
-    const wideThreshold = 10;
-    const narrowThreshold = 3;
-
-    if (
-      metrics.wideSpanManagers.length === 0 &&
-      metrics.narrowSpanManagers.length === 0 &&
-      metrics.singleChildManagers.length === 0
-    ) {
-      const noAlerts = document.createElement('div');
-      noAlerts.style.cssText = 'font-size:12px;color:var(--text-tertiary);font-style:italic;';
-      noAlerts.textContent = t('analytics.no_alerts');
-      section.appendChild(noAlerts);
-    } else {
-      if (metrics.wideSpanManagers.length > 0) {
-        this.addAlertGroup(
-          section,
-          t('analytics.wide_span_title', { threshold: String(wideThreshold) }),
-          t('analytics.wide_span_desc', {
-            count: String(metrics.wideSpanManagers.length),
-            threshold: String(wideThreshold),
-          }),
-          metrics.wideSpanManagers,
-        );
-      }
-      if (metrics.narrowSpanManagers.length > 0) {
-        this.addAlertGroup(
-          section,
-          t('analytics.narrow_span_title', { threshold: String(narrowThreshold) }),
-          t('analytics.narrow_span_desc', {
-            count: String(metrics.narrowSpanManagers.length),
-            threshold: String(narrowThreshold),
-          }),
-          metrics.narrowSpanManagers,
-        );
-      }
-      if (metrics.singleChildManagers.length > 0) {
-        this.addAlertGroup(
-          section,
-          t('analytics.single_child_title'),
-          t('analytics.single_child_desc', {
-            count: String(metrics.singleChildManagers.length),
-          }),
-          metrics.singleChildManagers,
-        );
-      }
-    }
-
-    this.container.appendChild(section);
-  }
-
-  private buildLevelSection(metrics: OrgMetrics): void {
-    const section = this.createSection(t('analytics.section.levels'));
+  private buildLevelSection(grid: HTMLElement, metrics: OrgMetrics, index: number): void {
+    const section = this.createDetailSection(t('analytics.section.levels'), index);
 
     if (metrics.levelDistribution.size === 0 && metrics.nodesWithoutLevel > 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'font-size:12px;color:var(--text-tertiary);font-style:italic;';
+      empty.className = 'analytics-kpi-subtitle';
       empty.textContent = t('analytics.no_levels');
       section.appendChild(empty);
     } else {
       const sorted = [...metrics.levelDistribution.entries()].sort((a, b) => b[1] - a[1]);
+      const maxCount = Math.max(...sorted.map(([, c]) => c), 1);
+
       for (const [level, count] of sorted) {
-        this.addStatRow(section, level, String(count));
+        const row = document.createElement('div');
+        row.className = 'analytics-dist-row';
+
+        const label = document.createElement('span');
+        label.className = 'analytics-dist-label';
+        label.textContent = level;
+        row.appendChild(label);
+
+        const countEl = document.createElement('span');
+        countEl.className = 'analytics-dist-count';
+        countEl.textContent = String(count);
+        row.appendChild(countEl);
+
+        const bar = document.createElement('div');
+        bar.className = 'analytics-dist-bar';
+        const fill = document.createElement('div');
+        fill.className = 'analytics-dist-bar-fill';
+        fill.style.width = `${(count / maxCount) * 100}%`;
+        fill.style.background = 'var(--accent)';
+        bar.appendChild(fill);
+        row.appendChild(bar);
+
+        section.appendChild(row);
       }
+
       if (metrics.nodesWithoutLevel > 0) {
         const note = document.createElement('div');
-        note.style.cssText = 'font-size:12px;color:var(--text-tertiary);margin-top:4px;';
+        note.className = 'analytics-kpi-subtitle';
         note.textContent = t('analytics.nodes_without_level', {
           count: String(metrics.nodesWithoutLevel),
         });
@@ -266,143 +339,92 @@ export class AnalyticsEditor {
       }
     }
 
-    this.container.appendChild(section);
+    grid.appendChild(section);
   }
 
-  private buildCategorySection(metrics: OrgMetrics): void {
-    const section = this.createSection(t('analytics.section.categories'));
+  private buildCategorySection(grid: HTMLElement, metrics: OrgMetrics, index: number): void {
+    const section = this.createDetailSection(t('analytics.section.categories'), index);
     const categories = this.options.categoryStore?.getAll() ?? [];
 
     if (metrics.categoryDistribution.size === 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'font-size:12px;color:var(--text-tertiary);font-style:italic;';
+      empty.className = 'analytics-kpi-subtitle';
       empty.textContent = t('analytics.no_categories');
       section.appendChild(empty);
     } else {
       const sorted = [...metrics.categoryDistribution.entries()].sort((a, b) => b[1] - a[1]);
+      const maxCount = Math.max(...sorted.map(([, c]) => c), 1);
+
       for (const [catId, count] of sorted) {
         const cat = categories.find(c => c.id === catId);
         const row = document.createElement('div');
-        row.style.cssText = STAT_ROW_STYLE;
+        row.className = 'analytics-dist-row';
 
-        const labelWrap = document.createElement('span');
         if (cat) {
           const swatch = document.createElement('span');
-          swatch.style.cssText = SWATCH_STYLE;
+          swatch.className = 'analytics-dist-swatch';
           swatch.style.backgroundColor = cat.color;
-          labelWrap.appendChild(swatch);
+          row.appendChild(swatch);
         }
-        const labelText = document.createTextNode(cat?.label ?? catId);
-        labelWrap.appendChild(labelText);
-        row.appendChild(labelWrap);
 
-        const value = document.createElement('span');
-        value.style.cssText = 'font-weight:600;color:var(--text-primary);';
-        value.textContent = String(count);
-        row.appendChild(value);
+        const label = document.createElement('span');
+        label.className = 'analytics-dist-label';
+        label.textContent = cat?.label ?? catId;
+        row.appendChild(label);
+
+        const countEl = document.createElement('span');
+        countEl.className = 'analytics-dist-count';
+        countEl.textContent = String(count);
+        row.appendChild(countEl);
+
+        const bar = document.createElement('div');
+        bar.className = 'analytics-dist-bar';
+        const fill = document.createElement('div');
+        fill.className = 'analytics-dist-bar-fill';
+        fill.style.width = `${(count / maxCount) * 100}%`;
+        fill.style.background = cat?.color ?? 'var(--accent)';
+        bar.appendChild(fill);
+        row.appendChild(bar);
 
         section.appendChild(row);
       }
     }
 
     if (metrics.uncategorizedCount > 0) {
-      this.addStatRow(section, t('analytics.uncategorized'), String(metrics.uncategorizedCount));
+      const row = document.createElement('div');
+      row.className = 'analytics-dist-row';
+      const label = document.createElement('span');
+      label.className = 'analytics-dist-label';
+      label.textContent = t('analytics.uncategorized');
+      row.appendChild(label);
+      const countEl = document.createElement('span');
+      countEl.className = 'analytics-dist-count';
+      countEl.textContent = String(metrics.uncategorizedCount);
+      row.appendChild(countEl);
+      section.appendChild(row);
     }
 
-    this.container.appendChild(section);
+    grid.appendChild(section);
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────
+  // ─── Helpers ────────────────────────────────────────────────────────
 
-  private createSection(title: string): HTMLDivElement {
+  private createDetailSection(title: string, index: number): HTMLDivElement {
     const section = document.createElement('div');
-    section.style.cssText = SECTION_STYLE;
+    section.className = 'analytics-detail-section';
+    section.style.animationDelay = `${(index + 5) * 50}ms`;
 
-    const heading = document.createElement('h4');
-    heading.style.cssText = HEADING_STYLE;
+    const heading = document.createElement('div');
+    heading.className = 'analytics-detail-heading';
     heading.textContent = title;
     section.appendChild(heading);
 
     return section;
   }
 
-  private addStatRow(parent: HTMLElement, label: string, value: string): void {
-    const row = document.createElement('div');
-    row.style.cssText = STAT_ROW_STYLE;
-
-    const labelEl = document.createElement('span');
-    labelEl.textContent = label;
-    row.appendChild(labelEl);
-
-    const valueEl = document.createElement('span');
-    valueEl.style.cssText = 'font-weight:600;color:var(--text-primary);';
-    valueEl.textContent = value;
-    row.appendChild(valueEl);
-
-    parent.appendChild(row);
-  }
-
-  private addGridStat(
-    grid: HTMLElement,
-    label: string,
-    value: string,
-    color?: string,
-  ): void {
-    const cell = document.createElement('div');
-    cell.style.cssText = 'padding:4px 0;';
-
-    const valEl = document.createElement('div');
-    valEl.style.cssText = `font-size:18px;font-weight:700;color:${color ?? 'var(--text-primary)'};`;
-    valEl.textContent = value;
-    cell.appendChild(valEl);
-
-    const labelEl = document.createElement('div');
-    labelEl.style.cssText = 'font-size:11px;color:var(--text-tertiary);';
-    labelEl.textContent = label;
-    cell.appendChild(labelEl);
-
-    grid.appendChild(cell);
-  }
-
-  private spanColor(avg: number): string {
-    if (avg >= 5 && avg <= 8) return 'var(--color-green, #22c55e)';
-    if ((avg >= 3 && avg < 5) || (avg > 8 && avg <= 10)) return 'var(--color-yellow, #eab308)';
-    return 'var(--color-red, #ef4444)';
-  }
-
-  private addAlertGroup(
-    parent: HTMLElement,
-    title: string,
-    description: string,
-    alerts: ManagerAlert[],
-  ): void {
-    const group = document.createElement('div');
-    group.style.cssText = 'margin-top:8px;';
-
-    const heading = document.createElement('div');
-    heading.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-secondary);';
-    heading.textContent = title;
-    group.appendChild(heading);
-
-    const desc = document.createElement('div');
-    desc.style.cssText = 'font-size:11px;color:var(--text-tertiary);margin-bottom:4px;';
-    desc.textContent = description;
-    group.appendChild(desc);
-
-    for (const alert of alerts) {
-      const btn = document.createElement('button');
-      btn.style.cssText = ALERT_BTN_STYLE;
-      btn.dataset.nodeId = alert.id;
-      btn.textContent = `${alert.name} — ${t('analytics.span_direct_reports', {
-        count: String(alert.directReports),
-      })}`;
-      btn.addEventListener('click', () => {
-        this.options.onNodeSelect?.(alert.id);
-      });
-      group.appendChild(btn);
-      group.appendChild(document.createElement('br'));
-    }
-
-    parent.appendChild(group);
+  private spanHealth(value: number): string {
+    if (value >= 5 && value <= 8) return 'healthy';
+    if ((value >= 3 && value < 5) || (value > 8 && value <= 10)) return 'caution';
+    return 'danger';
   }
 }

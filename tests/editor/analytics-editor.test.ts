@@ -36,37 +36,41 @@ describe('AnalyticsEditor', () => {
     container.remove();
   });
 
-  it('renders analytics title', () => {
+  it('renders KPI strip with cards', () => {
     new AnalyticsEditor({ container, orgStore: store });
-    const heading = container.querySelector('h3');
-    expect(heading).not.toBeNull();
-    expect(heading!.textContent).toBe('Org Analytics');
+    const strip = container.querySelector('.analytics-kpi-strip');
+    expect(strip).not.toBeNull();
+    const cards = container.querySelectorAll('.analytics-kpi-card');
+    expect(cards.length).toBe(5);
   });
 
-  it('renders headcount section', () => {
+  it('renders KPI cards with correct accents', () => {
+    new AnalyticsEditor({ container, orgStore: store });
+    const accents = Array.from(container.querySelectorAll('.analytics-kpi-card'))
+      .map(c => c.getAttribute('data-accent'));
+    expect(accents).toEqual(['teal', 'blue', 'green', 'amber', 'rose']);
+  });
+
+  it('renders headcount in KPI card', () => {
     new AnalyticsEditor({ container, orgStore: store });
     const text = container.textContent!;
     expect(text).toContain('7');
-    expect(text).toContain('people');
   });
 
-  it('renders manager and IC counts', () => {
+  it('renders manager and IC counts in text', () => {
     new AnalyticsEditor({ container, orgStore: store });
     const text = container.textContent!;
-    // Tree: CEO (manager with manager children), VP Sales (M1 with 2 ICs), VP Eng (M1 with 1 IC)
-    // Managers: CEO, VP Sales, VP Eng = 3
-    // ICs: Alice, Bob, Charlie = 3
-    // Advisors: 0 (all children of M1 managers are ICs)
     expect(text).toContain('Managers');
     expect(text).toContain('Individual Contributors');
     expect(text).toContain('Advisors');
   });
 
-  it('renders org depth', () => {
+  it('renders detail grid with sections', () => {
     new AnalyticsEditor({ container, orgStore: store });
-    const text = container.textContent!;
-    // Root -> VP Sales -> Alice = depth 2
-    expect(text).toContain('layers');
+    const grid = container.querySelector('.analytics-detail-grid');
+    expect(grid).not.toBeNull();
+    const sections = container.querySelectorAll('.analytics-detail-section');
+    expect(sections.length).toBeGreaterThanOrEqual(2);
   });
 
   it('renders span of control stats', () => {
@@ -76,6 +80,12 @@ describe('AnalyticsEditor', () => {
     expect(text).toContain('Minimum');
     expect(text).toContain('Maximum');
     expect(text).toContain('Median');
+  });
+
+  it('renders org depth', () => {
+    new AnalyticsEditor({ container, orgStore: store });
+    const text = container.textContent!;
+    expect(text).toContain('layers');
   });
 
   it('renders level distribution', () => {
@@ -89,20 +99,19 @@ describe('AnalyticsEditor', () => {
   it('renders nodes without level note', () => {
     new AnalyticsEditor({ container, orgStore: store });
     const text = container.textContent!;
-    // Charlie has no level
     expect(text).toContain('1 without level');
   });
 
-  it('shows focus mode banner', () => {
+  it('shows focus mode banner with class', () => {
     new AnalyticsEditor({
       container,
       orgStore: store,
       getFocusedTree: () => testTree.children![0],
       getFocusedName: () => 'VP Sales',
     });
-    const text = container.textContent!;
-    expect(text).toContain('VP Sales');
-    expect(text).toContain('metrics');
+    const banner = container.querySelector('.analytics-focus-banner');
+    expect(banner).not.toBeNull();
+    expect(banner!.textContent).toContain('VP Sales');
   });
 
   it('refreshes on store change', () => {
@@ -110,7 +119,6 @@ describe('AnalyticsEditor', () => {
     const textBefore = container.textContent!;
     expect(textBefore).toContain('7');
 
-    // Add a child — headcount should change
     store.addChild('ic1', { name: 'Dana', title: 'Junior' });
     const textAfter = container.textContent!;
     expect(textAfter).toContain('8');
@@ -118,11 +126,9 @@ describe('AnalyticsEditor', () => {
 
   it('clickable alert triggers onNodeSelect', () => {
     const onNodeSelect = vi.fn();
-    // VP Eng has 1 direct report → single-child manager alert
     new AnalyticsEditor({ container, orgStore: store, onNodeSelect });
 
-    // Find alert buttons — single-child manager "VP Eng"
-    const buttons = container.querySelectorAll<HTMLButtonElement>('button[data-node-id]');
+    const buttons = container.querySelectorAll<HTMLButtonElement>('.analytics-alert-name');
     const vpEngBtn = Array.from(buttons).find(b => b.textContent?.includes('VP Eng'));
     expect(vpEngBtn).toBeDefined();
     vpEngBtn!.click();
@@ -136,7 +142,6 @@ describe('AnalyticsEditor', () => {
     editor.destroy();
     expect(container.innerHTML).toBe('');
 
-    // Verify store listener is removed — changes shouldn't re-render
     store.addChild('ic1', { name: 'Eve', title: 'IC' });
     expect(container.innerHTML).toBe('');
   });
@@ -170,7 +175,6 @@ describe('AnalyticsEditor', () => {
       levelStore,
     });
     const text = container.textContent!;
-    // With mapped display mode, levels should resolve
     expect(text).toContain('Executive');
     expect(text).toContain('Vice President');
   });
@@ -188,5 +192,17 @@ describe('AnalyticsEditor', () => {
   it('shows no-categories message when none in use', () => {
     new AnalyticsEditor({ container, orgStore: store });
     expect(container.textContent).toContain('No categories in use');
+  });
+
+  it('renders span health indicators', () => {
+    new AnalyticsEditor({ container, orgStore: store });
+    const healthValues = container.querySelectorAll('.analytics-span-stat-value[data-health]');
+    expect(healthValues.length).toBeGreaterThan(0);
+  });
+
+  it('renders layer bars', () => {
+    new AnalyticsEditor({ container, orgStore: store });
+    const bars = container.querySelectorAll('.analytics-bar-row');
+    expect(bars.length).toBeGreaterThan(0);
   });
 });

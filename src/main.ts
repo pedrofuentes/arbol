@@ -39,7 +39,7 @@ import { ImportWizard } from './ui/import-wizard';
 import { WizardState, renderSourceStep, renderMappingStep, renderPreviewStep, renderImportStep } from './ui/import-wizard-steps';
 import { registerShortcuts } from './init/shortcuts-handler';
 import type { ChartRecord, VersionRecord } from './types';
-import { TabSwitcher } from './editor/tab-switcher';
+import { AnalyticsDrawer } from './ui/analytics-drawer';
 import { AnalyticsEditor } from './editor/analytics-editor';
 
 async function main(): Promise<void> {
@@ -530,13 +530,8 @@ async function main(): Promise<void> {
   offscreenHost.appendChild(jsonEditorHost);
   const jsonEditor = new JsonEditor(jsonEditorHost, store);
 
-  // Charts — sidebar with tabs
-  const sidebarTabSwitcher = new TabSwitcher(sidebar, [
-    { id: 'org', label: t('tabs.org') },
-    { id: 'analytics', label: t('tabs.analytics') },
-  ]);
-  const orgTabContent = sidebarTabSwitcher.getContentContainer('org')!;
-  const analyticsTabContent = sidebarTabSwitcher.getContentContainer('analytics')!;
+  // Analytics bottom drawer (overlays chart-area)
+  const analyticsDrawer = new AnalyticsDrawer(chartArea);
 
   const handleBeforeSwitch = async (): Promise<boolean> => {
     if (!chartStore.isDirty(store.getTree(), store.mutationVersion)) return true;
@@ -569,7 +564,7 @@ async function main(): Promise<void> {
   };
 
   const chartEditor = new ChartEditor({
-    container: orgTabContent,
+    container: sidebar,
     chartStore,
     getCurrentTree: () => store.getTree(),
     getCurrentCategories: () => categoryStore.getAll(),
@@ -625,7 +620,7 @@ async function main(): Promise<void> {
   });
 
   const analyticsEditor = new AnalyticsEditor({
-    container: analyticsTabContent,
+    container: analyticsDrawer.getContentContainer(),
     orgStore: store,
     levelStore,
     categoryStore,
@@ -646,6 +641,26 @@ async function main(): Promise<void> {
     onNodeSelect: (nodeId) => {
       renderer.setSelectedNode(nodeId);
     },
+  });
+
+  // Analytics toggle button in toolbar
+  const analyticsToggleBtn = document.createElement('button');
+  analyticsToggleBtn.className = 'analytics-toggle-btn';
+  analyticsToggleBtn.setAttribute('aria-label', t('analytics.drawer_toggle_tooltip'));
+  analyticsToggleBtn.setAttribute('data-tooltip', t('analytics.drawer_toggle_tooltip'));
+  const toggleIcon = document.createElement('span');
+  toggleIcon.setAttribute('aria-hidden', 'true');
+  toggleIcon.textContent = '📊';
+  analyticsToggleBtn.appendChild(toggleIcon);
+  analyticsToggleBtn.appendChild(document.createTextNode(' ' + t('analytics.drawer_toggle')));
+  headerRight.appendChild(analyticsToggleBtn);
+
+  analyticsToggleBtn.addEventListener('click', () => {
+    analyticsDrawer.toggle();
+  });
+
+  analyticsDrawer.onChange(() => {
+    analyticsToggleBtn.classList.toggle('active', analyticsDrawer.isOpen());
   });
 
   // Sidebar collapse toggle
@@ -922,6 +937,14 @@ async function main(): Promise<void> {
   cmdKBtn.addEventListener('click', async () => {
     commandPalette.setItems(await buildCommandItems());
     commandPalette.open();
+  });
+
+  // Analytics drawer keyboard shortcut
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+      e.preventDefault();
+      analyticsDrawer.toggle();
+    }
   });
 
   window.addEventListener('beforeunload', (e) => {
