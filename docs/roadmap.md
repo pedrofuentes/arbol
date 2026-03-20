@@ -8,6 +8,23 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
+## 🚀 v3.11.0 — Advanced Analytics Visualizations
+
+### Phase 39 — D3 Visualization Charts
+- [x] Zoomable Sunburst (d3.partition + d3.arc) — radial org view with click-to-zoom, breadcrumbs, center label
+- [x] Span of Control Distribution (lollipop chart) — health zone bands, KPI strip, manager drill-down list
+- [x] Interactive Treemap (d3.treemap) — zoomable tiles, department/depth color toggle, breadcrumbs
+- [x] Analytics sub-tab navigation — [Overview | Sunburst | Span Chart | Treemap] with ARIA tablist, roving tabindex, lazy chart init
+- [x] 40+ i18n keys for visualization labels, tooltips, controls
+- [x] Analytics drawer drag-to-resize with localStorage persistence
+- [x] Configurable ideal span range (user-settable, persisted, drives health zone colors)
+
+### Testing
+- [x] **2,479 tests across 99 files** — all passing
+- [x] 48 new tests: sunburst-chart (10), span-chart (15), treemap-chart (10), analytics-editor sub-tabs (7), analytics-drawer resize (6)
+
+---
+
 ## 🚀 v3.10.0 — Level Mapping + CSV Import + Analytics
 
 ### Phase 38b — Level Mapping System

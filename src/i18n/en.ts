@@ -44,6 +44,7 @@ const en: Record<string, string> = {
   'analytics.drawer_toggle': 'Analytics',
   'analytics.drawer_toggle_tooltip': 'Toggle analytics panel (Ctrl+Shift+A)',
   'analytics.drawer_close': 'Close analytics panel',
+  'analytics.drawer_resize': 'Drag to resize analytics panel',
   'analytics.drawer_aria': 'Organization analytics panel',
   'analytics.benchmark_healthy': 'Healthy range',
   'analytics.benchmark_caution': 'Outside healthy range',
@@ -88,6 +89,53 @@ const en: Record<string, string> = {
   'analytics.uncategorized': 'Uncategorized',
   'analytics.no_categories': 'No categories in use',
   'analytics.disclaimer': 'Metrics are computed from the current chart structure and are for reference only. Verify independently before making organizational decisions.',
+
+  // ─── Analytics Sub-tabs ───────────────────────────────────────────
+  'analytics.tab.overview': 'Overview',
+  'analytics.tab.sunburst': 'Sunburst',
+  'analytics.tab.span_chart': 'Span Chart',
+  'analytics.tab.treemap': 'Treemap',
+  'analytics.tab.aria': 'Analytics visualization tabs',
+
+  // ─── Visualization shared strings ─────────────────────────────────
+  'analytics.viz.click_to_zoom': 'Click to zoom in',
+  'analytics.viz.click_to_drill': 'Click to drill down',
+  'analytics.viz.click_center_back': 'Click center to go back',
+  'analytics.viz.people_in_org': 'people in org',
+  'analytics.viz.individual_contributor': 'Individual Contributor',
+  'analytics.viz.department': 'Department',
+  'analytics.viz.level': 'Level',
+  'analytics.viz.direct_reports': 'Direct reports',
+  'analytics.viz.team_size': 'Team size',
+  'analytics.viz.total_org_size': 'Total org size',
+  'analytics.viz.uncategorized': 'Uncategorized',
+  'analytics.viz.breadcrumb_root': 'Full Org',
+  'analytics.viz.no_data': 'Not enough data to display this visualization',
+
+  // ─── Span Chart strings ───────────────────────────────────────────
+  'analytics.viz.span.total_managers': 'Total Managers',
+  'analytics.viz.span.avg_span': 'Avg Span',
+  'analytics.viz.span.median_span': 'Median Span',
+  'analytics.viz.span.min_max': 'Min–Max',
+  'analytics.viz.span.direct_reports_axis': 'Span of Control (direct reports)',
+  'analytics.viz.span.manager_count_axis': 'Number of managers',
+  'analytics.viz.span.managers_with_span': '{count} manager(s) with span of {span}',
+  'analytics.viz.span.health_alert': 'Alert zone',
+  'analytics.viz.span.health_watch': 'Watch zone',
+  'analytics.viz.span.health_healthy': 'Healthy zone',
+  'analytics.viz.span.ideal_range_label': 'Ideal span:',
+  'analytics.viz.span.ideal_range_to': 'to',
+
+  // ─── Treemap strings ──────────────────────────────────────────────
+  'analytics.viz.treemap.color_by': 'Color by:',
+  'analytics.viz.treemap.color_department': 'Department',
+  'analytics.viz.treemap.color_depth': 'Org Depth',
+  'analytics.viz.treemap.depth_root': 'L0 — Root',
+  'analytics.viz.treemap.depth_vp': 'L1 — VP',
+  'analytics.viz.treemap.depth_director': 'L2 — Director',
+  'analytics.viz.treemap.depth_manager': 'L3 — Manager',
+  'analytics.viz.treemap.depth_lead': 'L4 — Lead',
+  'analytics.viz.treemap.depth_ic': 'L5 — IC',
 
   // ─── Context Menu ──────────────────────────────────────────────────
   'menu.edit': 'Edit',

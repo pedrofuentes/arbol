@@ -135,4 +135,63 @@ describe('AnalyticsDrawer', () => {
     expect(grip!.getAttribute('aria-hidden')).toBe('true');
     drawer.destroy();
   });
+
+  describe('drag-to-resize', () => {
+    it('handle has ns-resize cursor', () => {
+      const drawer = new AnalyticsDrawer(parent);
+      const handle = parent.querySelector('.analytics-drawer-handle') as HTMLElement;
+      expect(handle).not.toBeNull();
+      expect(handle.style.cursor).toBe('ns-resize');
+      drawer.destroy();
+    });
+
+    it('grip has aria-hidden', () => {
+      const drawer = new AnalyticsDrawer(parent);
+      const grip = parent.querySelector('.analytics-drawer-grip') as HTMLElement;
+      expect(grip).not.toBeNull();
+      expect(grip.getAttribute('aria-hidden')).toBe('true');
+      drawer.destroy();
+    });
+
+    it('pointerdown on handle starts drag', () => {
+      const drawer = new AnalyticsDrawer(parent);
+      const handle = parent.querySelector('.analytics-drawer-handle') as HTMLElement;
+      const root = parent.querySelector('.analytics-drawer') as HTMLElement;
+
+      handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientY: 300 }));
+
+      expect(root.style.transition).toBe('none');
+      drawer.destroy();
+    });
+
+    it('pointerup saves height to localStorage', () => {
+      const drawer = new AnalyticsDrawer(parent);
+      const handle = parent.querySelector('.analytics-drawer-handle') as HTMLElement;
+      const root = parent.querySelector('.analytics-drawer') as HTMLElement;
+
+      handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientY: 300 }));
+      document.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientY: 250 }));
+      document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+
+      expect(localStorage.getItem('arbol-analytics-drawer-height')).not.toBeNull();
+      drawer.destroy();
+      localStorage.removeItem('arbol-analytics-drawer-height');
+    });
+
+    it('restores height from localStorage', () => {
+      localStorage.setItem('arbol-analytics-drawer-height', '350px');
+      const drawer = new AnalyticsDrawer(parent);
+      const root = parent.querySelector('.analytics-drawer') as HTMLElement;
+
+      expect(root.style.height).toBe('350px');
+      drawer.destroy();
+      localStorage.removeItem('arbol-analytics-drawer-height');
+    });
+
+    it('destroy removes document listeners', () => {
+      const drawer = new AnalyticsDrawer(parent);
+      drawer.destroy();
+      expect(parent.querySelector('.analytics-drawer')).toBeNull();
+    });
+  });
 });

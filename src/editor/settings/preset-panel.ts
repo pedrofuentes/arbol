@@ -256,7 +256,7 @@ export class PresetPanel {
         display:flex;align-items:center;gap:6px;padding:6px 8px;position:relative;
         border:1px solid var(--border-default);border-radius:var(--radius-md);
         background:var(--bg-elevated);cursor:pointer;text-align:start;
-        transition:all 120ms ease;font-family:var(--font-sans);
+        transition:background-color 120ms ease,border-color 120ms ease;font-family:var(--font-sans);
       `;
 
       const swatch = document.createElement('div');
@@ -291,26 +291,6 @@ export class PresetPanel {
           this.rebuildCallback();
         });
         card.appendChild(deleteBtn);
-
-        card.addEventListener('mouseenter', () => {
-          card.style.borderColor = 'var(--accent)';
-          card.style.background = 'var(--bg-hover)';
-          deleteBtn.style.opacity = '1';
-        });
-        card.addEventListener('mouseleave', () => {
-          card.style.borderColor = 'var(--border-default)';
-          card.style.background = 'var(--bg-elevated)';
-          deleteBtn.style.opacity = '0';
-        });
-      } else {
-        card.addEventListener('mouseenter', () => {
-          card.style.borderColor = 'var(--accent)';
-          card.style.background = 'var(--bg-hover)';
-        });
-        card.addEventListener('mouseleave', () => {
-          card.style.borderColor = 'var(--border-default)';
-          card.style.background = 'var(--bg-elevated)';
-        });
       }
 
       card.addEventListener('click', () => {
@@ -391,15 +371,6 @@ export class PresetPanel {
       if (layoutActive) {
         btn.classList.add('layout-active');
       }
-
-      btn.addEventListener('mouseenter', () => {
-        btn.style.borderColor = 'var(--accent)';
-        btn.style.background = 'var(--bg-hover)';
-      });
-      btn.addEventListener('mouseleave', () => {
-        btn.style.borderColor = layoutActive ? 'var(--accent)' : 'var(--border-default)';
-        btn.style.background = layoutActive ? 'var(--accent-muted)' : 'var(--bg-elevated)';
-      });
 
       btn.addEventListener('click', () => {
         this.renderer.updateOptions(lp.sizes);

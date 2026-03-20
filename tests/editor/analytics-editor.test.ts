@@ -205,4 +205,79 @@ describe('AnalyticsEditor', () => {
     const bars = container.querySelectorAll('.analytics-bar-row');
     expect(bars.length).toBeGreaterThan(0);
   });
+
+  describe('visualization sub-tabs', () => {
+    it('renders viz tab bar', () => {
+      new AnalyticsEditor({ container, orgStore: store });
+      const nav = container.querySelector('nav.analytics-viz-tabs');
+      expect(nav).not.toBeNull();
+      expect(nav!.getAttribute('role')).toBe('tablist');
+    });
+
+    it('renders four tab buttons', () => {
+      new AnalyticsEditor({ container, orgStore: store });
+      const nav = container.querySelector('nav.analytics-viz-tabs');
+      const buttons = nav!.querySelectorAll('button[role="tab"]');
+      expect(buttons.length).toBe(4);
+    });
+
+    it('overview tab is active by default', () => {
+      new AnalyticsEditor({ container, orgStore: store });
+      const overviewBtn = container.querySelector('#analytics-tab-overview') as HTMLButtonElement;
+      expect(overviewBtn.getAttribute('aria-selected')).toBe('true');
+      expect(overviewBtn.classList.contains('analytics-viz-tab-btn-active')).toBe(true);
+
+      const overviewPanel = container.querySelector('#analytics-panel-overview') as HTMLDivElement;
+      expect(overviewPanel.style.display).not.toBe('none');
+    });
+
+    it('other tab panels are hidden by default', () => {
+      new AnalyticsEditor({ container, orgStore: store });
+      for (const id of ['sunburst', 'span-chart', 'treemap']) {
+        const panel = container.querySelector(`#analytics-panel-${id}`) as HTMLDivElement;
+        expect(panel.style.display).toBe('none');
+      }
+    });
+
+    it('clicking a tab button activates it', () => {
+      new AnalyticsEditor({ container, orgStore: store });
+      const sunburstBtn = container.querySelector('#analytics-tab-sunburst') as HTMLButtonElement;
+      sunburstBtn.click();
+
+      expect(sunburstBtn.getAttribute('aria-selected')).toBe('true');
+      expect(sunburstBtn.classList.contains('analytics-viz-tab-btn-active')).toBe(true);
+
+      const overviewBtn = container.querySelector('#analytics-tab-overview') as HTMLButtonElement;
+      expect(overviewBtn.getAttribute('aria-selected')).toBe('false');
+      expect(overviewBtn.classList.contains('analytics-viz-tab-btn-active')).toBe(false);
+
+      const sunburstPanel = container.querySelector('#analytics-panel-sunburst') as HTMLDivElement;
+      expect(sunburstPanel.style.display).not.toBe('none');
+
+      const overviewPanel = container.querySelector('#analytics-panel-overview') as HTMLDivElement;
+      expect(overviewPanel.style.display).toBe('none');
+    });
+
+    it('overview tab contains detail grid', () => {
+      new AnalyticsEditor({ container, orgStore: store });
+      const overviewPanel = container.querySelector('#analytics-panel-overview') as HTMLDivElement;
+      const grid = overviewPanel.querySelector('.analytics-detail-grid');
+      expect(grid).not.toBeNull();
+    });
+
+    it('tab panels have proper ARIA', () => {
+      new AnalyticsEditor({ container, orgStore: store });
+      const panels = container.querySelectorAll('.analytics-viz-panel');
+      expect(panels.length).toBe(4);
+
+      panels.forEach(panel => {
+        expect(panel.getAttribute('role')).toBe('tabpanel');
+        const labelledBy = panel.getAttribute('aria-labelledby');
+        expect(labelledBy).not.toBeNull();
+        const matchingBtn = container.querySelector(`#${labelledBy}`);
+        expect(matchingBtn).not.toBeNull();
+        expect(matchingBtn!.getAttribute('role')).toBe('tab');
+      });
+    });
+  });
 });

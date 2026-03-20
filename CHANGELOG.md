@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.11.0] — 2026-03-20
+
+### Added
+- **Advanced Analytics Visualizations** — three new interactive D3 charts in the analytics tab, accessible via sub-tabs:
+  - **Zoomable Sunburst** — radial partition chart showing org hierarchy as concentric rings; arc width = team size, color by department category; click-to-zoom with animated transitions, breadcrumb navigation, center label with stats
+  - **Span of Control Distribution** — lollipop chart showing manager span distribution with health zone bands (green=healthy 4-8, yellow=watch, red=alert); KPI strip with avg/median/min-max; hover for manager details, click for drill-down list with `onNodeSelect` integration
+  - **Interactive Treemap** — zoomable nested rectangles where tile area = team headcount; click-to-drill-down into sub-orgs; toggle color by department or org depth; breadcrumb navigation, tooltips with metrics
+- **Analytics sub-tab navigation** — tab bar with [Overview | Sunburst | Span Chart | Treemap] between KPI strip and detail sections; accessible keyboard navigation with roving tabindex; lazy chart initialization
+- **Configurable ideal span range** — "Ideal span: [min] to [max]" controls on the span chart; health zones, background bands, and lollipop colors derive dynamically from the user's ideal range; persisted in localStorage; default 4–8
+- **Analytics drawer drag-to-resize** — drag the grip bar at the top of the analytics drawer to make it taller or shorter; height persisted in localStorage; constrained between 120px and 80% viewport
+
+### Performance
+- Replace 25 instances of `transition: all` with specific CSS properties (background-color, color, border-color, opacity, transform)
+- Reduce `backdrop-filter: blur(8px)` to `blur(4px)` on 3 modal overlays
+- Move JS hover style mutations to CSS `:hover` rules in settings panels (eliminates per-hover reflows)
+- Add `requestAnimationFrame` throttle to tooltip mousemove handlers in all chart visualizations
+- Batch treemap tile creation with `DocumentFragment` (1 reflow instead of N)
+
 ## [3.10.0] — 2026-03-20
 
 ### Added

@@ -122,27 +122,14 @@ export class CategoryPanel {
       // Delete button with confirmation
       const deleteBtn = document.createElement('button');
       deleteBtn.textContent = '×';
+      deleteBtn.className = 'category-delete-btn';
       deleteBtn.style.cssText =
-        'width:24px;height:24px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;opacity:0.4;';
+        'width:24px;height:24px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color 120ms ease,border-color 120ms ease,opacity 120ms ease;opacity:0.4;';
       deleteBtn.setAttribute('aria-label', t('settings.category_remove_aria', { label: cat.label }));
 
       let confirmTimeout: ReturnType<typeof setTimeout> | null = null;
       let isConfirming = false;
 
-      deleteBtn.addEventListener('mouseenter', () => {
-        if (!isConfirming) {
-          deleteBtn.style.color = 'var(--danger)';
-          deleteBtn.style.borderColor = 'var(--danger)';
-          deleteBtn.style.opacity = '1';
-        }
-      });
-      deleteBtn.addEventListener('mouseleave', () => {
-        if (!isConfirming) {
-          deleteBtn.style.color = 'var(--text-tertiary)';
-          deleteBtn.style.borderColor = 'var(--border-default)';
-          deleteBtn.style.opacity = '0.4';
-        }
-      });
       deleteBtn.addEventListener('click', () => {
         if (isConfirming) {
           if (confirmTimeout) clearTimeout(confirmTimeout);
