@@ -65,6 +65,29 @@ describe('AnalyticsEditor', () => {
     expect(text).toContain('Advisors');
   });
 
+  it('renders info icon on each KPI card', () => {
+    new AnalyticsEditor({ container, orgStore: store });
+    const icons = container.querySelectorAll('.analytics-kpi-info');
+    expect(icons.length).toBe(5);
+  });
+
+  it('info icons have title attribute with tooltip text', () => {
+    new AnalyticsEditor({ container, orgStore: store });
+    const icons = container.querySelectorAll('.analytics-kpi-info');
+    icons.forEach(icon => {
+      expect(icon.getAttribute('title')).toBeTruthy();
+    });
+  });
+
+  it('info icons have aria-label for accessibility', () => {
+    new AnalyticsEditor({ container, orgStore: store });
+    const icons = container.querySelectorAll('.analytics-kpi-info');
+    icons.forEach(icon => {
+      expect(icon.getAttribute('aria-label')).toBeTruthy();
+      expect(icon.getAttribute('role')).toBe('img');
+    });
+  });
+
   it('renders detail grid with sections', () => {
     new AnalyticsEditor({ container, orgStore: store });
     const grid = container.querySelector('.analytics-detail-grid');
