@@ -162,6 +162,9 @@ async function main(): Promise<void> {
   // Comparison handler (initialized after rerender, before footer)
   let comparison: ReturnType<typeof createComparisonHandler>;
 
+  // Analytics editor (initialized after drawer is created)
+  let analyticsEditor: AnalyticsEditor | null = null;
+
   const rerender = () => {
     const fullTree = store.getTree();
 
@@ -180,6 +183,9 @@ async function main(): Promise<void> {
     });
 
     focusMode?.showBanner(chartArea);
+
+    // Refresh analytics panel (focus mode changes, tree mutations, etc.)
+    analyticsEditor?.refresh();
 
     onSettingsSaved?.();
 
@@ -619,7 +625,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const analyticsEditor = new AnalyticsEditor({
+  analyticsEditor = new AnalyticsEditor({
     container: analyticsDrawer.getContentContainer(),
     orgStore: store,
     levelStore,

@@ -56,6 +56,7 @@ export class AnalyticsEditor {
     }
     this.buildKPIStrip(metrics);
     this.buildDetailGrid(metrics);
+    this.buildDisclaimer();
   }
 
   destroy(): void {
@@ -408,6 +409,13 @@ export class AnalyticsEditor {
   }
 
   // ─── Helpers ────────────────────────────────────────────────────────
+
+  private buildDisclaimer(): void {
+    const disclaimer = document.createElement('p');
+    disclaimer.className = 'analytics-disclaimer';
+    disclaimer.textContent = t('analytics.disclaimer');
+    this.container.appendChild(disclaimer);
+  }
 
   private createDetailSection(title: string, index: number): HTMLDivElement {
     const section = document.createElement('div');

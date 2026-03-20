@@ -85,6 +85,7 @@ const es: Record<string, string> = {
   'analytics.section.categories': 'Distribución por categoría',
   'analytics.uncategorized': 'Sin categoría',
   'analytics.no_categories': 'Sin categorías en uso',
+  'analytics.disclaimer': 'Las métricas se calculan a partir de la estructura actual del organigrama y son solo de referencia. Verifique de manera independiente antes de tomar decisiones organizacionales.',
 
   // ─── Context Menu ──────────────────────────────────────────────────
   'menu.edit': 'Editar',

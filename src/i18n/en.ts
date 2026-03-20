@@ -85,6 +85,7 @@ const en: Record<string, string> = {
   'analytics.section.categories': 'Category Distribution',
   'analytics.uncategorized': 'Uncategorized',
   'analytics.no_categories': 'No categories in use',
+  'analytics.disclaimer': 'Metrics are computed from the current chart structure and are for reference only. Verify independently before making organizational decisions.',
 
   // ─── Context Menu ──────────────────────────────────────────────────
   'menu.edit': 'Edit',
