@@ -2875,6 +2875,19 @@ textarea:focus-visible {
   margin-bottom: var(--space-1);
 }
 
+.analytics-kpi-info {
+  margin-inline-start: 4px;
+  font-size: 10px;
+  opacity: 0.5;
+  cursor: help;
+  vertical-align: middle;
+  transition: opacity 0.15s ease;
+}
+
+.analytics-kpi-info:hover {
+  opacity: 0.9;
+}
+
 .analytics-kpi-value {
   font-size: 22px;
   font-weight: 800;
