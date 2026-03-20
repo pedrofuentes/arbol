@@ -332,7 +332,7 @@ describe('single card menu – level submenu', () => {
     showMenu('mgr1', new MouseEvent('contextmenu'));
     const items = menuMock.mock.calls[0][0].items;
     const levelItem = getLevelSubmenu(items);
-    const noneItem = levelItem!.submenu!.find((s: { label: string }) => s.label === en['menu.level_none']);
+    const noneItem = levelItem!.submenu!.find((s: { label: string }) => s.label === en['menu.level_none']) as { label: string; icon?: string };
     expect(noneItem!.icon).toBe(en['menu.level_check']);
   });
 
