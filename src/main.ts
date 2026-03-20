@@ -197,6 +197,14 @@ async function main(): Promise<void> {
     } else {
       dismissCategoryLegend();
     }
+
+    // Keep legend above the drawer when open
+    if (analyticsDrawer?.isOpen()) {
+      const legend = chartArea.querySelector('[data-testid="category-legend"]') as HTMLElement | null;
+      if (legend) {
+        legend.style.bottom = `${analyticsDrawer.getElement().offsetHeight + 12}px`;
+      }
+    }
   };
 
   // Initialize focus mode controller now that rerender is defined
@@ -662,6 +670,17 @@ async function main(): Promise<void> {
 
   analyticsDrawer.onChange(() => {
     analyticsToggleBtn.classList.toggle('active', analyticsDrawer.isOpen());
+    // Reposition category legend above or below drawer
+    requestAnimationFrame(() => {
+      const legend = chartArea.querySelector('[data-testid="category-legend"]') as HTMLElement | null;
+      if (!legend) return;
+      if (analyticsDrawer.isOpen()) {
+        const drawerHeight = analyticsDrawer.getElement().offsetHeight;
+        legend.style.bottom = `${drawerHeight + 12}px`;
+      } else {
+        legend.style.bottom = '';
+      }
+    });
   });
 
   // Sidebar collapse toggle

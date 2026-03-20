@@ -69,6 +69,10 @@ export class AnalyticsDrawer extends EventEmitter {
     return this._isOpen;
   }
 
+  getElement(): HTMLElement {
+    return this.root;
+  }
+
   destroy(): void {
     this.root.remove();
   }

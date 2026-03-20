@@ -2767,9 +2767,8 @@ textarea:focus-visible {
   pointer-events: none;
 }
 
-/* Bump category legend above drawer when open */
-.analytics-drawer:not(.collapsed) ~ [data-testid="category-legend"] {
-  bottom: calc(40% + var(--space-3, 12px)) !important;
+/* Category legend transition for smooth repositioning */
+[data-testid="category-legend"] {
   transition: bottom 300ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
