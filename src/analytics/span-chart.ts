@@ -346,7 +346,9 @@ export class SpanChart {
 
     const margin = { top: 28, right: 24, bottom: 40, left: 48 };
     const totalWidth = Math.min(this.container.clientWidth || 700, 700);
-    const totalHeight = 220;
+    const nonSvgHeight = 140; // KPI strip + ideal range + zone legend + manager list header + margins
+    const availableHeight = (this.container.clientHeight || 340) - nonSvgHeight;
+    const totalHeight = Math.max(160, Math.min(400, availableHeight));
     const width = totalWidth - margin.left - margin.right;
     const height = totalHeight - margin.top - margin.bottom;
 

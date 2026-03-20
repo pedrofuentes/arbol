@@ -7,7 +7,9 @@ type ColorMode = 'department' | 'depth';
 
 const DEPTH_COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
 const MAX_WIDTH = 700;
-const SVG_HEIGHT = 300;
+const MIN_SVG_HEIGHT = 180;
+const MAX_SVG_HEIGHT = 500;
+const NON_SVG_HEIGHT = 110; // breadcrumb + controls + legend + margins
 
 function getCategoryColor(categoryId: string | undefined, categories: ColorCategory[]): string {
   if (!categoryId) return '#6b7280';
@@ -38,7 +40,7 @@ export class TreemapChart {
   private colorMode: ColorMode = 'department';
   private focusPath: HierarchyRectangularNode<OrgNode>[] = [];
   private width = MAX_WIDTH;
-  private height = SVG_HEIGHT;
+  private height = MIN_SVG_HEIGHT;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -56,6 +58,8 @@ export class TreemapChart {
     }
 
     this.width = Math.min(this.container.clientWidth || MAX_WIDTH, MAX_WIDTH);
+    const availableHeight = (this.container.clientHeight || 400) - NON_SVG_HEIGHT;
+    this.height = Math.max(MIN_SVG_HEIGHT, Math.min(MAX_SVG_HEIGHT, availableHeight));
 
     const root = hierarchy(tree)
       .sum(d => (!d.children || d.children.length === 0) ? 1 : 0)
