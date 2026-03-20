@@ -150,6 +150,7 @@ const es: Record<string, string> = {
   'property_panel.edit': 'Editar',
   'property_panel.name': 'Nombre',
   'property_panel.title_field': 'Cargo',
+  'property_panel.mapped_title': 'Título mapeado',
   'property_panel.category': 'Categoría',
   'property_panel.category_none': 'Ninguna',
   'property_panel.level': 'Nivel',

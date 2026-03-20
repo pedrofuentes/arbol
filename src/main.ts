@@ -827,6 +827,7 @@ async function main(): Promise<void> {
       renderer.setSelectedNode(null);
       announce(t('announce.panel_closed'));
     },
+    resolveTitle,
   });
 
   const showPropertyPanel = (nodeId: string) => {

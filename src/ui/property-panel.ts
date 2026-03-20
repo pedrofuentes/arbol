@@ -19,6 +19,7 @@ export interface PropertyPanelOptions {
   onLevelChange: (nodeId: string, level: string | null) => void;
   onToggleDottedLine: (nodeId: string) => void;
   onClose: () => void;
+  resolveTitle?: (originalTitle: string, rawLevel?: string) => string;
 }
 
 export class PropertyPanel {
@@ -36,6 +37,8 @@ export class PropertyPanel {
   private metaLevel: HTMLElement;
   private nameInput: HTMLInputElement;
   private titleInput: HTMLInputElement;
+  private mappedTitleInput: HTMLInputElement;
+  private mappedTitleGroup: HTMLElement;
   private levelInput: HTMLInputElement;
   private categorySelect: HTMLSelectElement;
   private focusBtn: HTMLButtonElement;
@@ -126,6 +129,15 @@ export class PropertyPanel {
     const titleField = this.createField('pp-title-input', t('property_panel.title_field'));
     this.titleInput = titleField.input;
     editSection.appendChild(titleField.group);
+
+    // Mapped title field (read-only, shown when level mapping is active)
+    const mappedField = this.createField('pp-mapped-title', t('property_panel.mapped_title'));
+    this.mappedTitleInput = mappedField.input;
+    this.mappedTitleInput.disabled = true;
+    this.mappedTitleInput.style.cssText += 'opacity:0.7;cursor:default;font-style:italic;';
+    this.mappedTitleGroup = mappedField.group;
+    this.mappedTitleGroup.style.display = 'none';
+    editSection.appendChild(this.mappedTitleGroup);
 
     // Level field
     const levelField = this.createField('pp-level-input', t('property_panel.level'));
@@ -276,7 +288,10 @@ export class PropertyPanel {
 
   private populateContent(node: OrgNode, parentName: string | null, directReports: number, totalOrg: number, avgSpan: number, categories: CategoryInfo[]): void {
     this.nameDisplay.textContent = node.name;
-    this.titleDisplay.textContent = node.title;
+
+    // Summary card: show mapped title if available
+    const resolved = this.options.resolveTitle?.(node.title, node.level) ?? node.title;
+    this.titleDisplay.textContent = resolved;
 
     const isRoot = parentName === null;
     this.updateMetaValue(this.metaReportsTo, isRoot ? t('property_panel.root_node') : parentName);
@@ -296,6 +311,14 @@ export class PropertyPanel {
     this.nameInput.value = node.name;
     this.titleInput.value = node.title;
     this.levelInput.value = this.savedLevel;
+
+    // Mapped title field — show only when mapping changes the title
+    if (resolved !== node.title) {
+      this.mappedTitleInput.value = resolved;
+      this.mappedTitleGroup.style.display = '';
+    } else {
+      this.mappedTitleGroup.style.display = 'none';
+    }
 
     // Category dropdown — only rebuild if categories changed
     const categoryKey = categories.map((c) => c.id + ':' + c.label).join(',');
