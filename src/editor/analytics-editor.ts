@@ -4,6 +4,9 @@ import type { LevelStore } from '../store/level-store';
 import type { CategoryStore } from '../store/category-store';
 import { computeMetrics, type OrgMetrics, type ManagerAlert } from '../utils/analytics';
 import { t } from '../i18n';
+import { SunburstChart } from '../analytics/sunburst-chart';
+import { SpanChart } from '../analytics/span-chart';
+import { TreemapChart } from '../analytics/treemap-chart';
 
 export interface AnalyticsEditorOptions {
   container: HTMLElement;
@@ -15,11 +18,20 @@ export interface AnalyticsEditorOptions {
   onNodeSelect?: (nodeId: string) => void;
 }
 
+type VizTabId = 'overview' | 'sunburst' | 'span-chart' | 'treemap';
+
 export class AnalyticsEditor {
   private container: HTMLElement;
   private options: AnalyticsEditorOptions;
   private unsubscribes: (() => void)[] = [];
   private groupLevels = true;
+
+  private activeVizTab: VizTabId = 'overview';
+  private sunburstChart: SunburstChart | null = null;
+  private spanChart: SpanChart | null = null;
+  private treemapChart: TreemapChart | null = null;
+  private vizTabButtons: Map<VizTabId, HTMLButtonElement> = new Map();
+  private vizTabPanels: Map<VizTabId, HTMLDivElement> = new Map();
 
   constructor(options: AnalyticsEditorOptions) {
     this.container = options.container;
@@ -38,6 +50,8 @@ export class AnalyticsEditor {
 
   refresh(): void {
     this.container.innerHTML = '';
+    this.vizTabButtons.clear();
+    this.vizTabPanels.clear();
 
     const tree = this.options.getFocusedTree
       ? this.options.getFocusedTree()
@@ -56,14 +70,135 @@ export class AnalyticsEditor {
       this.buildFocusBanner(focusedName);
     }
     this.buildKPIStrip(metrics);
-    this.buildDetailGrid(metrics);
+    this.buildVizTabs(tree, metrics);
     this.buildDisclaimer();
   }
 
   destroy(): void {
     for (const unsub of this.unsubscribes) unsub();
     this.unsubscribes = [];
+    this.sunburstChart?.destroy();
+    this.spanChart?.destroy();
+    this.treemapChart?.destroy();
+    this.sunburstChart = null;
+    this.spanChart = null;
+    this.treemapChart = null;
+    this.vizTabButtons.clear();
+    this.vizTabPanels.clear();
     this.container.innerHTML = '';
+  }
+
+  // ─── Visualization Sub-tabs ─────────────────────────────────────────
+
+  private buildVizTabs(tree: OrgNode, metrics: OrgMetrics): void {
+    const categories = this.options.categoryStore?.getAll() ?? [];
+
+    // Tab bar
+    const nav = document.createElement('nav');
+    nav.className = 'analytics-viz-tabs';
+    nav.setAttribute('role', 'tablist');
+    nav.setAttribute('aria-label', t('analytics.tab.aria'));
+
+    const tabs: { id: VizTabId; label: string }[] = [
+      { id: 'overview', label: t('analytics.tab.overview') },
+      { id: 'sunburst', label: t('analytics.tab.sunburst') },
+      { id: 'span-chart', label: t('analytics.tab.span_chart') },
+      { id: 'treemap', label: t('analytics.tab.treemap') },
+    ];
+
+    for (const tab of tabs) {
+      const btn = document.createElement('button');
+      btn.className = 'analytics-viz-tab-btn';
+      btn.id = `analytics-tab-${tab.id}`;
+      btn.textContent = tab.label;
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', 'false');
+      btn.setAttribute('aria-controls', `analytics-panel-${tab.id}`);
+      btn.setAttribute('tabindex', '-1');
+      btn.addEventListener('click', () => this.activateVizTab(tab.id, tree, categories));
+      nav.appendChild(btn);
+      this.vizTabButtons.set(tab.id, btn);
+    }
+
+    // Arrow key navigation (roving tabindex)
+    nav.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const tabIds = tabs.map(t => t.id);
+      const currentIdx = tabIds.indexOf(this.activeVizTab);
+      if (currentIdx === -1) return;
+      const dir = e.key === 'ArrowRight' ? 1 : -1;
+      const nextIdx = (currentIdx + dir + tabIds.length) % tabIds.length;
+      this.activateVizTab(tabIds[nextIdx], tree, categories);
+      this.vizTabButtons.get(tabIds[nextIdx])?.focus();
+    });
+
+    this.container.appendChild(nav);
+
+    // Panels
+    for (const tab of tabs) {
+      const panel = document.createElement('div');
+      panel.className = 'analytics-viz-panel';
+      panel.id = `analytics-panel-${tab.id}`;
+      panel.setAttribute('role', 'tabpanel');
+      panel.setAttribute('aria-labelledby', `analytics-tab-${tab.id}`);
+      panel.style.display = 'none';
+      this.container.appendChild(panel);
+      this.vizTabPanels.set(tab.id, panel);
+    }
+
+    // Fill overview panel with existing detail grid
+    const overviewPanel = this.vizTabPanels.get('overview');
+    if (overviewPanel) {
+      this.buildDetailGrid(metrics, overviewPanel);
+    }
+
+    // Activate the current tab
+    this.activateVizTab(this.activeVizTab, tree, categories);
+  }
+
+  private activateVizTab(tabId: VizTabId, tree: OrgNode, categories: ColorCategory[]): void {
+    this.activeVizTab = tabId;
+
+    // Toggle panel visibility
+    for (const [id, panel] of this.vizTabPanels) {
+      panel.style.display = id === tabId ? 'block' : 'none';
+    }
+
+    // Toggle button states
+    for (const [id, btn] of this.vizTabButtons) {
+      const isActive = id === tabId;
+      btn.setAttribute('aria-selected', String(isActive));
+      btn.setAttribute('tabindex', isActive ? '0' : '-1');
+      if (isActive) {
+        btn.classList.add('analytics-viz-tab-btn-active');
+      } else {
+        btn.classList.remove('analytics-viz-tab-btn-active');
+      }
+    }
+
+    // Lazy-initialize chart on the active panel
+    const panel = this.vizTabPanels.get(tabId);
+    if (!panel) return;
+
+    if (tabId === 'sunburst') {
+      if (!this.sunburstChart) {
+        this.sunburstChart = new SunburstChart(panel);
+      }
+      this.sunburstChart.render(tree, categories);
+    } else if (tabId === 'span-chart') {
+      if (!this.spanChart) {
+        this.spanChart = new SpanChart(panel, {
+          onNodeSelect: this.options.onNodeSelect,
+        });
+      }
+      this.spanChart.render(tree, categories);
+    } else if (tabId === 'treemap') {
+      if (!this.treemapChart) {
+        this.treemapChart = new TreemapChart(panel);
+      }
+      this.treemapChart.render(tree, categories);
+    }
   }
 
   // ─── KPI Strip ──────────────────────────────────────────────────────
@@ -167,7 +302,8 @@ export class AnalyticsEditor {
 
   // ─── Detail Grid ────────────────────────────────────────────────────
 
-  private buildDetailGrid(metrics: OrgMetrics): void {
+  private buildDetailGrid(metrics: OrgMetrics, target?: HTMLElement): void {
+    const container = target ?? this.container;
     const grid = document.createElement('div');
     grid.className = 'analytics-detail-grid';
 
@@ -176,7 +312,7 @@ export class AnalyticsEditor {
     this.buildLevelSection(grid, metrics, 2);
     this.buildCategorySection(grid, metrics, 3);
 
-    this.container.appendChild(grid);
+    container.appendChild(grid);
   }
 
   private buildSpanSection(grid: HTMLElement, metrics: OrgMetrics, index: number): void {

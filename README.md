@@ -38,6 +38,7 @@ An interactive org chart editor for the browser — manage multiple org charts w
 - Search & highlight by name/title
 - Keyboard shortcuts (Ctrl+Z, Ctrl+E, Ctrl+F, etc.) and full chart keyboard navigation
 - Pan/zoom with fit-to-screen
+- Advanced analytics visualizations — zoomable sunburst, span of control distribution, interactive treemap
 
 ## Privacy
 

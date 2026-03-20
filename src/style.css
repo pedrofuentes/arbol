@@ -3088,6 +3088,45 @@ textarea:focus-visible {
 }
 
 /* ─── Analytics disclaimer ─────────────────── */
+/* ─── Analytics Visualization Sub-tabs ───── */
+.analytics-viz-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  margin: var(--space-3) 0;
+  background: var(--bg-base);
+  border-radius: var(--radius-lg);
+}
+
+.analytics-viz-tab-btn {
+  flex: 1;
+  padding: 6px 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  color: var(--text-tertiary);
+  border-radius: var(--radius-md);
+  transition: all 150ms cubic-bezier(0.22, 1, 0.36, 1);
+  letter-spacing: 0.02em;
+}
+
+.analytics-viz-tab-btn:hover {
+  color: var(--text-secondary);
+}
+
+.analytics-viz-tab-btn-active {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.analytics-viz-panel {
+  min-height: 120px;
+}
+
 .analytics-disclaimer {
   margin: var(--space-4) 0 0;
   padding-top: var(--space-3);

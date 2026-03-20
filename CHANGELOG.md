@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.11.0] — 2026-03-20
+
+### Added
+- **Advanced Analytics Visualizations** — three new interactive D3 charts in the analytics tab, accessible via sub-tabs:
+  - **Zoomable Sunburst** — radial partition chart showing org hierarchy as concentric rings; arc width = team size, color by department category; click-to-zoom with animated transitions, breadcrumb navigation, center label with stats
+  - **Span of Control Distribution** — lollipop chart showing manager span distribution with health zone bands (green=healthy 4-8, yellow=watch, red=alert); KPI strip with avg/median/min-max; hover for manager details, click for drill-down list with `onNodeSelect` integration
+  - **Interactive Treemap** — zoomable nested rectangles where tile area = team headcount; click-to-drill-down into sub-orgs; toggle color by department or org depth; breadcrumb navigation, tooltips with metrics
+- **Analytics sub-tab navigation** — tab bar with [Overview | Sunburst | Span Chart | Treemap] between KPI strip and detail sections; accessible keyboard navigation with roving tabindex; lazy chart initialization
+
 ## [3.10.0] — 2026-03-20
 
 ### Added
