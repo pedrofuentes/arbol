@@ -12,6 +12,7 @@ interface CardDatum {
     name: string;
     title: string;
     categoryId?: string;
+    level?: string;
   };
 }
 
@@ -71,8 +72,8 @@ export interface RendererOptions {
   levelBadgeTextColor?: string;
   levelBadgeFontSize?: number;
   levelBadgeSize?: number;
-  /** Optional function to resolve raw level values to display text. */
-  resolveLevel?: (rawLevel: string | undefined) => string;
+  /** Optional function to resolve the display title based on level mapping. */
+  resolveTitle?: (originalTitle: string, rawLevel?: string) => string;
   categories?: ColorCategory[];
   legendRows?: number;
   /** When true, disables zoom/keyboard/interactivity for static preview use. */
@@ -142,7 +143,7 @@ export class ChartRenderer {
       levelBadgeTextColor: '#ffffff',
       levelBadgeFontSize: 11,
       levelBadgeSize: 22,
-      resolveLevel: (raw: string | undefined) => raw ?? '',
+      resolveTitle: (title: string) => title,
       categories: [] as ColorCategory[],
       legendRows: 0,
       preview: false,
@@ -270,7 +271,7 @@ export class ChartRenderer {
           const self = this;
           g.each(function (d) {
             const datum = {
-              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId },
+              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId, level: d.level },
             };
             const sel = select(this).datum(datum);
             self.renderCardContent(
@@ -328,7 +329,7 @@ export class ChartRenderer {
           const self = this;
           g.each(function (d) {
             const datum = {
-              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId },
+              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId, level: d.level },
             };
             const sel = select(this).datum(datum);
             self.renderCardContent(
@@ -370,7 +371,7 @@ export class ChartRenderer {
             .attr('transform', (d) => `translate(${d.x - d.width / 2},${d.y})`);
           g.each(function (d) {
             const datum = {
-              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId },
+              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId, level: d.level },
             };
             const sel = select(this).datum(datum);
             self.renderCardContent(
@@ -606,7 +607,7 @@ export class ChartRenderer {
         return titleColor;
       })
       .attr('pointer-events', 'none')
-      .text((d: CardDatum) => d.data.title);
+      .text((d: CardDatum) => this.opts.resolveTitle(d.data.title, d.data.level));
   }
 
   private renderHeadcountBadge(
@@ -672,9 +673,7 @@ export class ChartRenderer {
       nodeHeight,
     } = this.opts;
 
-    const rawLevel = node.level ?? '';
-    if (!rawLevel) return;
-    const text = this.opts.resolveLevel ? this.opts.resolveLevel(rawLevel) : rawLevel;
+    const text = node.level ?? '';
     if (!text) return;
 
     // Position: inside bottom-left corner of the card

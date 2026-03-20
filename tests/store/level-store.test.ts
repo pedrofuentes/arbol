@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LevelStore } from '../../src/store/level-store';
 import type { ChartRecord, OrgNode } from '../../src/types';
 
-const SEPARATOR = ' \u2014 '; // em dash with spaces
-
 function makeChart(overrides: Partial<ChartRecord> = {}): ChartRecord {
   const tree: OrgNode = { id: 'root', name: 'Root', title: 'CEO' };
   return {
@@ -122,17 +120,15 @@ describe('LevelStore', () => {
   // ── Display Mode ──────────────────────────────────────
 
   describe('Display Mode', () => {
-    it('default display mode is raw', () => {
-      expect(store.getDisplayMode()).toBe('raw');
+    it('default display mode is original', () => {
+      expect(store.getDisplayMode()).toBe('original');
     });
 
     it('setDisplayMode changes mode', () => {
       store.setDisplayMode('mapped');
       expect(store.getDisplayMode()).toBe('mapped');
-      store.setDisplayMode('both');
-      expect(store.getDisplayMode()).toBe('both');
-      store.setDisplayMode('raw');
-      expect(store.getDisplayMode()).toBe('raw');
+      store.setDisplayMode('original');
+      expect(store.getDisplayMode()).toBe('original');
     });
 
     it('setDisplayMode throws on invalid mode', () => {
@@ -156,8 +152,8 @@ describe('LevelStore', () => {
       expect(store.resolve('')).toBe('');
     });
 
-    it('resolve in raw mode returns rawLevel as-is', () => {
-      store.setDisplayMode('raw');
+    it('resolve in original mode returns rawLevel as-is', () => {
+      store.setDisplayMode('original');
       expect(store.resolve('L10')).toBe('L10');
       expect(store.resolve('UNKNOWN')).toBe('UNKNOWN');
     });
@@ -173,15 +169,26 @@ describe('LevelStore', () => {
       expect(store.resolve('UNKNOWN')).toBe('UNKNOWN');
     });
 
-    it('resolve in both mode returns "rawLevel — displayTitle" when mapping exists', () => {
-      store.setDisplayMode('both');
-      expect(store.resolve('L10')).toBe(`L10${SEPARATOR}IC`);
-      expect(store.resolve('E5')).toBe(`E5${SEPARATOR}Senior`);
+    // resolveTitle tests
+    it('resolveTitle returns undefined when mode is original', () => {
+      store.setDisplayMode('original');
+      expect(store.resolveTitle('L10')).toBeUndefined();
     });
 
-    it('resolve in both mode returns rawLevel when no mapping exists', () => {
-      store.setDisplayMode('both');
-      expect(store.resolve('UNKNOWN')).toBe('UNKNOWN');
+    it('resolveTitle returns mapped title when mode is mapped', () => {
+      store.setDisplayMode('mapped');
+      expect(store.resolveTitle('L10')).toBe('IC');
+      expect(store.resolveTitle('E5')).toBe('Senior');
+    });
+
+    it('resolveTitle returns undefined when no mapping exists', () => {
+      store.setDisplayMode('mapped');
+      expect(store.resolveTitle('UNKNOWN')).toBeUndefined();
+    });
+
+    it('resolveTitle returns undefined for undefined input', () => {
+      store.setDisplayMode('mapped');
+      expect(store.resolveTitle(undefined)).toBeUndefined();
     });
   });
 
@@ -256,12 +263,12 @@ describe('LevelStore', () => {
       store.addMapping('L10', 'IC');
       store.loadFromChart(chart);
       expect(store.getMappings()).toEqual([]);
-      expect(store.getDisplayMode()).toBe('raw');
+      expect(store.getDisplayMode()).toBe('original');
     });
 
     it('loadFromChart replaces current state', () => {
       store.addMapping('L10', 'IC');
-      store.setDisplayMode('both');
+      store.setDisplayMode('mapped');
 
       const chart = makeChart({
         levelMappings: [{ rawLevel: 'E5', displayTitle: 'Senior' }],
@@ -275,11 +282,11 @@ describe('LevelStore', () => {
 
     it('toChartData returns current state', () => {
       store.addMapping('L10', 'IC');
-      store.setDisplayMode('both');
+      store.setDisplayMode('mapped');
       const data = store.toChartData();
       expect(data).toEqual({
         levelMappings: [{ rawLevel: 'L10', displayTitle: 'IC' }],
-        levelDisplayMode: 'both',
+        levelDisplayMode: 'mapped',
       });
     });
 
@@ -289,7 +296,7 @@ describe('LevelStore', () => {
           { rawLevel: 'L10', displayTitle: 'IC' },
           { rawLevel: 'E5', displayTitle: 'Senior' },
         ],
-        levelDisplayMode: 'both',
+        levelDisplayMode: 'mapped',
       });
       store.loadFromChart(chart);
       const data = store.toChartData();

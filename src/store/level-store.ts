@@ -1,16 +1,15 @@
 import type { LevelMapping, LevelDisplayMode, ChartRecord } from '../types';
 import { EventEmitter } from '../utils/event-emitter';
 
-const VALID_DISPLAY_MODES: LevelDisplayMode[] = ['raw', 'mapped', 'both'];
+const VALID_DISPLAY_MODES: LevelDisplayMode[] = ['original', 'mapped'];
 const MAX_RAW_LEVEL_LENGTH = 50;
 const MAX_DISPLAY_TITLE_LENGTH = 100;
-const LEVEL_SEPARATOR = ' \u2014 ';
 const CSV_HEADER = 'raw_level,display_title';
 const HEADER_RE = /level|raw/i;
 
 export class LevelStore extends EventEmitter {
   private mappings: LevelMapping[] = [];
-  private displayMode: LevelDisplayMode = 'raw';
+  private displayMode: LevelDisplayMode = 'original';
   private cache: Map<string, string> | null = null;
 
   // === CRUD ===
@@ -89,20 +88,28 @@ export class LevelStore extends EventEmitter {
 
   // === Resolution ===
 
+  /**
+   * Resolves the display title for a node based on its level.
+   * Returns the mapped display title if mode is 'mapped' and a mapping exists,
+   * otherwise returns undefined (caller should use original title).
+   */
+  resolveTitle(rawLevel: string | undefined): string | undefined {
+    if (!rawLevel) return undefined;
+    if (this.displayMode === 'original') return undefined;
+
+    // 'mapped'
+    if (!this.cache) this.cache = this.buildCache();
+    return this.cache.get(rawLevel);
+  }
+
+  /**
+   * @deprecated Use resolveTitle() instead. Kept for backward compatibility.
+   */
   resolve(rawLevel: string | undefined): string {
     if (!rawLevel) return '';
-
-    if (this.displayMode === 'raw') return rawLevel;
-
+    if (this.displayMode === 'original') return rawLevel;
     if (!this.cache) this.cache = this.buildCache();
-    const title = this.cache.get(rawLevel);
-
-    if (this.displayMode === 'mapped') {
-      return title ?? rawLevel;
-    }
-
-    // 'both'
-    return title ? `${rawLevel}${LEVEL_SEPARATOR}${title}` : rawLevel;
+    return this.cache.get(rawLevel) ?? rawLevel;
   }
 
   // === CSV Import/Export ===
@@ -152,7 +159,7 @@ export class LevelStore extends EventEmitter {
 
   loadFromChart(chart: ChartRecord): void {
     this.mappings = (chart.levelMappings ?? []).map(m => ({ ...m }));
-    this.displayMode = chart.levelDisplayMode ?? 'raw';
+    this.displayMode = chart.levelDisplayMode ?? 'original';
     this.invalidateCache();
     this.emit();
   }

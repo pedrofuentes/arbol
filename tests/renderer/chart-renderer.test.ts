@@ -2081,11 +2081,11 @@ describe('ChartRenderer', () => {
       expect(rect.getAttribute('height')).toBe('30');
     });
 
-    it('renderLevelBadge uses resolveLevel when provided', () => {
+    it('card title uses resolveTitle when provided', () => {
       renderer.destroy();
       renderer = createRenderer({
         showLevel: true,
-        resolveLevel: (raw: string | undefined) => (raw === 'L5' ? 'Senior' : raw ?? ''),
+        resolveTitle: (title: string, level?: string) => (level === 'L5' ? 'Senior' : title),
       });
       const tree: OrgNode = {
         id: 'root',
@@ -2094,13 +2094,12 @@ describe('ChartRenderer', () => {
         level: 'L5',
       };
       renderer.render(tree);
-      const badge = container.querySelector('.level-badge')!;
-      expect(badge).not.toBeNull();
-      const text = badge.querySelector('text')!;
-      expect(text.textContent).toBe('Senior');
+      const titleEl = container.querySelector('.node-title')!;
+      expect(titleEl).not.toBeNull();
+      expect(titleEl.textContent).toBe('Senior');
     });
 
-    it('renderLevelBadge shows raw level when no resolveLevel', () => {
+    it('card title shows original title when no resolveTitle override', () => {
       renderer.destroy();
       renderer = createRenderer({ showLevel: true });
       const tree: OrgNode = {
@@ -2110,17 +2109,16 @@ describe('ChartRenderer', () => {
         level: 'L5',
       };
       renderer.render(tree);
-      const badge = container.querySelector('.level-badge')!;
-      expect(badge).not.toBeNull();
-      const text = badge.querySelector('text')!;
-      expect(text.textContent).toBe('L5');
+      const titleEl = container.querySelector('.node-title')!;
+      expect(titleEl).not.toBeNull();
+      expect(titleEl.textContent).toBe('CEO');
     });
 
-    it('renderLevelBadge resolveLevel returning empty hides badge', () => {
+    it('resolveTitle returning empty string shows empty title', () => {
       renderer.destroy();
       renderer = createRenderer({
         showLevel: true,
-        resolveLevel: () => '',
+        resolveTitle: () => '',
       });
       const tree: OrgNode = {
         id: 'root',
@@ -2129,8 +2127,9 @@ describe('ChartRenderer', () => {
         level: 'L5',
       };
       renderer.render(tree);
-      const badges = container.querySelectorAll('.level-badge');
-      expect(badges.length).toBe(0);
+      const titleEl = container.querySelector('.node-title')!;
+      expect(titleEl).not.toBeNull();
+      expect(titleEl.textContent).toBe('');
     });
   });
 });

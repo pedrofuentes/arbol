@@ -129,5 +129,5 @@ export interface LevelMapping {
   displayTitle: string;
 }
 
-/** How level values are displayed on cards and in exports. */
-export type LevelDisplayMode = 'raw' | 'mapped' | 'both';
+/** How the job title is displayed on cards when level mappings exist. */
+export type LevelDisplayMode = 'original' | 'mapped';

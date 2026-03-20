@@ -147,11 +147,18 @@ async function main(): Promise<void> {
     categoryStore.replaceAll(activeChart.categories);
   }
 
+  const resolveTitle = (originalTitle: string, rawLevel?: string): string => {
+    if (!rawLevel) return originalTitle;
+    const mapped = levelStore.resolveTitle(rawLevel);
+    return mapped ?? originalTitle;
+  };
+
   const renderer= new ChartRenderer({
     container: chartArea,
     ...savedSettings,
     textAlign: savedSettings.textAlign as 'left' | 'center' | 'right',
     categories: categoryStore.getAll(),
+    resolveTitle,
   });
 
   let onSettingsSaved: (() => void) | null = null;

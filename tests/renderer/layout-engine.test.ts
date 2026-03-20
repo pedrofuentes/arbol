@@ -62,7 +62,7 @@ function defaultOpts(): ResolvedOptions {
     icContainerBorderRadius: 0,
     categories: [],
     preview: false,
-    resolveLevel: (raw: string | undefined) => raw ?? '',
+    resolveTitle: (title: string) => title,
   };
 }
 

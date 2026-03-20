@@ -807,22 +807,33 @@ describe('pptx-exporter', () => {
       expect(badgeText![1].color).toBe('00FF55');
     });
 
-    it('PPTX level badge uses resolveLevel', async () => {
+    it('PPTX title uses resolveTitle', async () => {
       const layout = makeLayout({
         nodes: [makeNode({ type: 'manager', level: 'L5' })],
       });
       await exportToPptx(layout, {
         showLevel: true,
-        resolveLevel: (raw: string | undefined) => (raw === 'L5' ? 'Senior' : raw ?? ''),
+        resolveTitle: (title: string, level?: string) => (level === 'L5' ? 'Senior' : title),
       });
 
       const textCalls = mockAddText.mock.calls;
-      const badgeText = textCalls.find((call: any) => call[0] === 'Senior');
-      expect(badgeText).not.toBeUndefined();
-      expect(badgeText![1].bold).toBe(true);
-      // Raw 'L5' should NOT appear as badge text
-      const rawText = textCalls.find((call: any) => call[0] === 'L5');
-      expect(rawText).toBeUndefined();
+      const hasResolvedTitle = textCalls.some((call: any) => {
+        const textBlocks = call[0];
+        return (
+          Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => t.text === 'Senior')
+        );
+      });
+      expect(hasResolvedTitle).toBe(true);
+      // Original title 'Manager' should NOT appear in card text
+      const hasOriginalTitle = textCalls.some((call: any) => {
+        const textBlocks = call[0];
+        return (
+          Array.isArray(textBlocks) &&
+          textBlocks.some((t: any) => t.text === 'Manager')
+        );
+      });
+      expect(hasOriginalTitle).toBe(false);
     });
 
     it('PPTX level badge falls back to raw level', async () => {

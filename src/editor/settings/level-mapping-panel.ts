@@ -1,7 +1,7 @@
 import type { LevelStore } from '../../store/level-store';
 import { t } from '../../i18n';
 
-type LevelDisplayMode = 'raw' | 'mapped' | 'both';
+type LevelDisplayMode = 'original' | 'mapped';
 
 export interface LevelMappingPanelDeps {
   container: HTMLElement;
@@ -62,9 +62,8 @@ export class LevelMappingPanel {
     const currentMode = this.levelStore.getDisplayMode();
 
     const modes: { value: LevelDisplayMode; labelKey: string }[] = [
-      { value: 'raw', labelKey: 'settings.label.display_mode_raw' },
+      { value: 'original', labelKey: 'settings.label.display_mode_original' },
       { value: 'mapped', labelKey: 'settings.label.display_mode_mapped' },
-      { value: 'both', labelKey: 'settings.label.display_mode_both' },
     ];
 
     const fieldset = document.createElement('fieldset');

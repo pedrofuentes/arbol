@@ -344,14 +344,14 @@ describe('ChartStore', () => {
       const tree = makeTree();
       const cats = makeCategories();
       const levels = makeLevelMappings();
-      const chart = await store.createChartFromTree('Leveled Chart', tree, cats, levels, 'both');
+      const chart = await store.createChartFromTree('Leveled Chart', tree, cats, levels, 'mapped');
       expect(chart.levelMappings).toEqual(levels);
-      expect(chart.levelDisplayMode).toBe('both');
+      expect(chart.levelDisplayMode).toBe('mapped');
 
       // Verify persisted to DB
       const fromDb = await db.getChart(chart.id);
       expect(fromDb!.levelMappings).toEqual(levels);
-      expect(fromDb!.levelDisplayMode).toBe('both');
+      expect(fromDb!.levelDisplayMode).toBe('mapped');
     });
 
     it('createChartFromTree without level mappings creates chart with undefined level fields', async () => {

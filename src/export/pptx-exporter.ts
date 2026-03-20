@@ -57,8 +57,8 @@ export interface PptxExportOptions {
   levelBadgeTextColor?: string;
   levelBadgeFontSize?: number;
   levelBadgeSize?: number;
-  /** Optional function to resolve raw level values to display text. */
-  resolveLevel?: (rawLevel: string | undefined) => string;
+  /** Optional function to resolve job title based on level mapping. */
+  resolveTitle?: (originalTitle: string, rawLevel?: string) => string;
   legendRows?: number;
   textAlign?: 'left' | 'center' | 'right' | 'start' | 'end';
   cardBorderRadius?: number;
@@ -195,7 +195,7 @@ function addNodeShape(
   padding: number,
   styles: ResolvedStyles,
   categories?: ColorCategory[],
-  resolveLevel?: (rawLevel: string | undefined) => string,
+  resolveTitle?: (originalTitle: string, rawLevel?: string) => string,
 ): void {
   const topLeft = convertCoordinates(
     node.x - node.width / 2,
@@ -239,7 +239,7 @@ function addNodeShape(
   slide.addText(
     [
       { text: node.name, options: { bold: true, breakLine: true, fontSize: nameFontSize } },
-      { text: node.title, options: { fontSize: titleFontSize, color: nodeTitleColor } },
+      { text: resolveTitle ? resolveTitle(node.title, node.level) : node.title, options: { fontSize: titleFontSize, color: nodeTitleColor } },
     ],
     {
       x: topLeft.x,
@@ -299,7 +299,7 @@ function addNodeShape(
 
   // Level badge
   if (styles.showLevel && node.level) {
-    const levelText = resolveLevel ? resolveLevel(node.level) : node.level;
+    const levelText = node.level;
     if (levelText) {
       const badgeFontSize = Math.max(3, Math.round(styles.levelBadgeFontSize * scale));
       const badgeSide = styles.levelBadgeSize * scale * PX_TO_INCHES;
@@ -471,7 +471,7 @@ export async function exportToPptx(
   // Layer 3: Nodes (all types)
   const categories = options?.categories;
   for (const node of layout.nodes) {
-    addNodeShape(slide, node, offsetX, offsetY, scale, padding, styles, categories, options?.resolveLevel);
+    addNodeShape(slide, node, offsetX, offsetY, scale, padding, styles, categories, options?.resolveTitle);
   }
 
   // Layer 4: Legend
@@ -517,7 +517,7 @@ export async function exportToPptx(
         addLinkLines(vSlide, link, vOffsetX, vOffsetY, vScale, padding, styles);
       }
       for (const node of vLayout.nodes) {
-        addNodeShape(vSlide, node, vOffsetX, vOffsetY, vScale, padding, styles, categories, options?.resolveLevel);
+        addNodeShape(vSlide, node, vOffsetX, vOffsetY, vScale, padding, styles, categories, options?.resolveTitle);
       }
       if (categories && categories.length > 0) {
         addLegend(vSlide, categories, vSlideW, vSlideH, padding, options?.legendRows, styles.fontFamily);

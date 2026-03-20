@@ -28,16 +28,16 @@ describe('LevelMappingPanel', () => {
     it('renders display mode radio buttons', () => {
       createPanel();
       const radios = container.querySelectorAll<HTMLInputElement>('input[type="radio"][name="display-mode"]');
-      expect(radios.length).toBe(3);
+      expect(radios.length).toBe(2);
       const values = Array.from(radios).map(r => r.value);
-      expect(values).toEqual(['raw', 'mapped', 'both']);
+      expect(values).toEqual(['original', 'mapped']);
     });
 
-    it('default display mode is raw', () => {
+    it('default display mode is original', () => {
       createPanel();
       const checked = container.querySelector<HTMLInputElement>('input[type="radio"][name="display-mode"]:checked');
       expect(checked).not.toBeNull();
-      expect(checked!.value).toBe('raw');
+      expect(checked!.value).toBe('original');
     });
 
     it('changing display mode calls setDisplayMode', () => {
@@ -50,10 +50,10 @@ describe('LevelMappingPanel', () => {
     });
 
     it('reflects current store display mode', () => {
-      levelStore.setDisplayMode('both');
+      levelStore.setDisplayMode('mapped');
       createPanel();
       const checked = container.querySelector<HTMLInputElement>('input[type="radio"][name="display-mode"]:checked');
-      expect(checked!.value).toBe('both');
+      expect(checked!.value).toBe('mapped');
     });
   });
 
