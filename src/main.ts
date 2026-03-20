@@ -1,6 +1,7 @@
 import { setLocale, t } from './i18n';
 import en from './i18n/en';
 import { OrgStore } from './store/org-store';
+import { createIconButton } from './utils/dom-builder';
 import { ChartRenderer, type RendererOptions } from './renderer/chart-renderer';
 import { FormEditor } from './editor/form-editor';
 import { JsonEditor } from './editor/json-editor';
@@ -649,21 +650,15 @@ async function main(): Promise<void> {
     },
   });
 
-  // Analytics toggle button in toolbar
-  const analyticsToggleBtn = document.createElement('button');
-  analyticsToggleBtn.className = 'analytics-toggle-btn';
-  analyticsToggleBtn.setAttribute('aria-label', t('analytics.drawer_toggle_tooltip'));
-  analyticsToggleBtn.setAttribute('data-tooltip', t('analytics.drawer_toggle_tooltip'));
-  const toggleIcon = document.createElement('span');
-  toggleIcon.setAttribute('aria-hidden', 'true');
-  toggleIcon.textContent = '📊';
-  analyticsToggleBtn.appendChild(toggleIcon);
-  analyticsToggleBtn.appendChild(document.createTextNode(' ' + t('analytics.drawer_toggle')));
-  headerRight.appendChild(analyticsToggleBtn);
-
-  analyticsToggleBtn.addEventListener('click', () => {
-    analyticsDrawer.toggle();
+  // Analytics toggle button in toolbar (icon-only, between settings and theme)
+  const analyticsToggleBtn = createIconButton({
+    icon: '📊',
+    tooltip: t('analytics.drawer_toggle_tooltip'),
+    ariaLabel: t('analytics.drawer_toggle_tooltip'),
+    ariaKeyshortcuts: 'Control+Shift+a',
+    onClick: () => { analyticsDrawer.toggle(); },
   });
+  headerRight.insertBefore(analyticsToggleBtn, toolbar.themeBtn);
 
   analyticsDrawer.onChange(() => {
     analyticsToggleBtn.classList.toggle('active', analyticsDrawer.isOpen());
