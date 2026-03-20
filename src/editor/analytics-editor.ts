@@ -301,33 +301,71 @@ export class AnalyticsEditor {
       empty.textContent = t('analytics.no_levels');
       section.appendChild(empty);
     } else {
-      const sorted = [...metrics.levelDistribution.entries()].sort((a, b) => b[1] - a[1]);
+      const sorted = [...metrics.levelDistribution.entries()].sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }));
       const maxCount = Math.max(...sorted.map(([, c]) => c), 1);
 
-      for (const [level, count] of sorted) {
-        const row = document.createElement('div');
-        row.className = 'analytics-dist-row';
+      // Group levels into bands by mapped title when LevelStore has mappings
+      const levelStore = this.options.levelStore;
+      const hasMappings = levelStore && levelStore.getMappings().length > 0;
 
-        const label = document.createElement('span');
-        label.className = 'analytics-dist-label';
-        label.textContent = level;
-        row.appendChild(label);
+      if (hasMappings) {
+        // Build bands: mapped title → [raw levels with counts]
+        const bands = new Map<string, { levels: string[]; total: number }>();
+        const unmapped: [string, number][] = [];
 
-        const countEl = document.createElement('span');
-        countEl.className = 'analytics-dist-count';
-        countEl.textContent = String(count);
-        row.appendChild(countEl);
+        for (const [rawLevel, count] of sorted) {
+          const mapping = levelStore!.getMapping(rawLevel);
+          if (mapping) {
+            const band = bands.get(mapping.displayTitle) ?? { levels: [], total: 0 };
+            band.levels.push(rawLevel);
+            band.total += count;
+            bands.set(mapping.displayTitle, band);
+          } else {
+            unmapped.push([rawLevel, count]);
+          }
+        }
 
-        const bar = document.createElement('div');
-        bar.className = 'analytics-dist-bar';
-        const fill = document.createElement('div');
-        fill.className = 'analytics-dist-bar-fill';
-        fill.style.width = `${(count / maxCount) * 100}%`;
-        fill.style.background = 'var(--accent)';
-        bar.appendChild(fill);
-        row.appendChild(bar);
+        // Render bands sorted by total count desc
+        const sortedBands = [...bands.entries()].sort((a, b) => b[1].total - a[1].total);
+        const bandMax = Math.max(...sortedBands.map(([, b]) => b.total), ...unmapped.map(([, c]) => c), 1);
 
-        section.appendChild(row);
+        for (const [title, band] of sortedBands) {
+          // Band header row
+          const row = document.createElement('div');
+          row.className = 'analytics-dist-row';
+
+          const label = document.createElement('span');
+          label.className = 'analytics-dist-label';
+          label.style.fontWeight = '600';
+          label.textContent = `${title} (${band.levels.join(', ')})`;
+          row.appendChild(label);
+
+          const countEl = document.createElement('span');
+          countEl.className = 'analytics-dist-count';
+          countEl.textContent = String(band.total);
+          row.appendChild(countEl);
+
+          const bar = document.createElement('div');
+          bar.className = 'analytics-dist-bar';
+          const fill = document.createElement('div');
+          fill.className = 'analytics-dist-bar-fill';
+          fill.style.width = `${(band.total / bandMax) * 100}%`;
+          fill.style.background = 'var(--accent)';
+          bar.appendChild(fill);
+          row.appendChild(bar);
+
+          section.appendChild(row);
+        }
+
+        // Render unmapped levels individually
+        for (const [rawLevel, count] of unmapped) {
+          this.appendDistRow(section, rawLevel, count, bandMax, 'var(--text-tertiary)');
+        }
+      } else {
+        // No mappings — show raw levels
+        for (const [level, count] of sorted) {
+          this.appendDistRow(section, level, count, maxCount, 'var(--accent)');
+        }
       }
 
       if (metrics.nodesWithoutLevel > 0) {
@@ -341,6 +379,32 @@ export class AnalyticsEditor {
     }
 
     grid.appendChild(section);
+  }
+
+  private appendDistRow(section: HTMLElement, label: string, count: number, maxCount: number, color: string): void {
+    const row = document.createElement('div');
+    row.className = 'analytics-dist-row';
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'analytics-dist-label';
+    labelEl.textContent = label;
+    row.appendChild(labelEl);
+
+    const countEl = document.createElement('span');
+    countEl.className = 'analytics-dist-count';
+    countEl.textContent = String(count);
+    row.appendChild(countEl);
+
+    const bar = document.createElement('div');
+    bar.className = 'analytics-dist-bar';
+    const fill = document.createElement('div');
+    fill.className = 'analytics-dist-bar-fill';
+    fill.style.width = `${(count / maxCount) * 100}%`;
+    fill.style.background = color;
+    bar.appendChild(fill);
+    row.appendChild(bar);
+
+    section.appendChild(row);
   }
 
   private buildCategorySection(grid: HTMLElement, metrics: OrgMetrics, index: number): void {

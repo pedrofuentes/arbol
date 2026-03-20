@@ -174,7 +174,7 @@ export function computeMetrics(tree: OrgNode, options?: MetricsOptions): OrgMetr
   let nodesWithoutLevel = 0;
   for (const node of all) {
     if (node.level) {
-      const key = options?.resolveLevel ? options.resolveLevel(node.level) : node.level;
+      const key = node.level;
       levelDistribution.set(key, (levelDistribution.get(key) ?? 0) + 1);
     } else {
       nodesWithoutLevel++;
