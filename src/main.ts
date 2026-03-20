@@ -8,6 +8,7 @@ import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { MappingStore } from './store/mapping-store';
 import { CategoryStore } from './store/category-store';
+import { LevelStore } from './store/level-store';
 import { flattenTree, findNodeById, findParent, isLeaf, avgSpanOfControl } from './utils/tree';
 import { dismissContextMenu } from './ui/context-menu';
 import { dismissInlineEditor } from './ui/inline-editor';
@@ -38,6 +39,8 @@ import { ImportWizard } from './ui/import-wizard';
 import { WizardState, renderSourceStep, renderMappingStep, renderPreviewStep, renderImportStep } from './ui/import-wizard-steps';
 import { registerShortcuts } from './init/shortcuts-handler';
 import type { ChartRecord, VersionRecord } from './types';
+import { TabSwitcher } from './editor/tab-switcher';
+import { AnalyticsEditor } from './editor/analytics-editor';
 
 async function main(): Promise<void> {
   const sidebar = document.getElementById('sidebar')!;
@@ -86,6 +89,7 @@ async function main(): Promise<void> {
   // Settings persistence
   const settingsStore = new SettingsStore();
   const mappingStore = new MappingStore();
+  const levelStore = new LevelStore();
   const defaultSettings: PersistableSettings = {
     nodeWidth: 160,
     nodeHeight: 34,
@@ -221,6 +225,7 @@ async function main(): Promise<void> {
     'headcount-badge': 'badges',
     'level-badge': 'badges',
     'categories-legend': 'categories',
+    'level-mapping': 'level_mapping',
     'settings-io': 'backup',
     'backup-restore': 'backup',
 
@@ -372,6 +377,8 @@ async function main(): Promise<void> {
           settingsStore,
           categoryStore,
           chartDB,
+          undefined,
+          levelStore,
         );
         settingsEditorInstance.setPreviewArea(settingsModal.getPreviewArea());
         settingsEditorInstance.wirePreviewControls(
@@ -523,7 +530,14 @@ async function main(): Promise<void> {
   offscreenHost.appendChild(jsonEditorHost);
   const jsonEditor = new JsonEditor(jsonEditorHost, store);
 
-  // Charts — mounted directly in sidebar (no tabs)
+  // Charts — sidebar with tabs
+  const sidebarTabSwitcher = new TabSwitcher(sidebar, [
+    { id: 'org', label: t('tabs.org') },
+    { id: 'analytics', label: t('tabs.analytics') },
+  ]);
+  const orgTabContent = sidebarTabSwitcher.getContentContainer('org')!;
+  const analyticsTabContent = sidebarTabSwitcher.getContentContainer('analytics')!;
+
   const handleBeforeSwitch = async (): Promise<boolean> => {
     if (!chartStore.isDirty(store.getTree(), store.mutationVersion)) return true;
     const confirmed = await showConfirmDialog({
@@ -555,7 +569,7 @@ async function main(): Promise<void> {
   };
 
   const chartEditor = new ChartEditor({
-    container: sidebar,
+    container: orgTabContent,
     chartStore,
     getCurrentTree: () => store.getTree(),
     getCurrentCategories: () => categoryStore.getAll(),
@@ -607,6 +621,30 @@ async function main(): Promise<void> {
     },
     onVersionCompare: (version) => {
       comparison.enterComparisonMode(version);
+    },
+  });
+
+  const analyticsEditor = new AnalyticsEditor({
+    container: analyticsTabContent,
+    orgStore: store,
+    levelStore,
+    categoryStore,
+    getFocusedTree: () => {
+      if (focusMode.focusedId) {
+        const sub = findNodeById(store.getTree(), focusMode.focusedId);
+        return sub ?? store.getTree();
+      }
+      return store.getTree();
+    },
+    getFocusedName: () => {
+      if (focusMode.focusedId) {
+        const node = findNodeById(store.getTree(), focusMode.focusedId);
+        return node?.name ?? null;
+      }
+      return null;
+    },
+    onNodeSelect: (nodeId) => {
+      renderer.setSelectedNode(nodeId);
     },
   });
 
