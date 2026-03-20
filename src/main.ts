@@ -147,6 +147,9 @@ async function main(): Promise<void> {
     categoryStore.replaceAll(activeChart.categories);
   }
 
+  // Load per-chart level mappings
+  levelStore.loadFromChart(activeChart);
+
   const resolveTitle = (originalTitle: string, rawLevel?: string): string => {
     if (!rawLevel) return originalTitle;
     const mapped = levelStore.resolveTitle(rawLevel);
@@ -186,7 +189,7 @@ async function main(): Promise<void> {
     renderer.render(treeToRender);
     const opts = renderer.getOptions();
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
-    chartStore.saveWorkingTree(fullTree, categoryStore.getAll(), store.mutationVersion).catch(() => {
+    chartStore.saveWorkingTree(fullTree, categoryStore.getAll(), store.mutationVersion, levelStore.toChartData()).catch(() => {
       showToast(t('footer.save_failed'), 'error');
     });
 
@@ -574,6 +577,7 @@ async function main(): Promise<void> {
     } else {
       categoryStore.replaceAll([]);
     }
+    levelStore.loadFromChart(chart);
     chartNameHeader.setName(chart.name);
     chartNameHeader.setDirty(false);
     rerender();
