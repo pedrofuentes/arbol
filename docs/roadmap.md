@@ -35,7 +35,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Tree diff level change tracking (oldLevel in DiffEntry)
 
 ### Testing
-- [x] **2,437 tests across 96 files** — all passing
+- [x] **2,431 tests across 96 files** — all passing
 - [x] ~152 new tests across 11 new/modified test files
 
 ---

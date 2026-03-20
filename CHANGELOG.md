@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Focus-mode aware analytics** — analytics panel shows metrics for focused subtree when in focus mode
 
 ### Testing
-- **2,437 tests across 96 files** — all passing
+- **2,431 tests across 96 files** — all passing
 - ~152 new tests: analytics metrics (55), level-store (44), analytics-editor (15), level-mapping-panel (15), context-menu level (17), csv-parser level (8), column-mapper level (4), tree-diff level (7), chart-store level integration (6), chart-renderer resolveLevel (3), pptx-exporter resolveLevel (2)
 
 ## [3.9.0] — 2026-03-19
