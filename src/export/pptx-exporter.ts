@@ -57,6 +57,8 @@ export interface PptxExportOptions {
   levelBadgeTextColor?: string;
   levelBadgeFontSize?: number;
   levelBadgeSize?: number;
+  /** Optional function to resolve raw level values to display text. */
+  resolveLevel?: (rawLevel: string | undefined) => string;
   legendRows?: number;
   textAlign?: 'left' | 'center' | 'right' | 'start' | 'end';
   cardBorderRadius?: number;
@@ -193,6 +195,7 @@ function addNodeShape(
   padding: number,
   styles: ResolvedStyles,
   categories?: ColorCategory[],
+  resolveLevel?: (rawLevel: string | undefined) => string,
 ): void {
   const topLeft = convertCoordinates(
     node.x - node.width / 2,
@@ -296,35 +299,37 @@ function addNodeShape(
 
   // Level badge
   if (styles.showLevel && node.level) {
-    const levelText = node.level;
-    const badgeFontSize = Math.max(3, Math.round(styles.levelBadgeFontSize * scale));
-    const badgeSide = styles.levelBadgeSize * scale * PX_TO_INCHES;
+    const levelText = resolveLevel ? resolveLevel(node.level) : node.level;
+    if (levelText) {
+      const badgeFontSize = Math.max(3, Math.round(styles.levelBadgeFontSize * scale));
+      const badgeSide = styles.levelBadgeSize * scale * PX_TO_INCHES;
 
-    // Position: inside bottom-left corner of the card
-    const badgeX = topLeft.x;
-    const badgeY = topLeft.y + h - badgeSide;
+      // Position: inside bottom-left corner of the card
+      const badgeX = topLeft.x;
+      const badgeY = topLeft.y + h - badgeSide;
 
-    slide.addShape('rect', {
-      x: badgeX,
-      y: badgeY,
-      w: badgeSide,
-      h: badgeSide,
-      fill: { color: styles.levelBadgeColor },
-    });
+      slide.addShape('rect', {
+        x: badgeX,
+        y: badgeY,
+        w: badgeSide,
+        h: badgeSide,
+        fill: { color: styles.levelBadgeColor },
+      });
 
-    slide.addText(levelText, {
-      x: badgeX,
-      y: badgeY,
-      w: badgeSide,
-      h: badgeSide,
-      align: 'center',
-      valign: 'middle',
-      fontFace: styles.fontFamily,
-      fontSize: badgeFontSize,
-      bold: true,
-      color: styles.levelBadgeTextColor,
-      wrap: false,
-    });
+      slide.addText(levelText, {
+        x: badgeX,
+        y: badgeY,
+        w: badgeSide,
+        h: badgeSide,
+        align: 'center',
+        valign: 'middle',
+        fontFace: styles.fontFamily,
+        fontSize: badgeFontSize,
+        bold: true,
+        color: styles.levelBadgeTextColor,
+        wrap: false,
+      });
+    }
   }
 }
 
@@ -466,7 +471,7 @@ export async function exportToPptx(
   // Layer 3: Nodes (all types)
   const categories = options?.categories;
   for (const node of layout.nodes) {
-    addNodeShape(slide, node, offsetX, offsetY, scale, padding, styles, categories);
+    addNodeShape(slide, node, offsetX, offsetY, scale, padding, styles, categories, options?.resolveLevel);
   }
 
   // Layer 4: Legend
@@ -512,7 +517,7 @@ export async function exportToPptx(
         addLinkLines(vSlide, link, vOffsetX, vOffsetY, vScale, padding, styles);
       }
       for (const node of vLayout.nodes) {
-        addNodeShape(vSlide, node, vOffsetX, vOffsetY, vScale, padding, styles, categories);
+        addNodeShape(vSlide, node, vOffsetX, vOffsetY, vScale, padding, styles, categories, options?.resolveLevel);
       }
       if (categories && categories.length > 0) {
         addLegend(vSlide, categories, vSlideW, vSlideH, padding, options?.legendRows, styles.fontFamily);

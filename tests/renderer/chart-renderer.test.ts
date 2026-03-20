@@ -2080,5 +2080,57 @@ describe('ChartRenderer', () => {
       expect(rect.getAttribute('width')).toBe('30');
       expect(rect.getAttribute('height')).toBe('30');
     });
+
+    it('renderLevelBadge uses resolveLevel when provided', () => {
+      renderer.destroy();
+      renderer = createRenderer({
+        showLevel: true,
+        resolveLevel: (raw: string | undefined) => (raw === 'L5' ? 'Senior' : raw ?? ''),
+      });
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'Alice',
+        title: 'CEO',
+        level: 'L5',
+      };
+      renderer.render(tree);
+      const badge = container.querySelector('.level-badge')!;
+      expect(badge).not.toBeNull();
+      const text = badge.querySelector('text')!;
+      expect(text.textContent).toBe('Senior');
+    });
+
+    it('renderLevelBadge shows raw level when no resolveLevel', () => {
+      renderer.destroy();
+      renderer = createRenderer({ showLevel: true });
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'Alice',
+        title: 'CEO',
+        level: 'L5',
+      };
+      renderer.render(tree);
+      const badge = container.querySelector('.level-badge')!;
+      expect(badge).not.toBeNull();
+      const text = badge.querySelector('text')!;
+      expect(text.textContent).toBe('L5');
+    });
+
+    it('renderLevelBadge resolveLevel returning empty hides badge', () => {
+      renderer.destroy();
+      renderer = createRenderer({
+        showLevel: true,
+        resolveLevel: () => '',
+      });
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'Alice',
+        title: 'CEO',
+        level: 'L5',
+      };
+      renderer.render(tree);
+      const badges = container.querySelectorAll('.level-badge');
+      expect(badges.length).toBe(0);
+    });
   });
 });

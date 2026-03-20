@@ -806,6 +806,35 @@ describe('pptx-exporter', () => {
       expect(badgeText).not.toBeUndefined();
       expect(badgeText![1].color).toBe('00FF55');
     });
+
+    it('PPTX level badge uses resolveLevel', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', level: 'L5' })],
+      });
+      await exportToPptx(layout, {
+        showLevel: true,
+        resolveLevel: (raw: string | undefined) => (raw === 'L5' ? 'Senior' : raw ?? ''),
+      });
+
+      const textCalls = mockAddText.mock.calls;
+      const badgeText = textCalls.find((call: any) => call[0] === 'Senior');
+      expect(badgeText).not.toBeUndefined();
+      expect(badgeText![1].bold).toBe(true);
+      // Raw 'L5' should NOT appear as badge text
+      const rawText = textCalls.find((call: any) => call[0] === 'L5');
+      expect(rawText).toBeUndefined();
+    });
+
+    it('PPTX level badge falls back to raw level', async () => {
+      const layout = makeLayout({
+        nodes: [makeNode({ type: 'manager', level: 'L5' })],
+      });
+      await exportToPptx(layout, { showLevel: true });
+
+      const textCalls = mockAddText.mock.calls;
+      const badgeText = textCalls.find((call: any) => call[0] === 'L5');
+      expect(badgeText).not.toBeUndefined();
+    });
   });
 
   // --- resolveStyles ---

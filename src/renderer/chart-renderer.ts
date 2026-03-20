@@ -71,6 +71,8 @@ export interface RendererOptions {
   levelBadgeTextColor?: string;
   levelBadgeFontSize?: number;
   levelBadgeSize?: number;
+  /** Optional function to resolve raw level values to display text. */
+  resolveLevel?: (rawLevel: string | undefined) => string;
   categories?: ColorCategory[];
   legendRows?: number;
   /** When true, disables zoom/keyboard/interactivity for static preview use. */
@@ -669,7 +671,9 @@ export class ChartRenderer {
       nodeHeight,
     } = this.opts;
 
-    const text = node.level ?? '';
+    const rawLevel = node.level ?? '';
+    if (!rawLevel) return;
+    const text = this.opts.resolveLevel ? this.opts.resolveLevel(rawLevel) : rawLevel;
     if (!text) return;
 
     // Position: inside bottom-left corner of the card
