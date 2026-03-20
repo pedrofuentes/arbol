@@ -1,4 +1,4 @@
-import type { OrgNode, ColorCategory, ChartRecord, VersionRecord, ChartBundle } from '../types';
+import type { OrgNode, ColorCategory, ChartRecord, VersionRecord, ChartBundle, LevelMapping, LevelDisplayMode } from '../types';
 import { ChartDB } from './chart-db';
 import { validateTree } from './org-store';
 import { generateId } from '../utils/id';
@@ -132,6 +132,8 @@ export class ChartStore extends EventEmitter {
     name: string,
     tree: OrgNode,
     categories: ColorCategory[] = [],
+    levelMappings?: LevelMapping[],
+    levelDisplayMode?: LevelDisplayMode,
   ): Promise<ChartRecord> {
     const trimmed = name.trim();
     if (!trimmed) throw new Error('Chart name cannot be empty');
@@ -148,6 +150,9 @@ export class ChartStore extends EventEmitter {
       workingTree: tree,
       categories,
     };
+
+    if (levelMappings) chart.levelMappings = levelMappings;
+    if (levelDisplayMode) chart.levelDisplayMode = levelDisplayMode;
 
     await this.db.putChart(chart);
     this.activeChartId = chart.id;
@@ -169,7 +174,9 @@ export class ChartStore extends EventEmitter {
 
     const clonedTree = structuredClone(source.workingTree);
     const clonedCategories = structuredClone(source.categories);
-    return this.createChartFromTree(copyName, clonedTree, clonedCategories);
+    const clonedLevelMappings = source.levelMappings ? structuredClone(source.levelMappings) : undefined;
+    const clonedDisplayMode = source.levelDisplayMode;
+    return this.createChartFromTree(copyName, clonedTree, clonedCategories, clonedLevelMappings, clonedDisplayMode);
   }
 
   async renameChart(id: string, name: string): Promise<void> {
@@ -232,14 +239,20 @@ export class ChartStore extends EventEmitter {
     tree: OrgNode,
     categories: ColorCategory[],
     mutationVersion?: number,
+    levelData?: { levelMappings: LevelMapping[]; levelDisplayMode: LevelDisplayMode },
   ): Promise<void> {
     if (!this.activeChartId) throw new Error('No active chart');
 
-    await this.db.patchChart(this.activeChartId, {
+    const patch: Partial<Omit<ChartRecord, 'id'>> = {
       workingTree: tree,
       categories,
       updatedAt: new Date().toISOString(),
-    });
+    };
+    if (levelData) {
+      patch.levelMappings = levelData.levelMappings;
+      patch.levelDisplayMode = levelData.levelDisplayMode;
+    }
+    await this.db.patchChart(this.activeChartId, patch);
     this.savedMutationVersion = mutationVersion ?? null;
     this.lastSavedTree = mutationVersion !== undefined ? null : JSON.stringify(tree);
   }

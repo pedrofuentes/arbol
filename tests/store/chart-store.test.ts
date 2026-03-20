@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ChartDB } from '../../src/store/chart-db';
 import { ChartStore } from '../../src/store/chart-store';
-import type { OrgNode, ColorCategory, ChartBundle } from '../../src/types';
+import type { OrgNode, ColorCategory, ChartBundle, LevelMapping, LevelDisplayMode } from '../../src/types';
 
 let idCounter = 0;
 vi.mock('../../src/utils/id', () => ({
@@ -29,6 +29,17 @@ function makeCategories(): ColorCategory[] {
     { id: 'cat-1', label: 'Open Position', color: '#fbbf24' },
     { id: 'cat-2', label: 'Contractor', color: '#60a5fa' },
   ];
+}
+
+function makeLevelMappings(): LevelMapping[] {
+  return [
+    { rawLevel: 'L5', displayTitle: 'Senior' },
+    { rawLevel: 'L6', displayTitle: 'Staff' },
+  ];
+}
+
+function makeLevelData(): { levelMappings: LevelMapping[]; levelDisplayMode: LevelDisplayMode } {
+  return { levelMappings: makeLevelMappings(), levelDisplayMode: 'mapped' };
 }
 
 describe('ChartStore', () => {
@@ -328,6 +339,48 @@ describe('ChartStore', () => {
     it('switchChart throws if chart does not exist', async () => {
       await expect(store.switchChart('nonexistent-id')).rejects.toThrow('Chart not found');
     });
+
+    it('createChartFromTree with level mappings stores them on the chart', async () => {
+      const tree = makeTree();
+      const cats = makeCategories();
+      const levels = makeLevelMappings();
+      const chart = await store.createChartFromTree('Leveled Chart', tree, cats, levels, 'both');
+      expect(chart.levelMappings).toEqual(levels);
+      expect(chart.levelDisplayMode).toBe('both');
+
+      // Verify persisted to DB
+      const fromDb = await db.getChart(chart.id);
+      expect(fromDb!.levelMappings).toEqual(levels);
+      expect(fromDb!.levelDisplayMode).toBe('both');
+    });
+
+    it('createChartFromTree without level mappings creates chart with undefined level fields', async () => {
+      const tree = makeTree();
+      const chart = await store.createChartFromTree('No Levels', tree);
+      expect(chart.levelMappings).toBeUndefined();
+      expect(chart.levelDisplayMode).toBeUndefined();
+    });
+
+    it('duplicateChart copies level mappings from source', async () => {
+      const tree = makeTree();
+      const levels = makeLevelMappings();
+      const original = await store.createChartFromTree('Source', tree, makeCategories(), levels, 'mapped');
+
+      const copy = await store.duplicateChart(original.id);
+      expect(copy.levelMappings).toEqual(levels);
+      expect(copy.levelDisplayMode).toBe('mapped');
+      // Deep clone — modifying copy should not affect original
+      copy.levelMappings![0].displayTitle = 'Changed';
+      const refetched = await db.getChart(original.id);
+      expect(refetched!.levelMappings![0].displayTitle).toBe('Senior');
+    });
+
+    it('duplicateChart without level mappings creates clean copy', async () => {
+      const original = await store.createChart('No Level Source');
+      const copy = await store.duplicateChart(original.id);
+      expect(copy.levelMappings).toBeUndefined();
+      expect(copy.levelDisplayMode).toBeUndefined();
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -378,6 +431,31 @@ describe('ChartStore', () => {
       const tree = makeTree({ name: 'Versioned' });
       await store.saveVersion('v1', tree);
       expect(store.isDirty(tree)).toBe(false);
+    });
+
+    it('saveWorkingTree persists level data when provided', async () => {
+      const tree = makeTree();
+      const cats = makeCategories();
+      const levelData = makeLevelData();
+      await store.saveWorkingTree(tree, cats, undefined, levelData);
+
+      const chart = await store.getActiveChart();
+      expect(chart!.levelMappings).toEqual(levelData.levelMappings);
+      expect(chart!.levelDisplayMode).toBe('mapped');
+    });
+
+    it('saveWorkingTree without level data does not remove existing level data', async () => {
+      const tree = makeTree();
+      const cats = makeCategories();
+      const levelData = makeLevelData();
+      await store.saveWorkingTree(tree, cats, undefined, levelData);
+
+      // Save again without level data — existing fields must survive
+      await store.saveWorkingTree(makeTree({ name: 'Updated' }), cats);
+
+      const chart = await store.getActiveChart();
+      expect(chart!.levelMappings).toEqual(levelData.levelMappings);
+      expect(chart!.levelDisplayMode).toBe('mapped');
     });
   });
 
