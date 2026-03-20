@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configurable ideal span range** — "Ideal span: [min] to [max]" controls on the span chart; health zones, background bands, and lollipop colors derive dynamically from the user's ideal range; persisted in localStorage; default 4–8
 - **Analytics drawer drag-to-resize** — drag the grip bar at the top of the analytics drawer to make it taller or shorter; height persisted in localStorage; constrained between 120px and 80% viewport
 
+### Performance
+- Replace 25 instances of `transition: all` with specific CSS properties (background-color, color, border-color, opacity, transform)
+- Reduce `backdrop-filter: blur(8px)` to `blur(4px)` on 3 modal overlays
+- Move JS hover style mutations to CSS `:hover` rules in settings panels (eliminates per-hover reflows)
+- Add `requestAnimationFrame` throttle to tooltip mousemove handlers in all chart visualizations
+- Batch treemap tile creation with `DocumentFragment` (1 reflow instead of N)
+
 ## [3.10.0] — 2026-03-20
 
 ### Added
