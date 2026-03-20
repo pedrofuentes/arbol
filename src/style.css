@@ -1607,6 +1607,12 @@ textarea:focus-visible {
 }
 .property-panel.open { width: 280px; }
 
+/* Shift category legend inward when property panel is open */
+.property-panel.open ~ [data-testid="category-legend"] {
+  right: calc(280px + var(--space-3, 12px)) !important;
+  transition: right var(--transition-normal) !important;
+}
+
 .pp-header {
   display: flex;
   align-items: center;
