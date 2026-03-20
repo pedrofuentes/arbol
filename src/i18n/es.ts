@@ -44,6 +44,7 @@ const es: Record<string, string> = {
   'analytics.drawer_toggle': 'Analíticas',
   'analytics.drawer_toggle_tooltip': 'Alternar panel de analíticas (Ctrl+Shift+A)',
   'analytics.drawer_close': 'Cerrar panel de analíticas',
+  'analytics.drawer_resize': 'Arrastrar para redimensionar panel de analíticas',
   'analytics.drawer_aria': 'Panel de analíticas del organigrama',
   'analytics.benchmark_healthy': 'Rango saludable',
   'analytics.benchmark_caution': 'Fuera del rango saludable',

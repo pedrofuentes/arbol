@@ -188,8 +188,12 @@ export class AnalyticsEditor {
       this.sunburstChart.render(tree, categories);
     } else if (tabId === 'span-chart') {
       if (!this.spanChart) {
+        const idealRange = this.loadIdealRange();
         this.spanChart = new SpanChart(panel, {
           onNodeSelect: this.options.onNodeSelect,
+          idealMin: idealRange.min,
+          idealMax: idealRange.max,
+          onIdealRangeChange: (min, max) => this.saveIdealRange(min, max),
         });
       }
       this.spanChart.render(tree, categories);
@@ -642,5 +646,28 @@ export class AnalyticsEditor {
     if (value >= 5 && value <= 8) return 'healthy';
     if ((value >= 3 && value < 5) || (value > 8 && value <= 10)) return 'caution';
     return 'danger';
+  }
+
+  private loadIdealRange(): { min: number; max: number } {
+    try {
+      const raw = localStorage.getItem('arbol-span-ideal-range');
+      if (raw) {
+        const parsed = JSON.parse(raw) as { min: number; max: number };
+        if (typeof parsed.min === 'number' && typeof parsed.max === 'number' && parsed.min < parsed.max) {
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    return { min: 4, max: 8 };
+  }
+
+  private saveIdealRange(min: number, max: number): void {
+    try {
+      localStorage.setItem('arbol-span-ideal-range', JSON.stringify({ min, max }));
+    } catch {
+      // Ignore storage errors
+    }
   }
 }

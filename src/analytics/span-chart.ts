@@ -4,6 +4,9 @@ import type { OrgNode, ColorCategory } from '../types';
 
 export interface SpanChartOptions {
   onNodeSelect?: (nodeId: string) => void;
+  idealMin?: number;
+  idealMax?: number;
+  onIdealRangeChange?: (min: number, max: number) => void;
 }
 
 interface ManagerInfo {
@@ -25,11 +28,9 @@ interface HealthZone {
   color: string;
 }
 
-function getZoneColor(span: number): string {
-  if (span <= 2) return '#ef4444';
-  if (span === 3) return '#f59e0b';
-  if (span <= 8) return '#10b981';
-  if (span <= 10) return '#f59e0b';
+function getZoneColor(span: number, idealMin: number, idealMax: number): string {
+  if (span >= idealMin && span <= idealMax) return '#10b981';
+  if (span === idealMin - 1 || (span >= idealMax + 1 && span <= idealMax + 2)) return '#f59e0b';
   return '#ef4444';
 }
 
@@ -83,13 +84,33 @@ function computeStats(managers: ManagerInfo[]): {
   };
 }
 
-function buildHealthZones(maxSpan: number): HealthZone[] {
+function buildHealthZones(maxSpan: number, idealMin: number, idealMax: number): HealthZone[] {
   const zones: HealthZone[] = [];
-  if (maxSpan >= 1) zones.push({ start: 1, end: Math.min(2, maxSpan), color: '#ef4444' });
-  if (maxSpan >= 3) zones.push({ start: 3, end: 3, color: '#f59e0b' });
-  if (maxSpan >= 4) zones.push({ start: 4, end: Math.min(8, maxSpan), color: '#10b981' });
-  if (maxSpan >= 9) zones.push({ start: 9, end: Math.min(10, maxSpan), color: '#f59e0b' });
-  if (maxSpan >= 11) zones.push({ start: 11, end: maxSpan, color: '#ef4444' });
+  const alertLow = idealMin - 2;
+  const watchLow = idealMin - 1;
+  const watchHighStart = idealMax + 1;
+  const watchHighEnd = idealMax + 2;
+
+  // Alert low (1 to idealMin-2)
+  if (alertLow >= 1 && maxSpan >= 1) {
+    zones.push({ start: 1, end: Math.min(alertLow, maxSpan), color: '#ef4444' });
+  }
+  // Watch low (idealMin-1)
+  if (watchLow >= 1 && maxSpan >= watchLow) {
+    zones.push({ start: watchLow, end: Math.min(watchLow, maxSpan), color: '#f59e0b' });
+  }
+  // Healthy (idealMin to idealMax)
+  if (maxSpan >= idealMin) {
+    zones.push({ start: idealMin, end: Math.min(idealMax, maxSpan), color: '#10b981' });
+  }
+  // Watch high (idealMax+1 to idealMax+2)
+  if (maxSpan >= watchHighStart) {
+    zones.push({ start: watchHighStart, end: Math.min(watchHighEnd, maxSpan), color: '#f59e0b' });
+  }
+  // Alert high (idealMax+3+)
+  if (maxSpan > watchHighEnd) {
+    zones.push({ start: watchHighEnd + 1, end: maxSpan, color: '#ef4444' });
+  }
   return zones;
 }
 
@@ -101,15 +122,21 @@ export class SpanChart {
   private managerListEl: HTMLDivElement | null = null;
   private categories: ColorCategory[] = [];
   private managersBySpan: Map<number, ManagerInfo[]> = new Map();
+  private idealMin: number;
+  private idealMax: number;
+  private lastTree: OrgNode | null = null;
 
   constructor(container: HTMLElement, options?: SpanChartOptions) {
     this.container = container;
     this.options = options ?? {};
+    this.idealMin = options?.idealMin ?? 4;
+    this.idealMax = options?.idealMax ?? 8;
   }
 
   render(tree: OrgNode, categories: ColorCategory[]): void {
     this.destroy();
     this.categories = categories;
+    this.lastTree = tree;
 
     const managers = collectManagers(tree);
     if (managers.length === 0) {
@@ -134,6 +161,7 @@ export class SpanChart {
     this.tooltip = this.createTooltip();
 
     this.renderKpiStrip(stats);
+    this.renderIdealRangeControls();
     this.renderSvgChart(distribution);
     this.renderZoneLegend();
 
@@ -157,6 +185,7 @@ export class SpanChart {
     this.managerListEl = null;
     this.categories = [];
     this.managersBySpan = new Map();
+    this.lastTree = null;
   }
 
   private createTooltip(): HTMLDivElement {
@@ -239,10 +268,83 @@ export class SpanChart {
     this.root.appendChild(strip);
   }
 
+  private renderIdealRangeControls(): void {
+    if (!this.root) return;
+
+    const row = document.createElement('div');
+    row.className = 'span-chart-ideal-range';
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.gap = '8px';
+    row.style.marginBottom = '12px';
+    row.style.fontSize = '13px';
+    row.style.color = 'var(--text-secondary)';
+
+    const label = document.createElement('span');
+    label.textContent = t('analytics.viz.span.ideal_range_label');
+    row.appendChild(label);
+
+    const minInput = this.createRangeInput(this.idealMin, 1, 20);
+    minInput.addEventListener('change', () => {
+      const val = parseInt(minInput.value, 10);
+      if (!isNaN(val) && val >= 1 && val < this.idealMax) {
+        this.idealMin = val;
+        this.options.onIdealRangeChange?.(this.idealMin, this.idealMax);
+        this.reRender();
+      } else {
+        minInput.value = String(this.idealMin);
+      }
+    });
+    row.appendChild(minInput);
+
+    const toLabel = document.createElement('span');
+    toLabel.textContent = t('analytics.viz.span.ideal_range_to');
+    row.appendChild(toLabel);
+
+    const maxInput = this.createRangeInput(this.idealMax, 2, 30);
+    maxInput.addEventListener('change', () => {
+      const val = parseInt(maxInput.value, 10);
+      if (!isNaN(val) && val > this.idealMin && val <= 30) {
+        this.idealMax = val;
+        this.options.onIdealRangeChange?.(this.idealMin, this.idealMax);
+        this.reRender();
+      } else {
+        maxInput.value = String(this.idealMax);
+      }
+    });
+    row.appendChild(maxInput);
+
+    this.root.appendChild(row);
+  }
+
+  private createRangeInput(value: number, min: number, max: number): HTMLInputElement {
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = String(min);
+    input.max = String(max);
+    input.value = String(value);
+    input.className = 'span-chart-range-input';
+    input.style.width = '52px';
+    input.style.padding = '4px 6px';
+    input.style.border = '1px solid var(--border-primary)';
+    input.style.borderRadius = 'var(--radius-sm)';
+    input.style.background = 'var(--bg-elevated)';
+    input.style.color = 'var(--text-primary)';
+    input.style.fontSize = '13px';
+    input.style.fontFamily = 'var(--font-sans)';
+    input.style.textAlign = 'center';
+    return input;
+  }
+
+  private reRender(): void {
+    if (!this.lastTree) return;
+    this.render(this.lastTree, this.categories);
+  }
+
   private renderSvgChart(distribution: Map<number, number>): void {
     if (!this.root) return;
 
-    const margin = { top: 16, right: 24, bottom: 40, left: 48 };
+    const margin = { top: 28, right: 24, bottom: 40, left: 48 };
     const totalWidth = Math.min(this.container.clientWidth || 700, 700);
     const totalHeight = 280;
     const width = totalWidth - margin.left - margin.right;
@@ -272,7 +374,7 @@ export class SpanChart {
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
     // Health zone backgrounds
-    const zones = buildHealthZones(maxSpan);
+    const zones = buildHealthZones(maxSpan, this.idealMin, this.idealMax);
     const bandwidth = x.bandwidth();
     const step = x.step();
     const innerPad = step * x.paddingInner() / 2;
@@ -345,7 +447,7 @@ export class SpanChart {
       .attr('x2', d => (x(d.span) ?? 0) + bandwidth / 2)
       .attr('y1', height)
       .attr('y2', height)
-      .attr('stroke', d => getZoneColor(d.span))
+      .attr('stroke', d => getZoneColor(d.span, this.idealMin, this.idealMax))
       .attr('stroke-width', 2.5)
       .attr('stroke-linecap', 'round')
       .attr('opacity', 0.6)
@@ -363,7 +465,7 @@ export class SpanChart {
       .attr('cx', d => (x(d.span) ?? 0) + bandwidth / 2)
       .attr('cy', height)
       .attr('r', 0)
-      .attr('fill', d => getZoneColor(d.span))
+      .attr('fill', d => getZoneColor(d.span, this.idealMin, this.idealMax))
       .attr('stroke', 'var(--bg-elevated)')
       .attr('stroke-width', 2)
       .style('cursor', 'pointer')
@@ -525,7 +627,7 @@ export class SpanChart {
       badge.style.fontSize = '12px';
       badge.style.fontWeight = '600';
       badge.style.color = '#fff';
-      badge.style.backgroundColor = getZoneColor(m.span);
+      badge.style.backgroundColor = getZoneColor(m.span, this.idealMin, this.idealMax);
       badge.textContent = String(m.span);
 
       const nameEl = document.createElement('span');

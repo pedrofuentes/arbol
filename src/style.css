@@ -2783,6 +2783,9 @@ textarea:focus-visible {
   flex-shrink: 0;
   background: linear-gradient(180deg, var(--bg-elevated), var(--bg-surface));
   position: relative;
+  cursor: ns-resize;
+  user-select: none;
+  touch-action: none;
 }
 
 .analytics-drawer-grip {

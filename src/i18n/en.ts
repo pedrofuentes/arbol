@@ -44,6 +44,7 @@ const en: Record<string, string> = {
   'analytics.drawer_toggle': 'Analytics',
   'analytics.drawer_toggle_tooltip': 'Toggle analytics panel (Ctrl+Shift+A)',
   'analytics.drawer_close': 'Close analytics panel',
+  'analytics.drawer_resize': 'Drag to resize analytics panel',
   'analytics.drawer_aria': 'Organization analytics panel',
   'analytics.benchmark_healthy': 'Healthy range',
   'analytics.benchmark_caution': 'Outside healthy range',
@@ -122,6 +123,8 @@ const en: Record<string, string> = {
   'analytics.viz.span.health_alert': 'Alert zone',
   'analytics.viz.span.health_watch': 'Watch zone',
   'analytics.viz.span.health_healthy': 'Healthy zone',
+  'analytics.viz.span.ideal_range_label': 'Ideal span:',
+  'analytics.viz.span.ideal_range_to': 'to',
 
   // ─── Treemap strings ──────────────────────────────────────────────
   'analytics.viz.treemap.color_by': 'Color by:',

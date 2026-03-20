@@ -180,4 +180,59 @@ describe('SpanChart', () => {
 
     chart.destroy();
   });
+
+  describe('configurable ideal range', () => {
+    it('renders ideal range controls', () => {
+      const chart = new SpanChart(container);
+      chart.render(testTree, testCategories);
+
+      const rangeRow = container.querySelector('.span-chart-ideal-range');
+      expect(rangeRow).not.toBeNull();
+
+      chart.destroy();
+    });
+
+    it('renders two number inputs', () => {
+      const chart = new SpanChart(container);
+      chart.render(testTree, testCategories);
+
+      const rangeRow = container.querySelector('.span-chart-ideal-range')!;
+      const inputs = rangeRow.querySelectorAll('input[type="number"]');
+      expect(inputs.length).toBe(2);
+
+      chart.destroy();
+    });
+
+    it('inputs have default values 4 and 8', () => {
+      const chart = new SpanChart(container);
+      chart.render(testTree, testCategories);
+
+      const inputs = container.querySelectorAll('.span-chart-ideal-range input[type="number"]');
+      expect((inputs[0] as HTMLInputElement).value).toBe('4');
+      expect((inputs[1] as HTMLInputElement).value).toBe('8');
+
+      chart.destroy();
+    });
+
+    it('custom idealMin/idealMax reflected in inputs', () => {
+      const chart = new SpanChart(container, { idealMin: 3, idealMax: 10 });
+      chart.render(testTree, testCategories);
+
+      const inputs = container.querySelectorAll('.span-chart-ideal-range input[type="number"]');
+      expect((inputs[0] as HTMLInputElement).value).toBe('3');
+      expect((inputs[1] as HTMLInputElement).value).toBe('10');
+
+      chart.destroy();
+    });
+
+    it('SVG has the correct class', () => {
+      const chart = new SpanChart(container);
+      chart.render(testTree, testCategories);
+
+      const svg = container.querySelector('svg.span-chart-svg');
+      expect(svg).not.toBeNull();
+
+      chart.destroy();
+    });
+  });
 });
