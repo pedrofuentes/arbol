@@ -231,6 +231,31 @@ function getHelpSections(): HelpSection[] {
       ],
     },
     {
+      titleKey: 'help.analytics.title',
+      items: [
+        [
+          { tag: 'strong', text: t('help.analytics.headcount_label') },
+          t('help.analytics.headcount_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.analytics.depth_label') },
+          t('help.analytics.depth_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.analytics.ratio_label') },
+          t('help.analytics.ratio_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.analytics.span_label') },
+          t('help.analytics.span_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.analytics.alerts_label') },
+          t('help.analytics.alerts_desc'),
+        ],
+      ],
+    },
+    {
       titleKey: 'help.comparison.title',
       items: [
         [t('help.comparison.desc')],

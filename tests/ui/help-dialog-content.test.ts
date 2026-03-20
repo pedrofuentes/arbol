@@ -9,4 +9,7 @@ describe('help-dialog content', () => {
   it('dotted lines', () => { showHelpDialog(); expect(document.body.textContent).toContain('Dotted lines'); });
   it('comparison', () => { showHelpDialog(); expect(document.body.textContent).toContain('Version Comparison'); });
   it('advisor', () => { showHelpDialog(); expect(document.body.textContent).toContain('Chief of Staff'); });
+  it('Analytics section exists', () => { showHelpDialog(); const h = document.querySelectorAll('.help-section-header'); expect(Array.from(h).some(t => t.textContent!.includes('Analytics'))).toBe(true); });
+  it('Analytics section explains ratio', () => { showHelpDialog(); expect(document.body.textContent).toContain('Manager-to-IC Ratio'); });
+  it('Analytics section explains span', () => { showHelpDialog(); expect(document.body.textContent).toContain('Span of Control'); });
 });
