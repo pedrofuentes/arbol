@@ -927,6 +927,7 @@ async function main(): Promise<void> {
     footer: document.getElementById('footer')!,
     getChartName: () => chartNameHeader.getName(),
     getSideBySideRenderer: () => comparison.getSideBySideRenderer(),
+    resolveTitle,
   });
   const { exportCurrentChart } = footerResult;
   updateSelectionIndicator = footerResult.updateSelectionIndicator;

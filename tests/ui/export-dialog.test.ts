@@ -78,7 +78,7 @@ describe('showExportDialog', () => {
     expect(dialog!.textContent).toContain('Q3 Snapshot');
   });
 
-  it('all version checkboxes are checked by default', () => {
+  it('all version checkboxes are unchecked by default', () => {
     showExportDialog({
       chartName: 'My Org',
       versions: sampleVersions,
@@ -88,7 +88,7 @@ describe('showExportDialog', () => {
 
     const checkboxes = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
     checkboxes.forEach((cb) => {
-      expect(cb.checked).toBe(true);
+      expect(cb.checked).toBe(false);
     });
   });
 
@@ -115,6 +115,10 @@ describe('showExportDialog', () => {
       onCancel,
     });
 
+    // Versions start unchecked — select all
+    const checkboxes = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    checkboxes.forEach((cb) => { cb.checked = true; });
+
     const exportBtn = Array.from(document.querySelectorAll('button')).find(
       (b) => b.textContent === 'Export',
     );
@@ -124,7 +128,7 @@ describe('showExportDialog', () => {
     expect(onExport).toHaveBeenCalledWith('pptx', ['v-1', 'v-2', 'v-3'], undefined);
   });
 
-  it('export button calls onExport with subset of IDs when some unchecked', () => {
+  it('export button calls onExport with subset of IDs when some checked', () => {
     showExportDialog({
       chartName: 'My Org',
       versions: sampleVersions,
@@ -132,8 +136,10 @@ describe('showExportDialog', () => {
       onCancel,
     });
 
+    // Versions start unchecked — select first and third
     const checkboxes = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
-    checkboxes[1].checked = false;
+    checkboxes[0].checked = true;
+    checkboxes[2].checked = true;
 
     const exportBtn = Array.from(document.querySelectorAll('button')).find(
       (b) => b.textContent === 'Export',
@@ -212,7 +218,7 @@ describe('showExportDialog', () => {
     expect(onCancel).toHaveBeenCalledOnce();
   });
 
-  it('"Deselect all" / "Select all" toggle works', () => {
+  it('"Select all" / "Deselect all" toggle works', () => {
     showExportDialog({
       chartName: 'My Org',
       versions: sampleVersions,
@@ -221,24 +227,24 @@ describe('showExportDialog', () => {
     });
 
     const toggleLink = document.querySelector('a')!;
-    expect(toggleLink.textContent).toBe('Deselect all');
+    expect(toggleLink.textContent).toBe('Select all');
 
-    // Click to deselect all
+    // Click to select all
     toggleLink.click();
 
     const checkboxes = document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
     checkboxes.forEach((cb) => {
-      expect(cb.checked).toBe(false);
-    });
-    expect(toggleLink.textContent).toBe('Select all');
-
-    // Click to select all again
-    toggleLink.click();
-
-    checkboxes.forEach((cb) => {
       expect(cb.checked).toBe(true);
     });
     expect(toggleLink.textContent).toBe('Deselect all');
+
+    // Click to deselect all again
+    toggleLink.click();
+
+    checkboxes.forEach((cb) => {
+      expect(cb.checked).toBe(false);
+    });
+    expect(toggleLink.textContent).toBe('Select all');
   });
 
   it('destroy() removes dialog from DOM', () => {

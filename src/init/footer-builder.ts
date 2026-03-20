@@ -25,6 +25,7 @@ export interface FooterDeps {
   footer: HTMLElement;
   getChartName: () => string;
   getSideBySideRenderer: () => SideBySideRenderer | null;
+  resolveTitle?: (originalTitle: string, rawLevel?: string) => string;
 }
 
 export interface FooterElements {
@@ -248,6 +249,12 @@ export function buildFooter(deps: FooterDeps): FooterElements {
               textAlign: rendererOpts.textAlign as 'left' | 'center' | 'right',
               cardBorderRadius: rendererOpts.cardBorderRadius as number,
               fontFamily: rendererOpts.fontFamily as string,
+              showLevel: rendererOpts.showLevel,
+              levelBadgeColor: rendererOpts.levelBadgeColor,
+              levelBadgeTextColor: rendererOpts.levelBadgeTextColor,
+              levelBadgeFontSize: rendererOpts.levelBadgeFontSize,
+              levelBadgeSize: rendererOpts.levelBadgeSize,
+              resolveTitle: deps.resolveTitle,
               additionalLayouts,
             });
             showToast(t('footer.exported'), 'success');

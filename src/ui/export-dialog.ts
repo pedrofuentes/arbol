@@ -106,7 +106,7 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
   if (options.versions.length > 0) {
     const toggleLink = document.createElement('a');
     toggleLink.href = '#';
-    toggleLink.textContent = t('export_dialog.deselect_all');
+    toggleLink.textContent = t('export_dialog.select_all');
     toggleLink.style.cssText = `
       display:inline-block;margin-bottom:8px;font-size:12px;
       color:var(--accent);cursor:pointer;font-family:var(--font-sans);
@@ -148,7 +148,7 @@ export function showExportDialog(options: ExportDialogOptions): { destroy: () =>
 
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
-      checkbox.checked = true;
+      checkbox.checked = false;
       checkbox.id = `export-version-${version.id}`;
       checkbox.value = version.id;
       checkbox.style.marginTop = '2px';
