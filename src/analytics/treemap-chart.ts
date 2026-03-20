@@ -7,7 +7,7 @@ type ColorMode = 'department' | 'depth';
 
 const DEPTH_COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
 const MAX_WIDTH = 700;
-const SVG_HEIGHT = 420;
+const SVG_HEIGHT = 300;
 
 function getCategoryColor(categoryId: string | undefined, categories: ColorCategory[]): string {
   if (!categoryId) return '#6b7280';

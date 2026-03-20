@@ -346,7 +346,7 @@ export class SpanChart {
 
     const margin = { top: 28, right: 24, bottom: 40, left: 48 };
     const totalWidth = Math.min(this.container.clientWidth || 700, 700);
-    const totalHeight = 280;
+    const totalHeight = 220;
     const width = totalWidth - margin.left - margin.right;
     const height = totalHeight - margin.top - margin.bottom;
 
