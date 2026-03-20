@@ -9,6 +9,8 @@ import { PresetPanel } from './settings/preset-panel';
 import { CategoryPanel } from './settings/category-panel';
 import { SettingsIOPanel } from './settings/settings-io';
 import { BackupPanel } from './settings/backup-panel';
+import { LevelMappingPanel } from './settings/level-mapping-panel';
+import type { LevelStore } from '../store/level-store';
 
 export type { CombinedPreset } from './settings/preset-panel';
 export { COMBINED_PRESETS, LAYOUT_PRESETS } from './settings/preset-panel';
@@ -362,6 +364,7 @@ export class SettingsEditor {
   private rerenderCallback: () => void;
   private settingsStore: SettingsStore | null;
   private categoryStore: CategoryStore | null;
+  private levelStore: LevelStore | null;
   private chartDB: ChartDB | null;
   private storage: IStorage;
   private onBuildCallback: (() => void) | null = null;
@@ -369,6 +372,7 @@ export class SettingsEditor {
   private previewRenderer: PreviewRenderer | null = null;
   private presetPanel: PresetPanel;
   private categoryPanel: CategoryPanel | null = null;
+  private levelMappingPanel: LevelMappingPanel | null = null;
   private settingsIOPanel: SettingsIOPanel;
   private backupPanel: BackupPanel | null = null;
   private rangeDebounceTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
@@ -381,12 +385,14 @@ export class SettingsEditor {
     categoryStore?: CategoryStore,
     chartDB?: ChartDB,
     storage: IStorage = browserStorage,
+    levelStore?: LevelStore,
   ) {
     this.container = container;
     this.renderer = renderer;
     this.rerenderCallback = rerenderCallback;
     this.settingsStore = settingsStore ?? null;
     this.categoryStore = categoryStore ?? null;
+    this.levelStore = levelStore ?? null;
     this.chartDB = chartDB ?? null;
     this.storage = storage;
 
@@ -582,6 +588,21 @@ export class SettingsEditor {
     this.container.appendChild(
       this.createAccordionSection('settings-io', t('settings.settings_section'), this.settingsIOPanel.build()),
     );
+
+    // Level Mapping section
+    if (this.levelStore) {
+      const levelContainer = document.createElement('div');
+      this.levelMappingPanel?.destroy();
+      this.levelMappingPanel = new LevelMappingPanel({
+        container: levelContainer,
+        levelStore: this.levelStore,
+        rerenderCallback: this.rerenderCallback,
+        rebuildCallback: () => this.build(),
+      });
+      this.container.appendChild(
+        this.createAccordionSection('level-mapping', t('settings.level_mapping_section'), levelContainer),
+      );
+    }
 
     // Backup & Restore section
     if (this.backupPanel) {
@@ -794,6 +815,7 @@ export class SettingsEditor {
 
   destroy(): void {
     this.clearDebounceTimers();
+    this.levelMappingPanel?.destroy();
     this.previewRenderer?.destroy();
     this.container.innerHTML = '';
   }

@@ -1,0 +1,202 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { LevelMappingPanel } from '../../../src/editor/settings/level-mapping-panel';
+import { LevelStore } from '../../../src/store/level-store';
+
+describe('LevelMappingPanel', () => {
+  let container: HTMLElement;
+  let levelStore: LevelStore;
+  let rerenderCallback: () => void;
+  let rebuildCallback: () => void;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    levelStore = new LevelStore();
+    rerenderCallback = vi.fn();
+    rebuildCallback = vi.fn();
+  });
+
+  function createPanel(): LevelMappingPanel {
+    return new LevelMappingPanel({
+      container,
+      levelStore,
+      rerenderCallback,
+      rebuildCallback,
+    });
+  }
+
+  describe('display mode section', () => {
+    it('renders display mode radio buttons', () => {
+      createPanel();
+      const radios = container.querySelectorAll<HTMLInputElement>('input[type="radio"][name="display-mode"]');
+      expect(radios.length).toBe(3);
+      const values = Array.from(radios).map(r => r.value);
+      expect(values).toEqual(['raw', 'mapped', 'both']);
+    });
+
+    it('default display mode is raw', () => {
+      createPanel();
+      const checked = container.querySelector<HTMLInputElement>('input[type="radio"][name="display-mode"]:checked');
+      expect(checked).not.toBeNull();
+      expect(checked!.value).toBe('raw');
+    });
+
+    it('changing display mode calls setDisplayMode', () => {
+      createPanel();
+      const spy = vi.spyOn(levelStore, 'setDisplayMode');
+      const mappedRadio = container.querySelector<HTMLInputElement>('input[type="radio"][value="mapped"]');
+      expect(mappedRadio).not.toBeNull();
+      mappedRadio!.dispatchEvent(new Event('change'));
+      expect(spy).toHaveBeenCalledWith('mapped');
+    });
+
+    it('reflects current store display mode', () => {
+      levelStore.setDisplayMode('both');
+      createPanel();
+      const checked = container.querySelector<HTMLInputElement>('input[type="radio"][name="display-mode"]:checked');
+      expect(checked!.value).toBe('both');
+    });
+  });
+
+  describe('mappings table', () => {
+    it('renders empty state when no mappings', () => {
+      createPanel();
+      expect(container.textContent).toContain('No level mappings defined. Add one below.');
+    });
+
+    it('renders mappings table when mappings exist', () => {
+      levelStore.addMapping('L10', 'IC');
+      levelStore.addMapping('L11', 'Senior');
+      createPanel();
+      const rows = container.querySelectorAll('[data-testid="mapping-row"]');
+      expect(rows.length).toBe(2);
+      expect(rows[0].textContent).toContain('L10');
+      expect(rows[0].textContent).toContain('IC');
+      expect(rows[1].textContent).toContain('L11');
+      expect(rows[1].textContent).toContain('Senior');
+    });
+
+    it('delete button removes mapping', () => {
+      levelStore.addMapping('L10', 'IC');
+      createPanel();
+      const spy = vi.spyOn(levelStore, 'removeMapping');
+      const deleteBtn = container.querySelector<HTMLButtonElement>('[data-testid="delete-mapping"]');
+      expect(deleteBtn).not.toBeNull();
+      deleteBtn!.click();
+      expect(spy).toHaveBeenCalledWith('L10');
+    });
+  });
+
+  describe('add form', () => {
+    it('add form creates new mapping', () => {
+      createPanel();
+      const spy = vi.spyOn(levelStore, 'addMapping');
+      const rawInput = container.querySelector<HTMLInputElement>('[data-testid="raw-level-input"]');
+      const titleInput = container.querySelector<HTMLInputElement>('[data-testid="display-title-input"]');
+      const addBtn = container.querySelector<HTMLButtonElement>('[data-testid="add-mapping-btn"]');
+
+      expect(rawInput).not.toBeNull();
+      expect(titleInput).not.toBeNull();
+      expect(addBtn).not.toBeNull();
+
+      rawInput!.value = 'L12';
+      titleInput!.value = 'Director';
+      addBtn!.click();
+
+      expect(spy).toHaveBeenCalledWith('L12', 'Director');
+    });
+
+    it('add form validates empty inputs', () => {
+      createPanel();
+      const addBtn = container.querySelector<HTMLButtonElement>('[data-testid="add-mapping-btn"]');
+      addBtn!.click();
+      const error = container.querySelector('[data-testid="mapping-error"]');
+      expect(error).not.toBeNull();
+      expect(error!.textContent!.length).toBeGreaterThan(0);
+    });
+
+    it('add form shows duplicate error', () => {
+      levelStore.addMapping('L10', 'IC');
+      createPanel();
+      const rawInput = container.querySelector<HTMLInputElement>('[data-testid="raw-level-input"]');
+      const titleInput = container.querySelector<HTMLInputElement>('[data-testid="display-title-input"]');
+      const addBtn = container.querySelector<HTMLButtonElement>('[data-testid="add-mapping-btn"]');
+
+      rawInput!.value = 'L10';
+      titleInput!.value = 'Another';
+      addBtn!.click();
+
+      const error = container.querySelector('[data-testid="mapping-error"]');
+      expect(error).not.toBeNull();
+      expect(error!.textContent).toContain('A mapping for this level already exists.');
+    });
+
+    it('clears inputs after successful add', () => {
+      createPanel();
+      const rawInput = container.querySelector<HTMLInputElement>('[data-testid="raw-level-input"]');
+      const titleInput = container.querySelector<HTMLInputElement>('[data-testid="display-title-input"]');
+      const addBtn = container.querySelector<HTMLButtonElement>('[data-testid="add-mapping-btn"]');
+
+      rawInput!.value = 'L12';
+      titleInput!.value = 'Director';
+      addBtn!.click();
+
+      // After rebuild, inputs should be empty
+      const newRawInput = container.querySelector<HTMLInputElement>('[data-testid="raw-level-input"]');
+      expect(newRawInput!.value).toBe('');
+    });
+  });
+
+  describe('CSV import/export', () => {
+    it('export CSV triggers download', () => {
+      levelStore.addMapping('L10', 'IC');
+      createPanel();
+      const spy = vi.spyOn(levelStore, 'exportToCsv');
+      const exportBtn = container.querySelector<HTMLButtonElement>('[data-testid="export-csv-btn"]');
+      expect(exportBtn).not.toBeNull();
+
+      // Mock URL/Blob for download
+      const createObjectURL = vi.fn(() => 'blob:mock');
+      const revokeObjectURL = vi.fn();
+      globalThis.URL.createObjectURL = createObjectURL;
+      globalThis.URL.revokeObjectURL = revokeObjectURL;
+
+      exportBtn!.click();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('import CSV button exists and has file input', () => {
+      createPanel();
+      const importBtn = container.querySelector<HTMLButtonElement>('[data-testid="import-csv-btn"]');
+      expect(importBtn).not.toBeNull();
+      const fileInput = container.querySelector<HTMLInputElement>('input[type="file"]');
+      expect(fileInput).not.toBeNull();
+      expect(fileInput!.accept).toBe('.csv');
+    });
+  });
+
+  describe('rebuild on store change', () => {
+    it('rebuilds on store change', () => {
+      createPanel();
+      expect(container.querySelectorAll('[data-testid="mapping-row"]').length).toBe(0);
+
+      levelStore.addMapping('L10', 'IC');
+      // Store emits change, panel should rebuild
+      const rows = container.querySelectorAll('[data-testid="mapping-row"]');
+      expect(rows.length).toBe(1);
+    });
+  });
+
+  describe('destroy', () => {
+    it('destroy cleans up', () => {
+      const panel = createPanel();
+      expect(container.children.length).toBeGreaterThan(0);
+      panel.destroy();
+      expect(container.innerHTML).toBe('');
+
+      // After destroy, store changes should not rebuild
+      const childCountAfterDestroy = container.children.length;
+      levelStore.addMapping('L10', 'IC');
+      expect(container.children.length).toBe(childCountAfterDestroy);
+    });
+  });
+});

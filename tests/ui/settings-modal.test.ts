@@ -85,11 +85,11 @@ describe('SettingsModal', () => {
     modal.destroy();
   });
 
-  it('renders 10 tabs', () => {
+  it('renders 11 tabs', () => {
     const { modal } = createModal();
     modal.open();
     const tabs = document.querySelectorAll('.settings-nav-item');
-    expect(tabs.length).toBe(10);
+    expect(tabs.length).toBe(11);
     modal.destroy();
   });
 

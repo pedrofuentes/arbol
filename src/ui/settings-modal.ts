@@ -12,7 +12,7 @@ const PREVIEW_HINT_KEYS: Record<string, string> = {
   categories: 'settings_modal.preview_hint.categories',
 };
 
-const TABS_WITHOUT_PREVIEW = new Set(['backup']);
+const TABS_WITHOUT_PREVIEW = new Set(['backup', 'level_mapping']);
 
 export interface SettingsTab {
   id: string;
@@ -39,6 +39,7 @@ function getDefaultTabs(): SettingsTab[] {
     { id: 'advisors', label: t('settings_modal.tab.advisors'), icon: '📎' },
     { id: 'badges', label: t('settings_modal.tab.badges'), icon: '🔢' },
     { id: 'categories', label: t('settings_modal.tab.categories'), icon: '🏷️' },
+    { id: 'level_mapping', label: t('settings_modal.tab.level_mapping'), icon: '📊' },
     { id: 'backup', label: t('settings_modal.tab.backup'), icon: '💾' },
   ];
 }
