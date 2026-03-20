@@ -2767,10 +2767,6 @@ textarea:focus-visible {
   pointer-events: none;
 }
 
-/* Category legend transition for smooth repositioning */
-[data-testid="category-legend"] {
-  transition: bottom 300ms cubic-bezier(0.22, 1, 0.36, 1) !important;
-}
 
 .analytics-drawer-handle {
   height: 28px;

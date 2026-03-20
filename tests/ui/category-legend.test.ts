@@ -148,12 +148,12 @@ describe('CategoryLegend', () => {
       expect(style).toContain('var(--bg-surface)');
     });
 
-    it('positions at bottom-left of container', () => {
+    it('positions at bottom-right of container', () => {
       showCategoryLegend({ categories: sampleCategories, container });
       const legend = getLegend()!;
       const style = legend.getAttribute('style') ?? '';
       expect(style).toContain('bottom');
-      expect(style).toContain('left');
+      expect(style).toContain('right');
     });
   });
 

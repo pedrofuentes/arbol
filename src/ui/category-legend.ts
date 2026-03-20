@@ -35,7 +35,7 @@ export function showCategoryLegend(options: CategoryLegendOptions): void {
     [
       'position:absolute',
       'bottom:var(--space-3, 12px)',
-      'left:var(--space-3, 12px)',
+      'right:var(--space-3, 12px)',
       'z-index:50',
       'display:flex',
       'flex-direction:column',
