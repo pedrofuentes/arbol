@@ -8,7 +8,7 @@ These rules are **absolute requirements**. Violating any one will break the proj
 
 1. **TDD is mandatory.** Write a failing test FIRST, then implement. Red → Green → Refactor. No exceptions.
 2. **Never commit to `main`.** All work happens on feature branches (`feat/`, `fix/`, `refactor/`, etc.).
-3. **All 2,251 tests must pass** (`npm run test`) before any commit.
+3. **All 2,403 tests must pass** (`npm run test`) before any commit.
 4. **Merge only with explicit user approval.** Never auto-merge, rebase, or push to `main` without the user saying yes.
 5. **No hardcoded values.** All spacing, sizing, color, and style values go through options/parameters — zero magic numbers.
 6. **No `innerHTML` with dynamic data.** Use `textContent`, `createElement`, `appendChild` only.
@@ -166,6 +166,24 @@ Charts are independent org trees stored in IndexedDB (`arbol-db`), each with the
 | `restoreVersion()` | `(versionId): Promise<void>` — replaces working tree |
 | `onChange()` | `(listener): () => void` |
 
+### LevelStore API (`src/store/level-store.ts`)
+
+| Method | Signature |
+|--------|-----------|
+| `getMappings()` | `(): LevelMapping[]` |
+| `getMapping()` | `(rawLevel): LevelMapping \| undefined` |
+| `addMapping()` | `(rawLevel, displayTitle): void` |
+| `updateMapping()` | `(rawLevel, displayTitle): void` |
+| `removeMapping()` | `(rawLevel): void` |
+| `replaceAll()` | `(mappings): void` |
+| `getDisplayMode()` | `(): LevelDisplayMode` |
+| `setDisplayMode()` | `(mode): void` |
+| `resolve()` | `(rawLevel): string` — resolves based on display mode |
+| `importFromCsv()` | `(csvText): number` — returns import count |
+| `exportToCsv()` | `(): string` |
+| `loadFromChart()` | `(chart): void` |
+| `toChartData()` | `(): { levelMappings, levelDisplayMode }` |
+
 ### Interactions
 
 | Input | Target | Behavior |
@@ -311,7 +329,7 @@ The version in `package.json` is the single source of truth — injected into th
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **2,251 tests across 91 files** — all must pass before committing
+- **2,403 tests across 95 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure exactly (e.g., `src/store/org-store.ts` → `tests/store/org-store.test.ts`)

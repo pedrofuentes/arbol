@@ -1,10 +1,42 @@
 # Arbol — Project Roadmap
 
-> Last updated: 2026-03-19
+> Last updated: 2026-03-20
 
 ## Overview
 
 Arbol is an interactive org chart editor for the browser, built with TypeScript, D3.js, and Vite. This roadmap tracks everything completed, in progress, and planned.
+
+---
+
+## 🚀 v3.10.0 — Level Mapping + CSV Import + Analytics
+
+### Phase 38b — Level Mapping System
+- [x] LevelMapping interface + LevelDisplayMode type
+- [x] LevelStore (EventEmitter pattern) with CRUD, resolve(), CSV import/export
+- [x] ChartStore integration (per-chart persistence of level mappings)
+- [x] Level mapping settings panel (new tab in Settings Modal)
+- [x] Mapped level rendering on cards and PPTX export
+
+### Phase 38b — CSV Import Level Column
+- [x] `level` field on ColumnMapping
+- [x] Auto-detection of level/grade/band column headers
+- [x] Level column dropdown in ColumnMapper UI
+- [x] Level propagation through tree building
+
+### Phase 38b — Analytics Panel
+- [x] Pure `computeMetrics()` function with 5 metric groups
+- [x] Sidebar tabs (Org + Analytics) via TabSwitcher
+- [x] AnalyticsEditor with headcount, structure, span of control, levels, categories
+- [x] Clickable span-of-control alerts (select node on canvas)
+- [x] Focus-mode aware metrics
+
+### Phase 38b — Gap Fills
+- [x] Context menu level submenu (single + multi-select)
+- [x] Tree diff level change tracking (oldLevel in DiffEntry)
+
+### Testing
+- [x] **2,403 tests across 95 files** — all passing
+- [x] ~152 new tests across 11 new/modified test files
 
 ---
 

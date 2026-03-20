@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.10.0] — 2026-03-20
+
+### Added
+- **Level Mapping System** — many-to-one mapping from raw level values to display titles (e.g., L10→IC, L12→Senior); three display modes: raw, mapped, or both
+- **LevelStore** — new store for managing level mappings per chart, with CSV import/export support
+- **Level mapping settings** — new "Level Mapping" tab in Settings Modal for managing mappings and display mode
+- **Analytics panel** — new "Analytics" sidebar tab with 5 collapsible sections of org structure metrics:
+  - Headcount overview (total, managers/ICs/advisors, manager-to-IC ratio)
+  - Structure shape (org depth, average leaf depth, layer headcount bars)
+  - Span of control (avg/min/max/median, benchmark colors, wide/narrow/single-child manager alerts)
+  - Level distribution (raw + mapped, ungrouped count)
+  - Category distribution (color-coded with uncategorized count)
+- **Sidebar tabs** — sidebar now has "Org" and "Analytics" tabs via TabSwitcher
+- **Context menu level submenu** — set or clear level via right-click menu (single and multi-select)
+- **CSV import level column** — optional level/grade/band column in CSV imports with auto-detection
+- **Level change tracking** — tree diff now detects and reports level changes (`oldLevel` in DiffEntry)
+- **Mapped level rendering** — level badges on cards and in PPTX export show resolved display titles
+- **Clickable analytics alerts** — clicking a wide/narrow span manager name selects that node on the canvas
+- **Focus-mode aware analytics** — analytics panel shows metrics for focused subtree when in focus mode
+
+### Testing
+- **2,403 tests across 95 files** — all passing
+- ~152 new tests: analytics metrics (55), level-store (44), analytics-editor (15), level-mapping-panel (15), context-menu level (17), csv-parser level (8), column-mapper level (4), tree-diff level (7), chart-store level integration (6), chart-renderer resolveLevel (3), pptx-exporter resolveLevel (2)
+
 ## [3.9.0] — 2026-03-19
 
 ### Changed

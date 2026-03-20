@@ -82,6 +82,7 @@ const EMERALD_MATCHING_OPTS: ResolvedOptions = {
   textPaddingHorizontal: 8,
   categories: [],
   preview: false,
+  resolveLevel: (raw: string | undefined) => raw ?? '',
 } as ResolvedOptions;
 
 function createPanel(optsOverride?: Partial<ResolvedOptions>): {

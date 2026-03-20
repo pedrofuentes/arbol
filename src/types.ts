@@ -63,6 +63,10 @@ export interface ChartRecord {
   workingTree: OrgNode;
   /** Color categories specific to this chart. */
   categories: ColorCategory[];
+  /** Level-to-title mappings specific to this chart. */
+  levelMappings?: LevelMapping[];
+  /** How level values are displayed on cards and in exports. */
+  levelDisplayMode?: LevelDisplayMode;
 }
 
 /** Immutable point-in-time snapshot of a chart's tree. */
@@ -115,3 +119,14 @@ export interface ChartBundle {
   };
   versions: ChartBundleVersion[];
 }
+
+/** Maps a raw level string to a human-readable display title. */
+export interface LevelMapping {
+  /** Raw level value as stored on OrgNode (e.g., 'L10', 'E5', '12'). */
+  rawLevel: string;
+  /** Human-readable display title (e.g., 'IC', 'Senior', 'Director'). */
+  displayTitle: string;
+}
+
+/** How level values are displayed on cards and in exports. */
+export type LevelDisplayMode = 'raw' | 'mapped' | 'both';

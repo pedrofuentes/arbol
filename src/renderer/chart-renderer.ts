@@ -142,6 +142,7 @@ export class ChartRenderer {
       levelBadgeTextColor: '#ffffff',
       levelBadgeFontSize: 11,
       levelBadgeSize: 22,
+      resolveLevel: (raw: string | undefined) => raw ?? '',
       categories: [] as ColorCategory[],
       legendRows: 0,
       preview: false,

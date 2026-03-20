@@ -74,6 +74,7 @@ const DEFAULT_OPTS: ResolvedOptions = {
   icContainerBorderRadius: 0,
   categories: [],
   preview: false,
+  resolveLevel: (raw: string | undefined) => raw ?? '',
 } as ResolvedOptions;
 
 function createMockRenderer(): ChartRenderer {
