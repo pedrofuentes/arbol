@@ -81,6 +81,8 @@ const en: Record<string, string> = {
   'analytics.no_alerts': 'No span of control alerts',
   'analytics.section.levels': 'Level Distribution',
   'analytics.no_levels': 'No levels assigned',
+  'analytics.group_by_band': 'Group by band',
+  'analytics.show_individual': 'Show individual',
   'analytics.nodes_without_level': '{count} without level',
   'analytics.section.categories': 'Category Distribution',
   'analytics.uncategorized': 'Uncategorized',

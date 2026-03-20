@@ -19,6 +19,7 @@ export class AnalyticsEditor {
   private container: HTMLElement;
   private options: AnalyticsEditorOptions;
   private unsubscribes: (() => void)[] = [];
+  private groupLevels = true;
 
   constructor(options: AnalyticsEditorOptions) {
     this.container = options.container;
@@ -304,12 +305,23 @@ export class AnalyticsEditor {
       const sorted = [...metrics.levelDistribution.entries()].sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true }));
       const maxCount = Math.max(...sorted.map(([, c]) => c), 1);
 
-      // Group levels into bands by mapped title when LevelStore has mappings
       const levelStore = this.options.levelStore;
       const hasMappings = levelStore && levelStore.getMappings().length > 0;
 
+      // Toggle button (only shown when mappings exist)
       if (hasMappings) {
-        // Build bands: mapped title → [raw levels with counts]
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'analytics-alert-name';
+        toggleBtn.style.cssText = 'font-size:10px;margin-bottom:8px;display:block;';
+        toggleBtn.textContent = this.groupLevels ? t('analytics.show_individual') : t('analytics.group_by_band');
+        toggleBtn.addEventListener('click', () => {
+          this.groupLevels = !this.groupLevels;
+          this.refresh();
+        });
+        section.appendChild(toggleBtn);
+      }
+
+      if (hasMappings && this.groupLevels) {
         const bands = new Map<string, { levels: string[]; total: number }>();
         const unmapped: [string, number][] = [];
 
@@ -325,12 +337,10 @@ export class AnalyticsEditor {
           }
         }
 
-        // Render bands sorted by total count desc
         const sortedBands = [...bands.entries()].sort((a, b) => b[1].total - a[1].total);
         const bandMax = Math.max(...sortedBands.map(([, b]) => b.total), ...unmapped.map(([, c]) => c), 1);
 
         for (const [title, band] of sortedBands) {
-          // Band header row
           const row = document.createElement('div');
           row.className = 'analytics-dist-row';
 
@@ -357,12 +367,10 @@ export class AnalyticsEditor {
           section.appendChild(row);
         }
 
-        // Render unmapped levels individually
         for (const [rawLevel, count] of unmapped) {
           this.appendDistRow(section, rawLevel, count, bandMax, 'var(--text-tertiary)');
         }
       } else {
-        // No mappings — show raw levels
         for (const [level, count] of sorted) {
           this.appendDistRow(section, level, count, maxCount, 'var(--accent)');
         }
