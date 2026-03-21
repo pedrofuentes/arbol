@@ -12,4 +12,5 @@ describe('help-dialog content', () => {
   it('Analytics section exists', () => { showHelpDialog(); const h = document.querySelectorAll('.help-section-header'); expect(Array.from(h).some(t => t.textContent!.includes('Analytics'))).toBe(true); });
   it('Analytics section explains ratio', () => { showHelpDialog(); expect(document.body.textContent).toContain('Manager-to-IC Ratio'); });
   it('Analytics section explains span', () => { showHelpDialog(); expect(document.body.textContent).toContain('Span of Control'); });
+  it('Analytics section has disclaimer', () => { showHelpDialog(); expect(document.body.textContent).toContain('for reference only'); });
 });
