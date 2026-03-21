@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.11.1] — 2026-03-20
+
+### Added
+- **Analytics Help** — new "Analytics" section in the help dialog explaining all five KPI metrics (Headcount, Org Depth, Manager-to-IC Ratio, Span of Control, Alerts)
+- **KPI Tooltips** — ℹ️ info icons on each analytics KPI card with hover tooltips explaining what each metric measures
+- 16 new i18n keys for analytics help content and tooltips
+
 ## [3.11.0] — 2026-03-20
 
 ### Added

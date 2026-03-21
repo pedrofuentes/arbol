@@ -90,6 +90,13 @@ const en: Record<string, string> = {
   'analytics.no_categories': 'No categories in use',
   'analytics.disclaimer': 'Metrics are computed from the current chart structure and are for reference only. Verify independently before making organizational decisions.',
 
+  // ─── Analytics Tooltips ─────────────────────────────────────────────
+  'analytics.tooltip.headcount': 'Total people, split by managers, ICs, and advisors',
+  'analytics.tooltip.org_depth': 'Maximum layers from top to bottom of the org',
+  'analytics.tooltip.ratio': 'Managers divided by individual contributors — higher means leaner',
+  'analytics.tooltip.span': 'Average direct reports per manager',
+  'analytics.tooltip.alerts': 'Structural anomalies like overloaded or redundant managers',
+
   // ─── Analytics Sub-tabs ───────────────────────────────────────────
   'analytics.tab.overview': 'Overview',
   'analytics.tab.sunburst': 'Sunburst',
@@ -933,6 +940,19 @@ const en: Record<string, string> = {
   'help.headcount.enable_strong': 'Badges',
   'help.headcount.enable_3': ' tab.',
   'help.headcount.customize': 'Badge appearance (color, size, radius) can be customized in the same Badges tab.',
+
+  // Help: Analytics
+  'help.analytics.title': 'Analytics',
+  'help.analytics.headcount_label': 'Headcount Overview — ',
+  'help.analytics.headcount_desc': 'Total number of people in the org, broken down by role type (Managers, ICs, Advisors). Useful for understanding composition at a glance.',
+  'help.analytics.depth_label': 'Org Depth — ',
+  'help.analytics.depth_desc': 'The maximum number of layers from root to the deepest leaf. Deeper orgs have more management layers; flatter orgs have fewer. Average leaf depth shows where most people sit.',
+  'help.analytics.ratio_label': 'Manager-to-IC Ratio — ',
+  'help.analytics.ratio_desc': 'The ratio of managers to individual contributors (non-managers). Shown as "1 : X" — higher X means leaner management overhead. Useful for benchmarking.',
+  'help.analytics.span_label': 'Span of Control — ',
+  'help.analytics.span_desc': 'Average number of direct reports per manager, with min/max range. Wide spans (>10) may signal overload; narrow spans (<3) may signal unnecessary layers.',
+  'help.analytics.alerts_label': 'Alerts — ',
+  'help.analytics.alerts_desc': 'Flags structural anomalies: managers with too many reports (wide span), too few (narrow span), or exactly one (single-child, possibly redundant layer).',
 
   // Help: Your Data
   'help.your_data.title': 'Your Data',

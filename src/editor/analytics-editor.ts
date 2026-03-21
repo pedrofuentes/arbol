@@ -234,16 +234,19 @@ export class AnalyticsEditor {
       value: string;
       unit?: string;
       subtitle?: string;
+      tooltip?: string;
     }[] = [
       {
         accent: 'teal',
         label: t('analytics.section.headcount'),
         value: String(metrics.totalHeadcount),
+        tooltip: t('analytics.tooltip.headcount'),
         subtitle: `${metrics.managerCount} ${t('analytics.managers')} · ${metrics.icCount} ${t('analytics.ics')} · ${metrics.advisorCount} ${t('analytics.advisors')}`,
       },
       {
         accent: 'blue',
         label: t('analytics.org_depth'),
+        tooltip: t('analytics.tooltip.org_depth'),
         value: String(metrics.orgDepth),
         unit: t('analytics.org_depth_value', { count: String(metrics.orgDepth) }).replace(String(metrics.orgDepth), '').trim(),
         subtitle: `${t('analytics.avg_depth')}: ${t('analytics.avg_depth_value', { value: String(metrics.avgDepth) })}`,
@@ -251,17 +254,20 @@ export class AnalyticsEditor {
       {
         accent: 'green',
         label: t('analytics.manager_ic_ratio'),
+        tooltip: t('analytics.tooltip.ratio'),
         value: ratio > 0 ? t('analytics.ratio_format', { value: String(ratio) }) : '—',
       },
       {
         accent: 'amber',
         label: t('analytics.section.span'),
+        tooltip: t('analytics.tooltip.span'),
         value: String(metrics.spanOfControl.avg),
         subtitle: `${t('analytics.span_min')}: ${metrics.spanOfControl.min} · ${t('analytics.span_max')}: ${metrics.spanOfControl.max}`,
       },
       {
         accent: 'rose',
         label: t('analytics.alerts_count', { count: String(totalAlerts) }),
+        tooltip: t('analytics.tooltip.alerts'),
         value: String(totalAlerts),
       },
     ];
@@ -275,6 +281,15 @@ export class AnalyticsEditor {
       const label = document.createElement('div');
       label.className = 'analytics-kpi-label';
       label.textContent = card.label;
+      if (card.tooltip) {
+        const info = document.createElement('span');
+        info.className = 'analytics-kpi-info';
+        info.textContent = 'ℹ️';
+        info.setAttribute('title', card.tooltip);
+        info.setAttribute('role', 'img');
+        info.setAttribute('aria-label', card.tooltip);
+        label.appendChild(info);
+      }
       el.appendChild(label);
 
       const valueRow = document.createElement('div');
