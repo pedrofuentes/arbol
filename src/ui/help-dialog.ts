@@ -253,6 +253,7 @@ function getHelpSections(): HelpSection[] {
           { tag: 'strong', text: t('help.analytics.alerts_label') },
           t('help.analytics.alerts_desc'),
         ],
+        [t('analytics.disclaimer')],
       ],
     },
     {
