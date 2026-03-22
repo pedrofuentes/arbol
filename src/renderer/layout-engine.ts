@@ -37,6 +37,7 @@ export interface LayoutNode {
   categoryId?: string;
   descendantCount?: number;
   level?: string;
+  pinnedTitle?: boolean;
 }
 
 export interface LayoutLink {
@@ -302,6 +303,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
           type: 'ic',
           categoryId: ic.categoryId,
           level: ic.level,
+          pinnedTitle: ic.pinnedTitle,
         });
       });
     }
@@ -339,6 +341,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
           type: 'pal',
           categoryId: pal.categoryId,
           level: pal.level,
+          pinnedTitle: pal.pinnedTitle,
         });
       });
     }
@@ -364,6 +367,7 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
       categoryId: treeNode.data.categoryId,
       descendantCount: descCount,
       level: treeNode.data.level,
+      pinnedTitle: treeNode.data.pinnedTitle,
     });
   }
 

@@ -6,6 +6,7 @@ import type { ContextMenuDeps } from '../../src/init/context-menu-handler';
 import * as treeUtils from '../../src/utils/tree';
 import type { OrgNode } from '../../src/types';
 import { showContextMenu } from '../../src/ui/context-menu';
+import { showInlineEditor } from '../../src/ui/inline-editor';
 import { showManagerPicker } from '../../src/ui/manager-picker';
 import { showConfirmDialog } from '../../src/ui/confirm-dialog';
 
@@ -214,6 +215,107 @@ describe('createShowSingleCardMenu', () => {
     // flattenTree should still be called with the subtree node
     const subtreeCalls = flattenSpy.mock.calls.filter((args: unknown[]) => args[0] === mgr1Node);
     expect(subtreeCalls.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('edit onSave omits title from updateNode when title is unchanged', () => {
+    const deps = makeDeps();
+    const showMenu = createShowSingleCardMenu(deps);
+    const menuMock = captureMenuItems();
+
+    showMenu('ic1', new MouseEvent('contextmenu'));
+    const items = menuMock.mock.calls[0][0].items;
+
+    const editItem = getItemByLabel(items, en['menu.edit']);
+    expect(editItem).toBeDefined();
+    editItem!.action!();
+
+    // Capture the onSave callback passed to showInlineEditor
+    const editorMock = vi.mocked(showInlineEditor);
+    expect(editorMock).toHaveBeenCalledOnce();
+    const onSave = editorMock.mock.calls[0][0].onSave;
+
+    // Call onSave with changed name but SAME title
+    onSave('Alice Updated', 'Engineer');
+
+    expect(deps.store.updateNode).toHaveBeenCalledOnce();
+    const fields = (deps.store.updateNode as Mock).mock.calls[0][1];
+    expect(fields.name).toBe('Alice Updated');
+    expect(fields).not.toHaveProperty('title');
+  });
+
+  it('edit onSave includes title in updateNode when title changed', () => {
+    const deps = makeDeps();
+    const showMenu = createShowSingleCardMenu(deps);
+    const menuMock = captureMenuItems();
+
+    showMenu('ic1', new MouseEvent('contextmenu'));
+    const items = menuMock.mock.calls[0][0].items;
+
+    const editItem = getItemByLabel(items, en['menu.edit']);
+    editItem!.action!();
+
+    const editorMock = vi.mocked(showInlineEditor);
+    const onSave = editorMock.mock.calls[0][0].onSave;
+
+    // Call onSave with changed title
+    onSave('Alice', 'Senior Engineer');
+
+    expect(deps.store.updateNode).toHaveBeenCalledOnce();
+    const fields = (deps.store.updateNode as Mock).mock.calls[0][1];
+    expect(fields).not.toHaveProperty('name');
+    expect(fields.title).toBe('Senior Engineer');
+  });
+
+  it('edit onSave omits level from updateNode when level is unchanged', () => {
+    const tree: OrgNode = {
+      id: 'root', name: 'CEO', title: 'Chief Executive',
+      children: [{ id: 'n1', name: 'Dev', title: 'Engineer', level: 'L5' }],
+    };
+    const deps = makeDeps(tree);
+    const showMenu = createShowSingleCardMenu(deps);
+    const menuMock = captureMenuItems();
+
+    showMenu('n1', new MouseEvent('contextmenu'));
+    const items = menuMock.mock.calls[0][0].items;
+
+    const editItem = getItemByLabel(items, en['menu.edit']);
+    editItem!.action!();
+
+    const editorMock = vi.mocked(showInlineEditor);
+    const onSave = editorMock.mock.calls[0][0].onSave;
+
+    // Same name, same title, same level
+    onSave('Dev', 'Engineer', 'L5');
+
+    const updateMock = deps.store.updateNode as Mock;
+    // Nothing changed — updateNode should not be called
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it('edit onSave includes level when level changed', () => {
+    const tree: OrgNode = {
+      id: 'root', name: 'CEO', title: 'Chief Executive',
+      children: [{ id: 'n1', name: 'Dev', title: 'Engineer', level: 'L5' }],
+    };
+    const deps = makeDeps(tree);
+    const showMenu = createShowSingleCardMenu(deps);
+    const menuMock = captureMenuItems();
+
+    showMenu('n1', new MouseEvent('contextmenu'));
+    const items = menuMock.mock.calls[0][0].items;
+
+    const editItem = getItemByLabel(items, en['menu.edit']);
+    editItem!.action!();
+
+    const editorMock = vi.mocked(showInlineEditor);
+    const onSave = editorMock.mock.calls[0][0].onSave;
+
+    // Changed level
+    onSave('Dev', 'Engineer', 'L6');
+
+    const fields = (deps.store.updateNode as Mock).mock.calls[0][1];
+    expect(fields).not.toHaveProperty('title');
+    expect(fields.level).toBe('L6');
   });
 });
 

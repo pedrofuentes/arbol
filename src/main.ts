@@ -150,9 +150,10 @@ async function main(): Promise<void> {
   // Load per-chart level mappings
   levelStore.loadFromChart(activeChart);
 
-  const resolveTitle = (originalTitle: string, rawLevel?: string): string => {
+  const resolveTitle = (originalTitle: string, rawLevel?: string, isManager?: boolean, pinnedTitle?: boolean): string => {
+    if (pinnedTitle) return originalTitle;
     if (!rawLevel) return originalTitle;
-    const mapped = levelStore.resolveTitle(rawLevel);
+    const mapped = levelStore.resolveTitle(rawLevel, isManager);
     return mapped ?? originalTitle;
   };
 
@@ -825,6 +826,12 @@ async function main(): Promise<void> {
     onToggleDottedLine: (nodeId) => {
       const node = findNodeById(store.getTree(), nodeId);
       if (node) store.setDottedLine(nodeId, !node.dottedLine);
+    },
+    onPinTitle: (nodeId) => {
+      store.pinTitle(nodeId);
+    },
+    onUnpinTitle: (nodeId) => {
+      store.unpinTitle(nodeId);
     },
     onClose: () => {
       propertyPanel.hide();

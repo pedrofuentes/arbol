@@ -84,6 +84,29 @@ describe('LevelMappingPanel', () => {
       deleteBtn!.click();
       expect(spy).toHaveBeenCalledWith('L10');
     });
+
+    it('shows manager title in mapping rows', () => {
+      levelStore.addMapping('L20', 'Principal Engineer', 'Director');
+      createPanel();
+      const rows = container.querySelectorAll('[data-testid="mapping-row"]');
+      expect(rows.length).toBe(1);
+      const mgrTitle = rows[0].querySelector('[data-testid="manager-title"]');
+      expect(mgrTitle?.textContent).toBe('Director');
+    });
+
+    it('shows fallback dash when no manager title', () => {
+      levelStore.addMapping('L20', 'Principal Engineer');
+      createPanel();
+      const mgrTitle = container.querySelector('[data-testid="manager-title"]');
+      expect(mgrTitle?.textContent).toBe('—');
+    });
+
+    it('shows column headers when mappings exist', () => {
+      levelStore.addMapping('L20', 'IC');
+      createPanel();
+      const headerText = container.textContent;
+      expect(headerText).toContain('Manager Title');
+    });
   });
 
   describe('add form', () => {
@@ -102,7 +125,45 @@ describe('LevelMappingPanel', () => {
       titleInput!.value = 'Director';
       addBtn!.click();
 
-      expect(spy).toHaveBeenCalledWith('L12', 'Director');
+      expect(spy).toHaveBeenCalledWith('L12', 'Director', undefined);
+    });
+
+    it('add form includes manager title input', () => {
+      createPanel();
+      const mgrInput = container.querySelector('[data-testid="manager-title-input"]') as HTMLInputElement;
+      expect(mgrInput).toBeTruthy();
+      expect(mgrInput.placeholder).toContain('Director');
+    });
+
+    it('adds mapping with manager title', () => {
+      createPanel();
+      const rawInput = container.querySelector<HTMLInputElement>('[data-testid="raw-level-input"]');
+      const titleInput = container.querySelector<HTMLInputElement>('[data-testid="display-title-input"]');
+      const mgrInput = container.querySelector<HTMLInputElement>('[data-testid="manager-title-input"]');
+      const addBtn = container.querySelector<HTMLButtonElement>('[data-testid="add-mapping-btn"]');
+
+      rawInput!.value = 'L20';
+      titleInput!.value = 'Principal Engineer';
+      mgrInput!.value = 'Director';
+      addBtn!.click();
+
+      const mapping = levelStore.getMapping('L20');
+      expect(mapping?.managerDisplayTitle).toBe('Director');
+      expect(rerenderCallback).toHaveBeenCalled();
+    });
+
+    it('adds mapping without manager title when left empty', () => {
+      createPanel();
+      const rawInput = container.querySelector<HTMLInputElement>('[data-testid="raw-level-input"]');
+      const titleInput = container.querySelector<HTMLInputElement>('[data-testid="display-title-input"]');
+      const addBtn = container.querySelector<HTMLButtonElement>('[data-testid="add-mapping-btn"]');
+
+      rawInput!.value = 'L20';
+      titleInput!.value = 'Senior Engineer';
+      addBtn!.click();
+
+      const mapping = levelStore.getMapping('L20');
+      expect(mapping?.managerDisplayTitle).toBeUndefined();
     });
 
     it('add form validates empty inputs', () => {

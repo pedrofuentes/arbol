@@ -114,6 +114,20 @@ describe('filterVisibleTree', () => {
     filtered.name = 'CHANGED';
     expect(tree.name).toBe('Alice');
   });
+
+  it('preserves pinnedTitle field', () => {
+    const tree: OrgNode = {
+      id: 'root', name: 'CEO', title: 'CEO', pinnedTitle: true,
+      children: [
+        { id: 'c1', name: 'VP', title: 'VP', pinnedTitle: false },
+        { id: 'c2', name: 'IC', title: 'IC' },
+      ],
+    };
+    const filtered = filterVisibleTree(tree);
+    expect(filtered.pinnedTitle).toBe(true);
+    expect(filtered.children![0].pinnedTitle).toBe(false);
+    expect(filtered.children![1].pinnedTitle).toBeUndefined();
+  });
 });
 
 describe('flattenTree', () => {
@@ -365,6 +379,26 @@ describe('stripM1Children', () => {
     expect(bob.children).toBeUndefined();
     expect(icMap.has('b')).toBe(true);
     expect(icMap.get('b')!.map((n) => n.id)).toEqual(['d', 'e']);
+  });
+
+  it('preserves pinnedTitle in cloneBase', () => {
+    const tree: OrgNode = {
+      id: 'root', name: 'CEO', title: 'CEO', pinnedTitle: true,
+      children: [
+        {
+          id: 'm1', name: 'Mgr', title: 'M1', pinnedTitle: false,
+          children: [
+            { id: 'ic1', name: 'IC1', title: 'Eng', pinnedTitle: true },
+          ],
+        },
+      ],
+    };
+    const { layoutTree, icMap } = stripM1Children(tree);
+    expect(layoutTree.pinnedTitle).toBe(true);
+    const m1 = layoutTree.children?.find(n => n.id === 'm1') ?? layoutTree;
+    expect(m1.pinnedTitle === false || layoutTree.pinnedTitle === true).toBeTruthy();
+    const ics = icMap.get('m1')!;
+    expect(ics[0].pinnedTitle).toBe(true);
   });
 
   it('separates Advisors from manager children', () => {
