@@ -15,10 +15,14 @@ vi.mock('../../src/ui/confirm-dialog', () => ({
 vi.mock('../../src/ui/input-dialog', () => ({
   showInputDialog: vi.fn().mockResolvedValue(null),
 }));
+vi.mock('../../src/ui/create-chart-dialog', () => ({
+  showCreateChartDialog: vi.fn().mockResolvedValue(null),
+}));
 
 import { showChartExportDialog } from '../../src/ui/chart-export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../../src/export/chart-exporter';
 import { showInputDialog } from '../../src/ui/input-dialog';
+import { showCreateChartDialog } from '../../src/ui/create-chart-dialog';
 
 function makeTree(): OrgNode {
   return { id: 'root', name: 'Alice', title: 'CEO', children: [] };
@@ -689,5 +693,122 @@ describe('ChartEditor – delete active chart calls onChartSwitch', () => {
       expect(onChartSwitch).toHaveBeenCalledTimes(1);
       expect(onChartSwitch.mock.calls[0][0].id).toBe('chart-2');
     });
+  });
+});
+
+describe('ChartEditor – Create chart with sources', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let store: ReturnType<typeof mockChartStore>;
+  const chart = makeChart();
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = mockChartStore([chart]);
+
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+      categoryPresetStore: {
+        getPresets: () => [{ name: 'Eng', categories: [{ id: 'c1', label: 'Eng', color: '#f00', nameColor: '#fff', titleColor: '#fff' }] }],
+        getPreset: (n: string) =>
+          n === 'Eng' ? { name: 'Eng', categories: [{ id: 'c1', label: 'Eng', color: '#f00', nameColor: '#fff', titleColor: '#fff' }] } : undefined,
+      },
+      levelPresetStore: {
+        getPresets: () => [{ name: 'Std', levelMappings: [{ rawLevel: 'L5', displayTitle: 'Sr' }], levelDisplayMode: 'mapped' as const }],
+        getPreset: (n: string) =>
+          n === 'Std' ? { name: 'Std', levelMappings: [{ rawLevel: 'L5', displayTitle: 'Sr' }], levelDisplayMode: 'mapped' as const } : undefined,
+      },
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-chart-id]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    document.body.removeChild(container);
+  });
+
+  it('calls showCreateChartDialog instead of showInputDialog when creating a chart', async () => {
+    (showCreateChartDialog as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    const createBtn = container.querySelector('[title="New chart"]') as HTMLButtonElement;
+    createBtn.click();
+    await vi.waitFor(() => {
+      expect(showCreateChartDialog).toHaveBeenCalled();
+    });
+    expect(showInputDialog).not.toHaveBeenCalled();
+  });
+
+  it('passes category preset names and chart list to the dialog', async () => {
+    (showCreateChartDialog as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    const createBtn = container.querySelector('[title="New chart"]') as HTMLButtonElement;
+    createBtn.click();
+    await vi.waitFor(() => {
+      expect(showCreateChartDialog).toHaveBeenCalled();
+    });
+    const opts = (showCreateChartDialog as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(opts.categoryPresets).toEqual(['Eng']);
+    expect(opts.levelMappingPresets).toEqual(['Std']);
+  });
+
+  it('creates chart with preset categories when selected', async () => {
+    (showCreateChartDialog as ReturnType<typeof vi.fn>).mockResolvedValue({
+      name: 'New Org',
+      categorySource: { type: 'preset', name: 'Eng' },
+      levelMappingSource: { type: 'none' },
+    });
+    const createBtn = container.querySelector('[title="New chart"]') as HTMLButtonElement;
+    createBtn.click();
+    await vi.waitFor(() => {
+      expect(store.createChart).toHaveBeenCalled();
+    });
+    expect(store.createChart).toHaveBeenCalledWith(
+      'New Org',
+      [{ id: 'c1', label: 'Eng', color: '#f00', nameColor: '#fff', titleColor: '#fff' }],
+      undefined,
+      undefined,
+    );
+  });
+
+  it('creates chart with preset level mappings when selected', async () => {
+    (showCreateChartDialog as ReturnType<typeof vi.fn>).mockResolvedValue({
+      name: 'New Org',
+      categorySource: { type: 'none' },
+      levelMappingSource: { type: 'preset', name: 'Std' },
+    });
+    const createBtn = container.querySelector('[title="New chart"]') as HTMLButtonElement;
+    createBtn.click();
+    await vi.waitFor(() => {
+      expect(store.createChart).toHaveBeenCalled();
+    });
+    expect(store.createChart).toHaveBeenCalledWith(
+      'New Org',
+      undefined,
+      [{ rawLevel: 'L5', displayTitle: 'Sr' }],
+      'mapped',
+    );
+  });
+
+  it('does not call createChart when dialog is cancelled', async () => {
+    (showCreateChartDialog as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    const createBtn = container.querySelector('[title="New chart"]') as HTMLButtonElement;
+    createBtn.click();
+    await vi.waitFor(() => {
+      expect(showCreateChartDialog).toHaveBeenCalled();
+    });
+    // Give a tick for any pending async
+    await new Promise((r) => setTimeout(r, 50));
+    expect(store.createChart).not.toHaveBeenCalled();
   });
 });

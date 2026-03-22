@@ -602,6 +602,8 @@ async function main(): Promise<void> {
     getCurrentCategories: () => categoryStore.getAll(),
     onBeforeSwitch: handleBeforeSwitch,
     onChartSwitch: handleChartSwitched,
+    categoryPresetStore,
+    levelPresetStore,
     onVersionRestore: (tree) => {
       dismissVersionViewer();
       store.replaceTree(tree);
