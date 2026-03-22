@@ -1301,6 +1301,36 @@ const en: Record<string, string> = {
   'property_panel.auto_title': 'Auto',
 
   'column_mapper.level_column': 'Level Column (optional)',
+
+  // ─── Presets ────────────────────────────────────────────────
+  'preset.save': 'Save as preset',
+  'preset.load': 'Load preset',
+  'preset.copy_from_chart': 'Copy from chart',
+  'preset.save_name_title': 'Save Preset',
+  'preset.save_name_label': 'Preset name',
+  'preset.save_name_placeholder': 'e.g., Company Standard',
+  'preset.delete_confirm_title': 'Delete Preset',
+  'preset.delete_confirm': 'Delete preset "{name}"?',
+  'preset.load_confirm_title': 'Load Preset',
+  'preset.load_confirm': 'Replace current {type} with preset "{name}"?',
+  'preset.copy_confirm_title': 'Copy from Chart',
+  'preset.copy_confirm': 'Replace current {type} with {type} from "{name}"?',
+  'preset.saved': 'Preset "{name}" saved',
+  'preset.loaded': 'Preset "{name}" loaded',
+  'preset.deleted': 'Preset "{name}" deleted',
+  'preset.copied': '{type} copied from "{name}"',
+  'preset.no_presets': 'No saved presets',
+  'preset.no_other_charts': 'No other charts',
+  'preset.type_categories': 'categories',
+  'preset.type_level_mappings': 'level mappings',
+  'preset.overwrite_confirm_title': 'Overwrite Preset',
+  'preset.overwrite_confirm': 'A preset named "{name}" already exists. Overwrite?',
+
+  'chart_editor.categories_source': 'Categories',
+  'chart_editor.level_mappings_source': 'Level Mappings',
+  'chart_editor.source_none': 'None',
+  'chart_editor.source_preset': 'Preset: {name}',
+  'chart_editor.source_chart': 'From: {name}',
 };
 
 export default en;
