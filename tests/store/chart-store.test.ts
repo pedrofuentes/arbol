@@ -136,6 +136,40 @@ describe('ChartStore', () => {
 
       expect(chart.workingTree.name).not.toBe('Should Not Appear');
     });
+
+    it('falls back to default root when migrated tree fails validation', async () => {
+      const corruptTree = { id: '', name: 'Corrupt', title: 'Bad' };
+      localStorageMock.setItem('arbol-org-data', JSON.stringify(corruptTree));
+
+      const chart = await store.initialize();
+
+      expect(chart.workingTree.id).toBe('root');
+      expect(chart.workingTree.name).toBe('Organization');
+      expect(chart.workingTree.title).toBe('CEO');
+    });
+
+    it('falls back to default root when migrated tree exceeds max depth', async () => {
+      let tree: any = { id: 'leaf', name: 'Leaf', title: 'IC' };
+      for (let i = 100; i >= 0; i--) {
+        tree = { id: `n${i}`, name: `Node ${i}`, title: 'Mgr', children: [tree] };
+      }
+      localStorageMock.setItem('arbol-org-data', JSON.stringify(tree));
+
+      const chart = await store.initialize();
+
+      expect(chart.workingTree.id).toBe('root');
+      expect(chart.workingTree.name).toBe('Organization');
+    });
+
+    it('falls back to default root when migrated tree has name > 500 chars', async () => {
+      const badTree = { id: 'root', name: 'A'.repeat(501), title: 'CEO' };
+      localStorageMock.setItem('arbol-org-data', JSON.stringify(badTree));
+
+      const chart = await store.initialize();
+
+      expect(chart.workingTree.id).toBe('root');
+      expect(chart.workingTree.name).toBe('Organization');
+    });
   });
 
   // ---------------------------------------------------------------------------

@@ -54,8 +54,11 @@ export class ChartStore extends EventEmitter {
 
     if (rawTree) {
       try {
-        tree = JSON.parse(rawTree) as OrgNode;
+        const parsed = JSON.parse(rawTree);
+        validateTree(parsed);
+        tree = parsed;
       } catch {
+        console.warn('Legacy migration: corrupted tree in localStorage, using default');
         tree = DEFAULT_ROOT;
       }
 
