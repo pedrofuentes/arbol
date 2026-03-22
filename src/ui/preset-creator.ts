@@ -209,7 +209,7 @@ export class PresetCreator {
       return;
     }
     if (parentRefType === 'id' && !id) {
-      this.errorArea.textContent = 'ID column is required when parent reference type is "By ID".';
+      this.errorArea.textContent = t('column_mapper.error_id_required');
       this.setAriaInvalid(this.idInput);
       return;
     }

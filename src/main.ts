@@ -6,19 +6,22 @@ import { ChartRenderer, type RendererOptions } from './renderer/chart-renderer';
 import { FormEditor } from './editor/form-editor';
 import { JsonEditor } from './editor/json-editor';
 import { ThemeManager } from './store/theme-manager';
-import { SettingsStore, PersistableSettings } from './store/settings-store';
+import { SettingsStore, type PersistableSettings } from './store/settings-store';
+import { DEFAULT_RENDERER_OPTIONS } from './constants/defaults';
 import { MappingStore } from './store/mapping-store';
 import { CategoryStore } from './store/category-store';
 import { CategoryPresetStore } from './store/category-preset-store';
 import { LevelStore } from './store/level-store';
 import { LevelPresetStore } from './store/level-preset-store';
 import { flattenTree, findNodeById, findParent, isLeaf, avgSpanOfControl } from './utils/tree';
+import { debounce } from './utils/debounce';
 import { dismissContextMenu } from './ui/context-menu';
 import { dismissInlineEditor } from './ui/inline-editor';
 import { showAddPopover, dismissAddPopover } from './ui/add-popover';
 import { showManagerPicker } from './ui/manager-picker';
 import { showConfirmDialog } from './ui/confirm-dialog';
 import { showToast } from './ui/toast';
+import { showLoading, hideLoading } from './ui/loading-overlay';
 import { showInputDialog } from './ui/input-dialog';
 import { showCategoryLegend, dismissCategoryLegend } from './ui/category-legend';
 import { ChartDB } from './store/chart-db';
@@ -95,53 +98,7 @@ async function main(): Promise<void> {
   const levelStore = new LevelStore();
   const categoryPresetStore = new CategoryPresetStore();
   const levelPresetStore = new LevelPresetStore();
-  const defaultSettings: PersistableSettings = {
-    nodeWidth: 160,
-    nodeHeight: 34,
-    horizontalSpacing: 50,
-    branchSpacing: 20,
-    topVerticalSpacing: 10,
-    bottomVerticalSpacing: 20,
-    icNodeWidth: 141,
-    icGap: 6,
-    icContainerPadding: 10,
-    palTopGap: 12,
-    palBottomGap: 12,
-    palRowGap: 6,
-    palCenterGap: 70,
-    nameFontSize: 11,
-    titleFontSize: 9,
-    textPaddingTop: 6,
-    textGap: 2,
-    textAlign: 'center',
-    textPaddingHorizontal: 8,
-    fontFamily: 'Calibri',
-    nameColor: '#1e293b',
-    titleColor: '#64748b',
-    linkColor: '#94a3b8',
-    linkWidth: 1.5,
-    dottedLineDash: '6,4',
-    cardFill: '#ffffff',
-    cardStroke: '#22c55e',
-    cardStrokeWidth: 1,
-    cardBorderRadius: 0,
-    icContainerFill: '#e5e7eb',
-    icContainerBorderRadius: 0,
-    showHeadcount: false,
-    headcountBadgeColor: '#9ca3af',
-    headcountBadgeTextColor: '#1e293b',
-    headcountBadgeFontSize: 11,
-    headcountBadgeRadius: 4,
-    headcountBadgePadding: 8,
-    headcountBadgeHeight: 22,
-    showLevel: false,
-    levelBadgeColor: '#6366f1',
-    levelBadgeTextColor: '#ffffff',
-    levelBadgeFontSize: 11,
-    levelBadgeSize: 22,
-    legendRows: 0,
-  };
-  const savedSettings = settingsStore.load(defaultSettings);
+  const savedSettings = settingsStore.load(DEFAULT_RENDERER_OPTIONS);
 
   // Category store
   const categoryStore = new CategoryStore();
@@ -181,9 +138,16 @@ async function main(): Promise<void> {
   // Analytics editor (initialized after drawer is created)
   let analyticsEditor: AnalyticsEditor | null = null;
 
-  const rerender = () => {
+  const debouncedSave = debounce(() => {
     const fullTree = store.getTree();
+    chartStore.saveWorkingTree(fullTree, categoryStore.getAll(), store.mutationVersion, levelStore.toChartData()).catch((err) => {
+      console.error('Failed to save working tree:', err);
+      const isQuota = err instanceof DOMException && (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED');
+      showToast(t(isQuota ? 'error.storage_save_failed' : 'footer.save_failed'), 'error');
+    });
+  }, 500);
 
+  const rerender = () => {
     // Validate focus target still exists
     focusMode?.validate();
 
@@ -194,9 +158,7 @@ async function main(): Promise<void> {
     renderer.render(treeToRender);
     const opts = renderer.getOptions();
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
-    chartStore.saveWorkingTree(fullTree, categoryStore.getAll(), store.mutationVersion, levelStore.toChartData()).catch(() => {
-      showToast(t('footer.save_failed'), 'error');
-    });
+    debouncedSave();
 
     focusMode?.showBanner(chartArea);
 
@@ -217,6 +179,18 @@ async function main(): Promise<void> {
     if (analyticsDrawer?.isOpen()) {
       const legend = chartArea.querySelector('[data-testid="category-legend"]') as HTMLElement | null;
       if (legend) legend.style.display = 'none';
+    }
+  };
+
+  // Batched render: coalesces multiple onChange triggers into a single render frame
+  let renderScheduled = false;
+  const scheduleRender = () => {
+    if (!renderScheduled) {
+      renderScheduled = true;
+      requestAnimationFrame(() => {
+        renderScheduled = false;
+        rerender();
+      });
     }
   };
 
@@ -453,8 +427,12 @@ async function main(): Promise<void> {
         maxLength: 100,
       });
       if (name?.trim()) {
-        chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
-        announce(t('announce.chart_saved'));
+        try {
+          await chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
+          announce(t('announce.chart_saved'));
+        } catch {
+          showToast(t('error.version_save_failed'), 'error');
+        }
       }
     },
   });
@@ -576,23 +554,28 @@ async function main(): Promise<void> {
   };
 
   const handleChartSwitched = (chart: ChartRecord) => {
-    focusMode.clear();
-    dismissVersionViewer();
-    clearMultiSelection();
-    store.replaceTree(chart.workingTree);
-    if (chart.categories.length > 0) {
-      categoryStore.replaceAll(chart.categories);
-    } else {
-      categoryStore.replaceAll([]);
+    showLoading(t('loading.switching_chart'));
+    try {
+      focusMode.clear();
+      dismissVersionViewer();
+      clearMultiSelection();
+      store.replaceTree(chart.workingTree);
+      if (chart.categories.length > 0) {
+        categoryStore.replaceAll(chart.categories);
+      } else {
+        categoryStore.replaceAll([]);
+      }
+      levelStore.loadFromChart(chart);
+      chartNameHeader.setName(chart.name);
+      chartNameHeader.setDirty(false);
+      rerender();
+      renderer.getZoomManager()?.fitToContent();
+      formEditor.refresh();
+      jsonEditor.refresh();
+      announce(t('announce.chart_switched', { name: chart.name }));
+    } finally {
+      hideLoading();
     }
-    levelStore.loadFromChart(chart);
-    chartNameHeader.setName(chart.name);
-    chartNameHeader.setDirty(false);
-    rerender();
-    renderer.getZoomManager()?.fitToContent();
-    formEditor.refresh();
-    jsonEditor.refresh();
-    announce(t('announce.chart_switched', { name: chart.name }));
   };
 
   const chartEditor = new ChartEditor({
@@ -864,7 +847,7 @@ async function main(): Promise<void> {
 
   store.onChange(() => {
     clearMultiSelection();
-    rerender();
+    scheduleRender();
     formEditor.refresh();
     jsonEditor.refresh();
     // Refresh property panel if visible
@@ -884,7 +867,7 @@ async function main(): Promise<void> {
   });
 
   categoryStore.onChange(() => {
-    rerender();
+    scheduleRender();
   });
 
   renderer.setNodeClickHandler((nodeId: string, event: MouseEvent) => {
@@ -935,6 +918,48 @@ async function main(): Promise<void> {
       showSingleCardMenu(nodeId, event);
     }
   });
+
+  // Wire keyboard navigation handlers (Enter, Space, Shift+F10)
+  const keyboardNav = renderer.getKeyboardNav();
+  if (keyboardNav) {
+    keyboardNav.setSelectHandler((nodeId: string) => {
+      clearMultiSelection();
+      renderer.setSelectedNode(nodeId);
+      const node = findNodeById(store.getTree(), nodeId);
+      if (node) {
+        announce(t('announce.selected', { name: node.name, title: node.title }));
+        showPropertyPanel(nodeId);
+      }
+    });
+
+    keyboardNav.setMultiSelectHandler((nodeId: string) => {
+      const tree = store.getTree();
+      if (tree.id === nodeId) return;
+      selection.toggle(nodeId);
+      syncSelectionToRenderer();
+      updateSelectionIndicator();
+      announce(t('announce.multi_selected', { count: selection.count }));
+      if (selection.hasSelection) {
+        propertyPanel.hide();
+      }
+    });
+
+    keyboardNav.setContextMenuHandler((nodeId: string, element: SVGGElement) => {
+      dismissAllOverlays();
+      const rect = element.getBoundingClientRect();
+      const syntheticEvent = new MouseEvent('contextmenu', {
+        clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2,
+        bubbles: true,
+      });
+      if (selection.hasSelection && selection.isSelected(nodeId)) {
+        showMultiSelectMenu(syntheticEvent);
+      } else {
+        clearMultiSelection();
+        showSingleCardMenu(nodeId, syntheticEvent);
+      }
+    });
+  }
 
   // Footer
   const footerResult = buildFooter({
@@ -989,6 +1014,7 @@ async function main(): Promise<void> {
   });
 
   window.addEventListener('beforeunload', (e) => {
+    debouncedSave.flush();
     if (chartStore.isDirty(store.getTree(), store.mutationVersion)) {
       e.preventDefault();
     }

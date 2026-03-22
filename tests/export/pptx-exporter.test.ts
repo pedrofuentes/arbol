@@ -862,10 +862,10 @@ describe('pptx-exporter', () => {
       expect(styles.titleFontPt).toBe(Math.max(3, Math.round(9 * PX_TO_PT)));
     });
 
-    it('strips # from color values', () => {
+    it('strips # from color values and normalizes to uppercase', () => {
       const styles = resolveStyles({ cardFill: '#ff0000', cardStroke: '#00ff00' });
-      expect(styles.cardFill).toBe('ff0000');
-      expect(styles.cardStroke).toBe('00ff00');
+      expect(styles.cardFill).toBe('FF0000');
+      expect(styles.cardStroke).toBe('00FF00');
     });
 
     it('uses default colors when not provided', () => {
@@ -1031,11 +1031,11 @@ describe('pptx-exporter', () => {
       const shapeCalls = mockAddShape.mock.calls;
       const cardRect = shapeCalls.find((call: any) => {
         const opts = call[1];
-        return opts && opts.fill && opts.fill.color === 'ff0000';
+        return opts && opts.fill && opts.fill.color === 'FF0000';
       });
       expect(cardRect).not.toBeUndefined();
-      expect((cardRect![1] as any).fill.color).toBe('ff0000');
-      expect((cardRect![1] as any).line.color).toBe('00ff00');
+      expect((cardRect![1] as any).fill.color).toBe('FF0000');
+      expect((cardRect![1] as any).line.color).toBe('00FF00');
       expect((cardRect![1] as any).line.width).toBeCloseTo(1 * PX_TO_PT);
     });
 
@@ -1047,10 +1047,10 @@ describe('pptx-exporter', () => {
       const shapeCalls = mockAddShape.mock.calls;
       const containerRect = shapeCalls.find((call: any) => {
         const opts = call[1];
-        return opts && opts.fill && opts.fill.color === 'aabbcc';
+        return opts && opts.fill && opts.fill.color === 'AABBCC';
       });
       expect(containerRect).not.toBeUndefined();
-      expect(containerRect![1].fill.color).toBe('aabbcc');
+      expect(containerRect![1].fill.color).toBe('AABBCC');
       expect(containerRect![1].w).toBeCloseTo(100 * PX_TO_INCHES);
       expect(containerRect![1].h).toBeCloseTo(60 * PX_TO_INCHES);
     });
@@ -1066,10 +1066,10 @@ describe('pptx-exporter', () => {
       const shapeCalls = mockAddShape.mock.calls;
       const lineShape = shapeCalls.find((call: any) => {
         const opts = call[1];
-        return opts && opts.line && opts.line.color === 'ff00ff';
+        return opts && opts.line && opts.line.color === 'FF00FF';
       });
       expect(lineShape).not.toBeUndefined();
-      expect((lineShape![1] as any).line.color).toBe('ff00ff');
+      expect((lineShape![1] as any).line.color).toBe('FF00FF');
       expect((lineShape![1] as any).line.width).toBeCloseTo(3 * PX_TO_PT);
       expect((lineShape![1] as any).line.dashType).toBeUndefined();
     });

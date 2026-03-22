@@ -1156,6 +1156,7 @@ const en: Record<string, string> = {
   'error.unexpected': 'Unexpected error: {message}',
   'error.storage_save_failed': 'Failed to save. Storage may be full.',
   'error.render_failed': 'Chart rendering failed. Try refreshing.',
+  'error.version_save_failed': 'Failed to save version',
 
   // --- Form ---
   'form.required_indicator': '*',

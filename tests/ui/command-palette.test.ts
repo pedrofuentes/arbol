@@ -391,4 +391,59 @@ describe('CommandPalette', () => {
       expect(document.querySelector('.command-palette-overlay')).toBeNull();
     });
   });
+
+  describe('focus trapping', () => {
+    const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    function addFocusableButton(container: HTMLElement): void {
+      const btn = document.createElement('button');
+      btn.textContent = 'extra';
+      container.appendChild(btn);
+    }
+
+    it('traps Tab on last focusable element to first', () => {
+      const { palette } = createPalette();
+      palette.setItems(makeItems());
+      palette.open();
+      const dialog = document.querySelector('.command-palette') as HTMLElement;
+      addFocusableButton(dialog);
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+      const last = focusable[focusable.length - 1];
+      last.focus();
+      const e = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      last.dispatchEvent(e);
+      expect(document.activeElement).toBe(focusable[0]);
+      palette.destroy();
+    });
+
+    it('traps Shift+Tab on first focusable element to last', () => {
+      const { palette } = createPalette();
+      palette.setItems(makeItems());
+      palette.open();
+      const dialog = document.querySelector('.command-palette') as HTMLElement;
+      addFocusableButton(dialog);
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+      focusable[0].focus();
+      const e = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
+      focusable[0].dispatchEvent(e);
+      expect(document.activeElement).toBe(focusable[focusable.length - 1]);
+      palette.destroy();
+    });
+
+    it('releases focus trap on close', () => {
+      const { palette } = createPalette();
+      palette.setItems(makeItems());
+      palette.open();
+      const dialog = document.querySelector('.command-palette') as HTMLElement;
+      addFocusableButton(dialog);
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+      palette.close();
+      const last = focusable[focusable.length - 1];
+      last.focus();
+      const e = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      last.dispatchEvent(e);
+      expect(document.activeElement).toBe(last);
+      palette.destroy();
+    });
+  });
 });

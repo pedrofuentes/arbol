@@ -310,6 +310,82 @@ describe('BackupManager', () => {
 
       expect(db.deleteChart).toHaveBeenCalledTimes(2);
     });
+
+    it('skips charts with invalid workingTree', async () => {
+      const validChart = makeChart('c1', 'Valid');
+      const invalidChart: ChartRecord = {
+        ...makeChart('c2', 'Invalid'),
+        workingTree: { id: '', name: 'Bad', title: 'No ID' } as any,
+      };
+      const db = createMockDB();
+
+      const backup = makeValidBackup({
+        data: {
+          charts: [validChart, invalidChart],
+          versions: [],
+          settings: null,
+          theme: null,
+          csvMappings: null,
+          customPresets: null,
+          accordionState: null,
+        },
+      });
+
+      await restoreFullReplace(db, backup);
+
+      expect(db.putChart).toHaveBeenCalledTimes(1);
+      expect(db.putChart).toHaveBeenCalledWith(validChart);
+    });
+
+    it('skips charts with deeply nested tree exceeding max depth', async () => {
+      // Build a tree >100 levels deep
+      let tree: any = { id: 'leaf', name: 'Leaf', title: 'IC' };
+      for (let i = 100; i >= 0; i--) {
+        tree = { id: `n${i}`, name: `Node ${i}`, title: 'Mgr', children: [tree] };
+      }
+      const deepChart: ChartRecord = { ...makeChart('deep', 'Deep'), workingTree: tree };
+      const db = createMockDB();
+
+      const backup = makeValidBackup({
+        data: {
+          charts: [deepChart],
+          versions: [],
+          settings: null,
+          theme: null,
+          csvMappings: null,
+          customPresets: null,
+          accordionState: null,
+        },
+      });
+
+      await restoreFullReplace(db, backup);
+
+      expect(db.putChart).not.toHaveBeenCalled();
+    });
+
+    it('skips charts with name exceeding 500 chars', async () => {
+      const longNameChart: ChartRecord = {
+        ...makeChart('long', 'Long Name'),
+        workingTree: { id: 'root', name: 'A'.repeat(501), title: 'CEO' },
+      };
+      const db = createMockDB();
+
+      const backup = makeValidBackup({
+        data: {
+          charts: [longNameChart],
+          versions: [],
+          settings: null,
+          theme: null,
+          csvMappings: null,
+          customPresets: null,
+          accordionState: null,
+        },
+      });
+
+      await restoreFullReplace(db, backup);
+
+      expect(db.putChart).not.toHaveBeenCalled();
+    });
   });
 
   // ── restoreMerge ─────────────────────────────────────────────────────────
@@ -370,6 +446,34 @@ describe('BackupManager', () => {
 
       // Settings should NOT be overwritten
       expect(localStorageMock._getStore()['arbol-settings']).toBe('existing-settings');
+    });
+
+    it('skips charts with invalid workingTree during merge', async () => {
+      const invalidChart: ChartRecord = {
+        ...makeChart('bad', 'Bad'),
+        workingTree: { id: 'root', name: 123, title: 'CEO' } as any,
+      };
+      const db = createMockDB();
+
+      const backup = makeValidBackup({
+        data: {
+          charts: [makeChart('good', 'Good'), invalidChart],
+          versions: [makeVersion('v1', 'good'), makeVersion('v2', 'bad')],
+          settings: null,
+          theme: null,
+          csvMappings: null,
+          customPresets: null,
+          accordionState: null,
+        },
+      });
+
+      const result = await restoreMerge(db, backup);
+
+      expect(result.chartsAdded).toBe(1);
+      expect(result.chartsSkipped).toBe(1);
+      // Versions for invalid chart should not be restored
+      expect(db.putVersion).toHaveBeenCalledTimes(1);
+      expect(db.putVersion).toHaveBeenCalledWith(expect.objectContaining({ chartId: 'good' }));
     });
 
     it('returns accurate MergeResult summary', async () => {

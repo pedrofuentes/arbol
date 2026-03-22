@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { trapFocus } from './dialog-utils';
 
 export interface WizardStep {
   id: string;
@@ -24,6 +25,8 @@ export class ImportWizard {
   private previousFocus: HTMLElement | null = null;
   private mounted = false;
   private keyHandler: (e: KeyboardEvent) => void;
+  private dialog: HTMLDivElement;
+  private removeFocusTrap: (() => void) | null = null;
 
   constructor(options: ImportWizardOptions) {
     this.options = options;
@@ -41,6 +44,7 @@ export class ImportWizard {
     wizard.className = 'import-wizard';
     wizard.setAttribute('role', 'dialog');
     wizard.setAttribute('aria-modal', 'true');
+    this.dialog = wizard;
 
     // Header
     const header = document.createElement('div');
@@ -154,11 +158,14 @@ export class ImportWizard {
     this.clearContent();
     this.overlay.classList.add('open');
     document.addEventListener('keydown', this.keyHandler, true);
+    this.removeFocusTrap = trapFocus(this.dialog);
     const closeBtn = this.overlay.querySelector('.import-wizard-close') as HTMLElement;
     if (closeBtn) requestAnimationFrame(() => closeBtn.focus());
   }
 
   close(): void {
+    this.removeFocusTrap?.();
+    this.removeFocusTrap = null;
     this.overlay.classList.remove('open');
     document.removeEventListener('keydown', this.keyHandler, true);
     if (this.previousFocus && typeof this.previousFocus.focus === 'function') {
@@ -220,6 +227,8 @@ export class ImportWizard {
   }
 
   destroy(): void {
+    this.removeFocusTrap?.();
+    this.removeFocusTrap = null;
     document.removeEventListener('keydown', this.keyHandler, true);
     if (this.overlay.parentElement) {
       this.overlay.parentElement.removeChild(this.overlay);

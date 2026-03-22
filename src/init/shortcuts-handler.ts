@@ -7,6 +7,7 @@ import { showInputDialog } from '../ui/input-dialog';
 import { dismissVersionViewer, isVersionViewerActive } from '../ui/version-viewer';
 import { isComparisonBannerActive } from '../ui/comparison-banner';
 import { announce } from '../ui/announcer';
+import { showToast } from '../ui/toast';
 import type { OrgStore } from '../store/org-store';
 import type { ChartStore } from '../store/chart-store';
 import type { ThemeManager } from '../store/theme-manager';
@@ -199,8 +200,12 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
             maxLength: 100,
           });
           if (name?.trim()) {
-            chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
-            announce(t('announce.chart_saved'));
+            try {
+              await chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
+              announce(t('announce.chart_saved'));
+            } catch {
+              showToast(t('error.version_save_failed'), 'error');
+            }
           }
         },
       },

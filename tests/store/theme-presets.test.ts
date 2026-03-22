@@ -6,6 +6,7 @@ import {
   getPresetNames,
   addCustomPreset,
 } from '../../src/store/theme-presets';
+import { contrastRatio } from '../../src/utils/contrast';
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{3,8}$/;
 
@@ -88,6 +89,26 @@ describe('CHART_THEME_PRESETS', () => {
     for (const preset of CHART_THEME_PRESETS) {
       expect(preset.colors.fontFamily).toBeTypeOf('string');
       expect(preset.colors.fontFamily!.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('all presets meet WCAG AA contrast ratio (≥4.5) for nameColor on cardFill', () => {
+    for (const preset of CHART_THEME_PRESETS) {
+      const ratio = contrastRatio(preset.colors.nameColor, preset.colors.cardFill);
+      expect(
+        ratio,
+        `${preset.id}: nameColor ${preset.colors.nameColor} on cardFill ${preset.colors.cardFill} has ratio ${ratio.toFixed(2)}, needs ≥4.5`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('all presets meet WCAG AA contrast ratio (≥4.5) for titleColor on cardFill', () => {
+    for (const preset of CHART_THEME_PRESETS) {
+      const ratio = contrastRatio(preset.colors.titleColor, preset.colors.cardFill);
+      expect(
+        ratio,
+        `${preset.id}: titleColor ${preset.colors.titleColor} on cardFill ${preset.colors.cardFill} has ratio ${ratio.toFixed(2)}, needs ≥4.5`,
+      ).toBeGreaterThanOrEqual(4.5);
     }
   });
 });

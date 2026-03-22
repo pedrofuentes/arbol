@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.12.1] — 2026-03-22
+
+### Fixed
+- **Undo stack corruption** — OrgStore mutations (`addChild`, `removeNode`, `updateNode`, `fromJSON`) now validate inputs before creating undo snapshots; failed mutations no longer leave orphan entries
+- **Silent save failures** — `saveVersion()` and `saveWorkingTree()` now catch and report errors to users instead of fire-and-forget
+- **Backup restore accepts invalid trees** — `validateTree()` now runs on backup restore and legacy localStorage migration; invalid trees are skipped or replaced with defaults
+- **Settings import breaks on upgrade** — `parseImport()` now merges with defaults instead of rejecting files missing new settings keys
+- **Theme preset contrast failures** — 7 theme presets had title colors below WCAG AA 4.5:1 ratio; upgraded from `#64748b` (3.8:1) to `#475569` (6:1)
+- **Focus traps missing in 3 modals** — settings modal, import wizard, and command palette now trap Tab key per WCAG 2.1.1
+- **Keyboard select handlers not wired** — Enter/Space on SVG tree nodes now triggers selection and context menu
+- **~28 hardcoded English strings** — wired to existing i18n `t()`/`tp()` keys in import-editor, utilities-editor, help-dialog, column-mapper, preset-creator
+- **flatted CVE** — upgraded `flatted` 3.4.1→3.4.2 (prototype pollution, dev-only)
+
+### Added
+- `LoadingOverlay` wired to PPTX/PNG/SVG exports and chart switching — users now see loading feedback during async operations
+- `src/constants/defaults.ts` — single source of truth for renderer default values (previously duplicated in 3 files)
+- `src/utils/debounce.ts` — reusable debounce utility with flush support
+- `tests/helpers/factories.ts` — shared test factories (`makeTree`, `makeChart`, `makeCategories`, `makeM1Tree`, `makeAdvisorTree`, `makeDeepTree`, `makeWideTree`)
+- `tests/helpers/dom.ts` — shared DOM container helpers for tests
+- 135 new tests across 10 new test files
+
+### Changed
+- **IndexedDB saves debounced** — `saveWorkingTree()` calls now debounced at 500ms with `beforeunload` flush; eliminates 80% of I/O writes during rapid edits
+- **Rerender batching** — multiple store changes within a single frame now produce one render via `requestAnimationFrame`, down from 5-6 cascading re-renders
+- **OrgStore O(1) lookups** — internal `findNodeById`/`findParent` calls replaced with `Map<string, OrgNode>` index; `moveNode` goes from ~50k node visits to O(1) at 10k nodes
+- **2,798 tests across 112 files** — all passing
+
 ## [3.12.0] — 2026-03-22
 
 ### Added

@@ -3,6 +3,7 @@ import type { ChartDB } from './chart-db';
 import { APP_VERSION } from '../version';
 import { timestampedFilename } from '../utils/filename';
 import { type IStorage, browserStorage } from '../utils/storage';
+import { validateTree } from './org-store';
 
 // ── Backup format ────────────────────────────────────────────────────────────
 
@@ -173,6 +174,12 @@ export async function restoreFullReplace(db: ChartDB, backup: ArbolBackup, stora
 
   // Write backup charts
   for (const chart of backup.data.charts) {
+    try {
+      validateTree(chart.workingTree);
+    } catch {
+      console.warn(`Backup restore: skipping chart "${chart.name}" (${chart.id}) — invalid tree`);
+      continue;
+    }
     await db.putChart(chart);
   }
 
@@ -196,6 +203,15 @@ export async function restoreMerge(db: ChartDB, backup: ArbolBackup): Promise<Me
       result.chartsSkipped++;
       continue;
     }
+
+    try {
+      validateTree(chart.workingTree);
+    } catch {
+      console.warn(`Backup merge: skipping chart "${chart.name}" (${chart.id}) — invalid tree`);
+      result.chartsSkipped++;
+      continue;
+    }
+
     await db.putChart(chart);
     result.chartsAdded++;
 

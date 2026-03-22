@@ -8,6 +8,7 @@ import type {
 import type { ColorCategory } from '../types';
 import { timestampedFilename } from '../utils/filename';
 import { t } from '../i18n';
+import { DEFAULT_RENDERER_OPTIONS } from '../constants/defaults';
 
 export const PX_TO_INCHES = 1 / 96;
 export const PX_TO_PT = 72 / 96;
@@ -21,11 +22,11 @@ function generateFileName(): string {
   return timestampedFilename(t('export.default_filename') + '.pptx');
 }
 
-const DEFAULT_CARD_STROKE = '22C55E';
-const DEFAULT_CARD_FILL = 'FFFFFF';
-const DEFAULT_IC_CONTAINER_FILL = 'E5E7EB';
-const DEFAULT_LINK_COLOR = '94A3B8';
-const DEFAULT_FONT_FAMILY = 'Calibri';
+const DEFAULT_CARD_STROKE = stripHash(DEFAULT_RENDERER_OPTIONS.cardStroke);
+const DEFAULT_CARD_FILL = stripHash(DEFAULT_RENDERER_OPTIONS.cardFill);
+const DEFAULT_IC_CONTAINER_FILL = stripHash(DEFAULT_RENDERER_OPTIONS.icContainerFill);
+const DEFAULT_LINK_COLOR = stripHash(DEFAULT_RENDERER_OPTIONS.linkColor);
+const DEFAULT_FONT_FAMILY = DEFAULT_RENDERER_OPTIONS.fontFamily;
 
 const MIN_LINE_DIM = 0.001;
 
@@ -100,36 +101,37 @@ interface ResolvedStyles {
 }
 
 function stripHash(color: string): string {
-  return color.replace(/^#/, '');
+  return color.replace(/^#/, '').toUpperCase();
 }
 
 export function resolveStyles(options?: PptxExportOptions): ResolvedStyles {
+  const d = DEFAULT_RENDERER_OPTIONS;
   return {
-    nameFontPt: Math.max(3, Math.round((options?.nameFontSize ?? 11) * PX_TO_PT)),
-    titleFontPt: Math.max(3, Math.round((options?.titleFontSize ?? 9) * PX_TO_PT)),
-    cardFill: stripHash(options?.cardFill ?? '#FFFFFF'),
-    cardStroke: stripHash(options?.cardStroke ?? '#22C55E'),
-    cardStrokeWidth: (options?.cardStrokeWidth ?? 1) * PX_TO_PT,
-    icContainerFill: stripHash(options?.icContainerFill ?? '#E5E7EB'),
-    linkColor: stripHash(options?.linkColor ?? '#94A3B8'),
-    linkWidth: (options?.linkWidth ?? 1.5) * PX_TO_PT,
-    nameColor: stripHash(options?.nameColor ?? '#1E293B'),
-    titleColor: stripHash(options?.titleColor ?? '#64748B'),
-    showHeadcount: options?.showHeadcount ?? false,
-    headcountBadgeColor: stripHash(options?.headcountBadgeColor ?? '#9CA3AF'),
-    headcountBadgeTextColor: stripHash(options?.headcountBadgeTextColor ?? '#1E293B'),
-    headcountBadgeFontSize: Math.max(3, Math.round((options?.headcountBadgeFontSize ?? 11) * PX_TO_PT)),
-    headcountBadgeHeight: options?.headcountBadgeHeight ?? 22,
-    headcountBadgePadding: options?.headcountBadgePadding ?? 8,
-    headcountBadgeRadius: options?.headcountBadgeRadius ?? 4,
-    showLevel: options?.showLevel ?? false,
-    levelBadgeColor: stripHash(options?.levelBadgeColor ?? '#6366F1'),
-    levelBadgeTextColor: stripHash(options?.levelBadgeTextColor ?? '#FFFFFF'),
-    levelBadgeFontSize: Math.max(3, Math.round((options?.levelBadgeFontSize ?? 11) * PX_TO_PT)),
-    levelBadgeSize: options?.levelBadgeSize ?? 22,
-    textAlign:options?.textAlign === 'start' ? 'left' : options?.textAlign === 'end' ? 'right' : options?.textAlign ?? 'center',
-    cardBorderRadius: options?.cardBorderRadius ?? 0,
-    fontFamily: options?.fontFamily ?? 'Calibri',
+    nameFontPt: Math.max(3, Math.round((options?.nameFontSize ?? d.nameFontSize) * PX_TO_PT)),
+    titleFontPt: Math.max(3, Math.round((options?.titleFontSize ?? d.titleFontSize) * PX_TO_PT)),
+    cardFill: stripHash(options?.cardFill ?? d.cardFill),
+    cardStroke: stripHash(options?.cardStroke ?? d.cardStroke),
+    cardStrokeWidth: (options?.cardStrokeWidth ?? d.cardStrokeWidth) * PX_TO_PT,
+    icContainerFill: stripHash(options?.icContainerFill ?? d.icContainerFill),
+    linkColor: stripHash(options?.linkColor ?? d.linkColor),
+    linkWidth: (options?.linkWidth ?? d.linkWidth) * PX_TO_PT,
+    nameColor: stripHash(options?.nameColor ?? d.nameColor),
+    titleColor: stripHash(options?.titleColor ?? d.titleColor),
+    showHeadcount: options?.showHeadcount ?? d.showHeadcount,
+    headcountBadgeColor: stripHash(options?.headcountBadgeColor ?? d.headcountBadgeColor),
+    headcountBadgeTextColor: stripHash(options?.headcountBadgeTextColor ?? d.headcountBadgeTextColor),
+    headcountBadgeFontSize: Math.max(3, Math.round((options?.headcountBadgeFontSize ?? d.headcountBadgeFontSize) * PX_TO_PT)),
+    headcountBadgeHeight: options?.headcountBadgeHeight ?? d.headcountBadgeHeight,
+    headcountBadgePadding: options?.headcountBadgePadding ?? d.headcountBadgePadding,
+    headcountBadgeRadius: options?.headcountBadgeRadius ?? d.headcountBadgeRadius,
+    showLevel: options?.showLevel ?? d.showLevel,
+    levelBadgeColor: stripHash(options?.levelBadgeColor ?? d.levelBadgeColor),
+    levelBadgeTextColor: stripHash(options?.levelBadgeTextColor ?? d.levelBadgeTextColor),
+    levelBadgeFontSize: Math.max(3, Math.round((options?.levelBadgeFontSize ?? d.levelBadgeFontSize) * PX_TO_PT)),
+    levelBadgeSize: options?.levelBadgeSize ?? d.levelBadgeSize,
+    textAlign:options?.textAlign === 'start' ? 'left' : options?.textAlign === 'end' ? 'right' : options?.textAlign ?? d.textAlign as 'left' | 'center' | 'right',
+    cardBorderRadius: options?.cardBorderRadius ?? d.cardBorderRadius,
+    fontFamily: options?.fontFamily ?? d.fontFamily,
   };
 }
 

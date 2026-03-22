@@ -1,4 +1,5 @@
 import { t, getLocale, setLocale as i18nSetLocale } from '../i18n';
+import { trapFocus } from './dialog-utils';
 
 const PREVIEW_HINT_KEYS: Record<string, string> = {
   presets: 'settings_modal.preview_hint.presets',
@@ -54,6 +55,8 @@ export class SettingsModal {
   private previousFocus: HTMLElement | null = null;
   private mounted = false;
   private keyHandler: (e: KeyboardEvent) => void;
+  private dialog: HTMLDivElement;
+  private removeFocusTrap: (() => void) | null = null;
   private footerLeft: HTMLDivElement = null!;
   private previewStrip: HTMLDivElement = null!;
   private previewArea: HTMLDivElement = null!;
@@ -80,6 +83,7 @@ export class SettingsModal {
     modal.className = 'settings-modal';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
+    this.dialog = modal;
 
     // Header
     const header = document.createElement('div');
@@ -310,12 +314,15 @@ export class SettingsModal {
     this.previousFocus = document.activeElement as HTMLElement | null;
     this.overlay.classList.add('open');
     document.addEventListener('keydown', this.keyHandler, true);
+    this.removeFocusTrap = trapFocus(this.dialog);
     // Focus close button
     const closeBtn = this.overlay.querySelector('.settings-modal-close') as HTMLElement;
     if (closeBtn) requestAnimationFrame(() => closeBtn.focus());
   }
 
   close(): void {
+    this.removeFocusTrap?.();
+    this.removeFocusTrap = null;
     this.overlay.classList.remove('open');
     document.removeEventListener('keydown', this.keyHandler, true);
     if (this.previousFocus && typeof this.previousFocus.focus === 'function') {
@@ -410,6 +417,8 @@ export class SettingsModal {
   }
 
   destroy(): void {
+    this.removeFocusTrap?.();
+    this.removeFocusTrap = null;
     document.removeEventListener('keydown', this.keyHandler, true);
     if (this.overlay.parentElement) {
       this.overlay.parentElement.removeChild(this.overlay);

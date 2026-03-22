@@ -2,17 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { OrgStore } from '../../src/store/org-store';
 import { OrgNode } from '../../src/types';
 import { findNodeById, flattenTree } from '../../src/utils/tree';
+import { makeShallowTree } from '../helpers/factories';
 
 function makeRoot(): OrgNode {
-  return {
-    id: 'root',
-    name: 'Alice',
-    title: 'CEO',
-    children: [
-      { id: 'b', name: 'Bob', title: 'CTO' },
-      { id: 'c', name: 'Carol', title: 'CFO' },
-    ],
-  };
+  return makeShallowTree();
 }
 
 describe('OrgStore', () => {
@@ -1411,6 +1404,234 @@ describe('OrgStore', () => {
       const store = new OrgStore(makeRoot());
       const json = JSON.stringify({ id: 'root', name: 'A', title: 'CEO', pinnedTitle: 'yes' });
       expect(() => store.fromJSON(json)).toThrow('Invalid pinnedTitle');
+    });
+  });
+
+  describe('validate before snapshot (no orphan undo entries)', () => {
+    it('addChild with invalid parentId does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.addChild('nonexistent', { name: 'X', title: 'Y' })).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('removeNode with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.removeNode('nonexistent')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('updateNode with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.updateNode('nonexistent', { name: 'X' })).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('fromJSON with invalid JSON does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.fromJSON('not valid json')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('fromJSON with invalid tree does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.fromJSON(JSON.stringify({ bad: true }))).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('setNodeCategory with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.setNodeCategory('nonexistent', 'cat-x')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('setDottedLine with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.setDottedLine('nonexistent', true)).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('pinTitle with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.pinTitle('nonexistent')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('unpinTitle with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.unpinTitle('nonexistent')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('setNodeLevel with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.setNodeLevel('nonexistent', 'L1')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+  });
+
+  describe('node index consistency', () => {
+    it('getNodeById returns nodes by id', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getNodeById('root')!.name).toBe('Alice');
+      expect(store.getNodeById('b')!.name).toBe('Bob');
+      expect(store.getNodeById('c')!.name).toBe('Carol');
+    });
+
+    it('getNodeById returns undefined for non-existent id', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getNodeById('nonexistent')).toBeUndefined();
+    });
+
+    it('getParentOf returns parent node', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getParentOf('b')!.id).toBe('root');
+      expect(store.getParentOf('c')!.id).toBe('root');
+    });
+
+    it('getParentOf returns undefined for root', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getParentOf('root')).toBeUndefined();
+    });
+
+    it('getParentOf returns undefined for non-existent id', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getParentOf('nonexistent')).toBeUndefined();
+    });
+
+    it('index stays consistent after addChild', () => {
+      const store = new OrgStore(makeRoot());
+      const child = store.addChild('b', { name: 'Dave', title: 'Eng' });
+      expect(store.getNodeById(child.id)!.name).toBe('Dave');
+      expect(store.getParentOf(child.id)!.id).toBe('b');
+    });
+
+    it('index stays consistent after removeNode', () => {
+      const store = new OrgStore(makeRoot());
+      store.removeNode('b');
+      expect(store.getNodeById('b')).toBeUndefined();
+      expect(store.getParentOf('b')).toBeUndefined();
+      // remaining node still indexed
+      expect(store.getNodeById('c')!.name).toBe('Carol');
+    });
+
+    it('index stays consistent after moveNode', () => {
+      const store = new OrgStore(makeRoot());
+      store.addChild('b', { name: 'Dave', title: 'Eng' });
+      const tree = store.getTree();
+      const daveId = tree.children![0].children![0].id;
+
+      store.moveNode(daveId, 'c');
+      expect(store.getParentOf(daveId)!.id).toBe('c');
+      expect(store.getNodeById(daveId)!.name).toBe('Dave');
+    });
+
+    it('index stays consistent after updateNode', () => {
+      const store = new OrgStore(makeRoot());
+      store.updateNode('b', { name: 'Robert' });
+      expect(store.getNodeById('b')!.name).toBe('Robert');
+    });
+
+    it('index stays consistent after undo', () => {
+      const store = new OrgStore(makeRoot());
+      const child = store.addChild('b', { name: 'Dave', title: 'Eng' });
+      expect(store.getNodeById(child.id)).toBeDefined();
+      store.undo();
+      expect(store.getNodeById(child.id)).toBeUndefined();
+      // original nodes still indexed
+      expect(store.getNodeById('b')!.name).toBe('Bob');
+    });
+
+    it('index stays consistent after redo', () => {
+      const store = new OrgStore(makeRoot());
+      const child = store.addChild('b', { name: 'Dave', title: 'Eng' });
+      store.undo();
+      expect(store.getNodeById(child.id)).toBeUndefined();
+      store.redo();
+      // after redo, tree is from JSON parse so node identity differs but id matches
+      expect(store.getNodeById(child.id)!.name).toBe('Dave');
+    });
+
+    it('index stays consistent after fromJSON', () => {
+      const store = new OrgStore(makeRoot());
+      const json = JSON.stringify({
+        id: 'x',
+        name: 'Xavier',
+        title: 'CTO',
+        children: [{ id: 'y', name: 'Yara', title: 'VP' }],
+      });
+      store.fromJSON(json);
+      expect(store.getNodeById('x')!.name).toBe('Xavier');
+      expect(store.getNodeById('y')!.name).toBe('Yara');
+      expect(store.getParentOf('y')!.id).toBe('x');
+      // old nodes no longer indexed
+      expect(store.getNodeById('root')).toBeUndefined();
+    });
+
+    it('index stays consistent after replaceTree', () => {
+      const store = new OrgStore(makeRoot());
+      store.replaceTree({ id: 'z', name: 'Zara', title: 'CEO' });
+      expect(store.getNodeById('z')!.name).toBe('Zara');
+      expect(store.getNodeById('root')).toBeUndefined();
+    });
+
+    it('index stays consistent after removeNodeWithReassign', () => {
+      const store = new OrgStore({
+        id: 'root', name: 'A', title: 'CEO',
+        children: [
+          { id: 'b', name: 'B', title: 'VP', children: [
+            { id: 'd', name: 'D', title: 'Eng' },
+          ] },
+          { id: 'c', name: 'C', title: 'CFO' },
+        ],
+      });
+      store.removeNodeWithReassign('b', 'c');
+      expect(store.getNodeById('b')).toBeUndefined();
+      expect(store.getParentOf('d')!.id).toBe('c');
+    });
+
+    it('index stays consistent through chained mutations', () => {
+      const store = new OrgStore(makeRoot());
+      const c1 = store.addChild('root', { name: 'Dan', title: 'VP' });
+      const c2 = store.addChild(c1.id, { name: 'Eve', title: 'Eng' });
+      store.moveNode(c2.id, 'b');
+      expect(store.getParentOf(c2.id)!.id).toBe('b');
+      store.removeNode(c2.id);
+      expect(store.getNodeById(c2.id)).toBeUndefined();
+      store.undo(); // restore c2
+      expect(store.getNodeById(c2.id)!.name).toBe('Eve');
+    });
+
+    it('1000-node tree lookups are fast', () => {
+      // Build a 1000-node tree
+      const root: OrgNode = { id: 'n0', name: 'Root', title: 'CEO' };
+      const nodes = [root];
+      for (let i = 1; i < 1000; i++) {
+        const parentIdx = Math.floor((i - 1) / 5);
+        const parent = nodes[parentIdx];
+        const node: OrgNode = { id: `n${i}`, name: `P${i}`, title: `T${i}` };
+        if (!parent.children) parent.children = [];
+        parent.children.push(node);
+        nodes.push(node);
+      }
+
+      const store = new OrgStore(root);
+      const start = performance.now();
+      for (let i = 0; i < 1000; i++) {
+        store.getNodeById(`n${i}`);
+      }
+      const elapsed = performance.now() - start;
+      // O(1) lookups: 1000 lookups should complete in well under 50ms
+      expect(elapsed).toBeLessThan(50);
     });
   });
 });

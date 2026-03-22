@@ -248,8 +248,8 @@ export class SettingsStore {
     URL.revokeObjectURL(url);
   }
 
-  importFromFile(jsonContent: string): PersistableSettings {
-    const settings = this.parseImport(jsonContent);
+  importFromFile(jsonContent: string, defaults: PersistableSettings): PersistableSettings {
+    const settings = this.parseImport(jsonContent, defaults);
     this.cachedRaw = settings;
     this.writeToStorage(settings);
     return settings;
@@ -264,7 +264,7 @@ export class SettingsStore {
     };
   }
 
-  parseImport(jsonContent: string): PersistableSettings {
+  parseImport(jsonContent: string, defaults: PersistableSettings): PersistableSettings {
     let parsed: unknown;
     try {
       parsed = JSON.parse(jsonContent);
@@ -289,14 +289,11 @@ export class SettingsStore {
     const settingsObj = obj.settings as Record<string, unknown>;
     const validated = validateSettings(settingsObj);
 
-    // Ensure all keys are present
-    for (const key of ALL_KEYS) {
-      if (!(key in validated)) {
-        throw new Error(`Invalid settings file: missing setting "${key}"`);
-      }
+    if (Object.keys(validated).length === 0) {
+      throw new Error('Invalid settings file: no valid settings found');
     }
 
-    return validated as PersistableSettings;
+    return { ...defaults, ...validated };
   }
 
   private writeToStorage(settings: Partial<PersistableSettings>): void {

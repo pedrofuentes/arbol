@@ -41,7 +41,7 @@ const EMERALD_MATCHING_OPTS: ResolvedOptions = {
   icContainerFill: '#e5e7eb',
   icContainerBorderRadius: 0,
   nameColor: '#1e293b',
-  titleColor: '#64748b',
+  titleColor: '#475569',
   textAlign: 'center',
   cardBorderRadius: 0,
   fontFamily: 'Calibri',

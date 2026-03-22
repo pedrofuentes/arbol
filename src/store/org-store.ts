@@ -1,5 +1,5 @@
 import { OrgNode } from '../types';
-import { findNodeById, findParent, cloneTree, flattenTree, isLeaf, isM1 } from '../utils/tree';
+import { cloneTree, flattenTree, isLeaf, isM1 } from '../utils/tree';
 import { generateId } from '../utils/id';
 import { EventEmitter } from '../utils/event-emitter';
 
@@ -9,10 +9,36 @@ export class OrgStore extends EventEmitter {
   private redoStack: string[] = [];
   private static MAX_HISTORY = 50;
   private _mutationVersion = 0;
+  private nodeIndex = new Map<string, OrgNode>();
+  private parentIndex = new Map<string, OrgNode>();
 
   constructor(root: OrgNode) {
     super();
     this.root = cloneTree(root);
+    this.rebuildIndex();
+  }
+
+  private rebuildIndex(): void {
+    this.nodeIndex.clear();
+    this.parentIndex.clear();
+    const walk = (node: OrgNode, parent?: OrgNode): void => {
+      this.nodeIndex.set(node.id, node);
+      if (parent) this.parentIndex.set(node.id, parent);
+      if (node.children) {
+        for (const child of node.children) {
+          walk(child, node);
+        }
+      }
+    };
+    walk(this.root);
+  }
+
+  getNodeById(id: string): OrgNode | undefined {
+    return this.nodeIndex.get(id);
+  }
+
+  getParentOf(id: string): OrgNode | undefined {
+    return this.parentIndex.get(id);
   }
 
   getTree(): OrgNode {
@@ -43,6 +69,7 @@ export class OrgStore extends EventEmitter {
         }
         this.root = parsed;
         this._mutationVersion++;
+        this.rebuildIndex();
         this.emit();
         return true;
       } catch (e) {
@@ -61,6 +88,7 @@ export class OrgStore extends EventEmitter {
         this.undoStack.push(JSON.stringify(this.root));
         this.root = parsed;
         this._mutationVersion++;
+        this.rebuildIndex();
         this.emit();
         return true;
       } catch (e) {
@@ -88,9 +116,9 @@ export class OrgStore extends EventEmitter {
   }
 
   addChild(parentId: string, data: { name: string; title: string; level?: string }): OrgNode {
-    this.snapshot();
-    const parent = findNodeById(this.root, parentId);
+    const parent = this.nodeIndex.get(parentId);
     if (!parent) throw new Error(`Parent node "${parentId}" not found`);
+    this.snapshot();
     const node: OrgNode = {
       id: generateId(),
       name: data.name,
@@ -99,25 +127,27 @@ export class OrgStore extends EventEmitter {
     };
     if (!parent.children) parent.children = [];
     parent.children.push(node);
+    this.rebuildIndex();
     this.emit();
     return node;
   }
 
   removeNode(id: string): void {
     if (this.root.id === id) throw new Error('Cannot remove root node');
-    this.snapshot();
-    const parent = findParent(this.root, id);
+    const parent = this.parentIndex.get(id);
     if (!parent) throw new Error(`Node "${id}" not found`);
+    this.snapshot();
     parent.children = parent.children?.filter((c) => c.id !== id);
     if (parent.children?.length === 0) parent.children = undefined;
+    this.rebuildIndex();
     this.emit();
   }
 
   removeNodeWithReassign(nodeId: string, newParentId: string): void {
     if (this.root.id === nodeId) throw new Error('Cannot remove root node');
-    const node = findNodeById(this.root, nodeId);
+    const node = this.nodeIndex.get(nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
-    const newParent = findNodeById(this.root, newParentId);
+    const newParent = this.nodeIndex.get(newParentId);
     if (!newParent) throw new Error(`Target parent "${newParentId}" not found`);
     if (nodeId === newParentId)
       throw new Error('Cannot reassign children to the node being removed');
@@ -134,19 +164,20 @@ export class OrgStore extends EventEmitter {
     }
 
     // Remove the now-childless node
-    const parent = findParent(this.root, nodeId);
+    const parent = this.parentIndex.get(nodeId);
     if (parent) {
       parent.children = parent.children?.filter((c) => c.id !== nodeId);
       if (parent.children?.length === 0) parent.children = undefined;
     }
 
+    this.rebuildIndex();
     this.emit();
   }
 
   updateNode(id: string, fields: { name?: string; title?: string; level?: string | null }): OrgNode {
-    this.snapshot();
-    const node = findNodeById(this.root, id);
+    const node = this.nodeIndex.get(id);
     if (!node) throw new Error(`Node "${id}" not found`);
+    this.snapshot();
     if (fields.name !== undefined) node.name = fields.name;
     if (fields.title !== undefined) {
       node.title = fields.title;
@@ -164,7 +195,7 @@ export class OrgStore extends EventEmitter {
   }
 
   pinTitle(nodeId: string): OrgNode {
-    const node = findNodeById(this.root, nodeId);
+    const node = this.nodeIndex.get(nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
     if (node.pinnedTitle) return node;
     this.snapshot();
@@ -174,7 +205,7 @@ export class OrgStore extends EventEmitter {
   }
 
   unpinTitle(nodeId: string): OrgNode {
-    const node = findNodeById(this.root, nodeId);
+    const node = this.nodeIndex.get(nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
     if (!node.pinnedTitle) return node;
     this.snapshot();
@@ -184,7 +215,7 @@ export class OrgStore extends EventEmitter {
   }
 
   setNodeLevel(nodeId: string, level: string | null): OrgNode {
-    const node = findNodeById(this.root, nodeId);
+    const node = this.nodeIndex.get(nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
     this.snapshot();
     if (level === null || level === '') {
@@ -198,8 +229,8 @@ export class OrgStore extends EventEmitter {
 
   bulkSetLevel(nodeIds: string[], level: string | null): void {
     const validNodes = nodeIds
-      .map((id) => findNodeById(this.root, id))
-      .filter((n): n is OrgNode => n !== null);
+      .map((id) => this.nodeIndex.get(id))
+      .filter((n): n is OrgNode => n !== undefined);
     if (validNodes.length === 0) return;
     this.snapshot();
     for (const node of validNodes) {
@@ -213,7 +244,7 @@ export class OrgStore extends EventEmitter {
   }
 
   setNodeCategory(nodeId: string, categoryId: string | null): OrgNode {
-    const node = findNodeById(this.root, nodeId);
+    const node = this.nodeIndex.get(nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
     this.snapshot();
     if (categoryId === null) {
@@ -227,8 +258,8 @@ export class OrgStore extends EventEmitter {
 
   bulkSetCategory(nodeIds: string[], categoryId: string | null): void {
     const validNodes = nodeIds
-      .map((id) => findNodeById(this.root, id))
-      .filter((n): n is OrgNode => n !== null);
+      .map((id) => this.nodeIndex.get(id))
+      .filter((n): n is OrgNode => n !== undefined);
     if (validNodes.length === 0) return;
     this.snapshot();
     for (const node of validNodes) {
@@ -247,10 +278,10 @@ export class OrgStore extends EventEmitter {
 
   setDottedLine(nodeId: string, isDotted: boolean): OrgNode {
     if (this.root.id === nodeId) throw new Error('Cannot set dotted line on root node');
-    const node = findNodeById(this.root, nodeId);
+    const node = this.nodeIndex.get(nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
     if (isLeaf(node)) {
-      const parent = findParent(this.root, nodeId);
+      const parent = this.parentIndex.get(nodeId);
       if (parent && isM1(parent)) {
         throw new Error('Cannot set dotted line on an IC (Individual Contributor) node');
       }
@@ -267,15 +298,15 @@ export class OrgStore extends EventEmitter {
 
   moveNode(nodeId: string, newParentId: string, dottedLine?: boolean): OrgNode {
     if (this.root.id === nodeId) throw new Error('Cannot move root node');
-    const node = findNodeById(this.root, nodeId);
+    const node = this.nodeIndex.get(nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
-    const newParent = findNodeById(this.root, newParentId);
+    const newParent = this.nodeIndex.get(newParentId);
     if (!newParent) throw new Error(`Target parent "${newParentId}" not found`);
     if (nodeId === newParentId) throw new Error('Cannot move a node under itself');
     if (this.isDescendant(nodeId, newParentId))
       throw new Error('Cannot move a node under its own descendant');
 
-    const currentParent = findParent(this.root, nodeId);
+    const currentParent = this.parentIndex.get(nodeId);
     if (currentParent && currentParent.id === newParentId) return node;
 
     this.snapshot();
@@ -292,35 +323,24 @@ export class OrgStore extends EventEmitter {
         delete node.dottedLine;
       }
     }
+    this.rebuildIndex();
     this.emit();
     return node;
   }
 
   bulkMoveNodes(nodeIds: string[], newParentId: string): void {
-    // Pre-compute lookups once to avoid O(n*k) tree traversals
-    const allNodes = flattenTree(this.root);
-    const nodeMap = new Map(allNodes.map((n) => [n.id, n]));
-    const parentMap = new Map<string, OrgNode>();
-    for (const n of allNodes) {
-      if (n.children) {
-        for (const child of n.children) {
-          parentMap.set(child.id, n);
-        }
-      }
-    }
-
-    const newParent = nodeMap.get(newParentId);
+    const newParent = this.nodeIndex.get(newParentId);
     if (!newParent) throw new Error(`Target parent "${newParentId}" not found`);
 
     // Filter out root and nodes already under target, validate all exist
     const validIds = nodeIds.filter((id) => {
       if (this.root.id === id) return false;
-      const node = nodeMap.get(id);
+      const node = this.nodeIndex.get(id);
       if (!node) return false;
       // Check if newParent is a descendant of this node (would create cycle)
       const descendants = flattenTree(node);
       if (descendants.some((n) => n.id === newParentId && n.id !== id)) return false;
-      const currentParent = parentMap.get(id);
+      const currentParent = this.parentIndex.get(id);
       return !(currentParent && currentParent.id === newParentId);
     });
 
@@ -328,9 +348,9 @@ export class OrgStore extends EventEmitter {
 
     this.snapshot();
     for (const id of validIds) {
-      const node = nodeMap.get(id);
+      const node = this.nodeIndex.get(id);
       if (!node) continue;
-      const currentParent = parentMap.get(id);
+      const currentParent = this.parentIndex.get(id);
       if (currentParent) {
         currentParent.children = currentParent.children?.filter((c) => c.id !== id);
         if (currentParent.children?.length === 0) currentParent.children = undefined;
@@ -338,57 +358,48 @@ export class OrgStore extends EventEmitter {
       if (!newParent.children) newParent.children = [];
       newParent.children.push(node);
     }
+    this.rebuildIndex();
     this.emit();
   }
 
   bulkRemoveNodes(ids: string[]): void {
-    // Pre-compute lookups once to avoid O(n*k) tree traversals
-    const allNodes = flattenTree(this.root);
-    const nodeSet = new Set(allNodes.map((n) => n.id));
-    const parentMap = new Map<string, OrgNode>();
-    for (const n of allNodes) {
-      if (n.children) {
-        for (const child of n.children) {
-          parentMap.set(child.id, n);
-        }
-      }
-    }
-
     const validIds = ids.filter((id) => {
       if (this.root.id === id) return false;
-      return nodeSet.has(id);
+      return this.nodeIndex.has(id);
     });
 
     if (validIds.length === 0) return;
 
     this.snapshot();
     for (const id of validIds) {
-      const parent = parentMap.get(id);
+      const parent = this.parentIndex.get(id);
       if (!parent) continue;
       parent.children = parent.children?.filter((c) => c.id !== id);
       if (parent.children?.length === 0) parent.children = undefined;
     }
+    this.rebuildIndex();
     this.emit();
   }
 
   private isDescendant(ancestorId: string, nodeId: string): boolean {
-    const ancestor = findNodeById(this.root, ancestorId);
+    const ancestor = this.nodeIndex.get(ancestorId);
     if (!ancestor) return false;
     const allDescendants = flattenTree(ancestor);
     return allDescendants.some((n) => n.id === nodeId && n.id !== ancestorId);
   }
 
   getDescendantCount(nodeId: string): number {
-    const node = findNodeById(this.root, nodeId);
+    const node = this.nodeIndex.get(nodeId);
     if (!node) throw new Error(`Node "${nodeId}" not found`);
     return flattenTree(node).length - 1;
   }
 
   fromJSON(json: string): void {
-    this.snapshot();
     const parsed = JSON.parse(json);
     this.validateTree(parsed);
+    this.snapshot();
     this.root = parsed;
+    this.rebuildIndex();
     this.emit();
   }
 
@@ -402,6 +413,7 @@ export class OrgStore extends EventEmitter {
     this.undoStack.length = 0;
     this.redoStack.length = 0;
     this._mutationVersion++;
+    this.rebuildIndex();
     this.emit();
   }
 
