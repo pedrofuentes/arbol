@@ -1,10 +1,47 @@
 # Arbol — Project Roadmap
 
-> Last updated: 2026-03-20
+> Last updated: 2026-03-22
 
 ## Overview
 
 Arbol is an interactive org chart editor for the browser, built with TypeScript, D3.js, and Vite. This roadmap tracks everything completed, in progress, and planned.
+
+---
+
+## 🚀 v3.12.0 — Dual-Track Level Mappings & Presets
+
+### Dual-Track Level Mappings
+- [x] `managerDisplayTitle` on `LevelMapping` — same level maps to different titles for Managers vs ICs
+- [x] Auto-detection from tree structure (has children = manager, leaf = IC)
+- [x] 3-column level mapping table UI (Level | IC Title | Manager Title)
+- [x] Inline editing — click any title cell to edit in-place
+- [x] 3-column CSV import/export (backward compatible with 2-column)
+
+### Pinned Titles
+- [x] `pinnedTitle` on `OrgNode` — manual override immune to level mapping
+- [x] Auto-pin when user edits title via property panel or inline editor
+- [x] 📌 toggle in property panel with auto-title hint
+- [x] `OrgStore.pinTitle()` / `unpinTitle()` with undo support
+
+### Chart Bundle Export
+- [x] Level mappings and display mode included in `.arbol.json` bundles
+- [x] Warning dialog before replacing existing mappings on import
+
+### Category & Level Mapping Presets
+- [x] `CategoryPresetStore` — save/load/delete reusable category configurations
+- [x] `LevelPresetStore` — save/load/delete reusable level mapping configurations
+- [x] `PresetToolbar` — reusable UI with Save / Load / Copy-from-chart buttons
+- [x] Preset toolbars in both Category and Level Mapping settings sections
+- [x] Copy categories or level mappings from any other chart
+
+### Enhanced Chart Creation
+- [x] `CreateChartDialog` — dedicated dialog with preset/chart source pickers
+- [x] Pick categories from: None / saved preset / existing chart
+- [x] Pick level mappings from: None / saved preset / existing chart
+
+### Testing
+- [x] **2,663 tests across 104 files** — all passing
+- [x] 97 new tests across 8 new test files
 
 ---
 

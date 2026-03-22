@@ -1302,4 +1302,115 @@ describe('OrgStore', () => {
       expect(store.canUndo()).toBe(false);
     });
   });
+
+  describe('pinTitle / unpinTitle', () => {
+    it('pinTitle sets pinnedTitle to true', () => {
+      const store = new OrgStore(makeRoot());
+      store.pinTitle('b');
+      const node = findNodeById(store.getTree(), 'b')!;
+      expect(node.pinnedTitle).toBe(true);
+    });
+
+    it('pinTitle throws for non-existent node', () => {
+      const store = new OrgStore(makeRoot());
+      expect(() => store.pinTitle('nonexistent')).toThrow('not found');
+    });
+
+    it('pinTitle is no-op if already pinned', () => {
+      const store = new OrgStore(makeRoot());
+      store.pinTitle('b');
+      const sizeBefore = store.getUndoStackSize();
+      store.pinTitle('b');
+      expect(store.getUndoStackSize()).toBe(sizeBefore);
+    });
+
+    it('pinTitle is undoable', () => {
+      const store = new OrgStore(makeRoot());
+      store.pinTitle('b');
+      expect(findNodeById(store.getTree(), 'b')!.pinnedTitle).toBe(true);
+      store.undo();
+      expect(findNodeById(store.getTree(), 'b')!.pinnedTitle).toBeUndefined();
+    });
+
+    it('unpinTitle removes pinnedTitle', () => {
+      const store = new OrgStore(makeRoot());
+      store.pinTitle('b');
+      store.unpinTitle('b');
+      const node = findNodeById(store.getTree(), 'b')!;
+      expect(node.pinnedTitle).toBeUndefined();
+    });
+
+    it('unpinTitle throws for non-existent node', () => {
+      const store = new OrgStore(makeRoot());
+      expect(() => store.unpinTitle('nonexistent')).toThrow('not found');
+    });
+
+    it('unpinTitle is no-op if not pinned', () => {
+      const store = new OrgStore(makeRoot());
+      const sizeBefore = store.getUndoStackSize();
+      store.unpinTitle('b');
+      expect(store.getUndoStackSize()).toBe(sizeBefore);
+    });
+
+    it('unpinTitle is undoable', () => {
+      const store = new OrgStore(makeRoot());
+      store.pinTitle('b');
+      store.unpinTitle('b');
+      store.undo();
+      expect(findNodeById(store.getTree(), 'b')!.pinnedTitle).toBe(true);
+    });
+
+    it('updateNode auto-pins when title changes', () => {
+      const store = new OrgStore(makeRoot());
+      store.updateNode('b', { title: 'New Title' });
+      expect(findNodeById(store.getTree(), 'b')!.pinnedTitle).toBe(true);
+    });
+
+    it('updateNode does NOT auto-pin when only name changes', () => {
+      const store = new OrgStore(makeRoot());
+      store.updateNode('b', { name: 'New Name' });
+      expect(findNodeById(store.getTree(), 'b')!.pinnedTitle).toBeUndefined();
+    });
+
+    it('updateNode does NOT auto-pin when only level changes', () => {
+      const store = new OrgStore(makeRoot());
+      store.updateNode('b', { level: 'L5' });
+      expect(findNodeById(store.getTree(), 'b')!.pinnedTitle).toBeUndefined();
+    });
+
+    it('pinTitle emits change event', () => {
+      const store = new OrgStore(makeRoot());
+      const handler = vi.fn();
+      store.onChange(handler);
+      store.pinTitle('b');
+      expect(handler).toHaveBeenCalledOnce();
+    });
+
+    it('unpinTitle emits change event', () => {
+      const store = new OrgStore(makeRoot());
+      store.pinTitle('b');
+      const handler = vi.fn();
+      store.onChange(handler);
+      store.unpinTitle('b');
+      expect(handler).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('validateTree pinnedTitle', () => {
+    it('accepts valid pinnedTitle boolean', () => {
+      const store = new OrgStore(makeRoot());
+      const json = JSON.stringify({
+        id: 'root', name: 'A', title: 'CEO', pinnedTitle: true,
+        children: [{ id: 'b', name: 'B', title: 'VP', pinnedTitle: false }],
+      });
+      store.fromJSON(json);
+      expect(store.getTree().pinnedTitle).toBe(true);
+    });
+
+    it('rejects non-boolean pinnedTitle', () => {
+      const store = new OrgStore(makeRoot());
+      const json = JSON.stringify({ id: 'root', name: 'A', title: 'CEO', pinnedTitle: 'yes' });
+      expect(() => store.fromJSON(json)).toThrow('Invalid pinnedTitle');
+    });
+  });
 });

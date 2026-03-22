@@ -109,6 +109,45 @@ describe('buildChartBundle', () => {
 
     expect(bundle.versions).toEqual([]);
   });
+
+  it('includes levelMappings when chart has them', () => {
+    const chart = makeChart({
+      levelMappings: [
+        { rawLevel: 'L20', displayTitle: 'Principal Engineer', managerDisplayTitle: 'Director' },
+        { rawLevel: 'L21', displayTitle: 'Senior Engineer' },
+      ],
+      levelDisplayMode: 'mapped',
+    });
+    const bundle = buildChartBundle(chart, []);
+
+    expect(bundle.chart.levelMappings).toEqual(chart.levelMappings);
+    expect(bundle.chart.levelDisplayMode).toBe('mapped');
+  });
+
+  it('omits levelMappings when chart has none', () => {
+    const bundle = buildChartBundle(makeChart(), []);
+
+    expect(bundle.chart.levelMappings).toBeUndefined();
+    expect(bundle.chart.levelDisplayMode).toBeUndefined();
+  });
+
+  it('omits levelMappings when array is empty', () => {
+    const chart = makeChart({ levelMappings: [] });
+    const bundle = buildChartBundle(chart, []);
+
+    expect(bundle.chart.levelMappings).toBeUndefined();
+  });
+
+  it('omits levelDisplayMode when it is original', () => {
+    const chart = makeChart({
+      levelMappings: [{ rawLevel: 'L20', displayTitle: 'IC' }],
+      levelDisplayMode: 'original',
+    });
+    const bundle = buildChartBundle(chart, []);
+
+    expect(bundle.chart.levelMappings).toEqual(chart.levelMappings);
+    expect(bundle.chart.levelDisplayMode).toBeUndefined();
+  });
 });
 
 describe('downloadChartBundle', () => {

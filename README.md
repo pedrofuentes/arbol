@@ -10,6 +10,9 @@ An interactive org chart editor for the browser — manage multiple org charts w
 - **Version snapshots** — save named point-in-time snapshots; view read-only, restore, or delete
 - **Version comparison** — side-by-side or merged diff view with diff badges (added/removed/moved/modified), click-to-select cross-highlighting, and hover cross-pane tracking
 - **Per-chart color categories** — each chart has its own set of color categories
+- **Dual-track level mappings** — same level maps to different titles for Managers vs ICs, with auto-detection from tree structure
+- **Pinned titles** — manually override any node's title to prevent level mapping from changing it
+- **Category & level mapping presets** — save reusable presets, copy from other charts, pick presets when creating new charts
 - **Chart name in header** — editable name with dirty-state indicator (●) and quick save button (💾)
 - **IndexedDB storage** — org data stored in IndexedDB for capacity across multiple charts and versions
 - **Import creates or replaces** — importing CSV/JSON asks whether to create a new chart or replace the current one

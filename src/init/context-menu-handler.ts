@@ -55,8 +55,14 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
               name: node.name,
               title: node.title,
               level: node.level,
-              onSave: (name, title, level) => {
-                store.updateNode(nodeId, { name, title, level: level ?? null });
+              onSave: (newName, newTitle, newLevel) => {
+                const fields: { name?: string; title?: string; level?: string | null } = {};
+                if (newName !== node.name) fields.name = newName;
+                if (newTitle !== node.title) fields.title = newTitle;
+                if ((newLevel ?? '') !== (node.level ?? '')) fields.level = newLevel ?? null;
+                if (Object.keys(fields).length > 0) {
+                  store.updateNode(nodeId, fields);
+                }
               },
               onCancel: () => {},
             });

@@ -25,7 +25,7 @@ export interface FooterDeps {
   footer: HTMLElement;
   getChartName: () => string;
   getSideBySideRenderer: () => SideBySideRenderer | null;
-  resolveTitle?: (originalTitle: string, rawLevel?: string) => string;
+  resolveTitle?: (originalTitle: string, rawLevel?: string, isManager?: boolean, pinnedTitle?: boolean) => string;
 }
 
 export interface FooterElements {

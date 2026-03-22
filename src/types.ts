@@ -12,6 +12,8 @@ export interface OrgNode {
   dottedLine?: boolean;
   /** Optional level/grade label (e.g., 'L5', 'E10'). */
   level?: string;
+  /** When true, the title has been manually set and will not be overridden by level mapping. */
+  pinnedTitle?: boolean;
   /** Child nodes. Omit or set undefined for leaf nodes. */
   children?: OrgNode[];
 }
@@ -47,6 +49,24 @@ export interface ColumnMapping {
 export interface MappingPreset {
   name: string;
   mapping: ColumnMapping;
+}
+
+/** Reusable category preset for applying to multiple charts. */
+export interface CategoryPreset {
+  /** User-assigned preset name. Must be unique. */
+  name: string;
+  /** Snapshot of ColorCategory array. */
+  categories: ColorCategory[];
+}
+
+/** Reusable level mapping preset for applying to multiple charts. */
+export interface LevelMappingPreset {
+  /** User-assigned preset name. Must be unique. */
+  name: string;
+  /** Snapshot of LevelMapping array. */
+  levelMappings: LevelMapping[];
+  /** Display mode at time of save. */
+  levelDisplayMode: LevelDisplayMode;
 }
 
 /** Persistent chart record stored in IndexedDB. */
@@ -117,6 +137,10 @@ export interface ChartBundle {
     name: string;
     workingTree: OrgNode;
     categories: ColorCategory[];
+    /** Level-to-title mappings bundled with the chart for sharing. */
+    levelMappings?: LevelMapping[];
+    /** How level values are displayed when the chart is opened. */
+    levelDisplayMode?: LevelDisplayMode;
   };
   versions: ChartBundleVersion[];
 }
@@ -125,8 +149,11 @@ export interface ChartBundle {
 export interface LevelMapping {
   /** Raw level value as stored on OrgNode (e.g., 'L10', 'E5', '12'). */
   rawLevel: string;
-  /** Human-readable display title (e.g., 'IC', 'Senior', 'Director'). */
+  /** Human-readable display title for ICs / default (e.g., 'Principal Engineer'). */
   displayTitle: string;
+  /** Optional manager-specific display title (e.g., 'Director'). When set and the node
+   *  has children, this title is used instead of displayTitle. */
+  managerDisplayTitle?: string;
 }
 
 /** How the job title is displayed on cards when level mappings exist. */

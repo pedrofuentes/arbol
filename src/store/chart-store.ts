@@ -103,7 +103,12 @@ export class ChartStore extends EventEmitter {
     return this.activeChartId;
   }
 
-  async createChart(name: string): Promise<ChartRecord> {
+  async createChart(
+    name: string,
+    categories?: ColorCategory[],
+    levelMappings?: LevelMapping[],
+    levelDisplayMode?: LevelDisplayMode,
+  ): Promise<ChartRecord> {
     const trimmed = name.trim();
     if (!trimmed) throw new Error('Chart name cannot be empty');
     if (await this.db.isChartNameTaken(trimmed)) {
@@ -117,8 +122,11 @@ export class ChartStore extends EventEmitter {
       createdAt: now,
       updatedAt: now,
       workingTree: { ...DEFAULT_ROOT },
-      categories: [],
+      categories: categories ?? [],
     };
+
+    if (levelMappings) chart.levelMappings = levelMappings;
+    if (levelDisplayMode) chart.levelDisplayMode = levelDisplayMode;
 
     await this.db.putChart(chart);
     this.activeChartId = chart.id;
@@ -349,6 +357,8 @@ export class ChartStore extends EventEmitter {
       updatedAt: now,
       workingTree: bundle.chart.workingTree,
       categories: bundle.chart.categories,
+      ...(bundle.chart.levelMappings && { levelMappings: bundle.chart.levelMappings }),
+      ...(bundle.chart.levelDisplayMode && { levelDisplayMode: bundle.chart.levelDisplayMode }),
     };
     await this.db.putChart(chart);
 
@@ -388,6 +398,16 @@ export class ChartStore extends EventEmitter {
 
     chart.workingTree = bundle.chart.workingTree;
     chart.categories = bundle.chart.categories;
+    if (bundle.chart.levelMappings) {
+      chart.levelMappings = bundle.chart.levelMappings;
+    } else {
+      delete chart.levelMappings;
+    }
+    if (bundle.chart.levelDisplayMode) {
+      chart.levelDisplayMode = bundle.chart.levelDisplayMode;
+    } else {
+      delete chart.levelDisplayMode;
+    }
     chart.updatedAt = new Date().toISOString();
     await this.db.putChart(chart);
 
@@ -416,6 +436,18 @@ export class ChartStore extends EventEmitter {
     if (!chart || chart.categories.length === 0) return false;
     if (bundle.chart.categories.length === 0) return true;
     return JSON.stringify(chart.categories) !== JSON.stringify(bundle.chart.categories);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Level mapping comparison
+  // ---------------------------------------------------------------------------
+
+  async wouldReplaceLevelMappings(bundle: ChartBundle): Promise<boolean> {
+    if (!this.activeChartId) return false;
+    const chart = await this.db.getChart(this.activeChartId);
+    if (!chart || !chart.levelMappings || chart.levelMappings.length === 0) return false;
+    if (!bundle.chart.levelMappings || bundle.chart.levelMappings.length === 0) return true;
+    return JSON.stringify(chart.levelMappings) !== JSON.stringify(bundle.chart.levelMappings);
   }
 
   // ---------------------------------------------------------------------------

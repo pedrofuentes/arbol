@@ -56,6 +56,33 @@ describe('LevelStore', () => {
       expect(() => store.addMapping('x'.repeat(50), 'x'.repeat(100))).not.toThrow();
     });
 
+    it('addMapping stores managerDisplayTitle when provided', () => {
+      store.addMapping('L10', 'IC', 'Manager');
+      const mapping = store.getMapping('L10');
+      expect(mapping?.managerDisplayTitle).toBe('Manager');
+    });
+
+    it('addMapping omits managerDisplayTitle when not provided', () => {
+      store.addMapping('L10', 'IC');
+      const mapping = store.getMapping('L10');
+      expect(mapping?.managerDisplayTitle).toBeUndefined();
+    });
+
+    it('addMapping validates managerDisplayTitle max length', () => {
+      expect(() => store.addMapping('L10', 'IC', 'x'.repeat(101))).toThrow('managerDisplayTitle');
+      expect(() => store.addMapping('L10', 'IC', 'x'.repeat(100))).not.toThrow();
+    });
+
+    it('addMapping trims managerDisplayTitle', () => {
+      store.addMapping('L10', 'IC', '  Director  ');
+      expect(store.getMapping('L10')?.managerDisplayTitle).toBe('Director');
+    });
+
+    it('addMapping ignores empty managerDisplayTitle', () => {
+      store.addMapping('L10', 'IC', '   ');
+      expect(store.getMapping('L10')?.managerDisplayTitle).toBeUndefined();
+    });
+
     it('getMapping returns existing mapping', () => {
       store.addMapping('L10', 'IC');
       const m = store.getMapping('L10');
@@ -237,11 +264,11 @@ describe('LevelStore', () => {
       store.addMapping('L10', 'IC');
       store.addMapping('E5', 'Senior');
       const csv = store.exportToCsv();
-      expect(csv).toBe('raw_level,display_title\nL10,IC\nE5,Senior');
+      expect(csv).toBe('raw_level,display_title,manager_display_title\nL10,IC,\nE5,Senior,');
     });
 
     it('exportToCsv with no mappings returns header only', () => {
-      expect(store.exportToCsv()).toBe('raw_level,display_title');
+      expect(store.exportToCsv()).toBe('raw_level,display_title,manager_display_title');
     });
   });
 
@@ -350,6 +377,132 @@ describe('LevelStore', () => {
       store.onChange(listener);
       store.loadFromChart(makeChart());
       expect(listener).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ── Dual-track (Manager/IC) ────────────────────────────
+
+  describe('Dual-track (Manager/IC)', () => {
+    it('resolveTitle returns IC title when isManager is false', () => {
+      store.addMapping('L20', 'Principal Engineer', 'Director');
+      store.setDisplayMode('mapped');
+      expect(store.resolveTitle('L20', false)).toBe('Principal Engineer');
+    });
+
+    it('resolveTitle returns manager title when isManager is true', () => {
+      store.addMapping('L20', 'Principal Engineer', 'Director');
+      store.setDisplayMode('mapped');
+      expect(store.resolveTitle('L20', true)).toBe('Director');
+    });
+
+    it('resolveTitle falls back to IC title when no managerDisplayTitle', () => {
+      store.addMapping('L20', 'Principal Engineer');
+      store.setDisplayMode('mapped');
+      expect(store.resolveTitle('L20', true)).toBe('Principal Engineer');
+    });
+
+    it('resolveTitle returns IC title when isManager is undefined', () => {
+      store.addMapping('L20', 'Principal Engineer', 'Director');
+      store.setDisplayMode('mapped');
+      expect(store.resolveTitle('L20')).toBe('Principal Engineer');
+    });
+
+    it('resolveTitle returns undefined in original mode regardless of isManager', () => {
+      store.addMapping('L20', 'Principal Engineer', 'Director');
+      expect(store.resolveTitle('L20', true)).toBeUndefined();
+      expect(store.resolveTitle('L20', false)).toBeUndefined();
+    });
+
+    it('updateMapping can set managerDisplayTitle', () => {
+      store.addMapping('L20', 'IC');
+      store.updateMapping('L20', 'IC', 'Director');
+      expect(store.getMapping('L20')!.managerDisplayTitle).toBe('Director');
+    });
+
+    it('updateMapping can clear managerDisplayTitle', () => {
+      store.addMapping('L20', 'IC', 'Director');
+      store.updateMapping('L20', 'IC', '');
+      expect(store.getMapping('L20')!.managerDisplayTitle).toBeUndefined();
+    });
+
+    it('updateMapping preserves managerDisplayTitle when not passed', () => {
+      store.addMapping('L20', 'IC', 'Director');
+      store.updateMapping('L20', 'Senior');
+      expect(store.getMapping('L20')!.managerDisplayTitle).toBe('Director');
+    });
+
+    it('replaceAll preserves managerDisplayTitle', () => {
+      store.replaceAll([
+        { rawLevel: 'L20', displayTitle: 'IC', managerDisplayTitle: 'Director' },
+        { rawLevel: 'L21', displayTitle: 'Senior' },
+      ]);
+      expect(store.getMapping('L20')!.managerDisplayTitle).toBe('Director');
+      expect(store.getMapping('L21')!.managerDisplayTitle).toBeUndefined();
+    });
+  });
+
+  // ── CSV with dual-track ────────────────────────────────
+
+  describe('CSV with dual-track', () => {
+    it('exports 3-column CSV with manager title', () => {
+      store.addMapping('L20', 'Principal Engineer', 'Director');
+      store.addMapping('L21', 'Senior Engineer');
+      const csv = store.exportToCsv();
+      const lines = csv.split('\n');
+      expect(lines[0]).toBe('raw_level,display_title,manager_display_title');
+      expect(lines[1]).toBe('L20,Principal Engineer,Director');
+      expect(lines[2]).toBe('L21,Senior Engineer,');
+    });
+
+    it('imports 3-column CSV', () => {
+      const csv = 'raw_level,display_title,manager_display_title\nL20,IC,Director\nL21,Senior,';
+      store.importFromCsv(csv);
+      expect(store.getMapping('L20')!.managerDisplayTitle).toBe('Director');
+      expect(store.getMapping('L21')!.managerDisplayTitle).toBeUndefined();
+    });
+
+    it('imports 2-column CSV (backward compatible)', () => {
+      const csv = 'raw_level,display_title\nL20,IC\nL21,Senior';
+      store.importFromCsv(csv);
+      expect(store.getMapping('L20')!.displayTitle).toBe('IC');
+      expect(store.getMapping('L20')!.managerDisplayTitle).toBeUndefined();
+    });
+
+    it('round-trips 3-column CSV', () => {
+      store.addMapping('L20', 'Principal Engineer', 'Director');
+      store.addMapping('L21', 'Senior');
+      const csv = store.exportToCsv();
+
+      const store2 = new LevelStore();
+      store2.importFromCsv(csv);
+      expect(store2.getMapping('L20')).toEqual(store.getMapping('L20'));
+      expect(store2.getMapping('L21')).toEqual(store.getMapping('L21'));
+    });
+
+    it('CSV import clears managerDisplayTitle when 3rd column is empty', () => {
+      store.addMapping('L20', 'IC', 'Director');
+      store.importFromCsv('raw_level,display_title,manager_display_title\nL20,IC,');
+      expect(store.getMapping('L20')!.managerDisplayTitle).toBeUndefined();
+    });
+  });
+
+  // ── Chart integration with dual-track ──────────────────
+
+  describe('Chart integration with dual-track', () => {
+    it('loadFromChart preserves managerDisplayTitle', () => {
+      const chart = makeChart({
+        levelMappings: [
+          { rawLevel: 'L20', displayTitle: 'IC', managerDisplayTitle: 'Director' },
+        ],
+      });
+      store.loadFromChart(chart);
+      expect(store.getMapping('L20')!.managerDisplayTitle).toBe('Director');
+    });
+
+    it('toChartData includes managerDisplayTitle', () => {
+      store.addMapping('L20', 'IC', 'Director');
+      const data = store.toChartData();
+      expect(data.levelMappings[0].managerDisplayTitle).toBe('Director');
     });
   });
 });

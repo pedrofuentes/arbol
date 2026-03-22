@@ -856,6 +856,19 @@ export class ImportEditor {
           const chart = await this.chartStore.importChartAsNew(this.pendingBundle);
           if (this.onBundleImported) this.onBundleImported(chart);
         } else {
+          const wouldReplace = await this.chartStore.wouldReplaceLevelMappings(this.pendingBundle);
+          if (wouldReplace) {
+            const proceed = await showConfirmDialog({
+              title: t('dialog.replace_mappings.title'),
+              message: t('dialog.replace_mappings.message'),
+              confirmLabel: t('dialog.replace_mappings.confirm'),
+              cancelLabel: t('dialog.replace_mappings.cancel'),
+              danger: true,
+            });
+            if (!proceed) {
+              return;
+            }
+          }
           const chart = await this.chartStore.importChartReplaceCurrent(this.pendingBundle);
           if (this.onBundleImported) this.onBundleImported(chart);
         }

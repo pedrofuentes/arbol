@@ -39,6 +39,9 @@ export function normalizeTreeText(
   if (tree.level !== undefined) {
     result.level = tree.level;
   }
+  if (tree.pinnedTitle !== undefined) {
+    result.pinnedTitle = tree.pinnedTitle;
+  }
   if (tree.children) {
     result.children = tree.children.map((child) => normalizeTreeText(child, nameMode, titleMode));
   }

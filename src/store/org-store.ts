@@ -148,7 +148,10 @@ export class OrgStore extends EventEmitter {
     const node = findNodeById(this.root, id);
     if (!node) throw new Error(`Node "${id}" not found`);
     if (fields.name !== undefined) node.name = fields.name;
-    if (fields.title !== undefined) node.title = fields.title;
+    if (fields.title !== undefined) {
+      node.title = fields.title;
+      node.pinnedTitle = true;
+    }
     if (fields.level !== undefined) {
       if (fields.level === null || fields.level === '') {
         delete node.level;
@@ -156,6 +159,26 @@ export class OrgStore extends EventEmitter {
         node.level = fields.level;
       }
     }
+    this.emit();
+    return node;
+  }
+
+  pinTitle(nodeId: string): OrgNode {
+    const node = findNodeById(this.root, nodeId);
+    if (!node) throw new Error(`Node "${nodeId}" not found`);
+    if (node.pinnedTitle) return node;
+    this.snapshot();
+    node.pinnedTitle = true;
+    this.emit();
+    return node;
+  }
+
+  unpinTitle(nodeId: string): OrgNode {
+    const node = findNodeById(this.root, nodeId);
+    if (!node) throw new Error(`Node "${nodeId}" not found`);
+    if (!node.pinnedTitle) return node;
+    this.snapshot();
+    delete node.pinnedTitle;
     this.emit();
     return node;
   }
@@ -409,6 +432,10 @@ export function validateTree(node: unknown, depth = 0, count = { value: 0 }): as
   if (obj.dottedLine !== undefined) {
     if (typeof obj.dottedLine !== 'boolean')
       throw new Error(`Invalid dottedLine on node "${obj.id}": expected a boolean`);
+  }
+  if (obj.pinnedTitle !== undefined) {
+    if (typeof obj.pinnedTitle !== 'boolean')
+      throw new Error(`Invalid pinnedTitle on node "${obj.id}": expected a boolean`);
   }
   if (obj.children !== undefined) {
     if (!Array.isArray(obj.children))

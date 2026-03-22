@@ -231,4 +231,21 @@ describe('normalizeTreeText', () => {
     expect(result.name).toBe('test');
     expect(result.title).toBe('role');
   });
+
+  it('preserves pinnedTitle field on all nodes', () => {
+    const tree: OrgNode = {
+      id: 'root',
+      name: 'JANE DOE',
+      title: 'CEO',
+      pinnedTitle: true,
+      children: [
+        { id: 'c1', name: 'john smith', title: 'VP', pinnedTitle: false },
+        { id: 'c2', name: 'alice', title: 'IC' },
+      ],
+    };
+    const result = normalizeTreeText(tree, 'titleCase', 'uppercase');
+    expect(result.pinnedTitle).toBe(true);
+    expect(result.children![0].pinnedTitle).toBe(false);
+    expect(result.children![1].pinnedTitle).toBeUndefined();
+  });
 });

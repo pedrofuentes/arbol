@@ -13,6 +13,7 @@ interface CardDatum {
     title: string;
     categoryId?: string;
     level?: string;
+    pinnedTitle?: boolean;
   };
 }
 
@@ -73,7 +74,7 @@ export interface RendererOptions {
   levelBadgeFontSize?: number;
   levelBadgeSize?: number;
   /** Optional function to resolve the display title based on level mapping. */
-  resolveTitle?: (originalTitle: string, rawLevel?: string) => string;
+  resolveTitle?: (originalTitle: string, rawLevel?: string, isManager?: boolean, pinnedTitle?: boolean) => string;
   categories?: ColorCategory[];
   legendRows?: number;
   /** When true, disables zoom/keyboard/interactivity for static preview use. */
@@ -271,7 +272,7 @@ export class ChartRenderer {
           const self = this;
           g.each(function (d) {
             const datum = {
-              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId, level: d.level },
+              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId, level: d.level, pinnedTitle: d.pinnedTitle },
             };
             const sel = select(this).datum(datum);
             self.renderCardContent(
@@ -279,6 +280,7 @@ export class ChartRenderer {
               d.width,
               nodeHeight,
               () => d.id,
+              false,
             );
 
             if (self.opts.showLevel && d.level) {
@@ -329,7 +331,7 @@ export class ChartRenderer {
           const self = this;
           g.each(function (d) {
             const datum = {
-              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId, level: d.level },
+              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId, level: d.level, pinnedTitle: d.pinnedTitle },
             };
             const sel = select(this).datum(datum);
             self.renderCardContent(
@@ -337,6 +339,7 @@ export class ChartRenderer {
               d.width,
               nodeHeight,
               () => d.id,
+              false,
             );
 
             if (self.opts.showLevel && d.level) {
@@ -371,7 +374,7 @@ export class ChartRenderer {
             .attr('transform', (d) => `translate(${d.x - d.width / 2},${d.y})`);
           g.each(function (d) {
             const datum = {
-              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId, level: d.level },
+              data: { id: d.id, name: d.name, title: d.title, categoryId: d.categoryId, level: d.level, pinnedTitle: d.pinnedTitle },
             };
             const sel = select(this).datum(datum);
             self.renderCardContent(
@@ -379,6 +382,7 @@ export class ChartRenderer {
               d.width,
               nodeHeight,
               (dd) => dd.data.id,
+              true,
             );
 
             if (self.opts.showHeadcount && d.descendantCount && d.descendantCount > 0) {
@@ -508,6 +512,7 @@ export class ChartRenderer {
     width: number,
     height: number,
     getId: (d: CardDatum) => string,
+    isManager?: boolean,
   ): void {
     const {
       textPaddingTop,
@@ -607,7 +612,7 @@ export class ChartRenderer {
         return titleColor;
       })
       .attr('pointer-events', 'none')
-      .text((d: CardDatum) => this.opts.resolveTitle(d.data.title, d.data.level));
+      .text((d: CardDatum) => this.opts.resolveTitle(d.data.title, d.data.level, isManager, d.data.pinnedTitle));
   }
 
   private renderHeadcountBadge(

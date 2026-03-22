@@ -1,4 +1,4 @@
-import type { ChartRecord, VersionRecord, OrgNode, ColorCategory } from '../types';
+import type { ChartRecord, VersionRecord, OrgNode, ColorCategory, LevelMapping, LevelDisplayMode, CategoryPreset, LevelMappingPreset } from '../types';
 import type { ChartStore } from '../store/chart-store';
 import { showConfirmDialog } from '../ui/confirm-dialog';
 import { showInputDialog } from '../ui/input-dialog';
@@ -6,6 +6,7 @@ import { showChartExportDialog } from '../ui/chart-export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../export/chart-exporter';
 import { flattenTree } from '../utils/tree';
 import { t, getLocale } from '../i18n';
+import { showCreateChartDialog } from '../ui/create-chart-dialog';
 import { createButton } from '../utils/dom-builder';
 
 export interface ChartEditorOptions {
@@ -18,6 +19,14 @@ export interface ChartEditorOptions {
   getCurrentTree: () => OrgNode;
   getCurrentCategories: () => ColorCategory[];
   onBeforeSwitch: () => Promise<boolean>;
+  categoryPresetStore?: {
+    getPresets(): CategoryPreset[];
+    getPreset(name: string): CategoryPreset | undefined;
+  };
+  levelPresetStore?: {
+    getPresets(): LevelMappingPreset[];
+    getPreset(name: string): LevelMappingPreset | undefined;
+  };
 }
 
 const INLINE_BTN_EXTRA = 'font-size:10px;padding:3px 8px;';
@@ -35,6 +44,8 @@ export class ChartEditor {
   private getCurrentTree: ChartEditorOptions['getCurrentTree'];
   private getCurrentCategories: ChartEditorOptions['getCurrentCategories'];
   private onBeforeSwitch: ChartEditorOptions['onBeforeSwitch'];
+  private categoryPresetStore: ChartEditorOptions['categoryPresetStore'];
+  private levelPresetStore: ChartEditorOptions['levelPresetStore'];
 
   private chartListEl!: HTMLDivElement;
   private versionListEl!: HTMLDivElement;
@@ -59,6 +70,8 @@ export class ChartEditor {
     this.getCurrentTree = options.getCurrentTree;
     this.getCurrentCategories = options.getCurrentCategories;
     this.onBeforeSwitch = options.onBeforeSwitch;
+    this.categoryPresetStore = options.categoryPresetStore;
+    this.levelPresetStore = options.levelPresetStore;
 
     this.build();
     this.unsubscribe = this.chartStore.onChange(() => this.refresh());
@@ -439,18 +452,55 @@ export class ChartEditor {
   // ── Handlers: Charts ───────────────────────────────────
 
   private async handleCreateChart(): Promise<void> {
-    const name = await showInputDialog({
-      title: t('chart_editor.new_chart_dialog_title'),
-      label: t('chart_editor.new_chart_dialog_label'),
-      placeholder: t('chart_editor.new_chart_placeholder'),
+    const charts = await this.chartStore.getCharts();
+    const activeId = this.chartStore.getActiveChartId();
+
+    const result = await showCreateChartDialog({
+      categoryPresets: this.categoryPresetStore?.getPresets().map((p) => p.name) ?? [],
+      levelMappingPresets: this.levelPresetStore?.getPresets().map((p) => p.name) ?? [],
+      charts: charts
+        .filter((c) => c.id !== activeId)
+        .map((c) => ({ id: c.id, name: c.name })),
     });
-    if (!name) return;
+
+    if (!result) return;
 
     const proceed = await this.onBeforeSwitch();
     if (!proceed) return;
 
     try {
-      const chart = await this.chartStore.createChart(name);
+      let categories: ColorCategory[] | undefined;
+      if (result.categorySource.type === 'preset') {
+        const preset = this.categoryPresetStore?.getPreset(result.categorySource.name!);
+        if (preset) categories = preset.categories;
+      } else if (result.categorySource.type === 'chart') {
+        const sourceChart = charts.find((c) => c.id === result.categorySource.id);
+        if (sourceChart) categories = structuredClone(sourceChart.categories);
+      }
+
+      let levelMappings: LevelMapping[] | undefined;
+      let levelDisplayMode: LevelDisplayMode | undefined;
+      if (result.levelMappingSource.type === 'preset') {
+        const preset = this.levelPresetStore?.getPreset(result.levelMappingSource.name!);
+        if (preset) {
+          levelMappings = preset.levelMappings;
+          levelDisplayMode = preset.levelDisplayMode;
+        }
+      } else if (result.levelMappingSource.type === 'chart') {
+        const sourceChart = charts.find((c) => c.id === result.levelMappingSource.id);
+        if (sourceChart) {
+          levelMappings = sourceChart.levelMappings ? structuredClone(sourceChart.levelMappings) : undefined;
+          levelDisplayMode = sourceChart.levelDisplayMode;
+        }
+      }
+
+      const chart = await this.chartStore.createChart(
+        result.name,
+        categories,
+        levelMappings,
+        levelDisplayMode,
+      );
+
       this.onChartSwitch(chart);
       this.chartErrorEl.textContent = '';
       await this.refresh();

@@ -9,7 +9,9 @@ import { ThemeManager } from './store/theme-manager';
 import { SettingsStore, PersistableSettings } from './store/settings-store';
 import { MappingStore } from './store/mapping-store';
 import { CategoryStore } from './store/category-store';
+import { CategoryPresetStore } from './store/category-preset-store';
 import { LevelStore } from './store/level-store';
+import { LevelPresetStore } from './store/level-preset-store';
 import { flattenTree, findNodeById, findParent, isLeaf, avgSpanOfControl } from './utils/tree';
 import { dismissContextMenu } from './ui/context-menu';
 import { dismissInlineEditor } from './ui/inline-editor';
@@ -91,6 +93,8 @@ async function main(): Promise<void> {
   const settingsStore = new SettingsStore();
   const mappingStore = new MappingStore();
   const levelStore = new LevelStore();
+  const categoryPresetStore = new CategoryPresetStore();
+  const levelPresetStore = new LevelPresetStore();
   const defaultSettings: PersistableSettings = {
     nodeWidth: 160,
     nodeHeight: 34,
@@ -150,9 +154,10 @@ async function main(): Promise<void> {
   // Load per-chart level mappings
   levelStore.loadFromChart(activeChart);
 
-  const resolveTitle = (originalTitle: string, rawLevel?: string): string => {
+  const resolveTitle = (originalTitle: string, rawLevel?: string, isManager?: boolean, pinnedTitle?: boolean): string => {
+    if (pinnedTitle) return originalTitle;
     if (!rawLevel) return originalTitle;
-    const mapped = levelStore.resolveTitle(rawLevel);
+    const mapped = levelStore.resolveTitle(rawLevel, isManager);
     return mapped ?? originalTitle;
   };
 
@@ -402,6 +407,9 @@ async function main(): Promise<void> {
           chartDB,
           undefined,
           levelStore,
+          categoryPresetStore,
+          levelPresetStore,
+          chartStore,
         );
         settingsEditorInstance.setPreviewArea(settingsModal.getPreviewArea());
         settingsEditorInstance.wirePreviewControls(
@@ -594,6 +602,8 @@ async function main(): Promise<void> {
     getCurrentCategories: () => categoryStore.getAll(),
     onBeforeSwitch: handleBeforeSwitch,
     onChartSwitch: handleChartSwitched,
+    categoryPresetStore,
+    levelPresetStore,
     onVersionRestore: (tree) => {
       dismissVersionViewer();
       store.replaceTree(tree);
@@ -825,6 +835,12 @@ async function main(): Promise<void> {
     onToggleDottedLine: (nodeId) => {
       const node = findNodeById(store.getTree(), nodeId);
       if (node) store.setDottedLine(nodeId, !node.dottedLine);
+    },
+    onPinTitle: (nodeId) => {
+      store.pinTitle(nodeId);
+    },
+    onUnpinTitle: (nodeId) => {
+      store.unpinTitle(nodeId);
     },
     onClose: () => {
       propertyPanel.hide();

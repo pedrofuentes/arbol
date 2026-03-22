@@ -18,8 +18,10 @@ export interface PropertyPanelOptions {
   onCategoryChange: (nodeId: string, categoryId: string | null) => void;
   onLevelChange: (nodeId: string, level: string | null) => void;
   onToggleDottedLine: (nodeId: string) => void;
+  onPinTitle?: (nodeId: string) => void;
+  onUnpinTitle?: (nodeId: string) => void;
   onClose: () => void;
-  resolveTitle?: (originalTitle: string, rawLevel?: string) => string;
+  resolveTitle?: (originalTitle: string, rawLevel?: string, isManager?: boolean, pinnedTitle?: boolean) => string;
 }
 
 export class PropertyPanel {
@@ -45,6 +47,8 @@ export class PropertyPanel {
   private dottedBtn: HTMLButtonElement;
   private moveBtn: HTMLButtonElement;
   private removeBtn: HTMLButtonElement;
+  private pinBtn: HTMLButtonElement;
+  private autoTitleEl: HTMLDivElement;
 
   private savedName = '';
   private savedTitle = '';
@@ -90,6 +94,21 @@ export class PropertyPanel {
 
     this.titleDisplay = document.createElement('div');
     this.titleDisplay.className = 'pp-node-title';
+    this.titleDisplay.style.cssText = 'flex:1;min-width:0;';
+
+    this.pinBtn = document.createElement('button');
+    this.pinBtn.className = 'pin-title-btn';
+    this.pinBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:14px;padding:2px 4px;opacity:0.3;flex-shrink:0;';
+    this.pinBtn.setAttribute('data-testid', 'pin-title-btn');
+
+    const titleRow = document.createElement('div');
+    titleRow.style.cssText = 'display:flex;align-items:center;gap:4px;';
+    titleRow.appendChild(this.titleDisplay);
+    titleRow.appendChild(this.pinBtn);
+
+    this.autoTitleEl = document.createElement('div');
+    this.autoTitleEl.style.cssText = 'font-size:10px;color:var(--text-tertiary);font-style:italic;display:none;';
+    this.autoTitleEl.setAttribute('data-testid', 'auto-title');
 
     const meta = document.createElement('div');
     meta.className = 'pp-node-meta';
@@ -107,7 +126,8 @@ export class PropertyPanel {
     meta.appendChild(this.metaSpanOfControl);
 
     card.appendChild(this.nameDisplay);
-    card.appendChild(this.titleDisplay);
+    card.appendChild(titleRow);
+    card.appendChild(this.autoTitleEl);
     card.appendChild(meta);
     content.appendChild(card);
 
@@ -290,8 +310,35 @@ export class PropertyPanel {
     this.nameDisplay.textContent = node.name;
 
     // Summary card: show mapped title if available
-    const resolved = this.options.resolveTitle?.(node.title, node.level) ?? node.title;
+    const isManager = !!(node.children && node.children.length > 0);
+    const resolved = this.options.resolveTitle?.(node.title, node.level, isManager, node.pinnedTitle) ?? node.title;
     this.titleDisplay.textContent = resolved;
+
+    // Pin indicator
+    this.pinBtn.textContent = '📌';
+    if (node.pinnedTitle) {
+      this.pinBtn.style.opacity = '0.9';
+      this.pinBtn.title = t('property_panel.unpin_title');
+      this.pinBtn.setAttribute('aria-label', t('property_panel.unpin_title'));
+      this.pinBtn.onclick = () => {
+        if (this.nodeId) this.options.onUnpinTitle?.(this.nodeId);
+      };
+      const autoTitle = this.options.resolveTitle?.(node.title, node.level, isManager, false) ?? node.title;
+      if (autoTitle !== node.title) {
+        this.autoTitleEl.textContent = `${t('property_panel.auto_title')}: ${autoTitle}`;
+        this.autoTitleEl.style.display = '';
+      } else {
+        this.autoTitleEl.style.display = 'none';
+      }
+    } else {
+      this.pinBtn.style.opacity = '0.3';
+      this.pinBtn.title = t('property_panel.pin_title');
+      this.pinBtn.setAttribute('aria-label', t('property_panel.pin_title'));
+      this.pinBtn.onclick = () => {
+        if (this.nodeId) this.options.onPinTitle?.(this.nodeId);
+      };
+      this.autoTitleEl.style.display = 'none';
+    }
 
     const isRoot = parentName === null;
     this.updateMetaValue(this.metaReportsTo, isRoot ? t('property_panel.root_node') : parentName);

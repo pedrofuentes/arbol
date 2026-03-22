@@ -4,8 +4,8 @@ import { EventEmitter } from '../utils/event-emitter';
 const VALID_DISPLAY_MODES: LevelDisplayMode[] = ['original', 'mapped'];
 const MAX_RAW_LEVEL_LENGTH = 50;
 const MAX_DISPLAY_TITLE_LENGTH = 100;
-const CSV_HEADER = 'raw_level,display_title';
-const HEADER_RE = /level|raw/i;
+const CSV_HEADER = 'raw_level,display_title,manager_display_title';
+const HEADER_RE = /level|raw|manager/i;
 
 export class LevelStore extends EventEmitter {
   private mappings: LevelMapping[] = [];
@@ -23,7 +23,7 @@ export class LevelStore extends EventEmitter {
     return m ? { ...m } : undefined;
   }
 
-  addMapping(rawLevel: string, displayTitle: string): void {
+  addMapping(rawLevel: string, displayTitle: string, managerDisplayTitle?: string): void {
     const trimmedRaw = rawLevel.trim();
     const trimmedTitle = displayTitle.trim();
 
@@ -39,15 +39,30 @@ export class LevelStore extends EventEmitter {
       throw new Error(`Duplicate rawLevel: ${trimmedRaw}`);
     }
 
-    this.mappings.push({ rawLevel: trimmedRaw, displayTitle: trimmedTitle });
+    const trimmedManagerTitle = managerDisplayTitle?.trim();
+    if (trimmedManagerTitle && trimmedManagerTitle.length > MAX_DISPLAY_TITLE_LENGTH) {
+      throw new Error(`managerDisplayTitle exceeds max length of ${MAX_DISPLAY_TITLE_LENGTH}`);
+    }
+
+    const mapping: LevelMapping = { rawLevel: trimmedRaw, displayTitle: trimmedTitle };
+    if (trimmedManagerTitle) mapping.managerDisplayTitle = trimmedManagerTitle;
+    this.mappings.push(mapping);
     this.invalidateCache();
     this.emit();
   }
 
-  updateMapping(rawLevel: string, displayTitle: string): void {
+  updateMapping(rawLevel: string, displayTitle: string, managerDisplayTitle?: string): void {
     const mapping = this.mappings.find(m => m.rawLevel === rawLevel);
     if (!mapping) throw new Error(`Mapping not found: ${rawLevel}`);
     mapping.displayTitle = displayTitle.trim();
+    if (managerDisplayTitle !== undefined) {
+      const trimmed = managerDisplayTitle.trim();
+      if (trimmed) {
+        mapping.managerDisplayTitle = trimmed;
+      } else {
+        delete mapping.managerDisplayTitle;
+      }
+    }
     this.invalidateCache();
     this.emit();
   }
@@ -93,13 +108,17 @@ export class LevelStore extends EventEmitter {
    * Returns the mapped display title if mode is 'mapped' and a mapping exists,
    * otherwise returns undefined (caller should use original title).
    */
-  resolveTitle(rawLevel: string | undefined): string | undefined {
+  resolveTitle(rawLevel: string | undefined, isManager?: boolean): string | undefined {
     if (!rawLevel) return undefined;
     if (this.displayMode === 'original') return undefined;
 
-    // 'mapped'
-    if (!this.cache) this.cache = this.buildCache();
-    return this.cache.get(rawLevel);
+    const mapping = this.mappings.find(m => m.rawLevel === rawLevel);
+    if (!mapping) return undefined;
+
+    if (isManager && mapping.managerDisplayTitle) {
+      return mapping.managerDisplayTitle;
+    }
+    return mapping.displayTitle;
   }
 
   /**
@@ -129,18 +148,26 @@ export class LevelStore extends EventEmitter {
       const line = lines[i].trim();
       if (!line) continue;
 
-      const commaIdx = line.indexOf(',');
-      if (commaIdx < 0) continue;
+      const parts = line.split(',');
+      if (parts.length < 2) continue;
 
-      const raw = line.slice(0, commaIdx).trim();
-      const title = line.slice(commaIdx + 1).trim();
+      const raw = parts[0].trim();
+      const title = parts[1].trim();
+      const managerTitle = parts.length >= 3 ? parts[2].trim() : '';
       if (!raw || !title) continue;
 
       const existing = this.mappings.find(m => m.rawLevel === raw);
       if (existing) {
         existing.displayTitle = title;
+        if (managerTitle) {
+          existing.managerDisplayTitle = managerTitle;
+        } else {
+          delete existing.managerDisplayTitle;
+        }
       } else {
-        this.mappings.push({ rawLevel: raw, displayTitle: title });
+        const mapping: LevelMapping = { rawLevel: raw, displayTitle: title };
+        if (managerTitle) mapping.managerDisplayTitle = managerTitle;
+        this.mappings.push(mapping);
       }
       count++;
     }
@@ -151,7 +178,9 @@ export class LevelStore extends EventEmitter {
   }
 
   exportToCsv(): string {
-    const rows = this.mappings.map(m => `${m.rawLevel},${m.displayTitle}`);
+    const rows = this.mappings.map(m =>
+      `${m.rawLevel},${m.displayTitle},${m.managerDisplayTitle ?? ''}`
+    );
     return [CSV_HEADER, ...rows].join('\n');
   }
 

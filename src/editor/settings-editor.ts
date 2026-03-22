@@ -3,6 +3,9 @@ import { PreviewRenderer } from '../renderer/preview-renderer';
 import { SettingsStore } from '../store/settings-store';
 import { CategoryStore } from '../store/category-store';
 import type { ChartDB } from '../store/chart-db';
+import type { ChartStore } from '../store/chart-store';
+import type { CategoryPresetStore } from '../store/category-preset-store';
+import type { LevelPresetStore } from '../store/level-preset-store';
 import { type IStorage, browserStorage } from '../utils/storage';
 import { t } from '../i18n';
 import { PresetPanel } from './settings/preset-panel';
@@ -10,6 +13,8 @@ import { CategoryPanel } from './settings/category-panel';
 import { SettingsIOPanel } from './settings/settings-io';
 import { BackupPanel } from './settings/backup-panel';
 import { LevelMappingPanel } from './settings/level-mapping-panel';
+import { PresetToolbar } from '../ui/preset-toolbar';
+import { showToast } from '../ui/toast';
 import type { LevelStore } from '../store/level-store';
 
 export type { CombinedPreset } from './settings/preset-panel';
@@ -366,6 +371,9 @@ export class SettingsEditor {
   private categoryStore: CategoryStore | null;
   private levelStore: LevelStore | null;
   private chartDB: ChartDB | null;
+  private chartStore: ChartStore | null;
+  private categoryPresetStore: CategoryPresetStore | null;
+  private levelPresetStore: LevelPresetStore | null;
   private storage: IStorage;
   private onBuildCallback: (() => void) | null = null;
   private previewArea: HTMLElement | null = null;
@@ -376,6 +384,7 @@ export class SettingsEditor {
   private settingsIOPanel: SettingsIOPanel;
   private backupPanel: BackupPanel | null = null;
   private rangeDebounceTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  private cachedChartEntries: { id: string; name: string }[] = [];
 
   constructor(
     container: HTMLElement,
@@ -386,6 +395,9 @@ export class SettingsEditor {
     chartDB?: ChartDB,
     storage: IStorage = browserStorage,
     levelStore?: LevelStore,
+    categoryPresetStore?: CategoryPresetStore,
+    levelPresetStore?: LevelPresetStore,
+    chartStore?: ChartStore,
   ) {
     this.container = container;
     this.renderer = renderer;
@@ -394,6 +406,9 @@ export class SettingsEditor {
     this.categoryStore = categoryStore ?? null;
     this.levelStore = levelStore ?? null;
     this.chartDB = chartDB ?? null;
+    this.chartStore = chartStore ?? null;
+    this.categoryPresetStore = categoryPresetStore ?? null;
+    this.levelPresetStore = levelPresetStore ?? null;
     this.storage = storage;
 
     const rebuildCallback = () => this.build();
@@ -540,6 +555,7 @@ export class SettingsEditor {
   private build(): void {
     this.clearDebounceTimers();
     this.container.innerHTML = '';
+    this.refreshChartEntries();
 
     const opts = this.renderer.getOptions();
 
@@ -550,10 +566,53 @@ export class SettingsEditor {
 
     // Node Categories section
     if (this.categoryPanel) {
+      const catWrapper = document.createElement('div');
+      catWrapper.appendChild(this.categoryPanel.build());
+
+      if (this.categoryPresetStore) {
+        const toolbarContainer = document.createElement('div');
+        toolbarContainer.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid var(--border-subtle);';
+
+        new PresetToolbar({
+          container: toolbarContainer,
+          presetNames: () => this.categoryPresetStore!.getPresets().map(p => p.name),
+          chartEntries: () => this.cachedChartEntries,
+          onSave: (name) => {
+            if (!this.categoryStore) return;
+            this.categoryPresetStore!.savePreset({
+              name,
+              categories: this.categoryStore.getAll(),
+            });
+            showToast(t('preset.saved', { name }));
+          },
+          onLoad: (name) => {
+            const preset = this.categoryPresetStore!.getPreset(name);
+            if (!preset || !this.categoryStore) return;
+            this.categoryStore.replaceAll(preset.categories);
+            this.rerenderCallback();
+            showToast(t('preset.loaded', { name }));
+          },
+          onCopyFromChart: async (chartId) => {
+            if (!this.chartStore) return;
+            const charts = await this.chartStore.getCharts();
+            const chart = charts.find(c => c.id === chartId);
+            if (!chart || !this.categoryStore) return;
+            this.categoryStore.replaceAll(chart.categories);
+            this.rerenderCallback();
+            showToast(t('preset.copied', { type: t('preset.type_categories'), name: chart.name }));
+          },
+          onDelete: (name) => {
+            this.categoryPresetStore!.deletePreset(name);
+            showToast(t('preset.deleted', { name }));
+          },
+          typeLabel: t('preset.type_categories'),
+        });
+
+        catWrapper.appendChild(toolbarContainer);
+      }
+
       this.container.appendChild(
-        this.createAccordionSection('categories', t('settings.categories_section'), () =>
-          this.categoryPanel!.build(),
-        ),
+        this.createAccordionSection('categories', t('settings.categories_section'), catWrapper),
       );
     }
 
@@ -599,6 +658,51 @@ export class SettingsEditor {
         rerenderCallback: this.rerenderCallback,
         rebuildCallback: () => this.build(),
       });
+
+      if (this.levelPresetStore) {
+        const toolbarContainer = document.createElement('div');
+        toolbarContainer.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid var(--border-subtle);';
+
+        new PresetToolbar({
+          container: toolbarContainer,
+          presetNames: () => this.levelPresetStore!.getPresets().map(p => p.name),
+          chartEntries: () => this.cachedChartEntries,
+          onSave: (name) => {
+            this.levelPresetStore!.savePreset({
+              name,
+              levelMappings: this.levelStore!.getMappings(),
+              levelDisplayMode: this.levelStore!.getDisplayMode(),
+            });
+            showToast(t('preset.saved', { name }));
+          },
+          onLoad: (name) => {
+            const preset = this.levelPresetStore!.getPreset(name);
+            if (!preset) return;
+            this.levelStore!.replaceAll(preset.levelMappings);
+            this.levelStore!.setDisplayMode(preset.levelDisplayMode);
+            this.rerenderCallback();
+            showToast(t('preset.loaded', { name }));
+          },
+          onCopyFromChart: async (chartId) => {
+            if (!this.chartStore) return;
+            const charts = await this.chartStore.getCharts();
+            const chart = charts.find(c => c.id === chartId);
+            if (!chart) return;
+            this.levelStore!.replaceAll(chart.levelMappings ?? []);
+            this.levelStore!.setDisplayMode(chart.levelDisplayMode ?? 'original');
+            this.rerenderCallback();
+            showToast(t('preset.copied', { type: t('preset.type_level_mappings'), name: chart.name }));
+          },
+          onDelete: (name) => {
+            this.levelPresetStore!.deletePreset(name);
+            showToast(t('preset.deleted', { name }));
+          },
+          typeLabel: t('preset.type_level_mappings'),
+        });
+
+        levelContainer.appendChild(toolbarContainer);
+      }
+
       this.container.appendChild(
         this.createAccordionSection('level-mapping', t('settings.level_mapping_section'), levelContainer),
       );
@@ -613,6 +717,18 @@ export class SettingsEditor {
 
     this.updatePreview();
     this.onBuildCallback?.();
+  }
+
+  private refreshChartEntries(): void {
+    if (!this.chartStore) return;
+    const activeId = this.chartStore.getActiveChartId();
+    this.chartStore.getCharts().then(charts => {
+      this.cachedChartEntries = charts
+        .filter(c => c.id !== activeId)
+        .map(c => ({ id: c.id, name: c.name }));
+    }).catch(() => {
+      this.cachedChartEntries = [];
+    });
   }
 
   private createControl(setting: SettingDef, currentValue: number | string | boolean): HTMLDivElement {

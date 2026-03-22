@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterEach } from 'vitest';
 import { setLocale } from '../../src/i18n';
 import en from '../../src/i18n/en';
-import { PropertyPanel } from '../../src/ui/property-panel';
+import { PropertyPanel, type PropertyPanelOptions } from '../../src/ui/property-panel';
 import type { OrgNode } from '../../src/types';
 
 beforeAll(() => { setLocale('en', en); });
@@ -333,6 +333,86 @@ describe('PropertyPanel', () => {
       }
     });
   });
+
+  describe('pinned title indicator', () => {
+    function createPanelWithResolve(resolveTitle?: PropertyPanelOptions['resolveTitle']) {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const callbacks = {
+        onEdit: vi.fn(), onAddChild: vi.fn(), onMove: vi.fn(), onRemove: vi.fn(),
+        onFocus: vi.fn(), onCategoryChange: vi.fn(), onLevelChange: vi.fn(),
+        onToggleDottedLine: vi.fn(), onClose: vi.fn(),
+        onPinTitle: vi.fn(), onUnpinTitle: vi.fn(),
+        resolveTitle,
+      };
+      const panel = new PropertyPanel({ container, ...callbacks });
+      return { container, panel, ...callbacks };
+    }
+
+    it('shows pin button when a node is displayed', () => {
+      const { container, panel } = createPanelWithResolve();
+      panel.show(makeNode(), 'Boss', 0, 0, 0, []);
+      const pinBtn = container.querySelector('[data-testid="pin-title-btn"]');
+      expect(pinBtn).not.toBeNull();
+    });
+
+    it('shows high-opacity pin when title is pinned', () => {
+      const { container, panel } = createPanelWithResolve();
+      panel.show(makeNode({ pinnedTitle: true }), 'Boss', 0, 0, 0, []);
+      const pinBtn = container.querySelector('[data-testid="pin-title-btn"]') as HTMLButtonElement;
+      expect(pinBtn.style.opacity).toBe('0.9');
+      expect(pinBtn.getAttribute('aria-label')).toBe(en['property_panel.unpin_title']);
+    });
+
+    it('shows low-opacity pin when title is not pinned', () => {
+      const { container, panel } = createPanelWithResolve();
+      panel.show(makeNode(), 'Boss', 0, 0, 0, []);
+      const pinBtn = container.querySelector('[data-testid="pin-title-btn"]') as HTMLButtonElement;
+      expect(pinBtn.style.opacity).toBe('0.3');
+      expect(pinBtn.getAttribute('aria-label')).toBe(en['property_panel.pin_title']);
+    });
+
+    it('calls onPinTitle when clicking pin on unpinned node', () => {
+      const { container, panel, onPinTitle } = createPanelWithResolve();
+      panel.show(makeNode(), 'Boss', 0, 0, 0, []);
+      const pinBtn = container.querySelector('[data-testid="pin-title-btn"]') as HTMLButtonElement;
+      pinBtn.click();
+      expect(onPinTitle).toHaveBeenCalledWith('n1');
+    });
+
+    it('calls onUnpinTitle when clicking pin on pinned node', () => {
+      const { container, panel, onUnpinTitle } = createPanelWithResolve();
+      panel.show(makeNode({ pinnedTitle: true }), 'Boss', 0, 0, 0, []);
+      const pinBtn = container.querySelector('[data-testid="pin-title-btn"]') as HTMLButtonElement;
+      pinBtn.click();
+      expect(onUnpinTitle).toHaveBeenCalledWith('n1');
+    });
+
+    it('shows auto-resolved title when pinned node has different mapping', () => {
+      const resolve = (orig: string, _lvl?: string, _mgr?: boolean, pinned?: boolean) =>
+        pinned ? orig : 'Mapped Title';
+      const { container, panel } = createPanelWithResolve(resolve);
+      panel.show(makeNode({ pinnedTitle: true, level: 'L5' }), 'Boss', 0, 0, 0, []);
+      const autoEl = container.querySelector('[data-testid="auto-title"]') as HTMLElement;
+      expect(autoEl).not.toBeNull();
+      expect(autoEl.style.display).not.toBe('none');
+      expect(autoEl.textContent).toContain('Mapped Title');
+    });
+
+    it('hides auto-resolved title when not pinned', () => {
+      const resolve = (orig: string) => orig;
+      const { container, panel } = createPanelWithResolve(resolve);
+      panel.show(makeNode(), 'Boss', 0, 0, 0, []);
+      const autoEl = container.querySelector('[data-testid="auto-title"]') as HTMLElement;
+      expect(autoEl.style.display).toBe('none');
+    });
+
+    it('hides auto-resolved title when pinned but mapping produces same title', () => {
+      const resolve = (orig: string) => orig;
+      const { container, panel } = createPanelWithResolve(resolve);
+      panel.show(makeNode({ pinnedTitle: true }), 'Boss', 0, 0, 0, []);
+      const autoEl = container.querySelector('[data-testid="auto-title"]') as HTMLElement;
+      expect(autoEl.style.display).toBe('none');
+    });
+  });
 });
-
-
