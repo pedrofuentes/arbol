@@ -5,6 +5,7 @@ import { computeLayout, LayoutResult, LayoutNode } from './layout-engine';
 import { ZoomManager } from './zoom-manager';
 import { KeyboardNav } from './keyboard-nav';
 import { t } from '../i18n';
+import { DEFAULT_RENDERER_OPTIONS } from '../constants/defaults';
 
 interface CardDatum {
   data: {
@@ -103,50 +104,12 @@ export class ChartRenderer {
 
   constructor(options: RendererOptions) {
     this.opts = {
+      ...DEFAULT_RENDERER_OPTIONS,
+      textAlign: DEFAULT_RENDERER_OPTIONS.textAlign as 'left' | 'center' | 'right',
       icNodeWidth: Math.round(options.nodeWidth * 0.88),
-      icGap: 6,
-      icContainerPadding: 10,
-      branchSpacing: 20,
-      topVerticalSpacing: 10,
-      bottomVerticalSpacing: 20,
-      palTopGap: 12,
-      palBottomGap: 12,
-      palRowGap: 6,
-      palCenterGap: 70,
-      nameFontSize: 11,
-      titleFontSize: 9,
       legendFontSize: 12,
-      fontFamily: 'Calibri',
-      textPaddingTop: 6,
-      textGap: 2,
-      nameColor: '#1e293b',
-      titleColor: '#64748b',
-      linkColor: '#94a3b8',
-      linkWidth: 1.5,
-      dottedLineDash: '6,4',
-      cardFill: '#ffffff',
-      cardStroke: '#22c55e',
-      cardStrokeWidth: 1,
-      cardBorderRadius: 0,
-      icContainerFill: '#e5e7eb',
-      icContainerBorderRadius: 0,
-      textAlign: 'center' as const,
-      textPaddingHorizontal: 8,
-      showHeadcount: false,
-      headcountBadgeColor: '#9ca3af',
-      headcountBadgeTextColor: '#1e293b',
-      headcountBadgeFontSize: 11,
-      headcountBadgeRadius: 4,
-      headcountBadgePadding: 8,
-      headcountBadgeHeight: 22,
-      showLevel: false,
-      levelBadgeColor: '#6366f1',
-      levelBadgeTextColor: '#ffffff',
-      levelBadgeFontSize: 11,
-      levelBadgeSize: 22,
       resolveTitle: (title: string) => title,
       categories: [] as ColorCategory[],
-      legendRows: 0,
       preview: false,
       ...options,
     };
