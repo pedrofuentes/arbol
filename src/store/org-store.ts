@@ -88,9 +88,9 @@ export class OrgStore extends EventEmitter {
   }
 
   addChild(parentId: string, data: { name: string; title: string; level?: string }): OrgNode {
-    this.snapshot();
     const parent = findNodeById(this.root, parentId);
     if (!parent) throw new Error(`Parent node "${parentId}" not found`);
+    this.snapshot();
     const node: OrgNode = {
       id: generateId(),
       name: data.name,
@@ -105,9 +105,9 @@ export class OrgStore extends EventEmitter {
 
   removeNode(id: string): void {
     if (this.root.id === id) throw new Error('Cannot remove root node');
-    this.snapshot();
     const parent = findParent(this.root, id);
     if (!parent) throw new Error(`Node "${id}" not found`);
+    this.snapshot();
     parent.children = parent.children?.filter((c) => c.id !== id);
     if (parent.children?.length === 0) parent.children = undefined;
     this.emit();
@@ -144,9 +144,9 @@ export class OrgStore extends EventEmitter {
   }
 
   updateNode(id: string, fields: { name?: string; title?: string; level?: string | null }): OrgNode {
-    this.snapshot();
     const node = findNodeById(this.root, id);
     if (!node) throw new Error(`Node "${id}" not found`);
+    this.snapshot();
     if (fields.name !== undefined) node.name = fields.name;
     if (fields.title !== undefined) {
       node.title = fields.title;
@@ -385,9 +385,9 @@ export class OrgStore extends EventEmitter {
   }
 
   fromJSON(json: string): void {
-    this.snapshot();
     const parsed = JSON.parse(json);
     this.validateTree(parsed);
+    this.snapshot();
     this.root = parsed;
     this.emit();
   }

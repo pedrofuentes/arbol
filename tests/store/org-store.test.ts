@@ -1413,4 +1413,76 @@ describe('OrgStore', () => {
       expect(() => store.fromJSON(json)).toThrow('Invalid pinnedTitle');
     });
   });
+
+  describe('validate before snapshot (no orphan undo entries)', () => {
+    it('addChild with invalid parentId does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.addChild('nonexistent', { name: 'X', title: 'Y' })).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('removeNode with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.removeNode('nonexistent')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('updateNode with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.updateNode('nonexistent', { name: 'X' })).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('fromJSON with invalid JSON does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.fromJSON('not valid json')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('fromJSON with invalid tree does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.fromJSON(JSON.stringify({ bad: true }))).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('setNodeCategory with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.setNodeCategory('nonexistent', 'cat-x')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('setDottedLine with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.setDottedLine('nonexistent', true)).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('pinTitle with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.pinTitle('nonexistent')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('unpinTitle with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.unpinTitle('nonexistent')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+
+    it('setNodeLevel with invalid id does not grow undo stack', () => {
+      const store = new OrgStore(makeRoot());
+      expect(store.getUndoStackSize()).toBe(0);
+      expect(() => store.setNodeLevel('nonexistent', 'L1')).toThrow();
+      expect(store.getUndoStackSize()).toBe(0);
+    });
+  });
 });
