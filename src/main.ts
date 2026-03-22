@@ -919,6 +919,48 @@ async function main(): Promise<void> {
     }
   });
 
+  // Wire keyboard navigation handlers (Enter, Space, Shift+F10)
+  const keyboardNav = renderer.getKeyboardNav();
+  if (keyboardNav) {
+    keyboardNav.setSelectHandler((nodeId: string) => {
+      clearMultiSelection();
+      renderer.setSelectedNode(nodeId);
+      const node = findNodeById(store.getTree(), nodeId);
+      if (node) {
+        announce(t('announce.selected', { name: node.name, title: node.title }));
+        showPropertyPanel(nodeId);
+      }
+    });
+
+    keyboardNav.setMultiSelectHandler((nodeId: string) => {
+      const tree = store.getTree();
+      if (tree.id === nodeId) return;
+      selection.toggle(nodeId);
+      syncSelectionToRenderer();
+      updateSelectionIndicator();
+      announce(t('announce.multi_selected', { count: selection.count }));
+      if (selection.hasSelection) {
+        propertyPanel.hide();
+      }
+    });
+
+    keyboardNav.setContextMenuHandler((nodeId: string, element: SVGGElement) => {
+      dismissAllOverlays();
+      const rect = element.getBoundingClientRect();
+      const syntheticEvent = new MouseEvent('contextmenu', {
+        clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2,
+        bubbles: true,
+      });
+      if (selection.hasSelection && selection.isSelected(nodeId)) {
+        showMultiSelectMenu(syntheticEvent);
+      } else {
+        clearMultiSelection();
+        showSingleCardMenu(nodeId, syntheticEvent);
+      }
+    });
+  }
+
   // Footer
   const footerResult = buildFooter({
     store,
