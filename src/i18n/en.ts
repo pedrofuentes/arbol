@@ -286,6 +286,7 @@ const en: Record<string, string> = {
   'dialog.cancel': 'Cancel',
   'dialog.confirm': 'Confirm',
   'dialog.ok': 'OK',
+  'dialog.create': 'Create',
   'dialog.save_version.title': 'Save Version',
   'dialog.save_version.label': 'Version name',
   'dialog.save_version.placeholder': 'e.g. Q1 2024 Plan',
