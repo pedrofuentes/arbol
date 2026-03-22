@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { OrgNode } from '../../src/types';
+import type { OrgNode } from '../../src/types';
 import {
   findNodeById,
   findParent,
@@ -15,30 +15,7 @@ import {
   countManagersByLevel,
   avgSpanOfControl,
 } from '../../src/utils/tree';
-
-function makeTree(): OrgNode {
-  return {
-    id: 'root',
-    name: 'Alice',
-    title: 'CEO',
-    children: [
-      {
-        id: 'b',
-        name: 'Bob',
-        title: 'CTO',
-        children: [
-          { id: 'd', name: 'Diana', title: 'Engineer' },
-          { id: 'e', name: 'Eve', title: 'Engineer' },
-        ],
-      },
-      {
-        id: 'c',
-        name: 'Carol',
-        title: 'CFO',
-      },
-    ],
-  };
-}
+import { makeTree } from '../helpers/factories';
 
 describe('findNodeById', () => {
   it('finds the root node', () => {
