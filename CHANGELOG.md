@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **CSV import losing level field** — `normalizeTreeText()` was not copying `level` or `dottedLine` when cloning nodes, causing levels mapped during CSV import to be silently dropped when text normalization was applied
+- **Wrong tree shown after deleting active chart** — deleting the active chart left OrgStore holding the deleted chart's tree; the remaining chart now loads correctly
 
 ## [3.11.2] — 2026-03-21
 

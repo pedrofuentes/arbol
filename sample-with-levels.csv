@@ -1,0 +1,14 @@
+name,title,manager_name,level
+Sarah Chen,Chief Executive Officer,,E12
+Marcus Johnson,VP Engineering,Sarah Chen,E10
+Priya Patel,VP Product,Sarah Chen,E10
+David Kim,Senior Engineering Manager,Marcus Johnson,E8
+Lisa Wang,Engineering Manager,Marcus Johnson,E8
+Tom Rodriguez,Staff Engineer,David Kim,L7
+Ana Costa,Senior Engineer,David Kim,L6
+James Wright,Engineer,David Kim,L5
+Mei Lin,Senior Engineer,Lisa Wang,L6
+Carlos Diaz,Engineer,Lisa Wang,L5
+Rachel Green,Product Manager,Priya Patel,L7
+Omar Hassan,Senior Designer,Priya Patel,L6
+Sophie Martin,UX Researcher,Priya Patel,L5
