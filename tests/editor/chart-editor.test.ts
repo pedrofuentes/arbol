@@ -55,6 +55,7 @@ function mockChartStore(charts: ChartRecord[] = [], versions: VersionRecord[] = 
     onChange: vi.fn().mockReturnValue(() => {}),
     createChart: vi.fn().mockResolvedValue(charts[0] ?? makeChart()),
     switchChart: vi.fn().mockResolvedValue(charts[0] ?? makeChart()),
+    getActiveChart: vi.fn().mockImplementation(async () => charts[0]),
     deleteChart: vi.fn().mockResolvedValue(undefined),
     renameChart: vi.fn().mockResolvedValue(undefined),
     duplicateChart: vi.fn().mockResolvedValue(makeChart({ id: 'chart-dup', name: 'Copy' })),
@@ -622,5 +623,71 @@ describe('ChartEditor – shows newly imported chart as active after refresh', (
     activeItems = container.querySelectorAll('.chart-item.active');
     expect(activeItems.length).toBe(1);
     expect(activeItems[0]!.textContent).toContain('Imported Org');
+  });
+});
+
+describe('ChartEditor – delete active chart calls onChartSwitch', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let store: ReturnType<typeof mockChartStore>;
+  let onChartSwitch: ReturnType<typeof vi.fn<(chart: ChartRecord) => void>>;
+  const chart1 = makeChart({ id: 'chart-1', name: 'Active Chart' });
+  const chart2 = makeChart({
+    id: 'chart-2',
+    name: 'Other Chart',
+    workingTree: { id: 'r2', name: 'Bob', title: 'CTO', children: [] },
+  });
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = mockChartStore([chart1, chart2], []);
+    onChartSwitch = vi.fn();
+
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch,
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-chart-id]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    document.body.removeChild(container);
+  });
+
+  it('calls onChartSwitch with remaining chart after deleting active chart', async () => {
+    // deleteChart mock simulates the real behavior: after deletion, active switches to chart2
+    store.deleteChart = vi.fn().mockImplementation(async () => {
+      store.getActiveChartId = vi.fn().mockReturnValue('chart-2');
+      store.getActiveChart = vi.fn().mockResolvedValue(chart2);
+      store.getCharts = vi.fn().mockResolvedValue([chart2]);
+    });
+
+    const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
+    const deleteBtn = Array.from(chartItem.querySelectorAll('button')).find(
+      (b) => b.getAttribute('data-tooltip') === 'Delete',
+    )!;
+    deleteBtn.click();
+
+    await vi.waitFor(() => {
+      expect(store.deleteChart).toHaveBeenCalledWith('chart-1');
+    });
+
+    await vi.waitFor(() => {
+      expect(onChartSwitch).toHaveBeenCalledTimes(1);
+      expect(onChartSwitch.mock.calls[0][0].id).toBe('chart-2');
+    });
   });
 });

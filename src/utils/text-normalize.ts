@@ -33,6 +33,12 @@ export function normalizeTreeText(
   if (tree.categoryId !== undefined) {
     result.categoryId = tree.categoryId;
   }
+  if (tree.dottedLine !== undefined) {
+    result.dottedLine = tree.dottedLine;
+  }
+  if (tree.level !== undefined) {
+    result.level = tree.level;
+  }
   if (tree.children) {
     result.children = tree.children.map((child) => normalizeTreeText(child, nameMode, titleMode));
   }

@@ -534,7 +534,14 @@ export class ChartEditor {
     if (!confirmed) return;
 
     try {
+      const wasActive = chart.id === this.chartStore.getActiveChartId();
       await this.chartStore.deleteChart(chart.id);
+      if (wasActive) {
+        const newActive = await this.chartStore.getActiveChart();
+        if (newActive) {
+          this.onChartSwitch(newActive);
+        }
+      }
       await this.refresh();
     } catch (err) {
       this.showError(this.chartErrorEl, (err as Error).message);

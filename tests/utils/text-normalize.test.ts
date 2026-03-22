@@ -176,4 +176,59 @@ describe('normalizeTreeText', () => {
     expect(result.title).toBe('Role');
     expect(result.children).toBeUndefined();
   });
+
+  it('preserves level field on all nodes', () => {
+    const tree: OrgNode = {
+      id: 'root',
+      name: 'JANE DOE',
+      title: 'CEO',
+      level: 'E10',
+      children: [
+        { id: 'c1', name: 'john smith', title: 'VP', level: 'L8' },
+        { id: 'c2', name: 'alice', title: 'IC' },
+      ],
+    };
+    const result = normalizeTreeText(tree, 'titleCase', 'uppercase');
+
+    expect(result.level).toBe('E10');
+    expect(result.children![0].level).toBe('L8');
+    expect(result.children![1].level).toBeUndefined();
+  });
+
+  it('preserves dottedLine field on all nodes', () => {
+    const tree: OrgNode = {
+      id: 'root',
+      name: 'JANE',
+      title: 'CEO',
+      children: [
+        { id: 'c1', name: 'john', title: 'VP', dottedLine: true },
+        { id: 'c2', name: 'alice', title: 'IC', dottedLine: false },
+        { id: 'c3', name: 'bob', title: 'PM' },
+      ],
+    };
+    const result = normalizeTreeText(tree, 'lowercase', 'lowercase');
+
+    expect(result.dottedLine).toBeUndefined();
+    expect(result.children![0].dottedLine).toBe(true);
+    expect(result.children![1].dottedLine).toBe(false);
+    expect(result.children![2].dottedLine).toBeUndefined();
+  });
+
+  it('preserves level and dottedLine together', () => {
+    const tree: OrgNode = {
+      id: '1',
+      name: 'TEST',
+      title: 'ROLE',
+      level: 'L5',
+      dottedLine: true,
+      categoryId: 'cat-1',
+    };
+    const result = normalizeTreeText(tree, 'lowercase', 'lowercase');
+
+    expect(result.level).toBe('L5');
+    expect(result.dottedLine).toBe(true);
+    expect(result.categoryId).toBe('cat-1');
+    expect(result.name).toBe('test');
+    expect(result.title).toBe('role');
+  });
 });
