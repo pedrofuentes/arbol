@@ -119,6 +119,10 @@ export interface ChartBundle {
     name: string;
     workingTree: OrgNode;
     categories: ColorCategory[];
+    /** Level-to-title mappings bundled with the chart for sharing. */
+    levelMappings?: LevelMapping[];
+    /** How level values are displayed when the chart is opened. */
+    levelDisplayMode?: LevelDisplayMode;
   };
   versions: ChartBundleVersion[];
 }

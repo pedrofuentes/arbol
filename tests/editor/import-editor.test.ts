@@ -567,6 +567,7 @@ describe('ImportEditor — Chart bundle import', () => {
       importChartReplaceCurrent: vi.fn().mockResolvedValue({
         id: 'cur-id', name: 'Test Org', workingTree: VALID_BUNDLE.chart.workingTree, categories: [],
       }),
+      wouldReplaceLevelMappings: vi.fn().mockResolvedValue(false),
     } as unknown as ChartStore;
     editor = new ImportEditor(container, store, undefined, mockChartStore);
   });

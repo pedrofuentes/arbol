@@ -6,7 +6,7 @@ function sanitizeFilename(name: string): string {
 }
 
 export function buildChartBundle(chart: ChartRecord, versions: VersionRecord[]): ChartBundle {
-  return {
+  const bundle: ChartBundle = {
     format: 'arbol-chart',
     version: 1,
     chart: {
@@ -20,6 +20,13 @@ export function buildChartBundle(chart: ChartRecord, versions: VersionRecord[]):
       tree: v.tree,
     })),
   };
+  if (chart.levelMappings && chart.levelMappings.length > 0) {
+    bundle.chart.levelMappings = chart.levelMappings;
+  }
+  if (chart.levelDisplayMode && chart.levelDisplayMode !== 'original') {
+    bundle.chart.levelDisplayMode = chart.levelDisplayMode;
+  }
+  return bundle;
 }
 
 export function downloadChartBundle(bundle: ChartBundle, chartName: string): void {

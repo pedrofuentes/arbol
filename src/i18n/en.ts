@@ -332,6 +332,11 @@ const en: Record<string, string> = {
   'dialog.import_bundle.new_chart': 'New chart',
   'dialog.import_bundle.replace': 'Replace current',
 
+  'dialog.replace_mappings.title': 'Replace Level Mappings?',
+  'dialog.replace_mappings.message': 'This chart has existing level mappings that will be replaced by the imported bundle\'s mappings. Continue?',
+  'dialog.replace_mappings.confirm': 'Replace mappings',
+  'dialog.replace_mappings.cancel': 'Cancel',
+
   // ─── Manager Picker ────────────────────────────────────────────────
   'picker.move_to': 'Move "{name}" to…',
   'picker.reassign_to': 'Reassign "{name}"\'s reports to…',
