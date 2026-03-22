@@ -9,7 +9,7 @@ git clone https://github.com/pedrofuentes/arbol.git
 cd arbol
 npm install
 npm run dev     # http://localhost:5173/
-npm run test    # 2490 tests, all must pass
+npm run test    # 2507 tests, all must pass
 ```
 
 ## Development Workflow

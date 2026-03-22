@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.11.4] — 2026-03-22
+
+### Fixed
+- **Chart list export showing wrong dialog** — the 📤 export button on the active chart in the sidebar was showing the PPTX/SVG/PNG format picker instead of the JSON data export dialog with version selection; created a dedicated `showChartExportDialog()` that correctly exports chart data as `.arbol.json`
+
 ## [3.11.3] — 2026-03-22
 
 ### Fixed
