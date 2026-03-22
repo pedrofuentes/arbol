@@ -10,10 +10,10 @@ import { t } from '../../src/i18n';
 
 describe('PresetToolbar', () => {
   let container: HTMLElement;
-  let onSave: ReturnType<typeof vi.fn>;
-  let onLoad: ReturnType<typeof vi.fn>;
-  let onCopyFromChart: ReturnType<typeof vi.fn>;
-  let onDelete: ReturnType<typeof vi.fn>;
+  let onSave: (name: string) => void;
+  let onLoad: (name: string) => void;
+  let onCopyFromChart: (chartId: string) => void;
+  let onDelete: (name: string) => void;
 
   beforeEach(() => {
     container = document.createElement('div');
