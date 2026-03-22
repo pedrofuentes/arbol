@@ -1263,6 +1263,9 @@ const en: Record<string, string> = {
   'export.scale_3x': '3× (Ultra high)',
   'export.exported_svg': 'Exported as SVG',
   'export.exported_png': 'Exported as PNG',
+  // ─── Chart Data Export ────────────────────────────────────────────
+  'chart_export_dialog.title': 'Export Chart Data',
+  'chart_export_dialog.versions_hint': 'Select which saved versions to include in the export.',
   // ─── Level Mapping ────────────────────────────────────────────────
   'settings.group.level_mapping': 'Level Mapping',
   'settings.section_desc.level_mapping': 'Define how raw level values map to display titles on cards.',

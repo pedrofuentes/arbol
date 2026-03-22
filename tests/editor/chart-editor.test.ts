@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ChartRecord, VersionRecord, OrgNode, ColorCategory } from '../../src/types';
 import { ChartEditor, ChartEditorOptions } from '../../src/editor/chart-editor';
 
-vi.mock('../../src/ui/export-dialog', () => ({
-  showExportDialog: vi.fn().mockReturnValue({ destroy: () => {} }),
+vi.mock('../../src/ui/chart-export-dialog', () => ({
+  showChartExportDialog: vi.fn().mockReturnValue({ destroy: () => {} }),
 }));
 vi.mock('../../src/export/chart-exporter', () => ({
   buildChartBundle: vi.fn().mockReturnValue({ format: 'arbol-chart', version: 1, chart: {}, versions: [] }),
@@ -16,7 +16,7 @@ vi.mock('../../src/ui/input-dialog', () => ({
   showInputDialog: vi.fn().mockResolvedValue(null),
 }));
 
-import { showExportDialog } from '../../src/ui/export-dialog';
+import { showChartExportDialog } from '../../src/ui/chart-export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../../src/export/chart-exporter';
 import { showInputDialog } from '../../src/ui/input-dialog';
 
@@ -121,7 +121,7 @@ describe('ChartEditor – Export button', () => {
     expect(delIdx).toBe(expIdx + 1);
   });
 
-  it('clicking Export calls showExportDialog with chart name and versions', async () => {
+  it('clicking Export calls showChartExportDialog with chart name and versions', async () => {
     const chartItem = container.querySelector('[data-chart-id="chart-1"]')!;
     const exportBtn = Array.from(chartItem.querySelectorAll('button')).find(
       (b) => b.getAttribute('data-tooltip') === 'Export',
@@ -130,11 +130,11 @@ describe('ChartEditor – Export button', () => {
 
     // Wait for async handler (getVersions is async)
     await vi.waitFor(() => {
-      expect(showExportDialog).toHaveBeenCalled();
+      expect(showChartExportDialog).toHaveBeenCalled();
     });
 
     expect(store.getVersions).toHaveBeenCalledWith(chart.id);
-    const dialogOpts = (showExportDialog as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const dialogOpts = (showChartExportDialog as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(dialogOpts.chartName).toBe('Test Chart');
     expect(dialogOpts.versions).toEqual(versions);
     expect(typeof dialogOpts.onExport).toBe('function');
@@ -149,13 +149,13 @@ describe('ChartEditor – Export button', () => {
     exportBtn.click();
 
     await vi.waitFor(() => {
-      expect(showExportDialog).toHaveBeenCalled();
+      expect(showChartExportDialog).toHaveBeenCalled();
     });
 
-    const dialogOpts = (showExportDialog as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const dialogOpts = (showChartExportDialog as ReturnType<typeof vi.fn>).mock.calls[0][0];
 
     // Simulate user selecting ver-1 only
-    dialogOpts.onExport('pptx', ['ver-1']);
+    dialogOpts.onExport(['ver-1']);
 
     expect(buildChartBundle).toHaveBeenCalledWith(chart, [versions[0]]);
     expect(downloadChartBundle).toHaveBeenCalledWith(
@@ -179,7 +179,7 @@ describe('ChartEditor – Export button', () => {
       expect(allText).toContain('DB error');
     });
 
-    expect(showExportDialog).not.toHaveBeenCalled();
+    expect(showChartExportDialog).not.toHaveBeenCalled();
   });
 
   it('Export button has ghost styling, not danger', () => {

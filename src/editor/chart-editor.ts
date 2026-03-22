@@ -2,7 +2,7 @@ import type { ChartRecord, VersionRecord, OrgNode, ColorCategory } from '../type
 import type { ChartStore } from '../store/chart-store';
 import { showConfirmDialog } from '../ui/confirm-dialog';
 import { showInputDialog } from '../ui/input-dialog';
-import { showExportDialog } from '../ui/export-dialog';
+import { showChartExportDialog } from '../ui/chart-export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../export/chart-exporter';
 import { flattenTree } from '../utils/tree';
 import { t, getLocale } from '../i18n';
@@ -492,10 +492,10 @@ export class ChartEditor {
   private async handleExportChart(chart: ChartRecord): Promise<void> {
     try {
       const versions = await this.chartStore.getVersions(chart.id);
-      showExportDialog({
+      showChartExportDialog({
         chartName: chart.name,
         versions,
-        onExport: (_format, selectedVersionIds) => {
+        onExport: (selectedVersionIds) => {
           const selectedVersions = versions.filter((v) => selectedVersionIds.includes(v.id));
           const bundle = buildChartBundle(chart, selectedVersions);
           downloadChartBundle(bundle, chart.name);
