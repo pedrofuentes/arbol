@@ -6,7 +6,8 @@ import { ChartRenderer, type RendererOptions } from './renderer/chart-renderer';
 import { FormEditor } from './editor/form-editor';
 import { JsonEditor } from './editor/json-editor';
 import { ThemeManager } from './store/theme-manager';
-import { SettingsStore, PersistableSettings } from './store/settings-store';
+import { SettingsStore, type PersistableSettings } from './store/settings-store';
+import { DEFAULT_RENDERER_OPTIONS } from './constants/defaults';
 import { MappingStore } from './store/mapping-store';
 import { CategoryStore } from './store/category-store';
 import { CategoryPresetStore } from './store/category-preset-store';
@@ -95,53 +96,7 @@ async function main(): Promise<void> {
   const levelStore = new LevelStore();
   const categoryPresetStore = new CategoryPresetStore();
   const levelPresetStore = new LevelPresetStore();
-  const defaultSettings: PersistableSettings = {
-    nodeWidth: 160,
-    nodeHeight: 34,
-    horizontalSpacing: 50,
-    branchSpacing: 20,
-    topVerticalSpacing: 10,
-    bottomVerticalSpacing: 20,
-    icNodeWidth: 141,
-    icGap: 6,
-    icContainerPadding: 10,
-    palTopGap: 12,
-    palBottomGap: 12,
-    palRowGap: 6,
-    palCenterGap: 70,
-    nameFontSize: 11,
-    titleFontSize: 9,
-    textPaddingTop: 6,
-    textGap: 2,
-    textAlign: 'center',
-    textPaddingHorizontal: 8,
-    fontFamily: 'Calibri',
-    nameColor: '#1e293b',
-    titleColor: '#64748b',
-    linkColor: '#94a3b8',
-    linkWidth: 1.5,
-    dottedLineDash: '6,4',
-    cardFill: '#ffffff',
-    cardStroke: '#22c55e',
-    cardStrokeWidth: 1,
-    cardBorderRadius: 0,
-    icContainerFill: '#e5e7eb',
-    icContainerBorderRadius: 0,
-    showHeadcount: false,
-    headcountBadgeColor: '#9ca3af',
-    headcountBadgeTextColor: '#1e293b',
-    headcountBadgeFontSize: 11,
-    headcountBadgeRadius: 4,
-    headcountBadgePadding: 8,
-    headcountBadgeHeight: 22,
-    showLevel: false,
-    levelBadgeColor: '#6366f1',
-    levelBadgeTextColor: '#ffffff',
-    levelBadgeFontSize: 11,
-    levelBadgeSize: 22,
-    legendRows: 0,
-  };
-  const savedSettings = settingsStore.load(defaultSettings);
+  const savedSettings = settingsStore.load(DEFAULT_RENDERER_OPTIONS);
 
   // Category store
   const categoryStore = new CategoryStore();
@@ -194,8 +149,10 @@ async function main(): Promise<void> {
     renderer.render(treeToRender);
     const opts = renderer.getOptions();
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
-    chartStore.saveWorkingTree(fullTree, categoryStore.getAll(), store.mutationVersion, levelStore.toChartData()).catch(() => {
-      showToast(t('footer.save_failed'), 'error');
+    chartStore.saveWorkingTree(fullTree, categoryStore.getAll(), store.mutationVersion, levelStore.toChartData()).catch((err) => {
+      console.error('Failed to save working tree:', err);
+      const isQuota = err instanceof DOMException && (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED');
+      showToast(t(isQuota ? 'error.storage_save_failed' : 'footer.save_failed'), 'error');
     });
 
     focusMode?.showBanner(chartArea);
@@ -453,8 +410,12 @@ async function main(): Promise<void> {
         maxLength: 100,
       });
       if (name?.trim()) {
-        chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
-        announce(t('announce.chart_saved'));
+        try {
+          await chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
+          announce(t('announce.chart_saved'));
+        } catch {
+          showToast(t('error.version_save_failed'), 'error');
+        }
       }
     },
   });
