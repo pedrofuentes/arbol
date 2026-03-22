@@ -247,6 +247,97 @@ describe('LevelMappingPanel', () => {
     });
   });
 
+  describe('inline editing', () => {
+    it('clicking IC title replaces span with input', () => {
+      levelStore.addMapping('L20', 'Principal Engineer');
+      createPanel();
+      const icTitle = container.querySelector('[data-testid="ic-title"]') as HTMLElement;
+      icTitle.click();
+      const input = container.querySelector('[data-testid="ic-title-input"]') as HTMLInputElement;
+      expect(input).toBeTruthy();
+      expect(input.value).toBe('Principal Engineer');
+    });
+
+    it('clicking manager title replaces span with input', () => {
+      levelStore.addMapping('L20', 'IC', 'Director');
+      createPanel();
+      const mgrTitle = container.querySelector('[data-testid="manager-title"]') as HTMLElement;
+      mgrTitle.click();
+      const input = container.querySelector('[data-testid="manager-title-input-edit"]') as HTMLInputElement;
+      expect(input).toBeTruthy();
+      expect(input.value).toBe('Director');
+    });
+
+    it('clicking fallback dash in manager title opens empty input', () => {
+      levelStore.addMapping('L20', 'IC');
+      createPanel();
+      const mgrTitle = container.querySelector('[data-testid="manager-title"]') as HTMLElement;
+      mgrTitle.click();
+      const input = container.querySelector('[data-testid="manager-title-input-edit"]') as HTMLInputElement;
+      expect(input).toBeTruthy();
+      expect(input.value).toBe('');
+    });
+
+    it('pressing Enter saves IC title edit', () => {
+      levelStore.addMapping('L20', 'Principal Engineer');
+      createPanel();
+      const icTitle = container.querySelector('[data-testid="ic-title"]') as HTMLElement;
+      icTitle.click();
+      const input = container.querySelector('[data-testid="ic-title-input"]') as HTMLInputElement;
+      input.value = 'Staff Engineer';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      expect(levelStore.getMapping('L20')!.displayTitle).toBe('Staff Engineer');
+      expect(rerenderCallback).toHaveBeenCalled();
+    });
+
+    it('pressing Enter saves manager title edit', () => {
+      levelStore.addMapping('L20', 'IC', 'Director');
+      createPanel();
+      const mgrTitle = container.querySelector('[data-testid="manager-title"]') as HTMLElement;
+      mgrTitle.click();
+      const input = container.querySelector('[data-testid="manager-title-input-edit"]') as HTMLInputElement;
+      input.value = 'VP';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      expect(levelStore.getMapping('L20')!.managerDisplayTitle).toBe('VP');
+    });
+
+    it('pressing Escape cancels edit and restores span', () => {
+      levelStore.addMapping('L20', 'Principal Engineer');
+      createPanel();
+      const icTitle = container.querySelector('[data-testid="ic-title"]') as HTMLElement;
+      icTitle.click();
+      const input = container.querySelector('[data-testid="ic-title-input"]') as HTMLInputElement;
+      input.value = 'CHANGED';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      expect(levelStore.getMapping('L20')!.displayTitle).toBe('Principal Engineer');
+      const span = container.querySelector('[data-testid="ic-title"]') as HTMLElement;
+      expect(span).toBeTruthy();
+      expect(span.textContent).toBe('Principal Engineer');
+    });
+
+    it('clearing manager title removes it', () => {
+      levelStore.addMapping('L20', 'IC', 'Director');
+      createPanel();
+      const mgrTitle = container.querySelector('[data-testid="manager-title"]') as HTMLElement;
+      mgrTitle.click();
+      const input = container.querySelector('[data-testid="manager-title-input-edit"]') as HTMLInputElement;
+      input.value = '';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      expect(levelStore.getMapping('L20')!.managerDisplayTitle).toBeUndefined();
+    });
+
+    it('does not save IC title if empty', () => {
+      levelStore.addMapping('L20', 'Principal Engineer');
+      createPanel();
+      const icTitle = container.querySelector('[data-testid="ic-title"]') as HTMLElement;
+      icTitle.click();
+      const input = container.querySelector('[data-testid="ic-title-input"]') as HTMLInputElement;
+      input.value = '';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+      expect(levelStore.getMapping('L20')!.displayTitle).toBe('Principal Engineer');
+    });
+  });
+
   describe('destroy', () => {
     it('destroy cleans up', () => {
       const panel = createPanel();

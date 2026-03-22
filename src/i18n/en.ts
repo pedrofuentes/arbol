@@ -1288,6 +1288,7 @@ const en: Record<string, string> = {
   'settings.label.delete_mapping': 'Delete mapping',
   'settings.label.mapping_duplicate_error': 'A mapping for this level already exists.',
   'settings.label.manager_title_fallback': '—',
+  'settings.label.click_to_edit': 'Click to edit',
 
   'property_panel.pinned_title': 'Pinned — title will not change with level mapping',
   'property_panel.unpin_title': 'Unpin title to use level mapping',

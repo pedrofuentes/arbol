@@ -160,18 +160,35 @@ export class LevelMappingPanel {
       row.appendChild(arrow);
 
       const titleLabel = document.createElement('span');
-      titleLabel.style.cssText = 'flex:1;font-size:12px;color:var(--text-secondary);';
+      titleLabel.style.cssText = 'flex:1;font-size:12px;color:var(--text-secondary);cursor:pointer;';
       titleLabel.textContent = mapping.displayTitle;
       titleLabel.setAttribute('data-testid', 'ic-title');
+      titleLabel.title = t('settings.label.click_to_edit');
+      titleLabel.addEventListener('click', () => {
+        this.startInlineEdit(titleLabel, mapping.displayTitle, 'ic-title-input', (newValue) => {
+          if (!newValue.trim()) return false;
+          this.levelStore.updateMapping(mapping.rawLevel, newValue.trim());
+          this.rerenderCallback();
+          return true;
+        });
+      });
       row.appendChild(titleLabel);
 
       const mgrLabel = document.createElement('span');
-      mgrLabel.style.cssText = 'flex:1;font-size:12px;color:var(--text-secondary);font-style:italic;';
+      mgrLabel.style.cssText = 'flex:1;font-size:12px;color:var(--text-secondary);font-style:italic;cursor:pointer;';
       mgrLabel.textContent = mapping.managerDisplayTitle || t('settings.label.manager_title_fallback');
       mgrLabel.setAttribute('data-testid', 'manager-title');
+      mgrLabel.title = t('settings.label.click_to_edit');
       if (!mapping.managerDisplayTitle) {
         mgrLabel.style.color = 'var(--text-tertiary)';
       }
+      mgrLabel.addEventListener('click', () => {
+        this.startInlineEdit(mgrLabel, mapping.managerDisplayTitle ?? '', 'manager-title-input-edit', (newValue) => {
+          this.levelStore.updateMapping(mapping.rawLevel, mapping.displayTitle, newValue.trim() || '');
+          this.rerenderCallback();
+          return true;
+        });
+      });
       row.appendChild(mgrLabel);
 
       const deleteBtn = document.createElement('button');
@@ -332,6 +349,52 @@ export class LevelMappingPanel {
 
   private rebuild(): void {
     this.build();
+  }
+
+  private startInlineEdit(
+    span: HTMLElement,
+    currentValue: string,
+    testId: string,
+    onSave: (newValue: string) => boolean,
+  ): void {
+    const parent = span.parentElement;
+    if (!parent) return;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentValue;
+    input.setAttribute('data-testid', testId);
+    input.style.cssText =
+      'flex:1;padding:2px 6px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font-size:12px;font-family:var(--font-sans);min-width:0;';
+
+    const commit = () => {
+      if (onSave(input.value)) return;
+      revert();
+    };
+
+    const revert = () => {
+      parent.replaceChild(span, input);
+    };
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commit();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        revert();
+      }
+    });
+
+    input.addEventListener('blur', () => {
+      if (parent.contains(input)) {
+        commit();
+      }
+    });
+
+    parent.replaceChild(input, span);
+    input.focus();
+    input.select();
   }
 
   destroy(): void {
