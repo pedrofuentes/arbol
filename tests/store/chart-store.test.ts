@@ -180,6 +180,26 @@ describe('ChartStore', () => {
       await expect(store.createChart('Unique Name')).rejects.toThrow('already exists');
     });
 
+    it('createChart with categories copies them to the new chart', async () => {
+      const cats: ColorCategory[] = [{ id: 'c1', label: 'Eng', color: '#ff0000', nameColor: '#fff', titleColor: '#fff' }];
+      const chart = await store.createChart('With Cats', cats);
+      expect(chart.categories).toEqual(cats);
+    });
+
+    it('createChart with levelMappings copies them to the new chart', async () => {
+      const mappings: LevelMapping[] = [{ rawLevel: 'L5', displayTitle: 'Senior' }];
+      const chart = await store.createChart('With Levels', undefined, mappings, 'mapped');
+      expect(chart.levelMappings).toEqual(mappings);
+      expect(chart.levelDisplayMode).toBe('mapped');
+    });
+
+    it('createChart without optional params uses empty categories and no level data', async () => {
+      const chart = await store.createChart('Plain');
+      expect(chart.categories).toEqual([]);
+      expect(chart.levelMappings).toBeUndefined();
+      expect(chart.levelDisplayMode).toBeUndefined();
+    });
+
     it('createChartFromTree creates a chart with the provided tree', async () => {
       const tree = makeTree({ name: 'Custom Root', children: [{ id: 'c1', name: 'Child', title: 'VP' }] });
       const chart = await store.createChartFromTree('Tree Chart', tree);

@@ -103,7 +103,12 @@ export class ChartStore extends EventEmitter {
     return this.activeChartId;
   }
 
-  async createChart(name: string): Promise<ChartRecord> {
+  async createChart(
+    name: string,
+    categories?: ColorCategory[],
+    levelMappings?: LevelMapping[],
+    levelDisplayMode?: LevelDisplayMode,
+  ): Promise<ChartRecord> {
     const trimmed = name.trim();
     if (!trimmed) throw new Error('Chart name cannot be empty');
     if (await this.db.isChartNameTaken(trimmed)) {
@@ -117,8 +122,11 @@ export class ChartStore extends EventEmitter {
       createdAt: now,
       updatedAt: now,
       workingTree: { ...DEFAULT_ROOT },
-      categories: [],
+      categories: categories ?? [],
     };
+
+    if (levelMappings) chart.levelMappings = levelMappings;
+    if (levelDisplayMode) chart.levelDisplayMode = levelDisplayMode;
 
     await this.db.putChart(chart);
     this.activeChartId = chart.id;
