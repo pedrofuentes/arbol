@@ -21,6 +21,7 @@ import { showAddPopover, dismissAddPopover } from './ui/add-popover';
 import { showManagerPicker } from './ui/manager-picker';
 import { showConfirmDialog } from './ui/confirm-dialog';
 import { showToast } from './ui/toast';
+import { showLoading, hideLoading } from './ui/loading-overlay';
 import { showInputDialog } from './ui/input-dialog';
 import { showCategoryLegend, dismissCategoryLegend } from './ui/category-legend';
 import { ChartDB } from './store/chart-db';
@@ -553,23 +554,28 @@ async function main(): Promise<void> {
   };
 
   const handleChartSwitched = (chart: ChartRecord) => {
-    focusMode.clear();
-    dismissVersionViewer();
-    clearMultiSelection();
-    store.replaceTree(chart.workingTree);
-    if (chart.categories.length > 0) {
-      categoryStore.replaceAll(chart.categories);
-    } else {
-      categoryStore.replaceAll([]);
+    showLoading(t('loading.switching_chart'));
+    try {
+      focusMode.clear();
+      dismissVersionViewer();
+      clearMultiSelection();
+      store.replaceTree(chart.workingTree);
+      if (chart.categories.length > 0) {
+        categoryStore.replaceAll(chart.categories);
+      } else {
+        categoryStore.replaceAll([]);
+      }
+      levelStore.loadFromChart(chart);
+      chartNameHeader.setName(chart.name);
+      chartNameHeader.setDirty(false);
+      rerender();
+      renderer.getZoomManager()?.fitToContent();
+      formEditor.refresh();
+      jsonEditor.refresh();
+      announce(t('announce.chart_switched', { name: chart.name }));
+    } finally {
+      hideLoading();
     }
-    levelStore.loadFromChart(chart);
-    chartNameHeader.setName(chart.name);
-    chartNameHeader.setDirty(false);
-    rerender();
-    renderer.getZoomManager()?.fitToContent();
-    formEditor.refresh();
-    jsonEditor.refresh();
-    announce(t('announce.chart_switched', { name: chart.name }));
   };
 
   const chartEditor = new ChartEditor({

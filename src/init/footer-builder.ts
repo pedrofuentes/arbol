@@ -5,6 +5,7 @@ import { timestampedFilename } from '../utils/filename';
 import { showConfirmDialog } from '../ui/confirm-dialog';
 import { showExportDialog } from '../ui/export-dialog';
 import { showToast } from '../ui/toast';
+import { showLoading, hideLoading } from '../ui/loading-overlay';
 import { APP_VERSION } from '../version';
 import type { ExportFormat } from '../ui/export-dialog';
 import type { OrgStore } from '../store/org-store';
@@ -194,6 +195,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
       chartName,
       versions,
       onExport: async (format: ExportFormat, selectedVersionIds: string[], pngScale?: number) => {
+        showLoading(t('footer.exporting_label'));
         try {
           if (format === 'pptx') {
             const layout = renderer.getLastLayout();
@@ -276,6 +278,8 @@ export function buildFooter(deps: FooterDeps): FooterElements {
           }
         } catch (e) {
           showToast(t('footer.export_failed', { error: e instanceof Error ? e.message : String(e) }), 'error');
+        } finally {
+          hideLoading();
         }
       },
       onCancel: () => {},
