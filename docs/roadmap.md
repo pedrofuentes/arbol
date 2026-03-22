@@ -8,6 +8,36 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ---
 
+## 🚀 v3.12.1 — Code Review Fixes
+
+### Data Integrity
+- [x] Validate-before-snapshot in OrgStore mutations — 4 methods fixed
+- [x] Error handling for `saveVersion()` and `saveWorkingTree()` — no more fire-and-forget
+- [x] `validateTree()` on backup restore and legacy migration paths
+- [x] Forward-compatible `parseImport()` — merges with defaults
+
+### Performance
+- [x] Debounce IndexedDB saves (500ms + beforeunload flush)
+- [x] Batch rerender with `requestAnimationFrame` — 5-6× fewer renders
+- [x] `nodeId→node` Map index in OrgStore — O(1) lookups
+
+### Accessibility & UX
+- [x] Focus traps in settings modal, import wizard, command palette (WCAG 2.1.1)
+- [x] Theme preset title colors fixed for WCAG AA contrast (7 presets)
+- [x] Keyboard select handlers wired — Enter/Space on SVG nodes
+- [x] LoadingOverlay wired to exports and chart switching
+
+### i18n & Architecture
+- [x] ~28 hardcoded strings wired to existing i18n keys
+- [x] `DEFAULT_RENDERER_OPTIONS` — single source of truth for defaults
+- [x] Shared test factories and DOM helpers
+
+### Testing
+- [x] **2,798 tests across 112 files** — all passing
+- [x] 135 new tests across 10 new test files
+
+---
+
 ## 🚀 v3.12.0 — Dual-Track Level Mappings & Presets
 
 ### Dual-Track Level Mappings
