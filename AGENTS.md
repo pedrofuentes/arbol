@@ -8,7 +8,7 @@ These rules are **absolute requirements**. Violating any one will break the proj
 
 1. **TDD is mandatory.** Write a failing test FIRST, then implement. Red → Green → Refactor. No exceptions.
 2. **Never commit to `main`.** All work happens on feature branches (`feat/`, `fix/`, `refactor/`, etc.).
-3. **All 2,507 tests must pass** (`npm run test`) before any commit.
+3. **All 2,663 tests must pass** (`npm run test`) before any commit.
 4. **Merge only with explicit user approval.** Never auto-merge, rebase, or push to `main` without the user saying yes.
 5. **No hardcoded values.** All spacing, sizing, color, and style values go through options/parameters — zero magic numbers.
 6. **No `innerHTML` with dynamic data.** Use `textContent`, `createElement`, `appendChild` only.
@@ -38,20 +38,20 @@ Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 
 
 ## Project Structure
 
-93 TypeScript source files in `src/`, organized by concern:
+98 TypeScript source files in `src/`, organized by concern:
 
 ```
 src/
 ├── analytics/       # D3 visualization charts: sunburst-chart, span-chart, treemap-chart
 ├── controllers/     # focus-mode, search-controller, selection-manager
-├── i18n/            # i18n system (t(), tp(), setLocale()) + en.ts (850+ translation keys)
+├── i18n/            # i18n system (t(), tp(), setLocale()) + en.ts (900+ translation keys)
 ├── editor/          # Sidebar tabs: chart-editor, form-editor, import-editor, json-editor, settings-editor, tab-switcher, utilities-editor
 ├── export/          # chart-exporter (orchestration), pptx-exporter (PowerPoint generation)
 ├── renderer/        # chart-renderer (D3 SVG), layout-engine, keyboard-nav, preview-renderer (vanilla DOM, no D3), side-by-side-renderer, zoom-manager
-├── store/           # org-store, chart-store, chart-db, category-store, settings-store, mapping-store, backup-manager, theme-manager, theme-presets
-├── ui/              # 28 components: context-menu, inline-editor, command-palette, property-panel, settings-modal, import-wizard, confirm-dialog, manager-picker, toast, loading-overlay, etc.
+├── store/           # org-store, chart-store, chart-db, category-store, category-preset-store, level-store, level-preset-store, settings-store, mapping-store, backup-manager, theme-manager, theme-presets
+├── ui/              # 32 components: context-menu, inline-editor, command-palette, property-panel, preset-toolbar, create-chart-dialog, settings-modal, import-wizard, confirm-dialog, manager-picker, toast, loading-overlay, etc.
 ├── utils/           # tree helpers (find/flatten/clone/isM1), csv-parser, contrast, shortcuts, event-emitter, filename, file-type, id, search, storage, text-normalize, tree-diff
-├── types.ts         # All interfaces: OrgNode, ColumnMapping, ColorCategory, ChartRecord, VersionRecord, DiffStatus
+├── types.ts         # All interfaces: OrgNode, ColumnMapping, ColorCategory, ChartRecord, VersionRecord, DiffStatus, CategoryPreset, LevelMappingPreset
 ├── main.ts          # App entry — wires stores, renderer, editors, menus, shortcuts
 ├── version.ts       # App version (injected from package.json at build time)
 └── style.css        # Global styles, CSS custom properties, dark/light themes
@@ -173,17 +173,29 @@ Charts are independent org trees stored in IndexedDB (`arbol-db`), each with the
 |--------|-----------|
 | `getMappings()` | `(): LevelMapping[]` |
 | `getMapping()` | `(rawLevel): LevelMapping \| undefined` |
-| `addMapping()` | `(rawLevel, displayTitle): void` |
-| `updateMapping()` | `(rawLevel, displayTitle): void` |
+| `addMapping()` | `(rawLevel, displayTitle, managerDisplayTitle?): void` |
+| `updateMapping()` | `(rawLevel, displayTitle, managerDisplayTitle?): void` |
 | `removeMapping()` | `(rawLevel): void` |
 | `replaceAll()` | `(mappings): void` |
 | `getDisplayMode()` | `(): LevelDisplayMode` |
 | `setDisplayMode()` | `(mode): void` |
-| `resolve()` | `(rawLevel): string` — resolves based on display mode |
-| `importFromCsv()` | `(csvText): number` — returns import count |
-| `exportToCsv()` | `(): string` |
+| `resolveTitle()` | `(rawLevel, isManager?): string \| undefined` — returns mapped title based on track |
+| `resolve()` | `(rawLevel): string` — deprecated, kept for backward compat |
+| `importFromCsv()` | `(csvText): number` — 3-column CSV (backward compat with 2-col) |
+| `exportToCsv()` | `(): string` — 3-column format |
 | `loadFromChart()` | `(chart): void` |
 | `toChartData()` | `(): { levelMappings, levelDisplayMode }` |
+
+### CategoryPresetStore / LevelPresetStore
+
+Preset stores for reusing categories and level mappings across charts. Both follow the `MappingStore` pattern with localStorage persistence.
+
+| Method | Signature |
+|--------|-----------|
+| `getPresets()` | `(): Preset[]` |
+| `getPreset()` | `(name): Preset \| undefined` |
+| `savePreset()` | `(preset): void` — upserts by name |
+| `deletePreset()` | `(name): void` |
 
 ### Interactions
 
@@ -330,7 +342,7 @@ The version in `package.json` is the single source of truth — injected into th
 ## Testing
 
 - **Framework:** Vitest with jsdom environment
-- **2,507 tests across 100 files** — all must pass before committing
+- **2,663 tests across 104 files** — all must pass before committing
 - **Run:** `npm run test` (one-shot) or `npm run test:watch` (watch mode)
 - **TDD is mandatory** — Red → Green → Refactor for every change
 - Tests live in `tests/` mirroring `src/` structure exactly (e.g., `src/store/org-store.ts` → `tests/store/org-store.test.ts`)

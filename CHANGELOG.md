@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.12.0] — 2026-03-22
+
+### Added
+- **Dual-track level mappings** — each level can now map to different titles for Managers vs Individual Contributors; auto-detected from tree structure (has children = manager)
+- **Pinned titles** — manually edited titles are auto-pinned and won't be overridden by level mapping; 📌 toggle in property panel to pin/unpin with undo support
+- **Inline editing of level mappings** — click any IC or Manager title cell in the mapping table to edit in-place (Enter saves, Escape cancels)
+- **Level mappings in chart bundles** — shared `.arbol.json` files now include level mappings and display mode so recipients see mapped titles; warning dialog before replacing existing mappings on import
+- **Category presets** — save, load, and delete reusable category configurations; copy categories from another chart
+- **Level mapping presets** — save, load, and delete reusable level mapping configurations; copy mappings from another chart
+- **Enhanced chart creation** — when creating a new chart, optionally pick categories and level mappings from a saved preset or an existing chart
+- 3-column CSV import/export for level mappings (`raw_level,display_title,manager_display_title`), backward compatible with 2-column format
+- `CategoryPresetStore` and `LevelPresetStore` — localStorage-backed preset stores following the existing `MappingStore` pattern
+- `PresetToolbar` reusable UI component with Save / Load / Copy-from-chart buttons
+- `CreateChartDialog` — dedicated dialog for chart creation with preset/chart source pickers
+- 30+ new i18n keys for preset and pin functionality
+- 97 new tests across 8 new test files
+
+### Changed
+- `LevelMapping` interface gains optional `managerDisplayTitle` field
+- `OrgNode` interface gains optional `pinnedTitle` boolean field
+- `ChartBundle.chart` gains optional `levelMappings` and `levelDisplayMode` fields
+- `resolveTitle` signature extended to `(title, rawLevel?, isManager?, pinnedTitle?) => string` across renderer, PPTX exporter, property panel, and footer builder
+- `SettingsEditor` constructor extended with optional `categoryPresetStore`, `levelPresetStore`, and `chartStore` parameters
+- `ChartStore.createChart()` accepts optional `categories`, `levelMappings`, `levelDisplayMode` parameters
+- Level mapping panel now shows 3-column table with column headers (Level | IC Title | Manager Title)
+
 ## [3.11.4] — 2026-03-22
 
 ### Fixed
