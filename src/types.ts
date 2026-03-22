@@ -51,6 +51,24 @@ export interface MappingPreset {
   mapping: ColumnMapping;
 }
 
+/** Reusable category preset for applying to multiple charts. */
+export interface CategoryPreset {
+  /** User-assigned preset name. Must be unique. */
+  name: string;
+  /** Snapshot of ColorCategory array. */
+  categories: ColorCategory[];
+}
+
+/** Reusable level mapping preset for applying to multiple charts. */
+export interface LevelMappingPreset {
+  /** User-assigned preset name. Must be unique. */
+  name: string;
+  /** Snapshot of LevelMapping array. */
+  levelMappings: LevelMapping[];
+  /** Display mode at time of save. */
+  levelDisplayMode: LevelDisplayMode;
+}
+
 /** Persistent chart record stored in IndexedDB. */
 export interface ChartRecord {
   /** Unique identifier (UUID). */
