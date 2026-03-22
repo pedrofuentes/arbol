@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { trapFocus } from './dialog-utils';
 
 export interface CommandItem {
   id: string;
@@ -26,6 +27,7 @@ export class CommandPalette {
   private previousFocus: HTMLElement | null = null;
   private options: CommandPaletteOptions;
   private mounted = false;
+  private removeFocusTrap: (() => void) | null = null;
 
   constructor(options: CommandPaletteOptions) {
     this.options = options;
@@ -108,11 +110,14 @@ export class CommandPalette {
     this.activeIndex = 0;
     this.renderItems();
     this.overlay.classList.add('open');
+    this.removeFocusTrap = trapFocus(this.dialog);
     // Delay focus to after CSS transition starts
     requestAnimationFrame(() => this.input.focus());
   }
 
   close(): void {
+    this.removeFocusTrap?.();
+    this.removeFocusTrap = null;
     this.overlay.classList.remove('open');
     if (this.previousFocus && typeof this.previousFocus.focus === 'function') {
       this.previousFocus.focus();
@@ -126,6 +131,8 @@ export class CommandPalette {
   }
 
   destroy(): void {
+    this.removeFocusTrap?.();
+    this.removeFocusTrap = null;
     if (this.overlay.parentElement) {
       this.overlay.parentElement.removeChild(this.overlay);
     }

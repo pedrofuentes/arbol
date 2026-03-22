@@ -441,4 +441,47 @@ describe('SettingsModal', () => {
       modal.destroy();
     });
   });
+
+  describe('focus trapping', () => {
+    const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    it('traps Tab on last focusable element to first', () => {
+      const { modal } = createModal();
+      modal.open();
+      const dialog = document.querySelector('.settings-modal') as HTMLElement;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+      const last = focusable[focusable.length - 1];
+      last.focus();
+      const e = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      last.dispatchEvent(e);
+      expect(document.activeElement).toBe(focusable[0]);
+      modal.destroy();
+    });
+
+    it('traps Shift+Tab on first focusable element to last', () => {
+      const { modal } = createModal();
+      modal.open();
+      const dialog = document.querySelector('.settings-modal') as HTMLElement;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+      focusable[0].focus();
+      const e = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
+      focusable[0].dispatchEvent(e);
+      expect(document.activeElement).toBe(focusable[focusable.length - 1]);
+      modal.destroy();
+    });
+
+    it('releases focus trap on close', () => {
+      const { modal } = createModal();
+      modal.open();
+      const dialog = document.querySelector('.settings-modal') as HTMLElement;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+      modal.close();
+      const last = focusable[focusable.length - 1];
+      last.focus();
+      const e = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      last.dispatchEvent(e);
+      expect(document.activeElement).toBe(last);
+      modal.destroy();
+    });
+  });
 });

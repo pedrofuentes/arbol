@@ -243,4 +243,47 @@ describe('ImportWizard', () => {
     wizard.destroy();
     expect(document.querySelector('.import-wizard-overlay')).toBeNull();
   });
+
+  describe('focus trapping', () => {
+    const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    it('traps Tab on last focusable element to first', () => {
+      const { wizard } = createWizard();
+      wizard.open();
+      const dialog = document.querySelector('.import-wizard') as HTMLElement;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+      const last = focusable[focusable.length - 1];
+      last.focus();
+      const e = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      last.dispatchEvent(e);
+      expect(document.activeElement).toBe(focusable[0]);
+      wizard.destroy();
+    });
+
+    it('traps Shift+Tab on first focusable element to last', () => {
+      const { wizard } = createWizard();
+      wizard.open();
+      const dialog = document.querySelector('.import-wizard') as HTMLElement;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+      focusable[0].focus();
+      const e = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
+      focusable[0].dispatchEvent(e);
+      expect(document.activeElement).toBe(focusable[focusable.length - 1]);
+      wizard.destroy();
+    });
+
+    it('releases focus trap on close', () => {
+      const { wizard } = createWizard();
+      wizard.open();
+      const dialog = document.querySelector('.import-wizard') as HTMLElement;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
+      wizard.close();
+      const last = focusable[focusable.length - 1];
+      last.focus();
+      const e = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      last.dispatchEvent(e);
+      expect(document.activeElement).toBe(last);
+      wizard.destroy();
+    });
+  });
 });
