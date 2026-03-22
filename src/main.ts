@@ -14,6 +14,7 @@ import { CategoryPresetStore } from './store/category-preset-store';
 import { LevelStore } from './store/level-store';
 import { LevelPresetStore } from './store/level-preset-store';
 import { flattenTree, findNodeById, findParent, isLeaf, avgSpanOfControl } from './utils/tree';
+import { debounce } from './utils/debounce';
 import { dismissContextMenu } from './ui/context-menu';
 import { dismissInlineEditor } from './ui/inline-editor';
 import { showAddPopover, dismissAddPopover } from './ui/add-popover';
@@ -136,9 +137,16 @@ async function main(): Promise<void> {
   // Analytics editor (initialized after drawer is created)
   let analyticsEditor: AnalyticsEditor | null = null;
 
-  const rerender = () => {
+  const debouncedSave = debounce(() => {
     const fullTree = store.getTree();
+    chartStore.saveWorkingTree(fullTree, categoryStore.getAll(), store.mutationVersion, levelStore.toChartData()).catch((err) => {
+      console.error('Failed to save working tree:', err);
+      const isQuota = err instanceof DOMException && (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED');
+      showToast(t(isQuota ? 'error.storage_save_failed' : 'footer.save_failed'), 'error');
+    });
+  }, 500);
 
+  const rerender = () => {
     // Validate focus target still exists
     focusMode?.validate();
 
@@ -149,11 +157,7 @@ async function main(): Promise<void> {
     renderer.render(treeToRender);
     const opts = renderer.getOptions();
     settingsStore.save(opts as unknown as Partial<PersistableSettings>);
-    chartStore.saveWorkingTree(fullTree, categoryStore.getAll(), store.mutationVersion, levelStore.toChartData()).catch((err) => {
-      console.error('Failed to save working tree:', err);
-      const isQuota = err instanceof DOMException && (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED');
-      showToast(t(isQuota ? 'error.storage_save_failed' : 'footer.save_failed'), 'error');
-    });
+    debouncedSave();
 
     focusMode?.showBanner(chartArea);
 
@@ -950,6 +954,7 @@ async function main(): Promise<void> {
   });
 
   window.addEventListener('beforeunload', (e) => {
+    debouncedSave.flush();
     if (chartStore.isDirty(store.getTree(), store.mutationVersion)) {
       e.preventDefault();
     }
