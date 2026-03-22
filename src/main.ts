@@ -181,6 +181,18 @@ async function main(): Promise<void> {
     }
   };
 
+  // Batched render: coalesces multiple onChange triggers into a single render frame
+  let renderScheduled = false;
+  const scheduleRender = () => {
+    if (!renderScheduled) {
+      renderScheduled = true;
+      requestAnimationFrame(() => {
+        renderScheduled = false;
+        rerender();
+      });
+    }
+  };
+
   // Initialize focus mode controller now that rerender is defined
   focusMode = new FocusModeController(store, renderer, rerender);
   focusMode.onExit(() => announce(t('focus.exited')));
@@ -829,7 +841,7 @@ async function main(): Promise<void> {
 
   store.onChange(() => {
     clearMultiSelection();
-    rerender();
+    scheduleRender();
     formEditor.refresh();
     jsonEditor.refresh();
     // Refresh property panel if visible
@@ -849,7 +861,7 @@ async function main(): Promise<void> {
   });
 
   categoryStore.onChange(() => {
-    rerender();
+    scheduleRender();
   });
 
   renderer.setNodeClickHandler((nodeId: string, event: MouseEvent) => {
