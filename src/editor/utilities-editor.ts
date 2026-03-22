@@ -3,12 +3,14 @@ import { normalizeTreeText } from '../utils/text-normalize';
 import type { TextNormalization } from '../types';
 import { t } from '../i18n';
 
-const NORM_OPTIONS: { value: TextNormalization; label: string }[] = [
-  { value: 'none', label: 'As is (no change)' },
-  { value: 'titleCase', label: 'Title Case' },
-  { value: 'uppercase', label: 'UPPERCASE' },
-  { value: 'lowercase', label: 'lowercase' },
-];
+function getNormOptions(): { value: TextNormalization; label: string }[] {
+  return [
+    { value: 'none', label: t('utilities.norm_as_is') },
+    { value: 'titleCase', label: t('utilities.norm_title_case') },
+    { value: 'uppercase', label: t('utilities.norm_uppercase') },
+    { value: 'lowercase', label: t('utilities.norm_lowercase') },
+  ];
+}
 
 export class UtilitiesEditor {
   private container: HTMLElement;
@@ -39,14 +41,13 @@ export class UtilitiesEditor {
     this.container.appendChild(heading);
 
     const desc = document.createElement('p');
-    desc.textContent =
-      'Normalize the text casing of all names and titles in the current org chart.';
+    desc.textContent = t('utilities.desc');
     desc.style.cssText =
       'margin:0 0 12px;font-size:var(--text-sm);color:var(--text-secondary);line-height:var(--leading-normal);';
     this.container.appendChild(desc);
 
-    this.nameNormSelect = this.createNormDropdown('Name Format');
-    this.titleNormSelect = this.createNormDropdown('Title Format');
+    this.nameNormSelect = this.createNormDropdown(t('utilities.name_format'));
+    this.titleNormSelect = this.createNormDropdown(t('utilities.title_format'));
 
     this.nameNormSelect.addEventListener('change', () => this.updateApplyState());
     this.titleNormSelect.addEventListener('change', () => this.updateApplyState());
@@ -81,7 +82,7 @@ export class UtilitiesEditor {
     const select = document.createElement('select');
     select.id = id;
     select.dataset.normField = labelText.toLowerCase().replace(/\s+/g, '-');
-    for (const opt of NORM_OPTIONS) {
+    for (const opt of getNormOptions()) {
       const option = document.createElement('option');
       option.value = opt.value;
       option.textContent = opt.label;

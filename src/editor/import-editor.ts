@@ -89,7 +89,7 @@ export class ImportEditor {
     presetRow.className = 'flex-row gap-2 mb-2';
 
     this.presetSelect = document.createElement('select');
-    this.presetSelect.setAttribute('aria-label', 'Mapping preset');
+    this.presetSelect.setAttribute('aria-label', t('import.preset_aria'));
     this.presetSelect.style.cssText =
       'flex:1;padding:4px 8px;font-size:11px;font-family:var(--font-sans);' +
       'background:var(--bg-base);border:1px solid var(--border-default);' +
@@ -168,17 +168,17 @@ export class ImportEditor {
 
     const createBtn = document.createElement('button');
     createBtn.className = 'btn btn-secondary';
-    createBtn.textContent = '+ New';
+    createBtn.textContent = t('import.new_preset');
     createBtn.style.cssText = actionBtnStyle;
 
     const importBtn = document.createElement('button');
     importBtn.className = 'btn btn-secondary';
-    importBtn.textContent = '📂 Import';
+    importBtn.textContent = t('import.import_presets');
     importBtn.style.cssText = actionBtnStyle;
 
     const exportAllBtn = document.createElement('button');
     exportAllBtn.className = 'btn btn-secondary';
-    exportAllBtn.textContent = '💾 Export All';
+    exportAllBtn.textContent = t('import.export_presets');
     exportAllBtn.style.cssText = actionBtnStyle;
 
     actionRow.append(createBtn, importBtn, exportAllBtn);
@@ -214,7 +214,7 @@ export class ImportEditor {
       this.manageSlot.style.display = 'block';
 
       const heading = document.createElement('h4');
-      heading.textContent = 'Import Presets';
+      heading.textContent = t('import.import_presets_heading');
       heading.style.cssText =
         'margin:0 0 4px;font-size:10px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:0.1em;font-weight:700;font-family:var(--font-sans);';
       this.manageSlot.appendChild(heading);
@@ -229,7 +229,7 @@ export class ImportEditor {
       this.manageSlot.appendChild(textarea);
 
       const loadFileLink = document.createElement('a');
-      loadFileLink.textContent = 'Or load file';
+      loadFileLink.textContent = t('import.or_load_file');
       loadFileLink.href = '#';
       loadFileLink.style.cssText =
         'font-size:10px;color:var(--accent);display:block;margin-bottom:8px;font-family:var(--font-sans);';
@@ -271,31 +271,31 @@ export class ImportEditor {
 
       const cancelImportBtn = document.createElement('button');
       cancelImportBtn.className = 'btn btn-secondary';
-      cancelImportBtn.textContent = 'Cancel';
+      cancelImportBtn.textContent = t('import.cancel');
       cancelImportBtn.style.cssText = actionBtnStyle;
       cancelImportBtn.addEventListener('click', () => this.clearManageSlot());
 
       const loadBtn = document.createElement('button');
       loadBtn.className = 'btn btn-primary';
-      loadBtn.textContent = 'Load';
+      loadBtn.textContent = t('import.load');
       loadBtn.style.cssText = actionBtnStyle;
       loadBtn.addEventListener('click', () => {
         importMsg.textContent = '';
         importMsg.style.color = '';
         const json = textarea.value.trim();
         if (!json) {
-          importMsg.textContent = 'Please paste JSON or load a file first.';
+          importMsg.textContent = t('import.paste_first');
           importMsg.style.color = 'var(--danger)';
           return;
         }
         try {
           const count = this.mappingStore.importPresets(json);
-          importMsg.textContent = `Imported ${count} preset${count === 1 ? '' : 's'} successfully.`;
+          importMsg.textContent = t('import.presets_imported', { count });
           importMsg.style.color = 'var(--success, #22c55e)';
           this.refreshPresetDropdown();
           rebuildManageList();
         } catch (e: unknown) {
-          importMsg.textContent = e instanceof Error ? e.message : 'Invalid JSON';
+          importMsg.textContent = e instanceof Error ? e.message : t('import.invalid_json');
           importMsg.style.color = 'var(--danger)';
         }
       });
@@ -311,7 +311,7 @@ export class ImportEditor {
         this.clearManageSlot();
         this.manageSlot.style.display = 'block';
         const msg = document.createElement('div');
-        msg.textContent = 'No presets to export';
+        msg.textContent = t('import.no_presets_export');
         msg.style.cssText =
           'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
         this.manageSlot.appendChild(msg);
@@ -337,7 +337,7 @@ export class ImportEditor {
     this.fileInput = document.createElement('input');
     this.fileInput.type = 'file';
     this.fileInput.accept = '.json,.csv,.xlsx,.xls';
-    this.fileInput.setAttribute('aria-label', 'Upload org chart file');
+    this.fileInput.setAttribute('aria-label', t('import.upload_aria'));
     this.fileInput.style.display = 'none';
     this.fileInput.addEventListener('change', () => {
       const file = this.fileInput.files?.[0];
@@ -365,20 +365,20 @@ export class ImportEditor {
     browseLabel.style.color = 'var(--accent)';
     browseLabel.style.cursor = 'pointer';
     browseLabel.textContent = t('import_editor.browse_label');
-    dropLabel.append(icon, '\u00A0\u00A0Drop file or ', browseLabel);
+    dropLabel.append(icon, '\u00A0\u00A0' + t('import.drop_or'), browseLabel);
     dropLabel.className = 'text-secondary text-sm';
     dropLabel.style.cssText = 'font-family:var(--font-sans);';
     dropZone.appendChild(dropLabel);
 
     const dropHint = document.createElement('div');
-    dropHint.textContent = 'Supports .json, .csv, .xlsx, and .arbol.json files';
+    dropHint.textContent = t('import.file_types');
     dropHint.className = 'text-tertiary text-xs mt-1';
     dropHint.style.cssText = 'font-family:var(--font-sans);';
     dropZone.appendChild(dropHint);
 
     dropZone.setAttribute('role', 'button');
     dropZone.setAttribute('tabindex', '0');
-    dropZone.setAttribute('aria-label', 'Upload org chart file');
+    dropZone.setAttribute('aria-label', t('import.upload_aria'));
     dropZone.addEventListener('click', () => this.fileInput.click());
     dropZone.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -418,7 +418,7 @@ export class ImportEditor {
 
     this.pasteArea = document.createElement('textarea');
     this.pasteArea.placeholder = t('import_editor.paste_placeholder');
-    this.pasteArea.setAttribute('aria-label', 'Paste JSON or CSV data');
+    this.pasteArea.setAttribute('aria-label', t('import.paste_aria'));
     this.pasteArea.style.cssText =
       'width:100%;min-height:120px;font-family:var(--font-mono);font-size:11px;' +
       'resize:vertical;padding:8px 10px;line-height:1.5;' +
@@ -768,8 +768,8 @@ export class ImportEditor {
       format: 'JSON',
       source,
       warning: versionCount > 0
-        ? `Chart bundle "${bundle.chart.name}" with ${versionCount} version${versionCount === 1 ? '' : 's'}`
-        : `Chart bundle "${bundle.chart.name}" with no versions`,
+        ? t('import.bundle_with_versions', { name: bundle.chart.name, count: versionCount })
+        : t('import.bundle_no_versions', { name: bundle.chart.name }),
     };
   }
 
@@ -793,12 +793,7 @@ export class ImportEditor {
     const info = document.createElement('div');
     info.style.cssText =
       'font-size:13px;color:var(--text-primary);margin-bottom:8px;font-family:var(--font-sans);';
-    info.textContent = '';
-    info.append('✓ Parsed ');
-    const strong = document.createElement('strong');
-    strong.textContent = String(result.nodeCount);
-    info.append(strong);
-    info.append(` people from ${result.format}`);
+    info.textContent = t('import.parsed_status', { count: String(result.nodeCount), format: result.format });
     this.statusArea.appendChild(info);
 
     if (result.warning) {
@@ -832,7 +827,7 @@ export class ImportEditor {
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-secondary';
     cancelBtn.dataset.action = 'cancel';
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = t('import.cancel');
     cancelBtn.addEventListener('click', () => this.clearStatus());
 
     btnGroup.append(applyBtn, cancelBtn);

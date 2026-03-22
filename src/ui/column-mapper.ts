@@ -279,7 +279,7 @@ export class ColumnMapper {
     const parentRef = this.parentRefSelect.value;
 
     if (!name || !title || !parentRef) {
-      this.errorArea.textContent = 'Please select a column for Name, Title, and Reports To.';
+      this.errorArea.textContent = t('column_mapper.error_required');
       const empty = [this.nameSelect, this.titleSelect, this.parentRefSelect].filter(s => !s.value);
       this.setAriaInvalid(...empty);
       return;

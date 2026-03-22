@@ -377,11 +377,9 @@ function buildClearDataButton(storage: IStorage): HTMLButtonElement {
   });
   clearBtn.addEventListener('click', async () => {
     const confirmed = await showConfirmDialog({
-      title: 'Clear All Data',
-      message:
-        'This will permanently delete all your org charts, versions, settings, themes, and preferences. ' +
-        'This cannot be undone.\n\nAre you sure?',
-      confirmLabel: 'Delete everything',
+      title: t('dialog.clear_data.title'),
+      message: t('dialog.clear_data.message'),
+      confirmLabel: t('dialog.clear_data.confirm'),
       danger: true,
     });
     if (confirmed) {
