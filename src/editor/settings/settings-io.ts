@@ -77,7 +77,11 @@ export class SettingsIOPanel {
               return;
             }
 
-            const settings = this.settingsStore!.importFromFile(reader.result as string);
+            const currentOpts = this.renderer.getOptions();
+            const settings = this.settingsStore!.importFromFile(
+              reader.result as string,
+              currentOpts as unknown as PersistableSettings,
+            );
             this.renderer.updateOptions(settings as unknown as Partial<RendererOptions>);
 
             const presetName = raw.name || file.name.replace(/\.json$/i, '');

@@ -211,54 +211,71 @@ describe('SettingsStore', () => {
     it('parses valid export JSON', () => {
       const exp = store.createExport(DEFAULTS, 'test');
       const json = JSON.stringify(exp);
-      const result = store.parseImport(json);
+      const result = store.parseImport(json, DEFAULTS);
       expect(result).toEqual(DEFAULTS);
     });
 
     it('throws on invalid JSON', () => {
-      expect(() => store.parseImport('not json')).toThrow('Invalid JSON');
+      expect(() => store.parseImport('not json', DEFAULTS)).toThrow('Invalid JSON');
     });
 
     it('throws on missing settings field', () => {
       const json = JSON.stringify({ version: 1 });
-      expect(() => store.parseImport(json)).toThrow('missing "settings"');
+      expect(() => store.parseImport(json, DEFAULTS)).toThrow('missing "settings"');
     });
 
     it('throws on missing version field', () => {
       const json = JSON.stringify({ settings: DEFAULTS });
-      expect(() => store.parseImport(json)).toThrow('missing "version"');
+      expect(() => store.parseImport(json, DEFAULTS)).toThrow('missing "version"');
     });
 
-    it('throws on missing individual setting', () => {
-      const partial = { ...DEFAULTS } as Record<string, unknown>;
-      delete partial.nodeWidth;
+    it('merges missing keys with defaults instead of rejecting', () => {
+      const partial = { nodeWidth: 200, nodeHeight: 40 };
       const json = JSON.stringify({ version: 1, settings: partial });
-      expect(() => store.parseImport(json)).toThrow('missing setting "nodeWidth"');
+      const result = store.parseImport(json, DEFAULTS);
+      expect(result.nodeWidth).toBe(200);
+      expect(result.nodeHeight).toBe(40);
+      expect(result.horizontalSpacing).toBe(DEFAULTS.horizontalSpacing);
+      expect(result.linkColor).toBe(DEFAULTS.linkColor);
+      expect(result.showHeadcount).toBe(DEFAULTS.showHeadcount);
+      expect(result.textAlign).toBe(DEFAULTS.textAlign);
+      expect(result.fontFamily).toBe(DEFAULTS.fontFamily);
     });
 
-    it('throws on invalid numeric value', () => {
+    it('throws when no valid settings keys are found', () => {
+      const json = JSON.stringify({ version: 1, settings: { unknownKey: 'value', anotherBad: 42 } });
+      expect(() => store.parseImport(json, DEFAULTS)).toThrow('no valid settings');
+    });
+
+    it('throws on invalid value types for present keys', () => {
+      const bad = { nodeWidth: 'not-a-number', linkColor: '#fff' };
+      const json = JSON.stringify({ version: 1, settings: bad });
+      expect(() => store.parseImport(json, DEFAULTS)).toThrow('expected a finite number');
+    });
+
+    it('validates present keys: invalid numeric value', () => {
       const bad = { ...DEFAULTS, nodeWidth: 'not-a-number' };
       const json = JSON.stringify({ version: 1, settings: bad });
-      expect(() => store.parseImport(json)).toThrow('expected a finite number');
+      expect(() => store.parseImport(json, DEFAULTS)).toThrow('expected a finite number');
     });
 
-    it('throws on invalid string value', () => {
+    it('validates present keys: invalid string value', () => {
       const bad = { ...DEFAULTS, linkColor: 42 };
       const json = JSON.stringify({ version: 1, settings: bad });
-      expect(() => store.parseImport(json)).toThrow('expected a string');
+      expect(() => store.parseImport(json, DEFAULTS)).toThrow('expected a string');
     });
 
-    it('throws on invalid boolean value', () => {
+    it('validates present keys: invalid boolean value', () => {
       const bad = { ...DEFAULTS, showHeadcount: 'yes' };
       const json = JSON.stringify({ version: 1, settings: bad });
-      expect(() => store.parseImport(json)).toThrow('expected a boolean');
+      expect(() => store.parseImport(json, DEFAULTS)).toThrow('expected a boolean');
     });
 
     it('handles different version gracefully (still parses if structure valid)', () => {
       const exp = store.createExport(DEFAULTS, 'test');
       exp.version = 99;
       const json = JSON.stringify(exp);
-      const result = store.parseImport(json);
+      const result = store.parseImport(json, DEFAULTS);
       expect(result).toEqual(DEFAULTS);
     });
   });
@@ -267,7 +284,7 @@ describe('SettingsStore', () => {
     it('parses JSON and saves to localStorage', () => {
       const exp = store.createExport(DEFAULTS, 'imported');
       const json = JSON.stringify(exp);
-      const result = store.importFromFile(json);
+      const result = store.importFromFile(json, DEFAULTS);
       expect(result).toEqual(DEFAULTS);
       expect(store.hasSaved()).toBe(true);
       expect(store.load(DEFAULTS)).toEqual(DEFAULTS);
@@ -309,13 +326,13 @@ describe('SettingsStore', () => {
     it('rejects invalid textAlign values', () => {
       const bad = { ...DEFAULTS, textAlign: 'justify' };
       const json = JSON.stringify({ version: 1, settings: bad });
-      expect(() => store.parseImport(json)).toThrow('expected one of');
+      expect(() => store.parseImport(json, DEFAULTS)).toThrow('expected one of');
     });
 
     it('rejects non-string textAlign', () => {
       const bad = { ...DEFAULTS, textAlign: 42 };
       const json = JSON.stringify({ version: 1, settings: bad });
-      expect(() => store.parseImport(json)).toThrow('expected one of');
+      expect(() => store.parseImport(json, DEFAULTS)).toThrow('expected one of');
     });
 
     it('defaults textAlign to center when not in saved data', () => {
@@ -392,7 +409,7 @@ describe('SettingsStore', () => {
     it('importFromFile updates cache', () => {
       const exp = store.createExport(DEFAULTS, 'test');
       const json = JSON.stringify(exp);
-      store.importFromFile(json);
+      store.importFromFile(json, DEFAULTS);
 
       const spy = vi.spyOn(localStorage, 'getItem');
       spy.mockClear();
@@ -424,7 +441,7 @@ describe('SettingsStore', () => {
     it('rejects invalid fontFamily values', () => {
       const bad = { ...DEFAULTS, fontFamily: 'Comic Sans' };
       const json = JSON.stringify({ version: 1, settings: bad });
-      expect(() => store.parseImport(json)).toThrow('expected one of');
+      expect(() => store.parseImport(json, DEFAULTS)).toThrow('expected one of');
     });
 
     it('defaults to Calibri when not in saved data', () => {
