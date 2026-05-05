@@ -103,7 +103,7 @@ Sentinel is required for ALL changes — 1-line fix, docs-only, config, dep bump
 ## Branching & Worktrees — REQUIRED
 
 - **Never work on `main`**: `git fetch origin main && git worktree add .worktrees/name -b branch-name main && cd .worktrees/name`. Each task = its own worktree.
-- Branch naming: `feature/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`
+- Branch naming: `feat/`, `fix/`, `refactor/`, `docs/`, `test/`, `chore/`
 - **Cleanup after merge**: `git worktree remove .worktrees/name && git branch -D branch-name`
 
 ## Sub-Agents

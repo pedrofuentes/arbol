@@ -25,7 +25,7 @@ Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 
 
 ## Project Structure
 
-98 TypeScript source files in `src/`, organized by concern:
+100 TypeScript source files in `src/`, organized by concern:
 
 ```
 arbol/

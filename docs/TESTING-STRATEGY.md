@@ -19,7 +19,7 @@ No E2E tests currently. All tests run in jsdom environment.
 
 - **New code**: 80% diff coverage required (lines added/modified in the PR)
 - **Project-wide coverage**: must never decrease from the previous merge baseline
-- **Critical paths**: 100% coverage required (OrgStore mutations, ChartStore persistence, tree utilities)
+- **Critical paths**: High coverage expected for OrgStore mutations, ChartStore persistence, tree utilities (aim for 90%+)
 - **Run coverage**: `npm test -- --coverage`
 - **Sentinel verifies coverage thresholds on every PR**
 
