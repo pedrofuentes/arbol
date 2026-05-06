@@ -14,9 +14,11 @@ npm run test    # 2798 tests, all must pass
 
 ## Development Workflow
 
-1. **Create a branch** off `main`:
+1. **Create a worktree branch** off `main`:
    ```bash
-   git checkout -b feature/your-feature-name
+   git fetch origin main
+   git worktree add .worktrees/my-feature -b feat/my-feature main
+   cd .worktrees/my-feature
    ```
 
 2. **Write tests first** (TDD). Tests go in `tests/` mirroring the `src/` structure.
@@ -43,6 +45,13 @@ npm run test    # 2798 tests, all must pass
    ```
 
 7. **Open a PR** against `main`.
+
+8. **Clean up** after merge:
+   ```bash
+   cd ../..
+   git worktree remove .worktrees/my-feature
+   git branch -D feat/my-feature
+   ```
 
 ## Project Structure
 

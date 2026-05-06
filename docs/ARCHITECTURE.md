@@ -154,7 +154,7 @@ All mutating methods call `snapshot()` (saves undo state) then `emit()` (notifie
 | `init()` | `(): Promise<void>` — opens IndexedDB, migrates, loads last-used chart |
 | `getCharts()` | `(): ChartRecord[]` — sorted by updatedAt desc |
 | `getActiveChart()` | `(): ChartRecord \| null` |
-| `createChart()` | `(name, tree?, categories?): Promise<ChartRecord>` |
+| `createChart()` | `(name, categories?, levelMappings?, levelDisplayMode?): Promise<ChartRecord>` |
 | `switchChart()` | `(chartId): Promise<void>` — saves current, loads target |
 | `deleteChart()` | `(chartId): Promise<void>` — cascades to versions |
 | `renameChart()` | `(chartId, name): Promise<void>` |
