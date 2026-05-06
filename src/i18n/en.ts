@@ -88,7 +88,8 @@ const en: Record<string, string> = {
   'analytics.section.categories': 'Category Distribution',
   'analytics.uncategorized': 'Uncategorized',
   'analytics.no_categories': 'No categories in use',
-  'analytics.disclaimer': 'Metrics are computed from the current chart structure and are for reference only. Verify independently before making organizational decisions.',
+  'analytics.disclaimer':
+    'Metrics are computed from the current chart structure and are for reference only. Verify independently before making organizational decisions.',
 
   // ─── Analytics Tooltips ─────────────────────────────────────────────
   'analytics.tooltip.headcount': 'Total people, split by managers, ICs, and advisors',
@@ -260,9 +261,8 @@ const en: Record<string, string> = {
   'toolbar.import_aria': 'Import data',
   'toolbar.import_label': 'Import',
 
-
   // ─── Focus Mode ────────────────────────────────────────────────────
-  'focus.viewing': '🔎 Viewing {name}\'s org',
+  'focus.viewing': "🔎 Viewing {name}'s org",
   'focus.show_full': 'Show full org',
   'focus.entered': 'Focused on {name} org',
   'focus.exited': 'Showing full org',
@@ -291,7 +291,8 @@ const en: Record<string, string> = {
   'dialog.save_version.label': 'Version name',
   'dialog.save_version.placeholder': 'e.g. Q1 2024 Plan',
   'dialog.unsaved.title': 'Unsaved Changes',
-  'dialog.unsaved.message': 'You have unsaved changes. Would you like to save a version before switching?',
+  'dialog.unsaved.message':
+    'You have unsaved changes. Would you like to save a version before switching?',
   'dialog.unsaved.confirm': 'Switch without saving',
   'dialog.remove_person.title': 'Remove Person',
   'dialog.remove_person.message': 'Remove "{name}"? You can undo this with Ctrl+Z.',
@@ -304,37 +305,46 @@ const en: Record<string, string> = {
   'dialog.remove_manager.reassign': 'Reassign reports',
   'dialog.remove_manager.remove_all': 'Remove entire org ({count} people)',
   'dialog.remove_manager.remove_all_confirm_title': 'Remove Entire Org',
-  'dialog.remove_manager.remove_all_confirm_message': 'This will remove "{name}" and {count} people in their org. You can undo this with Ctrl+Z.',
+  'dialog.remove_manager.remove_all_confirm_message':
+    'This will remove "{name}" and {count} people in their org. You can undo this with Ctrl+Z.',
   'dialog.remove_manager.remove_all_confirm': 'Remove All',
   'dialog.large_export.title': 'Large Org Chart',
-  'dialog.large_export.message': 'This org chart is too large to fit at full size on a PowerPoint slide (max 56″). It will be scaled down and may be hard to read.\n\nTip: Right-click a manager and choose "Focus on sub-org" to export a smaller section instead.',
+  'dialog.large_export.message':
+    'This org chart is too large to fit at full size on a PowerPoint slide (max 56″). It will be scaled down and may be hard to read.\n\nTip: Right-click a manager and choose "Focus on sub-org" to export a smaller section instead.',
   'dialog.large_export.confirm': 'Export anyway',
   'dialog.delete_chart.title': 'Delete Chart',
   'dialog.delete_chart.message': 'Are you sure you want to delete "{name}"? This cannot be undone.',
   'dialog.delete_chart.confirm': 'Delete',
   'dialog.delete_version.title': 'Delete Version',
-  'dialog.delete_version.message': 'Are you sure you want to delete version "{name}"? This cannot be undone.',
+  'dialog.delete_version.message':
+    'Are you sure you want to delete version "{name}"? This cannot be undone.',
   'dialog.delete_version.confirm': 'Delete',
   'dialog.clear_data.title': 'Clear All Data',
-  'dialog.clear_data.message': 'This will permanently delete all your org charts, versions, settings, themes, and preferences. This cannot be undone.\n\nAre you sure?',
+  'dialog.clear_data.message':
+    'This will permanently delete all your org charts, versions, settings, themes, and preferences. This cannot be undone.\n\nAre you sure?',
   'dialog.clear_data.confirm': 'Delete everything',
   'dialog.replace_data.title': 'Replace All Data',
-  'dialog.replace_data.message': 'This will permanently replace all existing charts, versions, and settings with the backup data. A backup of your current data has been downloaded.\n\nContinue?',
+  'dialog.replace_data.message':
+    'This will permanently replace all existing charts, versions, and settings with the backup data. A backup of your current data has been downloaded.\n\nContinue?',
   'dialog.replace_data.confirm': 'Replace everything',
   'dialog.merge_complete.title': 'Merge Complete',
-  'dialog.merge_complete.message': 'Added {chartsAdded} chart(s) and {versionsAdded} version(s). Skipped {chartsSkipped} chart(s) that already existed.\n\nThe page will reload to apply changes.',
+  'dialog.merge_complete.message':
+    'Added {chartsAdded} chart(s) and {versionsAdded} version(s). Skipped {chartsSkipped} chart(s) that already existed.\n\nThe page will reload to apply changes.',
   'dialog.import_destination.title': 'Import Destination',
-  'dialog.import_destination.message': 'Would you like to create a new chart from this import, or replace the current chart?',
+  'dialog.import_destination.message':
+    'Would you like to create a new chart from this import, or replace the current chart?',
   'dialog.import_destination.new_chart': 'New Chart',
   'dialog.import_destination.chart_name_label': 'Chart name',
   'dialog.import_destination.chart_name_placeholder': 'e.g. Engineering Org',
   'dialog.import_bundle.title': 'Import Chart Bundle',
-  'dialog.import_bundle.message': 'Import "{name}" with {count} version(s). Create a new chart or replace the current one?',
+  'dialog.import_bundle.message':
+    'Import "{name}" with {count} version(s). Create a new chart or replace the current one?',
   'dialog.import_bundle.new_chart': 'New chart',
   'dialog.import_bundle.replace': 'Replace current',
 
   'dialog.replace_mappings.title': 'Replace Level Mappings?',
-  'dialog.replace_mappings.message': 'This chart has existing level mappings that will be replaced by the imported bundle\'s mappings. Continue?',
+  'dialog.replace_mappings.message':
+    "This chart has existing level mappings that will be replaced by the imported bundle's mappings. Continue?",
   'dialog.replace_mappings.confirm': 'Replace mappings',
   'dialog.replace_mappings.cancel': 'Cancel',
 
@@ -400,7 +410,8 @@ const en: Record<string, string> = {
   'version_viewer.close': '✕ Close',
 
   // ─── Welcome Banner ────────────────────────────────────────────────
-  'welcome.message': 'Welcome to Arbol! This is a sample chart \u2014 tap, click, or right-click any card to edit, add, or move people. Click \u2753 for help.',
+  'welcome.message':
+    'Welcome to Arbol! This is a sample chart \u2014 tap, click, or right-click any card to edit, add, or move people. Click \u2753 for help.',
   'welcome.dismiss': 'Got it \u2014 click \u2753 anytime for help',
   'welcome.aria': 'Welcome guide',
   'welcome.dismiss_aria': 'Dismiss welcome message',
@@ -480,7 +491,8 @@ const en: Record<string, string> = {
   'import.nothing_to_parse': 'Nothing to parse — paste JSON or CSV data above.',
   'import.file_too_large': 'File too large ({size}MB). Maximum is 10MB.',
   'import.parsing_file': 'Parsing {name}…',
-  'import.encrypted_file': 'This file is encrypted or rights-protected. Open it in Excel, save as a new unprotected .xlsx or .csv, then import that file.',
+  'import.encrypted_file':
+    'This file is encrypted or rights-protected. Open it in Excel, save as a new unprotected .xlsx or .csv, then import that file.',
   'import.parse_failed': 'Could not parse as JSON or CSV. Check your data format.',
   'import.auto_detect_failed': 'Auto-detection failed. Please map columns below.',
   'import.invalid_tree': 'Invalid org tree: root must have id, name, and title',
@@ -492,7 +504,8 @@ const en: Record<string, string> = {
   'import.csv_example_name': 'name,title,manager_name\nJane Doe,CEO,\nJohn Smith,VP Eng,Jane Doe',
   'import.json_format': 'JSON Format',
   'import.json_nested': 'Nested tree',
-  'import.json_example': '{\n  "id": "ceo",\n  "name": "Jane Doe",\n  "title": "CEO",\n  "children": [\n    { "id": "vp", "name": "John", "title": "VP" }\n  ]\n}',
+  'import.json_example':
+    '{\n  "id": "ceo",\n  "name": "Jane Doe",\n  "title": "CEO",\n  "children": [\n    { "id": "vp", "name": "John", "title": "VP" }\n  ]\n}',
   'import.name_format': 'Name Format',
   'import.title_format': 'Title Format',
   'import.normalization_heading': 'Text Normalization',
@@ -504,9 +517,11 @@ const en: Record<string, string> = {
   'import.bundle_no_versions': 'Chart bundle "{name}" with no versions',
   'import.invalid_bundle_version': 'Unsupported chart bundle version: {version}',
   'import.invalid_bundle_missing': 'Invalid chart bundle: missing chart name or working tree',
-  'import.invalid_bundle_root': 'Invalid chart bundle: working tree root must have id, name, and title',
+  'import.invalid_bundle_root':
+    'Invalid chart bundle: working tree root must have id, name, and title',
   'import.invalid_bundle_versions': 'Invalid chart bundle: versions must be an array',
-  'import.invalid_bundle_version_entry': 'Invalid chart bundle: each version must have name and tree',
+  'import.invalid_bundle_version_entry':
+    'Invalid chart bundle: each version must have name and tree',
   'import.loading': 'Loading...',
   'import.drop_or': 'Drop file or ',
   'import.original_version_name': 'Original',
@@ -514,7 +529,8 @@ const en: Record<string, string> = {
 
   // ─── Column Mapper ─────────────────────────────────────────────────
   'column_mapper.heading': 'Map CSV Columns',
-  'column_mapper.description': 'We couldn\'t auto-detect your CSV format. Please map each column below.',
+  'column_mapper.description':
+    "We couldn't auto-detect your CSV format. Please map each column below.",
   'column_mapper.name_column': 'Person Name Column',
   'column_mapper.title_column': 'Job Title Column',
   'column_mapper.parent_column_name': 'Reports To (Name)',
@@ -540,8 +556,10 @@ const en: Record<string, string> = {
   'column_mapper.select_placeholder': '— Select —',
   'column_mapper.none_placeholder': '— None —',
   'column_mapper.error_required': 'Please select a column for Name, Title, and Reports To.',
-  'column_mapper.error_id_required': 'When using "By ID" parent references, the Person ID column must be mapped.',
-  'column_mapper.error_duplicates': 'Each column can only be mapped to one field. Please remove duplicates.',
+  'column_mapper.error_id_required':
+    'When using "By ID" parent references, the Person ID column must be mapped.',
+  'column_mapper.error_duplicates':
+    'Each column can only be mapped to one field. Please remove duplicates.',
 
   // ─── Preset Creator ────────────────────────────────────────────────
   'preset_creator.heading': 'Create Mapping Preset',
@@ -563,7 +581,8 @@ const en: Record<string, string> = {
   'preset_creator.save': 'Save',
   'preset_creator.error_name_required': 'Preset name is required.',
   'preset_creator.error_columns_required': 'Name, Title, and Reports To columns are required.',
-  'preset_creator.error_id_required': 'ID column is required when parent reference type is "By ID".',
+  'preset_creator.error_id_required':
+    'ID column is required when parent reference type is "By ID".',
 
   // ─── Import Editor ─────────────────────────────────────────────────
   'import_editor.preset_heading': 'Mapping Preset',
@@ -674,7 +693,8 @@ const en: Record<string, string> = {
   'settings.save_preset_button': 'Save',
   'settings.save_preset_skip': 'No',
   'settings.save_preset_prompt_title': 'Save as Preset?',
-  'settings.save_preset_prompt_label': 'Your settings have changed. Save them as a reusable preset?',
+  'settings.save_preset_prompt_label':
+    'Your settings have changed. Save them as a reusable preset?',
   'settings.layout_label': 'Layout',
 
   // ─── Setting Group Titles ──────────────────────────────────────────
@@ -749,7 +769,8 @@ const en: Record<string, string> = {
   'theme.emerald.name': 'Emerald',
   'theme.emerald.description': 'The default green-accented theme with clean white cards',
   'theme.corporate_blue.name': 'Corporate Blue',
-  'theme.corporate_blue.description': 'Professional blue-toned theme suited for business presentations',
+  'theme.corporate_blue.description':
+    'Professional blue-toned theme suited for business presentations',
   'theme.forest.name': 'Forest',
   'theme.forest.description': 'Deep forest greens evoking a natural, organic feel',
   'theme.sunset_warm.name': 'Sunset Warm',
@@ -761,7 +782,8 @@ const en: Record<string, string> = {
   'theme.pastel.name': 'Pastel',
   'theme.pastel.description': 'Soft pink and purple tones for a gentle, approachable look',
   'theme.high_contrast.name': 'High Contrast',
-  'theme.high_contrast.description': 'Maximum-accessibility theme with bold borders and stark contrasts',
+  'theme.high_contrast.description':
+    'Maximum-accessibility theme with bold borders and stark contrasts',
   'theme.ocean_teal.name': 'Ocean Teal',
   'theme.ocean_teal.description': 'Modern teal-accented theme with left-aligned text',
   'theme.stone.name': 'Stone',
@@ -793,7 +815,8 @@ const en: Record<string, string> = {
   'org_store.error_node_not_found': 'Node "{id}" not found',
   'org_store.error_parent_not_found': 'Parent node "{id}" not found',
   'org_store.error_reassign_self': 'Cannot reassign children to the node being removed',
-  'org_store.error_reassign_descendant': 'Cannot reassign children to a descendant of the node being removed',
+  'org_store.error_reassign_descendant':
+    'Cannot reassign children to a descendant of the node being removed',
   'org_store.error_dotted_root': 'Cannot set dotted line on root node',
   'org_store.error_dotted_ic': 'Cannot set dotted line on an IC (Individual Contributor) node',
   'org_store.error_move_root': 'Cannot move root node',
@@ -813,18 +836,27 @@ const en: Record<string, string> = {
   'org_store.error_invalid_children': 'Invalid children on node "{id}": expected an array',
 
   // ─── CSV Parser ────────────────────────────────────────────────────
-  'csv.error_no_name_title': 'Unrecognizable CSV format: could not find required "name" and "title" columns.',
-  'csv.error_no_parent': 'Unrecognizable CSV format: could not find parent reference column (parent_id, manager_name, or reports_to).',
+  'csv.error_no_name_title':
+    'Unrecognizable CSV format: could not find required "name" and "title" columns.',
+  'csv.error_no_parent':
+    'Unrecognizable CSV format: could not find parent reference column (parent_id, manager_name, or reports_to).',
   'csv.error_header_only': 'CSV must contain a header row and at least one data row.',
   'csv.error_min_rows_1': 'CSV must contain at least 1 data row (need at least a root node).',
   'csv.error_min_rows_2': 'CSV must contain at least 2 data rows.',
-  'csv.error_max_nodes': 'CSV contains {count} data rows, which exceeds the maximum of {max}. Please reduce the dataset.',
-  'csv.error_missing_columns': 'Column mapping error: the following columns were not found in the CSV headers: {missing}. Available headers: {available}',
-  'csv.error_duplicate_id': 'Duplicate ID "{id}": "{name1}" and "{name2}" share the same identifier.',
-  'csv.error_duplicate_name': 'Duplicate name "{name}": two people share the same name. Use ID-based import (with a unique alias column) to distinguish them.',
-  'csv.error_orphan_id': 'Orphan reference: node "{name}" references parent_id "{ref}" which does not exist.',
-  'csv.error_orphan_name': 'Orphan reference: node "{name}" references parent "{ref}" which does not exist.',
-  'csv.error_no_root': 'No root node found (every node has a parent reference — possible circular reference).',
+  'csv.error_max_nodes':
+    'CSV contains {count} data rows, which exceeds the maximum of {max}. Please reduce the dataset.',
+  'csv.error_missing_columns':
+    'Column mapping error: the following columns were not found in the CSV headers: {missing}. Available headers: {available}',
+  'csv.error_duplicate_id':
+    'Duplicate ID "{id}": "{name1}" and "{name2}" share the same identifier.',
+  'csv.error_duplicate_name':
+    'Duplicate name "{name}": two people share the same name. Use ID-based import (with a unique alias column) to distinguish them.',
+  'csv.error_orphan_id':
+    'Orphan reference: node "{name}" references parent_id "{ref}" which does not exist.',
+  'csv.error_orphan_name':
+    'Orphan reference: node "{name}" references parent "{ref}" which does not exist.',
+  'csv.error_no_root':
+    'No root node found (every node has a parent reference — possible circular reference).',
   'csv.error_multiple_roots': 'Multiple roots detected: {roots}. Only one root is allowed.',
   'csv.error_circular': 'Circular reference: {path}',
 
@@ -837,35 +869,46 @@ const en: Record<string, string> = {
   'help.sample_org_button': '🌳 Load Sample Org Chart',
   'help.sample_org_aria': 'Load a sample organization chart',
   'help.sample_org_confirm_title': 'Load Sample Org?',
-  'help.sample_org_confirm_message': 'This will replace the current chart with a sample organization. You can undo this action.',
+  'help.sample_org_confirm_message':
+    'This will replace the current chart with a sample organization. You can undo this action.',
   'help.section_toggle_aria': 'Toggle {section} section',
 
   // Help: Getting Started
   'help.getting_started.title': 'Getting Started',
-  'help.getting_started.pan_zoom': 'The chart displays your organization hierarchy. Pan by dragging the canvas, zoom with scroll wheel.',
-  'help.getting_started.right_click': 'Right-click any card for edit, add, move, or remove options.',
-  'help.getting_started.sidebar': 'The sidebar manages charts and versions. Use the toolbar buttons for Settings (⚙️), Import (📂), and Export (📤).',
+  'help.getting_started.pan_zoom':
+    'The chart displays your organization hierarchy. Pan by dragging the canvas, zoom with scroll wheel.',
+  'help.getting_started.right_click':
+    'Right-click any card for edit, add, move, or remove options.',
+  'help.getting_started.sidebar':
+    'The sidebar manages charts and versions. Use the toolbar buttons for Settings (⚙️), Import (📂), and Export (📤).',
 
   // Help: How the Chart Works
   'help.chart_works.title': 'How the Chart Works',
   'help.chart_works.managers_label': 'Managers',
   'help.chart_works.managers_desc': ' — People with direct reports. Connected by tree lines.',
   'help.chart_works.ics_label': 'ICs (Individual Contributors)',
-  'help.chart_works.ics_desc': ' — Employees without direct reports. Shown in compact vertical stacks under their manager.',
+  'help.chart_works.ics_desc':
+    ' — Employees without direct reports. Shown in compact vertical stacks under their manager.',
   'help.chart_works.advisors_label': 'Advisors',
-  'help.chart_works.advisors_desc': ' \u2014 Staff who report directly to a senior manager (one who manages other managers), such as a Chief of Staff or Executive Assistant. Shown in a special 2-column layout beside the manager\'s card.',
-  'help.chart_works.auto_detect': 'The chart automatically detects these roles based on the hierarchy — no manual configuration needed.',
+  'help.chart_works.advisors_desc':
+    " \u2014 Staff who report directly to a senior manager (one who manages other managers), such as a Chief of Staff or Executive Assistant. Shown in a special 2-column layout beside the manager's card.",
+  'help.chart_works.auto_detect':
+    'The chart automatically detects these roles based on the hierarchy — no manual configuration needed.',
 
   // Help: Toolbar & Sidebar
   'help.sidebar_tabs.title': 'Toolbar & Sidebar',
   'help.sidebar_tabs.sidebar_label': 'Sidebar',
-  'help.sidebar_tabs.sidebar_desc': ' — Browse, create, rename, and switch between org charts. Save, view, compare, and restore named version snapshots.',
+  'help.sidebar_tabs.sidebar_desc':
+    ' — Browse, create, rename, and switch between org charts. Save, view, compare, and restore named version snapshots.',
   'help.sidebar_tabs.settings_label': 'Settings (⚙️)',
-  'help.sidebar_tabs.settings_desc': ' — Opens a modal to adjust card sizes, spacing, colors, typography, and categories. Includes theme presets and a live preview.',
+  'help.sidebar_tabs.settings_desc':
+    ' — Opens a modal to adjust card sizes, spacing, colors, typography, and categories. Includes theme presets and a live preview.',
   'help.sidebar_tabs.import_label': 'Import (📂)',
-  'help.sidebar_tabs.import_desc': ' — Opens a step-by-step wizard to import org data from JSON or CSV files, with column mapping and text normalization.',
+  'help.sidebar_tabs.import_desc':
+    ' — Opens a step-by-step wizard to import org data from JSON or CSV files, with column mapping and text normalization.',
   'help.sidebar_tabs.export_label': 'Export (📤)',
-  'help.sidebar_tabs.export_desc': ' — Downloads the chart as an editable PowerPoint file. Choose which saved versions to include.',
+  'help.sidebar_tabs.export_desc':
+    ' — Downloads the chart as an editable PowerPoint file. Choose which saved versions to include.',
 
   // Help: Charts & Versions
   'help.charts_versions.title': 'Charts & Versions',
@@ -874,24 +917,31 @@ const en: Record<string, string> = {
   'help.charts_versions.multiple_2': '. Create, rename, and switch between charts in the ',
   'help.charts_versions.multiple_tab': 'sidebar',
   'help.charts_versions.multiple_3': '.',
-  'help.charts_versions.header': 'Hover over the active chart in the sidebar to access Rename, Duplicate, Export, and Delete actions.',
+  'help.charts_versions.header':
+    'Hover over the active chart in the sidebar to access Rename, Duplicate, Export, and Delete actions.',
   'help.charts_versions.save_label': 'Save a version',
-  'help.charts_versions.save_desc': ' — Take a named snapshot of the current chart using the Save button in the Versions section of the sidebar.',
+  'help.charts_versions.save_desc':
+    ' — Take a named snapshot of the current chart using the Save button in the Versions section of the sidebar.',
   'help.charts_versions.view_label': 'View a version',
-  'help.charts_versions.view_desc': ' — Opens a read-only preview. Click Restore to make it the working chart, or Close to return.',
-  'help.charts_versions.unsaved': 'If you have unsaved changes when switching charts or restoring a version, you\'ll be warned first.',
+  'help.charts_versions.view_desc':
+    ' — Opens a read-only preview. Click Restore to make it the working chart, or Close to return.',
+  'help.charts_versions.unsaved':
+    "If you have unsaved changes when switching charts or restoring a version, you'll be warned first.",
 
   // Help: Importing Data
   'help.importing.title': 'Importing Data',
   'help.importing.how_1': 'Click the ',
   'help.importing.how_strong': '📂 Import',
   'help.importing.how_2': ' button in the toolbar, or use the command palette (Ctrl+K).',
-  'help.importing.wizard': 'The import wizard guides you through four steps: choose a source, map columns (CSV only), preview the data, and select a destination.',
+  'help.importing.wizard':
+    'The import wizard guides you through four steps: choose a source, map columns (CSV only), preview the data, and select a destination.',
   'help.importing.json_label': 'JSON',
   'help.importing.json_desc': ' — Nested tree format. Recognized automatically.',
   'help.importing.csv_label': 'CSV',
-  'help.importing.csv_desc': ' — Flat table with columns for name, title, and parent. The column mapper lets you match your headers to the required fields and save presets.',
-  'help.importing.normalize': 'Text normalization (Title Case, UPPERCASE, lowercase) can be applied during the preview step.',
+  'help.importing.csv_desc':
+    ' — Flat table with columns for name, title, and parent. The column mapper lets you match your headers to the required fields and save presets.',
+  'help.importing.normalize':
+    'Text normalization (Title Case, UPPERCASE, lowercase) can be applied during the preview step.',
   'help.importing.limit': 'Maximum 10,000 people per import.',
 
   // Help: Chart Interactions
@@ -899,19 +949,25 @@ const en: Record<string, string> = {
   'help.interactions.click_label': 'Click',
   'help.interactions.click_desc': ' — Select and highlight a card.',
   'help.interactions.right_click_label': 'Right-click',
-  'help.interactions.right_click_desc': ' \u2014 Context menu with Edit, Add, Focus, Category, Dotted/Solid, Move, and Remove.',
+  'help.interactions.right_click_desc':
+    ' \u2014 Context menu with Edit, Add, Focus, Category, Dotted/Solid, Move, and Remove.',
   'help.interactions.shift_click_label': 'Shift+click',
-  'help.interactions.shift_click_desc': ' \u2014 Multi-select cards, then right-click for bulk Category, Move all, or Remove all.',
+  'help.interactions.shift_click_desc':
+    ' \u2014 Multi-select cards, then right-click for bulk Category, Move all, or Remove all.',
   'help.interactions.escape_label': 'Escape',
-  'help.interactions.escape_desc': ' — Dismiss version viewer, clear search, exit focus mode, clear multi-selection, or deselect (in that priority order).',
+  'help.interactions.escape_desc':
+    ' — Dismiss version viewer, clear search, exit focus mode, clear multi-selection, or deselect (in that priority order).',
   'help.interactions.inline_label': 'Inline editing',
-  'help.interactions.inline_desc': ' — Right-click a card and choose Edit to edit directly on the card.',
+  'help.interactions.inline_desc':
+    ' — Right-click a card and choose Edit to edit directly on the card.',
   'help.interactions.search_label': 'Search',
-  'help.interactions.search_desc': ' — Type in the search bar to highlight matching people. Non-matches are dimmed.',
+  'help.interactions.search_desc':
+    ' — Type in the search bar to highlight matching people. Non-matches are dimmed.',
 
   // Help: Color Categories
   'help.categories.title': 'Color Categories',
-  'help.categories.assign_1': 'Assign a color category to any person by right-clicking their card and choosing ',
+  'help.categories.assign_1':
+    'Assign a color category to any person by right-clicking their card and choosing ',
   'help.categories.assign_strong': 'Category',
   'help.categories.assign_2': '.',
   'help.categories.defaults_1': 'Each chart has its own set of categories. Default categories: ',
@@ -924,61 +980,77 @@ const en: Record<string, string> = {
   'help.categories.manage_1': 'Add, edit, or delete categories in the ',
   'help.categories.manage_strong': 'Settings',
   'help.categories.manage_2': ' modal under the Categories tab.',
-  'help.categories.legend': 'A color legend appears on the chart when categories are in use and is included in PowerPoint exports.',
+  'help.categories.legend':
+    'A color legend appears on the chart when categories are in use and is included in PowerPoint exports.',
 
   // Help: Focus Mode
   'help.focus_mode.title': 'Focus Mode',
   'help.focus_mode.enter_1': 'Right-click any manager and choose ',
   'help.focus_mode.enter_strong': 'Focus',
-  'help.focus_mode.enter_2': ' to view only that person\'s team as a standalone chart.',
+  'help.focus_mode.enter_2': " to view only that person's team as a standalone chart.",
   'help.focus_mode.exit_1': 'Press ',
   'help.focus_mode.exit_kbd': 'Escape',
   'help.focus_mode.exit_2': ' or click ',
   'help.focus_mode.exit_strong': 'Show full org',
   'help.focus_mode.exit_3': ' in the banner to return to the full chart.',
-  'help.focus_mode.export': 'PowerPoint export and status bar stats automatically reflect the focused sub-org.',
+  'help.focus_mode.export':
+    'PowerPoint export and status bar stats automatically reflect the focused sub-org.',
 
   // Help: Headcount Badges
   'help.headcount.title': 'Headcount Badges',
-  'help.headcount.enable_1': 'Managers can display a badge showing their total headcount (number of people in their org). Enable this in the ',
+  'help.headcount.enable_1':
+    'Managers can display a badge showing their total headcount (number of people in their org). Enable this in the ',
   'help.headcount.enable_settings': 'Settings',
   'help.headcount.enable_2': ' modal under the ',
   'help.headcount.enable_strong': 'Badges',
   'help.headcount.enable_3': ' tab.',
-  'help.headcount.customize': 'Badge appearance (color, size, radius) can be customized in the same Badges tab.',
+  'help.headcount.customize':
+    'Badge appearance (color, size, radius) can be customized in the same Badges tab.',
 
   // Help: Analytics
   'help.analytics.title': 'Analytics',
   'help.analytics.headcount_label': 'Headcount Overview — ',
-  'help.analytics.headcount_desc': 'Total number of people in the org, broken down by role type (Managers, ICs, Advisors). Useful for understanding composition at a glance.',
+  'help.analytics.headcount_desc':
+    'Total number of people in the org, broken down by role type (Managers, ICs, Advisors). Useful for understanding composition at a glance.',
   'help.analytics.depth_label': 'Org Depth — ',
-  'help.analytics.depth_desc': 'The maximum number of layers from root to the deepest leaf. Deeper orgs have more management layers; flatter orgs have fewer. Average leaf depth shows where most people sit.',
+  'help.analytics.depth_desc':
+    'The maximum number of layers from root to the deepest leaf. Deeper orgs have more management layers; flatter orgs have fewer. Average leaf depth shows where most people sit.',
   'help.analytics.ratio_label': 'Manager-to-IC Ratio — ',
-  'help.analytics.ratio_desc': 'The ratio of managers to individual contributors (non-managers). Shown as "1 : X" — higher X means leaner management overhead. Useful for benchmarking.',
+  'help.analytics.ratio_desc':
+    'The ratio of managers to individual contributors (non-managers). Shown as "1 : X" — higher X means leaner management overhead. Useful for benchmarking.',
   'help.analytics.span_label': 'Span of Control — ',
-  'help.analytics.span_desc': 'Average number of direct reports per manager, with min/max range. Wide spans (>10) may signal overload; narrow spans (<3) may signal unnecessary layers.',
+  'help.analytics.span_desc':
+    'Average number of direct reports per manager, with min/max range. Wide spans (>10) may signal overload; narrow spans (<3) may signal unnecessary layers.',
   'help.analytics.alerts_label': 'Alerts — ',
-  'help.analytics.alerts_desc': 'Flags structural anomalies: managers with too many reports (wide span), too few (narrow span), or exactly one (single-child, possibly redundant layer).',
+  'help.analytics.alerts_desc':
+    'Flags structural anomalies: managers with too many reports (wide span), too few (narrow span), or exactly one (single-child, possibly redundant layer).',
 
   // Help: Your Data
   'help.your_data.title': 'Your Data',
-  'help.your_data.privacy_1': 'Arbol runs entirely in your browser. Your org charts, versions, and preferences are stored in your browser\'s storage (IndexedDB and localStorage) and ',
+  'help.your_data.privacy_1':
+    "Arbol runs entirely in your browser. Your org charts, versions, and preferences are stored in your browser's storage (IndexedDB and localStorage) and ",
   'help.your_data.privacy_strong': 'never leave your device',
   'help.your_data.privacy_2': '.',
-  'help.your_data.no_server': 'There is no server, no database, no tracking, and no account required. Your data stays on your machine\u200b–\u200bnobody else can see it.',
+  'help.your_data.no_server':
+    'There is no server, no database, no tracking, and no account required. Your data stays on your machine\u200b–\u200bnobody else can see it.',
 
   // Help: Settings & Persistence
   'help.settings.title': 'Settings',
-  'help.settings.auto_save': 'All visual settings auto-save to your browser and restore on next visit.',
-  'help.settings.modal': 'Open Settings (⚙️ button or Ctrl+,) to access 10 tabs: Presets, Layout, Typography, Cards, Connectors, IC Options, Advisors, Badges, Categories, and Backup.',
-  'help.settings.presets': 'Theme presets apply a full set of colors and spacing in one click. You can also save your own custom presets.',
+  'help.settings.auto_save':
+    'All visual settings auto-save to your browser and restore on next visit.',
+  'help.settings.modal':
+    'Open Settings (⚙️ button or Ctrl+,) to access 10 tabs: Presets, Layout, Typography, Cards, Connectors, IC Options, Advisors, Badges, Categories, and Backup.',
+  'help.settings.presets':
+    'Theme presets apply a full set of colors and spacing in one click. You can also save your own custom presets.',
   'help.settings.preview': 'A live preview on the right shows changes as you adjust settings.',
   'help.settings.backup_1': 'Use ',
   'help.settings.backup_strong': 'Create Backup',
-  'help.settings.backup_2': ' in the Backup tab to save all your charts, versions, and settings as a single file.',
+  'help.settings.backup_2':
+    ' in the Backup tab to save all your charts, versions, and settings as a single file.',
   'help.settings.restore_1': 'Use ',
   'help.settings.restore_strong': 'Restore',
-  'help.settings.restore_2': ' to load a backup. You can choose to replace all data or merge with your existing charts.',
+  'help.settings.restore_2':
+    ' to load a backup. You can choose to replace all data or merge with your existing charts.',
 
   // Help: Keyboard Shortcuts
   'help.shortcuts.title': 'Keyboard Shortcuts',
@@ -999,14 +1071,17 @@ const en: Record<string, string> = {
   // Help: Exporting
   'help.exporting.title': 'Exporting',
   'help.exporting.pptx_label': 'Export PPTX',
-  'help.exporting.pptx_desc': ' — Downloads the chart as an editable PowerPoint file with native shapes and text.',
-  'help.exporting.versions': 'The export dialog lets you select which saved versions to include — each version becomes a separate slide.',
+  'help.exporting.pptx_desc':
+    ' — Downloads the chart as an editable PowerPoint file with native shapes and text.',
+  'help.exporting.versions':
+    'The export dialog lets you select which saved versions to include — each version becomes a separate slide.',
   'help.exporting.scale': 'The export auto-scales to fit a widescreen slide.',
 
   // Help: Links
   'help.links.title': 'Links',
   'help.links.built_with': '✦ Built with Arbol — https://github.com/pedrofuentes/arbol',
-  'help.links.report_bugs': 'Report bugs & request features — https://github.com/pedrofuentes/arbol/issues',
+  'help.links.report_bugs':
+    'Report bugs & request features — https://github.com/pedrofuentes/arbol/issues',
 
   // ─── Comparison Banner ─────────────────────────────────────────────
   'comparison.working_tree': 'Working tree',
@@ -1022,7 +1097,8 @@ const en: Record<string, string> = {
 
   // ─── Import Wizard Steps ──────────────────────────────────────────
   'import_wizard.source_title': 'Choose your data source',
-  'import_wizard.source_desc': 'Upload a file or paste data directly. We support CSV, JSON, and Excel formats.',
+  'import_wizard.source_desc':
+    'Upload a file or paste data directly. We support CSV, JSON, and Excel formats.',
   'import_wizard.drop_text': 'Drop a file here or click to browse',
   'import_wizard.drop_hint': 'CSV, JSON, or XLSX · Max 10,000 people',
   'import_wizard.file_aria': 'Choose file to import',
@@ -1061,8 +1137,8 @@ const en: Record<string, string> = {
   'toolbar.export_label': 'Export',
 
   // ─── Settings: Descriptions ─────────────────────────────────────────
-  'settings.desc.node_width': 'Width of each person\'s card in the chart',
-  'settings.desc.node_height': 'Height of each person\'s card',
+  'settings.desc.node_width': "Width of each person's card in the chart",
+  'settings.desc.node_height': "Height of each person's card",
   'settings.desc.horizontal_spacing': 'Minimum gap between cards at the same level',
   'settings.desc.branch_spacing': 'Gap between separate branches of the tree',
   'settings.desc.top_vertical_spacing': 'Space from a manager card to the connector line below',
@@ -1076,7 +1152,7 @@ const en: Record<string, string> = {
   'settings.desc.advisor_bottom_gap': 'Space below advisor cards',
   'settings.desc.advisor_row_gap': 'Vertical gap between advisor card rows',
   'settings.desc.advisor_center_gap': 'Horizontal gap between left and right advisor columns',
-  'settings.desc.name_font_size': 'Font size for the person\'s name on each card',
+  'settings.desc.name_font_size': "Font size for the person's name on each card",
   'settings.desc.title_font_size': 'Font size for the job title on each card',
   'settings.desc.text_padding_top': 'Space from the top of the card to the first line of text',
   'settings.desc.text_gap': 'Space between the name and title text lines',
@@ -1107,20 +1183,29 @@ const en: Record<string, string> = {
   'settings.desc.legend_rows': 'Number of rows for the category legend (0 = auto-fit)',
 
   // ─── Settings: Section Descriptions ─────────────────────────────────
-  'settings.section_desc.presets': 'Choose a visual theme or save your current settings as a custom preset.',
-  'settings.section_desc.categories': 'Define color categories to highlight special roles like open positions or pending offers.',
-  'settings.section_desc.card_dimensions': 'Control the size of each person\'s card in the org chart.',
+  'settings.section_desc.presets':
+    'Choose a visual theme or save your current settings as a custom preset.',
+  'settings.section_desc.categories':
+    'Define color categories to highlight special roles like open positions or pending offers.',
+  'settings.section_desc.card_dimensions':
+    "Control the size of each person's card in the org chart.",
   'settings.section_desc.tree_spacing': 'Adjust the gaps between cards and branches in the tree.',
-  'settings.section_desc.ic_options': 'Configure how individual contributors are displayed in stacked groups.',
-  'settings.section_desc.advisor_options': 'Control spacing for advisor nodes shown alongside managers.',
-  'settings.section_desc.typography': 'Customize fonts, sizes, colors, and text alignment for card text.',
+  'settings.section_desc.ic_options':
+    'Configure how individual contributors are displayed in stacked groups.',
+  'settings.section_desc.advisor_options':
+    'Control spacing for advisor nodes shown alongside managers.',
+  'settings.section_desc.typography':
+    'Customize fonts, sizes, colors, and text alignment for card text.',
   'settings.section_desc.link_style': 'Style the connector lines between cards in the org tree.',
-  'settings.section_desc.card_style': 'Customize card borders, background color, and corner rounding.',
+  'settings.section_desc.card_style':
+    'Customize card borders, background color, and corner rounding.',
   'settings.section_desc.headcount_badge': 'Show and style a headcount badge on manager cards.',
   'settings.section_desc.level_badge': 'Show and style a level indicator badge on all cards.',
-  'settings.section_desc.categories_legend': 'Configure how the category color legend appears on the chart.',
+  'settings.section_desc.categories_legend':
+    'Configure how the category color legend appears on the chart.',
   'settings.section_desc.settings_io': 'Export or import your settings configuration as a file.',
-  'settings.section_desc.backup_restore': 'Create full backups of all charts, versions, and settings.',
+  'settings.section_desc.backup_restore':
+    'Create full backups of all charts, versions, and settings.',
 
   // ─── Settings: Layout Preset Descriptions ───────────────────────────
   'settings.layout_compact_desc': 'Tight spacing for large orgs',
@@ -1143,7 +1228,8 @@ const en: Record<string, string> = {
   // ─── Settings: Category Enhancements ────────────────────────────────
   'settings.category_text_colors': 'Text colors:',
   'settings.category_confirm_delete': 'Delete "{label}"?',
-  'settings.category_confirm_delete_message': 'People using this category will revert to the default card color.',
+  'settings.category_confirm_delete_message':
+    'People using this category will revert to the default card color.',
   'settings.category_preview_name': 'Name',
   'settings.category_preview_title': 'Title',
 
@@ -1175,9 +1261,11 @@ const en: Record<string, string> = {
   'export_dialog.cancel': 'Cancel',
   'export_dialog.export': 'Export',
   'restore_dialog.title': 'Restore from Backup',
-  'restore_dialog.summary': '{chartCount} chart(s), {versionCount} version(s) \u00b7 Created {backupDate} \u00b7 v{appVersion}',
+  'restore_dialog.summary':
+    '{chartCount} chart(s), {versionCount} version(s) \u00b7 Created {backupDate} \u00b7 v{appVersion}',
   'restore_dialog.how': 'How would you like to restore?',
-  'restore_dialog.replace_all': '\ud83d\udd04 Replace All \u2014 wipe current data and restore from backup',
+  'restore_dialog.replace_all':
+    '\ud83d\udd04 Replace All \u2014 wipe current data and restore from backup',
   'restore_dialog.merge': '\u2795 Merge \u2014 add new charts, keep existing ones',
   'restore_dialog.cancel': 'Cancel',
   'comparison.dim_on': 'Dim: On',
@@ -1221,17 +1309,26 @@ const en: Record<string, string> = {
   'backup.backup_failed': 'Backup failed: {message}',
   'backup.restore_btn': '\ud83d\udcc2 Restore',
   'backup.replace_title': 'Replace All Data',
-  'backup.replace_message': 'This will permanently replace all existing charts, versions, and settings with the backup data. A backup of your current data has been downloaded.\n\nContinue?',
+  'backup.replace_message':
+    'This will permanently replace all existing charts, versions, and settings with the backup data. A backup of your current data has been downloaded.\n\nContinue?',
+  'backup.replace_message_no_backup':
+    'This will permanently replace all existing charts, versions, and settings with the backup data. No backup of your current data was created.\n\nContinue?',
   'backup.replace_confirm': 'Replace everything',
   'backup.merge_title': 'Merge Complete',
-  'backup.merge_message': 'Added {chartsAdded} chart(s) and {versionsAdded} version(s). Skipped {chartsSkipped} chart(s) that already existed.\n\nThe page will reload to apply changes.',
+  'backup.merge_message':
+    'Added {chartsAdded} chart(s) and {versionsAdded} version(s). Skipped {chartsSkipped} chart(s) that already existed.\n\nThe page will reload to apply changes.',
   'backup.merge_confirm': 'OK',
   'backup.restore_failed': 'Restore failed: {message}',
   'backup.clear_btn': '\ud83d\uddd1 Clear All Data',
   'backup.clear_aria': 'Clear all local data',
   'backup.clear_title': 'Clear All Data',
-  'backup.clear_message': 'This will permanently delete all your org charts, versions, settings, themes, and preferences. This cannot be undone.\n\nAre you sure?',
+  'backup.clear_message':
+    'This will permanently delete all your org charts, versions, settings, themes, and preferences. This cannot be undone.\n\nAre you sure?',
   'backup.clear_confirm': 'Delete everything',
+  'backup.clear_no_backup_title': 'Backup Failed',
+  'backup.clear_no_backup_message':
+    'An automatic backup could not be created. If you proceed, your data will be permanently deleted with no way to recover it.\n\nAre you sure you want to continue without a backup?',
+  'backup.clear_no_backup_confirm': 'Continue without backup',
   'settings_io.export_btn': '\ud83d\udcbe Export',
   'settings_io.import_btn': '\ud83d\udcc2 Import',
   'settings_io.file_too_large': 'Settings file too large (max 1MB).',
@@ -1250,15 +1347,19 @@ const en: Record<string, string> = {
   'export.default_filename': 'org-chart',
   'app.fatal_error': 'Failed to start Arbol',
   'app.unexpected_error': 'An unexpected error occurred',
-  'app.refresh_hint': 'Try refreshing the page. If the issue persists, clear your browser data for this site.',
+  'app.refresh_hint':
+    'Try refreshing the page. If the issue persists, clear your browser data for this site.',
 
   // ─── Help & Docs ──────────────────────────────────────────────────
-  'column_mapper.parent_ref_help': 'By Name matches the parent column to people\'s names. By ID matches a unique identifier.',
+  'column_mapper.parent_ref_help':
+    "By Name matches the parent column to people's names. By ID matches a unique identifier.",
   'footer.ics_tooltip': 'Individual Contributors \u2014 employees without direct reports',
   'help.comparison.title': 'Version Comparison',
-  'help.comparison.desc': 'Use the side-by-side comparison view to see what changed between two versions of your chart. Added, removed, and moved people are highlighted.',
+  'help.comparison.desc':
+    'Use the side-by-side comparison view to see what changed between two versions of your chart. Added, removed, and moved people are highlighted.',
   'help.interactions.dotted_label': 'Dotted lines',
-  'help.interactions.dotted_desc': ' \u2014 Toggle any link to a dotted line via right-click \u2192 Dotted/Solid. Useful for indicating temporary or informal reporting relationships.',
+  'help.interactions.dotted_desc':
+    ' \u2014 Toggle any link to a dotted line via right-click \u2192 Dotted/Solid. Useful for indicating temporary or informal reporting relationships.',
   'export_dialog.versions_hint': 'Select which saved versions to include as additional slides.',
   'export.format_label': 'Format',
   'export.format_pptx': 'PowerPoint (.pptx)',
@@ -1275,12 +1376,14 @@ const en: Record<string, string> = {
   'chart_export_dialog.versions_hint': 'Select which saved versions to include in the export.',
   // ─── Level Mapping ────────────────────────────────────────────────
   'settings.group.level_mapping': 'Level Mapping',
-  'settings.section_desc.level_mapping': 'Define how raw level values map to display titles on cards.',
+  'settings.section_desc.level_mapping':
+    'Define how raw level values map to display titles on cards.',
   'settings.level_mapping_section': 'Level Mapping',
   'settings.label.display_mode': 'Title Display',
   'settings.label.display_mode_original': 'Original Title',
   'settings.label.display_mode_mapped': 'Mapped Title',
-  'settings.desc.display_mode': 'When set to Mapped, the job title on cards is replaced with the mapped display title for that level.',
+  'settings.desc.display_mode':
+    'When set to Mapped, the job title on cards is replaced with the mapped display title for that level.',
   'settings.label.add_mapping': 'Add Mapping',
   'settings.label.raw_level': 'Raw Level',
   'settings.label.display_title': 'IC / Default Title',

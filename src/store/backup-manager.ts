@@ -70,7 +70,10 @@ function safeJsonParse(raw: string | null): unknown | null {
 
 // ── Public API ───────────────────────────────────────────────────────────────
 
-export async function createBackup(db: ChartDB, storage: IStorage = browserStorage): Promise<ArbolBackup> {
+export async function createBackup(
+  db: ChartDB,
+  storage: IStorage = browserStorage,
+): Promise<ArbolBackup> {
   const charts = await db.getAllCharts();
 
   const versions: VersionRecord[] = [];
@@ -160,36 +163,114 @@ export function getBackupSummary(backup: ArbolBackup): BackupSummary {
   };
 }
 
-export async function restoreFullReplace(db: ChartDB, backup: ArbolBackup, storage: IStorage = browserStorage): Promise<void> {
-  // Clear localStorage
-  for (const key of ALL_ARBOL_LS_KEYS) {
-    storage.removeItem(key);
-  }
-
-  // Delete all existing charts (this cascades to versions)
-  const existing = await db.getAllCharts();
-  for (const chart of existing) {
-    await db.deleteChart(chart.id);
-  }
-
-  // Write backup charts
+export async function restoreFullReplace(
+  db: ChartDB,
+  backup: ArbolBackup,
+  storage: IStorage = browserStorage,
+): Promise<void> {
+  // Stage 1: Validate all backup data before any destructive operations
+  const validChartIds = new Set<string>();
+  const validCharts: ChartRecord[] = [];
   for (const chart of backup.data.charts) {
     try {
       validateTree(chart.workingTree);
+      validCharts.push(chart);
+      validChartIds.add(chart.id);
     } catch {
       console.warn(`Backup restore: skipping chart "${chart.name}" (${chart.id}) — invalid tree`);
-      continue;
     }
-    await db.putChart(chart);
   }
 
-  // Write backup versions
+  // Filter versions to only those belonging to valid charts
+  const validVersions: VersionRecord[] = [];
   for (const version of backup.data.versions) {
-    await db.putVersion(version);
+    if (!validChartIds.has(version.chartId)) continue;
+    try {
+      validateTree(version.tree);
+      validVersions.push(version);
+    } catch {
+      console.warn(
+        `Backup restore: skipping version "${version.name}" (${version.id}) — invalid tree`,
+      );
+    }
   }
 
-  // Restore localStorage
-  restoreLocalStorage(backup, storage);
+  // Stage 2: Snapshot existing data for rollback
+  const existingCharts = await db.getAllCharts();
+  const existingVersions: VersionRecord[] = [];
+  for (const chart of existingCharts) {
+    const versions = await db.getVersionsByChart(chart.id);
+    existingVersions.push(...versions);
+  }
+  const existingLSValues: Record<string, string | null> = {};
+  for (const key of ALL_ARBOL_LS_KEYS) {
+    existingLSValues[key] = storage.getItem(key);
+  }
+
+  // Stage 3: Clear existing data, write backup, restore localStorage — all rollback-protected
+  const writtenChartIds: string[] = [];
+  const writtenVersionIds: string[] = [];
+  try {
+    for (const key of ALL_ARBOL_LS_KEYS) {
+      storage.removeItem(key);
+    }
+    for (const chart of existingCharts) {
+      await db.deleteChart(chart.id);
+    }
+
+    for (const chart of validCharts) {
+      await db.putChart(chart);
+      writtenChartIds.push(chart.id);
+    }
+    for (const version of validVersions) {
+      await db.putVersion(version);
+      writtenVersionIds.push(version.id);
+    }
+
+    restoreLocalStorage(backup, storage);
+  } catch (error) {
+    // Best-effort rollback: attempt all recovery steps, never abort mid-recovery
+    for (const id of writtenVersionIds) {
+      try {
+        await db.deleteVersion(id);
+      } catch {
+        /* best-effort */
+      }
+    }
+    for (const id of writtenChartIds) {
+      try {
+        await db.deleteChart(id);
+      } catch {
+        /* best-effort */
+      }
+    }
+    for (const chart of existingCharts) {
+      try {
+        await db.putChart(chart);
+      } catch {
+        /* best-effort */
+      }
+    }
+    for (const version of existingVersions) {
+      try {
+        await db.putVersion(version);
+      } catch {
+        /* best-effort */
+      }
+    }
+    for (const [key, value] of Object.entries(existingLSValues)) {
+      try {
+        if (value !== null) {
+          storage.setItem(key, value);
+        } else {
+          storage.removeItem(key);
+        }
+      } catch {
+        /* best-effort */
+      }
+    }
+    throw error;
+  }
 }
 
 export async function restoreMerge(db: ChartDB, backup: ArbolBackup): Promise<MergeResult> {
@@ -218,6 +299,14 @@ export async function restoreMerge(db: ChartDB, backup: ArbolBackup): Promise<Me
     // Restore versions for this newly-added chart
     const chartVersions = backup.data.versions.filter((v) => v.chartId === chart.id);
     for (const version of chartVersions) {
+      try {
+        validateTree(version.tree);
+      } catch {
+        console.warn(
+          `Backup merge: skipping version "${version.name}" (${version.id}) — invalid tree`,
+        );
+        continue;
+      }
       await db.putVersion(version);
       result.versionsAdded++;
     }

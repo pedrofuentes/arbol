@@ -363,6 +363,204 @@ describe('BackupManager', () => {
       expect(db.putChart).not.toHaveBeenCalled();
     });
 
+    it('skips versions with invalid tree during full replace', async () => {
+      const validVersion = makeVersion('v-good', 'c1');
+      const invalidVersion: VersionRecord = {
+        ...makeVersion('v-bad', 'c1'),
+        tree: { id: '', name: 'Bad', title: 'No ID' } as never,
+      };
+
+      const backup = makeValidBackup({
+        data: {
+          charts: [makeChart('c1', 'Chart')],
+          versions: [validVersion, invalidVersion],
+          settings: null,
+          theme: null,
+          csvMappings: null,
+          customPresets: null,
+          accordionState: null,
+        },
+      });
+
+      const db = createMockDB();
+      await restoreFullReplace(db, backup);
+
+      expect(db.putVersion).toHaveBeenCalledTimes(1);
+      expect(db.putVersion).toHaveBeenCalledWith(validVersion);
+    });
+
+    it('preserves existing data when backup write fails mid-restore', async () => {
+      const existing = [makeChart('e1', 'Existing')];
+      const existingVersions = [makeVersion('ve1', 'e1')];
+      const db = createMockDB(existing, existingVersions);
+      const storage = {
+        getItem: vi.fn((key: string) => (key === 'arbol-settings' ? '{"old":true}' : null)),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      };
+
+      // Make putChart throw to simulate a write failure
+      const putChartFn = db.putChart as ReturnType<typeof vi.fn>;
+      putChartFn.mockRejectedValueOnce(new Error('IndexedDB write failed'));
+
+      const backup = makeValidBackup();
+
+      await expect(restoreFullReplace(db, backup, storage)).rejects.toThrow();
+
+      // Existing chart should be preserved (rollback)
+      const charts = await db.getAllCharts();
+      expect(charts).toHaveLength(1);
+      expect(charts[0].id).toBe('e1');
+
+      // Existing versions should be preserved
+      const versions = await db.getVersionsByChart('e1');
+      expect(versions).toHaveLength(1);
+      expect(versions[0].id).toBe('ve1');
+
+      // localStorage should be restored
+      expect(storage.setItem).toHaveBeenCalledWith('arbol-settings', '{"old":true}');
+    });
+
+    it('cleans up partial writes when a later write fails mid-restore', async () => {
+      const existing = [makeChart('e1', 'Existing')];
+      const db = createMockDB(existing);
+      const storage = {
+        getItem: vi.fn(() => null),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      };
+
+      const chart1 = makeChart('b1', 'Backup1');
+      const chart2 = makeChart('b2', 'Backup2');
+      const backup = makeValidBackup({
+        data: {
+          charts: [chart1, chart2],
+          versions: [],
+          settings: null,
+          theme: null,
+          csvMappings: null,
+          customPresets: null,
+          accordionState: null,
+        },
+      });
+
+      // First putChart succeeds (writing chart1), second fails (writing chart2)
+      const putChartFn = db.putChart as ReturnType<typeof vi.fn>;
+      putChartFn
+        .mockResolvedValueOnce(undefined) // succeeds for chart1
+        .mockRejectedValueOnce(new Error('Write failed')); // fails for chart2
+
+      await expect(restoreFullReplace(db, backup, storage)).rejects.toThrow();
+
+      // Rollback should have restored original data — no mixed old+new state
+      const charts = await db.getAllCharts();
+      expect(charts).toHaveLength(1);
+      expect(charts[0].id).toBe('e1');
+    });
+
+    it('removes originally-absent localStorage keys during rollback', async () => {
+      const existing = [makeChart('e1', 'Existing')];
+      const db = createMockDB(existing);
+      const lsStore: Record<string, string> = { 'arbol-settings': '{"v":1}' };
+      const storage = {
+        getItem: vi.fn((key: string) => lsStore[key] ?? null),
+        setItem: vi.fn((key: string, val: string) => {
+          lsStore[key] = val;
+        }),
+        removeItem: vi.fn((key: string) => {
+          delete lsStore[key];
+        }),
+        clear: vi.fn(),
+      };
+
+      const backup = makeValidBackup({
+        data: {
+          charts: [makeChart('c1', 'Chart')],
+          versions: [],
+          settings: { newSettings: true },
+          theme: 'dark',
+          csvMappings: null,
+          customPresets: null,
+          accordionState: null,
+        },
+      });
+
+      // Make putChart fail to trigger rollback
+      const putChartFn = db.putChart as ReturnType<typeof vi.fn>;
+      putChartFn.mockRejectedValueOnce(new Error('fail'));
+
+      await expect(restoreFullReplace(db, backup, storage)).rejects.toThrow();
+
+      // arbol-settings was present → should be restored
+      expect(storage.setItem).toHaveBeenCalledWith('arbol-settings', '{"v":1}');
+      // arbol-theme was absent → should be explicitly removed (not left with backup value)
+      expect(storage.removeItem).toHaveBeenCalledWith('arbol-theme');
+    });
+
+    it('rollback continues past individual recovery failures', async () => {
+      const existing = [makeChart('e1', 'Existing'), makeChart('e2', 'Existing2')];
+      const existingVersions = [makeVersion('ve1', 'e1')];
+      const db = createMockDB(existing, existingVersions);
+      const storage = {
+        getItem: vi.fn(() => null),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      };
+
+      const backup = makeValidBackup();
+
+      // Make the initial putChart fail to trigger rollback
+      const putChartFn = db.putChart as ReturnType<typeof vi.fn>;
+      putChartFn
+        .mockRejectedValueOnce(new Error('write fail')) // triggers rollback
+        .mockRejectedValueOnce(new Error('rollback fail for e1')) // first rollback putChart fails
+        .mockResolvedValueOnce(undefined); // second rollback putChart succeeds
+
+      await expect(restoreFullReplace(db, backup, storage)).rejects.toThrow('write fail');
+
+      // Despite e1 rollback failing, e2 should still have been attempted
+      expect(putChartFn).toHaveBeenCalledTimes(3);
+    });
+
+    it('rolls back on version write failure', async () => {
+      const existing = [makeChart('e1', 'Existing')];
+      const db = createMockDB(existing);
+      const storage = {
+        getItem: vi.fn(() => null),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      };
+
+      const backup = makeValidBackup({
+        data: {
+          charts: [makeChart('c1', 'Chart')],
+          versions: [makeVersion('v1', 'c1'), makeVersion('v2', 'c1')],
+          settings: null,
+          theme: null,
+          csvMappings: null,
+          customPresets: null,
+          accordionState: null,
+        },
+      });
+
+      // putChart succeeds, first putVersion succeeds, second fails
+      const putVersionFn = db.putVersion as ReturnType<typeof vi.fn>;
+      putVersionFn
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error('version write failed'));
+
+      await expect(restoreFullReplace(db, backup, storage)).rejects.toThrow();
+
+      // Rollback should have restored original data
+      const charts = await db.getAllCharts();
+      expect(charts).toHaveLength(1);
+      expect(charts[0].id).toBe('e1');
+    });
+
     it('skips charts with name exceeding 500 chars', async () => {
       const longNameChart: ChartRecord = {
         ...makeChart('long', 'Long Name'),
@@ -476,16 +674,39 @@ describe('BackupManager', () => {
       expect(db.putVersion).toHaveBeenCalledWith(expect.objectContaining({ chartId: 'good' }));
     });
 
+    it('skips versions with invalid tree during merge', async () => {
+      const validVersion = makeVersion('v-good', 'c2');
+      const invalidVersion: VersionRecord = {
+        ...makeVersion('v-bad', 'c2'),
+        tree: { id: '', name: 'Bad', title: 'No ID' } as never,
+      };
+
+      const backup = makeValidBackup({
+        data: {
+          charts: [makeChart('c2', 'New Chart')],
+          versions: [validVersion, invalidVersion],
+          settings: null,
+          theme: null,
+          csvMappings: null,
+          customPresets: null,
+          accordionState: null,
+        },
+      });
+
+      const db = createMockDB();
+      const result = await restoreMerge(db, backup);
+
+      expect(db.putVersion).toHaveBeenCalledTimes(1);
+      expect(db.putVersion).toHaveBeenCalledWith(validVersion);
+      expect(result.versionsAdded).toBe(1);
+    });
+
     it('returns accurate MergeResult summary', async () => {
       const db = createMockDB([makeChart('c1', 'Existing')]);
 
       const backup = makeValidBackup({
         data: {
-          charts: [
-            makeChart('c1', 'Dup1'),
-            makeChart('c2', 'New1'),
-            makeChart('c3', 'New2'),
-          ],
+          charts: [makeChart('c1', 'Dup1'), makeChart('c2', 'New1'), makeChart('c3', 'New2')],
           versions: [
             makeVersion('v1', 'c1'),
             makeVersion('v2', 'c2'),
