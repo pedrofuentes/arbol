@@ -363,6 +363,51 @@ describe('BackupManager', () => {
       expect(db.putChart).not.toHaveBeenCalled();
     });
 
+    it('skips versions with invalid tree during full replace', async () => {
+      const validVersion = makeVersion('v-good', 'c1');
+      const invalidVersion: VersionRecord = {
+        ...makeVersion('v-bad', 'c1'),
+        tree: { id: '', name: 'Bad', title: 'No ID' } as never,
+      };
+
+      const backup = makeValidBackup({
+        data: {
+          charts: [makeChart('c1', 'Chart')],
+          versions: [validVersion, invalidVersion],
+          settings: null,
+          theme: null,
+          csvMappings: null,
+          customPresets: null,
+          accordionState: null,
+        },
+      });
+
+      const db = createMockDB();
+      await restoreFullReplace(db, backup);
+
+      expect(db.putVersion).toHaveBeenCalledTimes(1);
+      expect(db.putVersion).toHaveBeenCalledWith(validVersion);
+    });
+
+    it('preserves existing data when backup write fails mid-restore', async () => {
+      const existing = [makeChart('e1', 'Existing')];
+      const existingVersions = [makeVersion('ve1', 'e1')];
+      const db = createMockDB(existing, existingVersions);
+
+      // Make putChart throw to simulate a write failure
+      const putChartFn = db.putChart as ReturnType<typeof vi.fn>;
+      putChartFn.mockRejectedValueOnce(new Error('IndexedDB write failed'));
+
+      const backup = makeValidBackup();
+
+      await expect(restoreFullReplace(db, backup)).rejects.toThrow();
+
+      // Existing data should be preserved (rollback)
+      const charts = await db.getAllCharts();
+      expect(charts).toHaveLength(1);
+      expect(charts[0].id).toBe('e1');
+    });
+
     it('skips charts with name exceeding 500 chars', async () => {
       const longNameChart: ChartRecord = {
         ...makeChart('long', 'Long Name'),
@@ -474,6 +519,33 @@ describe('BackupManager', () => {
       // Versions for invalid chart should not be restored
       expect(db.putVersion).toHaveBeenCalledTimes(1);
       expect(db.putVersion).toHaveBeenCalledWith(expect.objectContaining({ chartId: 'good' }));
+    });
+
+    it('skips versions with invalid tree during merge', async () => {
+      const validVersion = makeVersion('v-good', 'c2');
+      const invalidVersion: VersionRecord = {
+        ...makeVersion('v-bad', 'c2'),
+        tree: { id: '', name: 'Bad', title: 'No ID' } as never,
+      };
+
+      const backup = makeValidBackup({
+        data: {
+          charts: [makeChart('c2', 'New Chart')],
+          versions: [validVersion, invalidVersion],
+          settings: null,
+          theme: null,
+          csvMappings: null,
+          customPresets: null,
+          accordionState: null,
+        },
+      });
+
+      const db = createMockDB();
+      const result = await restoreMerge(db, backup);
+
+      expect(db.putVersion).toHaveBeenCalledTimes(1);
+      expect(db.putVersion).toHaveBeenCalledWith(validVersion);
+      expect(result.versionsAdded).toBe(1);
     });
 
     it('returns accurate MergeResult summary', async () => {
