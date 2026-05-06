@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Backup restore with best-effort rollback** — `restoreFullReplace()` validates all data before deleting existing charts; if writing fails, original data is restored on a best-effort basis (#14)
 - **Clear-all blocks on backup failure** — destructive "Clear All Data" and "Replace" actions now show an explicit warning dialog when the auto-backup fails, requiring user acknowledgment before proceeding (#15)
 - **Version tree validation** — `restoreFullReplace()` and `restoreMerge()` now validate version trees before persisting; malformed versions are skipped with a warning (#16)
+- **Bundle import metadata validation** — `importChartAsNew()` and `importChartReplaceCurrent()` now validate categories, levelMappings, and levelDisplayMode; malformed categories are stripped, malformed levelMappings entries are sanitized (valid kept), and invalid levelDisplayMode values are rejected (#17)
 
 ## [3.12.1] — 2026-03-22
 

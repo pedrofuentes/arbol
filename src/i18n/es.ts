@@ -756,6 +756,8 @@ const es: Record<string, string> = {
   'chart_store.error_version_not_found': 'Versión no encontrada: {id}',
   'chart_store.error_import_invalid_tree':
     'El archivo importado contiene datos de árbol no válidos: {detail}',
+  'chart_store.error_import_invalid_metadata':
+    'El archivo importado contiene metadatos no válidos: {detail}',
 
   // ─── Org Store Validation ──────────────────────────────────────────
   'org_store.error_remove_root': 'No se puede eliminar el nodo raíz',
