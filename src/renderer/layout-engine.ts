@@ -110,32 +110,33 @@ export function computeLayout(root: OrgNode, opts: ResolvedOptions): LayoutResul
     return palTopGap + palRowGap + rows * nodeHeight + (rows - 1) * palRowGap + palBottomGap;
   };
 
-  // Shift a subtree vertically
-  const shiftSubtree = (node: HierarchyPointNode<OrgNode>, extraY: number): void => {
-    node.y += extraY;
-    for (const child of node.children ?? []) {
-      shiftSubtree(child, extraY);
+  // Apply vertical shifts for Advisor stacks, single-child, and multi-child nodes.
+  // Uses a single O(n) top-down pass with accumulated offsets instead of
+  // recursive shiftSubtree calls per node (which was O(n²) on deep/skewed trees).
+  const extraNonPalShift = bottomVerticalSpacing - topVerticalSpacing;
+
+  const applyShifts = (node: HierarchyPointNode<OrgNode>, accumulated: number): void => {
+    node.y += accumulated;
+
+    if (!node.children) return;
+
+    let childExtra = 0;
+    const palHeight = getPalStackHeight(node.data.id);
+    if (palHeight > 0) {
+      childExtra = palHeight;
+    } else if (node.children.length === 1) {
+      childExtra = -topVerticalSpacing;
+    } else if (extraNonPalShift > 0 && node.children.length > 1) {
+      childExtra = extraNonPalShift;
+    }
+
+    for (const child of node.children) {
+      applyShifts(child, accumulated + childExtra);
     }
   };
 
-  // Apply vertical shifts for Advisor stacks, single-child, and multi-child nodes
-  const extraNonPalShift = bottomVerticalSpacing - topVerticalSpacing;
-  for (const node of treeData.descendants()) {
-    const palHeight = getPalStackHeight(node.data.id);
-    if (palHeight > 0 && node.children) {
-      for (const child of node.children) {
-        shiftSubtree(child, palHeight);
-      }
-    } else if (node.children && node.children.length === 1) {
-      for (const child of node.children) {
-        shiftSubtree(child, -topVerticalSpacing);
-      }
-    } else if (extraNonPalShift > 0 && node.children && node.children.length > 1) {
-      for (const child of node.children) {
-        shiftSubtree(child, extraNonPalShift);
-      }
-    }
-  }
+  // Root has no parent shift
+  applyShifts(treeData, 0);
 
   // Enforce branchSpacing: ensure subtree bounding boxes don't overlap.
   // boundsCache is a local variable — recreated each computeLayout() call
