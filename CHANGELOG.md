@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Clear-all blocks on backup failure** — destructive "Clear All Data" and "Replace" actions now show an explicit warning dialog when the auto-backup fails, requiring user acknowledgment before proceeding (#15)
 - **Version tree validation** — `restoreFullReplace()` and `restoreMerge()` now validate version trees before persisting; malformed versions are skipped with a warning (#16)
 - **Bundle import metadata validation** — `importChartAsNew()` and `importChartReplaceCurrent()` now validate categories, levelMappings, and levelDisplayMode; malformed categories are stripped, malformed levelMappings entries are sanitized (valid kept), and invalid levelDisplayMode values are rejected (#17)
+- **Layout engine performance** — replaced O(n²) recursive `shiftSubtree` calls with single-pass O(n) offset accumulation for vertical spacing adjustments (#18)
 
 ## [3.12.1] — 2026-03-22
 
