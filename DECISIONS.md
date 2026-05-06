@@ -61,3 +61,11 @@
 **Decision**: Vanilla TypeScript for all non-SVG UI (sidebar, dialogs, menus). D3 owns the SVG exclusively.
 **Alternatives considered**: React with refs for D3 integration, Svelte.
 **Consequences**: No virtual DOM overhead. Full control over DOM manipulation. Requires manual DOM helpers for UI components (`createElement`, `appendChild`, `textContent`). Every UI component is a class or function that returns/manipulates DOM elements directly.
+
+### ADR-007: Atomic backup restore with rollback
+**Date**: 2026-05-05
+**Status**: Accepted
+**Context**: `restoreFullReplace()` deleted all existing charts before writing backup data. A failure mid-write left the app in an empty/partial state with no recovery path.
+**Decision**: Validate all backup data upfront, snapshot existing data, then delete+write. If writing fails, roll back by re-inserting the snapshot.
+**Alternatives considered**: (1) Two-phase IndexedDB transaction — not feasible with the current `ChartDB` abstraction. (2) Write-then-swap with temporary stores — adds complexity for marginal benefit.
+**Consequences**: Slightly higher memory usage during restore (holds both old and new data). Guarantees users never lose data due to a restore failure. Rollback is best-effort (if rollback itself fails, data may still be lost — but this is the same as the original situation and strictly better than guaranteed loss).

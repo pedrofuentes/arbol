@@ -88,7 +88,8 @@ const es: Record<string, string> = {
   'analytics.section.categories': 'Distribución por categoría',
   'analytics.uncategorized': 'Sin categoría',
   'analytics.no_categories': 'Sin categorías en uso',
-  'analytics.disclaimer': 'Las métricas se calculan a partir de la estructura actual del organigrama y son solo de referencia. Verifique de manera independiente antes de tomar decisiones organizacionales.',
+  'analytics.disclaimer':
+    'Las métricas se calculan a partir de la estructura actual del organigrama y son solo de referencia. Verifique de manera independiente antes de tomar decisiones organizacionales.',
 
   // ─── Context Menu ──────────────────────────────────────────────────
   'menu.edit': 'Editar',
@@ -206,9 +207,8 @@ const es: Record<string, string> = {
   'toolbar.import_aria': 'Importar datos',
   'toolbar.import_label': 'Importar',
 
-
   // ─── Focus Mode ────────────────────────────────────────────────────
-  'focus.viewing': '🔎 Viewing {name}\'s org',
+  'focus.viewing': "🔎 Viewing {name}'s org",
   'focus.show_full': 'Mostrar organigrama completo',
   'focus.entered': 'Enfocado en la organización de {name}',
   'focus.exited': 'Mostrando organigrama completo',
@@ -236,7 +236,8 @@ const es: Record<string, string> = {
   'dialog.save_version.label': 'Nombre de la versión',
   'dialog.save_version.placeholder': 'ej. Plan Q1 2024',
   'dialog.unsaved.title': 'Cambios sin guardar',
-  'dialog.unsaved.message': '¿Tiene cambios sin guardar. Desea guardar una versión antes de cambiar?',
+  'dialog.unsaved.message':
+    '¿Tiene cambios sin guardar. Desea guardar una versión antes de cambiar?',
   'dialog.unsaved.confirm': 'Cambiar sin guardar',
   'dialog.remove_person.title': 'Eliminar persona',
   'dialog.remove_person.message': '¿Eliminar "{name}"? Puede deshacer esto con Ctrl+Z.',
@@ -249,32 +250,41 @@ const es: Record<string, string> = {
   'dialog.remove_manager.reassign': 'Reasignar reportes',
   'dialog.remove_manager.remove_all': 'Eliminar organización completa ({count} personas)',
   'dialog.remove_manager.remove_all_confirm_title': 'Eliminar organización completa',
-  'dialog.remove_manager.remove_all_confirm_message': 'Esto eliminará a "{name}" y {count} personas de su organización. Puede deshacer esto con Ctrl+Z.',
+  'dialog.remove_manager.remove_all_confirm_message':
+    'Esto eliminará a "{name}" y {count} personas de su organización. Puede deshacer esto con Ctrl+Z.',
   'dialog.remove_manager.remove_all_confirm': 'Eliminar todos',
   'dialog.large_export.title': 'Organigrama grande',
-  'dialog.large_export.message': 'Este organigrama es demasiado grande para caber a tamaño completo en una diapositiva de PowerPoint (máx. 56″). Se reducirá de escala y podría ser difícil de leer.\n\nConsejo: Haga clic derecho en un gerente y elija "Enfocar" para exportar una sección más pequeña.',
+  'dialog.large_export.message':
+    'Este organigrama es demasiado grande para caber a tamaño completo en una diapositiva de PowerPoint (máx. 56″). Se reducirá de escala y podría ser difícil de leer.\n\nConsejo: Haga clic derecho en un gerente y elija "Enfocar" para exportar una sección más pequeña.',
   'dialog.large_export.confirm': 'Exportar de todos modos',
   'dialog.delete_chart.title': 'Eliminar organigrama',
-  'dialog.delete_chart.message': '¿Está seguro de que desea eliminar "{name}"? Esta acción no se puede deshacer.',
+  'dialog.delete_chart.message':
+    '¿Está seguro de que desea eliminar "{name}"? Esta acción no se puede deshacer.',
   'dialog.delete_chart.confirm': 'Eliminar',
   'dialog.delete_version.title': 'Eliminar versión',
-  'dialog.delete_version.message': '¿Está seguro de que desea eliminar la versión "{name}"? Esta acción no se puede deshacer.',
+  'dialog.delete_version.message':
+    '¿Está seguro de que desea eliminar la versión "{name}"? Esta acción no se puede deshacer.',
   'dialog.delete_version.confirm': 'Eliminar',
   'dialog.clear_data.title': 'Borrar todos los datos',
-  'dialog.clear_data.message': 'Esto eliminará permanentemente todos sus organigramas, versiones, configuración, temas y preferencias. Esta acción no se puede deshacer.\n\n¿Está seguro?',
+  'dialog.clear_data.message':
+    'Esto eliminará permanentemente todos sus organigramas, versiones, configuración, temas y preferencias. Esta acción no se puede deshacer.\n\n¿Está seguro?',
   'dialog.clear_data.confirm': 'Borrar todo',
   'dialog.replace_data.title': 'Reemplazar todos los datos',
-  'dialog.replace_data.message': 'Esto reemplazará permanentemente todos los organigramas, versiones y configuración existentes con los datos del respaldo. Se descargó un respaldo de sus datos actuales.\n\n¿Continuar?',
+  'dialog.replace_data.message':
+    'Esto reemplazará permanentemente todos los organigramas, versiones y configuración existentes con los datos del respaldo. Se descargó un respaldo de sus datos actuales.\n\n¿Continuar?',
   'dialog.replace_data.confirm': 'Reemplazar todo',
   'dialog.merge_complete.title': 'Combinación completa',
-  'dialog.merge_complete.message': 'Se agregaron {chartsAdded} organigrama(s) y {versionsAdded} versión(es). Se omitieron {chartsSkipped} organigrama(s) que ya existían.\n\nLa página se recargará para aplicar los cambios.',
+  'dialog.merge_complete.message':
+    'Se agregaron {chartsAdded} organigrama(s) y {versionsAdded} versión(es). Se omitieron {chartsSkipped} organigrama(s) que ya existían.\n\nLa página se recargará para aplicar los cambios.',
   'dialog.import_destination.title': 'Destino de importación',
-  'dialog.import_destination.message': '¿Desea crear un nuevo organigrama con esta importación o reemplazar el organigrama actual?',
+  'dialog.import_destination.message':
+    '¿Desea crear un nuevo organigrama con esta importación o reemplazar el organigrama actual?',
   'dialog.import_destination.new_chart': 'Nuevo organigrama',
   'dialog.import_destination.chart_name_label': 'Nombre del organigrama',
   'dialog.import_destination.chart_name_placeholder': 'ej. Org. de Ingeniería',
   'dialog.import_bundle.title': 'Importar paquete de organigrama',
-  'dialog.import_bundle.message': 'Importar "{name}" con {count} versión(es). ¿Crear un nuevo organigrama o reemplazar el actual?',
+  'dialog.import_bundle.message':
+    'Importar "{name}" con {count} versión(es). ¿Crear un nuevo organigrama o reemplazar el actual?',
   'dialog.import_bundle.new_chart': 'Nuevo organigrama',
   'dialog.import_bundle.replace': 'Reemplazar actual',
 
@@ -420,7 +430,8 @@ const es: Record<string, string> = {
   'import.nothing_to_parse': 'Nada que analizar — pegue datos JSON o CSV arriba.',
   'import.file_too_large': 'Archivo demasiado grande ({size}MB). El máximo es 10MB.',
   'import.parsing_file': 'Analizando {name}…',
-  'import.encrypted_file': 'Este archivo está cifrado o protegido. Ábralo en Excel, guárdelo como un nuevo archivo .xlsx o .csv sin protección e impórtelo.',
+  'import.encrypted_file':
+    'Este archivo está cifrado o protegido. Ábralo en Excel, guárdelo como un nuevo archivo .xlsx o .csv sin protección e impórtelo.',
   'import.parse_failed': 'No se pudo analizar como JSON o CSV. Verifique el formato de sus datos.',
   'import.auto_detect_failed': 'La detección automática falló. Mapee las columnas a continuación.',
   'import.invalid_tree': 'Árbol de organización no válido: la raíz debe tener id, nombre y cargo',
@@ -432,7 +443,8 @@ const es: Record<string, string> = {
   'import.csv_example_name': 'name,title,manager_name\nJane Doe,CEO,\nJohn Smith,VP Eng,Jane Doe',
   'import.json_format': 'Formato JSON',
   'import.json_nested': 'Árbol anidado',
-  'import.json_example': '{\n  "id": "ceo",\n  "name": "Jane Doe",\n  "title": "CEO",\n  "children": [\n    { "id": "vp", "name": "John", "title": "VP" }\n  ]\n}',
+  'import.json_example':
+    '{\n  "id": "ceo",\n  "name": "Jane Doe",\n  "title": "CEO",\n  "children": [\n    { "id": "vp", "name": "John", "title": "VP" }\n  ]\n}',
   'import.name_format': 'Formato de nombre',
   'import.title_format': 'Formato de cargo',
   'import.normalization_heading': 'Normalización de texto',
@@ -443,10 +455,13 @@ const es: Record<string, string> = {
   'import.bundle_with_versions': 'Paquete de organigrama "{name}" con {count} versión(es)',
   'import.bundle_no_versions': 'Paquete de organigrama "{name}" sin versiones',
   'import.invalid_bundle_version': 'Versión de paquete no soportada: {version}',
-  'import.invalid_bundle_missing': 'Paquete no válido: falta el nombre del organigrama o el árbol de trabajo',
-  'import.invalid_bundle_root': 'Paquete no válido: la raíz del árbol de trabajo debe tener id, nombre y cargo',
+  'import.invalid_bundle_missing':
+    'Paquete no válido: falta el nombre del organigrama o el árbol de trabajo',
+  'import.invalid_bundle_root':
+    'Paquete no válido: la raíz del árbol de trabajo debe tener id, nombre y cargo',
   'import.invalid_bundle_versions': 'Paquete no válido: las versiones deben ser un arreglo',
-  'import.invalid_bundle_version_entry': 'Paquete no válido: cada versión debe tener nombre y árbol',
+  'import.invalid_bundle_version_entry':
+    'Paquete no válido: cada versión debe tener nombre y árbol',
   'import.loading': 'Cargando…',
   'import.drop_or': 'Suelta un archivo o ',
   'import.original_version_name': 'Original',
@@ -454,7 +469,8 @@ const es: Record<string, string> = {
 
   // ─── Column Mapper ─────────────────────────────────────────────────
   'column_mapper.heading': 'Mapear columnas CSV',
-  'column_mapper.description': 'We couldn\'t auto-detect your CSV format. Please map each column below.',
+  'column_mapper.description':
+    "We couldn't auto-detect your CSV format. Please map each column below.",
   'column_mapper.name_column': 'Columna de nombre',
   'column_mapper.title_column': 'Columna de cargo',
   'column_mapper.parent_column_name': 'Reporta a (nombre)',
@@ -480,8 +496,10 @@ const es: Record<string, string> = {
   'column_mapper.select_placeholder': '— Seleccionar —',
   'column_mapper.none_placeholder': '— Ninguno —',
   'column_mapper.error_required': 'Seleccione una columna para Nombre, Cargo y Reporta a.',
-  'column_mapper.error_id_required': 'Al usar referencias "Por ID", la columna de ID debe estar mapeada.',
-  'column_mapper.error_duplicates': 'Cada columna solo puede mapearse a un campo. Elimine los duplicados.',
+  'column_mapper.error_id_required':
+    'Al usar referencias "Por ID", la columna de ID debe estar mapeada.',
+  'column_mapper.error_duplicates':
+    'Cada columna solo puede mapearse a un campo. Elimine los duplicados.',
 
   // ─── Preset Creator ────────────────────────────────────────────────
   'preset_creator.heading': 'Crear preajuste de mapeo',
@@ -502,8 +520,10 @@ const es: Record<string, string> = {
   'preset_creator.cancel': 'Cancelar',
   'preset_creator.save': 'Guardar',
   'preset_creator.error_name_required': 'El nombre del preajuste es obligatorio.',
-  'preset_creator.error_columns_required': 'Las columnas de Nombre, Cargo y Reporta a son obligatorias.',
-  'preset_creator.error_id_required': 'La columna de ID es obligatoria cuando el tipo de referencia es "Por ID".',
+  'preset_creator.error_columns_required':
+    'Las columnas de Nombre, Cargo y Reporta a son obligatorias.',
+  'preset_creator.error_id_required':
+    'La columna de ID es obligatoria cuando el tipo de referencia es "Por ID".',
 
   // ─── Import Editor ─────────────────────────────────────────────────
   'import_editor.preset_heading': 'Preajuste de mapeo',
@@ -614,7 +634,8 @@ const es: Record<string, string> = {
   'settings.save_preset_button': 'Guardar',
   'settings.save_preset_skip': 'No',
   'settings.save_preset_prompt_title': '¿Guardar como preajuste?',
-  'settings.save_preset_prompt_label': 'Su configuración ha cambiado. ¿Desea guardarla como un preajuste reutilizable?',
+  'settings.save_preset_prompt_label':
+    'Su configuración ha cambiado. ¿Desea guardarla como un preajuste reutilizable?',
   'settings.layout_label': 'Disposición',
 
   // ─── Setting Group Titles ──────────────────────────────────────────
@@ -689,23 +710,30 @@ const es: Record<string, string> = {
   'theme.emerald.name': 'Esmeralda',
   'theme.emerald.description': 'Tema verde predeterminado con tarjetas blancas limpias',
   'theme.corporate_blue.name': 'Azul corporativo',
-  'theme.corporate_blue.description': 'Tema profesional en tonos azules para presentaciones de negocios',
+  'theme.corporate_blue.description':
+    'Tema profesional en tonos azules para presentaciones de negocios',
   'theme.forest.name': 'Bosque',
   'theme.forest.description': 'Verdes profundos de bosque que evocan un estilo natural y orgánico',
   'theme.sunset_warm.name': 'Atardecer cálido',
-  'theme.sunset_warm.description': 'Tonos cálidos de ámbar y naranja inspirados en la luz del atardecer',
+  'theme.sunset_warm.description':
+    'Tonos cálidos de ámbar y naranja inspirados en la luz del atardecer',
   'theme.monochrome.name': 'Monocromático',
-  'theme.monochrome.description': 'Paleta limpia en escala de grises que mantiene el enfoque en la estructura',
+  'theme.monochrome.description':
+    'Paleta limpia en escala de grises que mantiene el enfoque en la estructura',
   'theme.midnight.name': 'Medianoche',
-  'theme.midnight.description': 'Colores de modo oscuro con acentos azul claro sobre tarjetas oscuras',
+  'theme.midnight.description':
+    'Colores de modo oscuro con acentos azul claro sobre tarjetas oscuras',
   'theme.pastel.name': 'Pastel',
   'theme.pastel.description': 'Tonos suaves de rosa y púrpura para un aspecto amigable y delicado',
   'theme.high_contrast.name': 'Alto contraste',
-  'theme.high_contrast.description': 'Tema de máxima accesibilidad con bordes gruesos y contrastes marcados',
+  'theme.high_contrast.description':
+    'Tema de máxima accesibilidad con bordes gruesos y contrastes marcados',
   'theme.ocean_teal.name': 'Océano verde azulado',
-  'theme.ocean_teal.description': 'Tema moderno con acentos verde azulado y texto alineado a la izquierda',
+  'theme.ocean_teal.description':
+    'Tema moderno con acentos verde azulado y texto alineado a la izquierda',
   'theme.stone.name': 'Piedra',
-  'theme.stone.description': 'Bordes verdes sobre blanco con contenedores CI grises y conectores azules',
+  'theme.stone.description':
+    'Bordes verdes sobre blanco con contenedores CI grises y conectores azules',
 
   // ─── Category Defaults ─────────────────────────────────────────────
   'category.open_position': 'Posición abierta',
@@ -726,16 +754,20 @@ const es: Record<string, string> = {
   'chart_store.error_no_active': 'No hay organigrama activo',
   'chart_store.error_version_name_empty': 'El nombre de la versión no puede estar vacío',
   'chart_store.error_version_not_found': 'Versión no encontrada: {id}',
-  'chart_store.error_import_invalid_tree': 'El archivo importado contiene datos de árbol no válidos: {detail}',
+  'chart_store.error_import_invalid_tree':
+    'El archivo importado contiene datos de árbol no válidos: {detail}',
 
   // ─── Org Store Validation ──────────────────────────────────────────
   'org_store.error_remove_root': 'No se puede eliminar el nodo raíz',
   'org_store.error_node_not_found': 'Nodo "{id}" no encontrado',
   'org_store.error_parent_not_found': 'Nodo superior "{id}" no encontrado',
-  'org_store.error_reassign_self': 'No se pueden reasignar los subordinados al nodo que se está eliminando',
-  'org_store.error_reassign_descendant': 'No se pueden reasignar los subordinados a un descendiente del nodo que se está eliminando',
+  'org_store.error_reassign_self':
+    'No se pueden reasignar los subordinados al nodo que se está eliminando',
+  'org_store.error_reassign_descendant':
+    'No se pueden reasignar los subordinados a un descendiente del nodo que se está eliminando',
   'org_store.error_dotted_root': 'No se puede establecer línea punteada en el nodo raíz',
-  'org_store.error_dotted_ic': 'No se puede establecer línea punteada en un nodo CI (Colaborador Individual)',
+  'org_store.error_dotted_ic':
+    'No se puede establecer línea punteada en un nodo CI (Colaborador Individual)',
   'org_store.error_move_root': 'No se puede mover el nodo raíz',
   'org_store.error_move_self': 'No se puede mover un nodo debajo de sí mismo',
   'org_store.error_move_descendant': 'No se puede mover un nodo debajo de su propio descendiente',
@@ -747,24 +779,39 @@ const es: Record<string, string> = {
   'org_store.error_title_required': 'Cada nodo debe tener un cargo de tipo cadena',
   'org_store.error_name_too_long': 'Nombre demasiado largo (máx. 500 caracteres) en el nodo "{id}"',
   'org_store.error_title_too_long': 'Cargo demasiado largo (máx. 500 caracteres) en el nodo "{id}"',
-  'org_store.error_invalid_category': 'categoryId no válido en el nodo "{id}": se esperaba una cadena',
-  'org_store.error_category_too_long': 'categoryId demasiado largo (máx. 100 caracteres) en el nodo "{id}"',
-  'org_store.error_invalid_dotted': 'dottedLine no válido en el nodo "{id}": se esperaba un booleano',
-  'org_store.error_invalid_children': 'children no válido en el nodo "{id}": se esperaba un arreglo',
+  'org_store.error_invalid_category':
+    'categoryId no válido en el nodo "{id}": se esperaba una cadena',
+  'org_store.error_category_too_long':
+    'categoryId demasiado largo (máx. 100 caracteres) en el nodo "{id}"',
+  'org_store.error_invalid_dotted':
+    'dottedLine no válido en el nodo "{id}": se esperaba un booleano',
+  'org_store.error_invalid_children':
+    'children no válido en el nodo "{id}": se esperaba un arreglo',
 
   // ─── CSV Parser ────────────────────────────────────────────────────
-  'csv.error_no_name_title': 'Formato CSV no reconocible: no se encontraron las columnas requeridas "name" y "title".',
-  'csv.error_no_parent': 'Formato CSV no reconocible: no se encontró la columna de referencia al superior (parent_id, manager_name o reports_to).',
-  'csv.error_header_only': 'El CSV debe contener una fila de encabezado y al menos una fila de datos.',
-  'csv.error_min_rows_1': 'El CSV debe contener al menos 1 fila de datos (se necesita al menos un nodo raíz).',
+  'csv.error_no_name_title':
+    'Formato CSV no reconocible: no se encontraron las columnas requeridas "name" y "title".',
+  'csv.error_no_parent':
+    'Formato CSV no reconocible: no se encontró la columna de referencia al superior (parent_id, manager_name o reports_to).',
+  'csv.error_header_only':
+    'El CSV debe contener una fila de encabezado y al menos una fila de datos.',
+  'csv.error_min_rows_1':
+    'El CSV debe contener al menos 1 fila de datos (se necesita al menos un nodo raíz).',
   'csv.error_min_rows_2': 'El CSV debe contener al menos 2 filas de datos.',
-  'csv.error_max_nodes': 'El CSV contiene {count} filas de datos, lo cual excede el máximo de {max}. Reduzca el conjunto de datos.',
-  'csv.error_missing_columns': 'Error de mapeo de columnas: las siguientes columnas no se encontraron en los encabezados del CSV: {missing}. Encabezados disponibles: {available}',
-  'csv.error_duplicate_id': 'ID duplicado "{id}": "{name1}" y "{name2}" comparten el mismo identificador.',
-  'csv.error_duplicate_name': 'Nombre duplicado "{name}": dos personas comparten el mismo nombre. Use importación por ID (con una columna de alias único) para distinguirlos.',
-  'csv.error_orphan_id': 'Referencia huérfana: el nodo "{name}" hace referencia al parent_id "{ref}" que no existe.',
-  'csv.error_orphan_name': 'Referencia huérfana: el nodo "{name}" hace referencia al superior "{ref}" que no existe.',
-  'csv.error_no_root': 'No se encontró nodo raíz (cada nodo tiene una referencia a un superior — posible referencia circular).',
+  'csv.error_max_nodes':
+    'El CSV contiene {count} filas de datos, lo cual excede el máximo de {max}. Reduzca el conjunto de datos.',
+  'csv.error_missing_columns':
+    'Error de mapeo de columnas: las siguientes columnas no se encontraron en los encabezados del CSV: {missing}. Encabezados disponibles: {available}',
+  'csv.error_duplicate_id':
+    'ID duplicado "{id}": "{name1}" y "{name2}" comparten el mismo identificador.',
+  'csv.error_duplicate_name':
+    'Nombre duplicado "{name}": dos personas comparten el mismo nombre. Use importación por ID (con una columna de alias único) para distinguirlos.',
+  'csv.error_orphan_id':
+    'Referencia huérfana: el nodo "{name}" hace referencia al parent_id "{ref}" que no existe.',
+  'csv.error_orphan_name':
+    'Referencia huérfana: el nodo "{name}" hace referencia al superior "{ref}" que no existe.',
+  'csv.error_no_root':
+    'No se encontró nodo raíz (cada nodo tiene una referencia a un superior — posible referencia circular).',
   'csv.error_multiple_roots': 'Se detectaron múltiples raíces: {roots}. Solo se permite una raíz.',
   'csv.error_circular': 'Referencia circular: {path}',
 
@@ -777,35 +824,47 @@ const es: Record<string, string> = {
   'help.sample_org_button': '🌳 Cargar organigrama de ejemplo',
   'help.sample_org_aria': 'Cargar un organigrama de ejemplo',
   'help.sample_org_confirm_title': '¿Cargar organigrama de ejemplo?',
-  'help.sample_org_confirm_message': 'Esto reemplazará el organigrama actual con una organización de ejemplo. Puede deshacer esta acción.',
+  'help.sample_org_confirm_message':
+    'Esto reemplazará el organigrama actual con una organización de ejemplo. Puede deshacer esta acción.',
   'help.section_toggle_aria': 'Alternar sección {section}',
 
   // Help: Getting Started
   'help.getting_started.title': 'Primeros pasos',
-  'help.getting_started.pan_zoom': 'El organigrama muestra la jerarquía de su organización. Desplácese arrastrando el lienzo, acerque o aleje con la rueda del ratón.',
-  'help.getting_started.right_click': 'Haga clic derecho en cualquier tarjeta para opciones de editar, agregar, mover o eliminar.',
-  'help.getting_started.sidebar': 'La barra lateral gestiona organigramas y versiones. Use los botones de la barra de herramientas para Configuración (⚙️), Importar (📂) y Exportar (📤).',
+  'help.getting_started.pan_zoom':
+    'El organigrama muestra la jerarquía de su organización. Desplácese arrastrando el lienzo, acerque o aleje con la rueda del ratón.',
+  'help.getting_started.right_click':
+    'Haga clic derecho en cualquier tarjeta para opciones de editar, agregar, mover o eliminar.',
+  'help.getting_started.sidebar':
+    'La barra lateral gestiona organigramas y versiones. Use los botones de la barra de herramientas para Configuración (⚙️), Importar (📂) y Exportar (📤).',
 
   // Help: How the Chart Works
   'help.chart_works.title': 'Cómo funciona el organigrama',
   'help.chart_works.managers_label': 'Gerentes',
-  'help.chart_works.managers_desc': ' — Personas con reportes directos. Conectados por líneas de árbol.',
+  'help.chart_works.managers_desc':
+    ' — Personas con reportes directos. Conectados por líneas de árbol.',
   'help.chart_works.ics_label': 'CI (Colaboradores Individuales)',
-  'help.chart_works.ics_desc': ' — Empleados sin reportes directos. Se muestran en pilas verticales compactas bajo su gerente.',
+  'help.chart_works.ics_desc':
+    ' — Empleados sin reportes directos. Se muestran en pilas verticales compactas bajo su gerente.',
   'help.chart_works.advisors_label': 'Asesores',
-  'help.chart_works.advisors_desc': ' — Personal que reporta directamente a un gerente senior (uno que gestiona a otros gerentes), como un Jefe de Gabinete o Asistente Ejecutivo. Se muestran en un diseño especial de 2 columnas junto a la tarjeta del gerente.',
-  'help.chart_works.auto_detect': 'El organigrama detecta automáticamente estos roles según la jerarquía — no se necesita configuración manual.',
+  'help.chart_works.advisors_desc':
+    ' — Personal que reporta directamente a un gerente senior (uno que gestiona a otros gerentes), como un Jefe de Gabinete o Asistente Ejecutivo. Se muestran en un diseño especial de 2 columnas junto a la tarjeta del gerente.',
+  'help.chart_works.auto_detect':
+    'El organigrama detecta automáticamente estos roles según la jerarquía — no se necesita configuración manual.',
 
   // Help: Toolbar & Sidebar
   'help.sidebar_tabs.title': 'Barra de herramientas y lateral',
   'help.sidebar_tabs.sidebar_label': 'Barra lateral',
-  'help.sidebar_tabs.sidebar_desc': ' — Explorar, crear, renombrar y cambiar entre organigramas. Guardar, ver, comparar y restaurar versiones con nombre.',
+  'help.sidebar_tabs.sidebar_desc':
+    ' — Explorar, crear, renombrar y cambiar entre organigramas. Guardar, ver, comparar y restaurar versiones con nombre.',
   'help.sidebar_tabs.settings_label': 'Configuración (⚙️)',
-  'help.sidebar_tabs.settings_desc': ' — Abre un diálogo para ajustar tamaños de tarjeta, espaciado, colores, tipografía y categorías. Incluye preajustes de tema y vista previa en vivo.',
+  'help.sidebar_tabs.settings_desc':
+    ' — Abre un diálogo para ajustar tamaños de tarjeta, espaciado, colores, tipografía y categorías. Incluye preajustes de tema y vista previa en vivo.',
   'help.sidebar_tabs.import_label': 'Importar (📂)',
-  'help.sidebar_tabs.import_desc': ' — Abre un asistente paso a paso para importar datos desde archivos JSON o CSV, con mapeo de columnas y normalización de texto.',
+  'help.sidebar_tabs.import_desc':
+    ' — Abre un asistente paso a paso para importar datos desde archivos JSON o CSV, con mapeo de columnas y normalización de texto.',
   'help.sidebar_tabs.export_label': 'Exportar (📤)',
-  'help.sidebar_tabs.export_desc': ' — Descarga el organigrama como un archivo PowerPoint editable. Elija qué versiones guardadas incluir.',
+  'help.sidebar_tabs.export_desc':
+    ' — Descarga el organigrama como un archivo PowerPoint editable. Elija qué versiones guardadas incluir.',
 
   // Help: Charts & Versions
   'help.charts_versions.title': 'Organigramas y versiones',
@@ -814,24 +873,31 @@ const es: Record<string, string> = {
   'help.charts_versions.multiple_2': '. Cree, renombre y cambie entre organigramas en la ',
   'help.charts_versions.multiple_tab': 'barra lateral',
   'help.charts_versions.multiple_3': '.',
-  'help.charts_versions.header': 'Pase el cursor sobre el organigrama activo en la barra lateral para acceder a las acciones de Renombrar, Duplicar, Exportar y Eliminar.',
+  'help.charts_versions.header':
+    'Pase el cursor sobre el organigrama activo en la barra lateral para acceder a las acciones de Renombrar, Duplicar, Exportar y Eliminar.',
   'help.charts_versions.save_label': 'Guardar una versión',
-  'help.charts_versions.save_desc': ' — Tome una instantánea con nombre del organigrama actual usando el botón Guardar en la sección Versiones de la barra lateral.',
+  'help.charts_versions.save_desc':
+    ' — Tome una instantánea con nombre del organigrama actual usando el botón Guardar en la sección Versiones de la barra lateral.',
   'help.charts_versions.view_label': 'Ver una versión',
-  'help.charts_versions.view_desc': ' — Abre una vista previa de solo lectura. Haga clic en Restaurar para convertirla en el organigrama de trabajo, o en Cerrar para volver.',
-  'help.charts_versions.unsaved': 'Si tiene cambios sin guardar al cambiar de organigrama o restaurar una versión, se le advertirá primero.',
+  'help.charts_versions.view_desc':
+    ' — Abre una vista previa de solo lectura. Haga clic en Restaurar para convertirla en el organigrama de trabajo, o en Cerrar para volver.',
+  'help.charts_versions.unsaved':
+    'Si tiene cambios sin guardar al cambiar de organigrama o restaurar una versión, se le advertirá primero.',
 
   // Help: Importing Data
   'help.importing.title': 'Importar datos',
   'help.importing.how_1': 'Haga clic en el botón ',
   'help.importing.how_strong': '📂 Importar',
   'help.importing.how_2': ' en la barra de herramientas, o use la paleta de comandos (Ctrl+K).',
-  'help.importing.wizard': 'El asistente de importación lo guía a través de cuatro pasos: elegir un origen, mapear columnas (solo CSV), previsualizar los datos y seleccionar un destino.',
+  'help.importing.wizard':
+    'El asistente de importación lo guía a través de cuatro pasos: elegir un origen, mapear columnas (solo CSV), previsualizar los datos y seleccionar un destino.',
   'help.importing.json_label': 'JSON',
   'help.importing.json_desc': ' — Formato de árbol anidado. Se reconoce automáticamente.',
   'help.importing.csv_label': 'CSV',
-  'help.importing.csv_desc': ' — Tabla plana con columnas de nombre, cargo y superior. El mapeador de columnas permite asociar sus encabezados con los campos requeridos y guardar preajustes.',
-  'help.importing.normalize': 'La normalización de texto (Tipo Título, MAYÚSCULAS, minúsculas) se puede aplicar durante el paso de vista previa.',
+  'help.importing.csv_desc':
+    ' — Tabla plana con columnas de nombre, cargo y superior. El mapeador de columnas permite asociar sus encabezados con los campos requeridos y guardar preajustes.',
+  'help.importing.normalize':
+    'La normalización de texto (Tipo Título, MAYÚSCULAS, minúsculas) se puede aplicar durante el paso de vista previa.',
   'help.importing.limit': 'Máximo 10,000 personas por importación.',
 
   // Help: Chart Interactions
@@ -839,22 +905,29 @@ const es: Record<string, string> = {
   'help.interactions.click_label': 'Clic',
   'help.interactions.click_desc': ' — Seleccionar y resaltar una tarjeta.',
   'help.interactions.right_click_label': 'Clic derecho',
-  'help.interactions.right_click_desc': ' — Menú contextual con Editar, Agregar, Enfocar, Categoría, Punteada/Sólida, Mover y Eliminar.',
+  'help.interactions.right_click_desc':
+    ' — Menú contextual con Editar, Agregar, Enfocar, Categoría, Punteada/Sólida, Mover y Eliminar.',
   'help.interactions.shift_click_label': 'Shift+clic',
-  'help.interactions.shift_click_desc': ' — Selección múltiple de tarjetas, luego clic derecho para Categoría, Mover todos o Eliminar todos en masa.',
+  'help.interactions.shift_click_desc':
+    ' — Selección múltiple de tarjetas, luego clic derecho para Categoría, Mover todos o Eliminar todos en masa.',
   'help.interactions.escape_label': 'Escape',
-  'help.interactions.escape_desc': ' — Cerrar visor de versiones, limpiar búsqueda, salir del modo enfoque, limpiar selección múltiple o deseleccionar (en ese orden de prioridad).',
+  'help.interactions.escape_desc':
+    ' — Cerrar visor de versiones, limpiar búsqueda, salir del modo enfoque, limpiar selección múltiple o deseleccionar (en ese orden de prioridad).',
   'help.interactions.inline_label': 'Edición en línea',
-  'help.interactions.inline_desc': ' — Haga clic derecho en una tarjeta y elija Editar para editar directamente sobre la tarjeta.',
+  'help.interactions.inline_desc':
+    ' — Haga clic derecho en una tarjeta y elija Editar para editar directamente sobre la tarjeta.',
   'help.interactions.search_label': 'Buscar',
-  'help.interactions.search_desc': ' — Escriba en la barra de búsqueda para resaltar personas coincidentes. Las no coincidentes se atenúan.',
+  'help.interactions.search_desc':
+    ' — Escriba en la barra de búsqueda para resaltar personas coincidentes. Las no coincidentes se atenúan.',
 
   // Help: Color Categories
   'help.categories.title': 'Categorías de color',
-  'help.categories.assign_1': 'Asigne una categoría de color a cualquier persona haciendo clic derecho en su tarjeta y eligiendo ',
+  'help.categories.assign_1':
+    'Asigne una categoría de color a cualquier persona haciendo clic derecho en su tarjeta y eligiendo ',
   'help.categories.assign_strong': 'Categoría',
   'help.categories.assign_2': '.',
-  'help.categories.defaults_1': 'Cada organigrama tiene su propio conjunto de categorías. Categorías predeterminadas: ',
+  'help.categories.defaults_1':
+    'Cada organigrama tiene su propio conjunto de categorías. Categorías predeterminadas: ',
   'help.categories.defaults_open': 'Posición abierta',
   'help.categories.defaults_2': ', ',
   'help.categories.defaults_offer': 'Oferta pendiente',
@@ -864,48 +937,61 @@ const es: Record<string, string> = {
   'help.categories.manage_1': 'Agregue, edite o elimine categorías en el diálogo de ',
   'help.categories.manage_strong': 'Configuración',
   'help.categories.manage_2': ' en la pestaña Categorías.',
-  'help.categories.legend': 'Una leyenda de colores aparece en el organigrama cuando hay categorías en uso y se incluye en las exportaciones de PowerPoint.',
+  'help.categories.legend':
+    'Una leyenda de colores aparece en el organigrama cuando hay categorías en uso y se incluye en las exportaciones de PowerPoint.',
 
   // Help: Focus Mode
   'help.focus_mode.title': 'Modo enfoque',
   'help.focus_mode.enter_1': 'Haga clic derecho en cualquier gerente y elija ',
   'help.focus_mode.enter_strong': 'Enfocar',
-  'help.focus_mode.enter_2': ' para ver solo el equipo de esa persona como un organigrama independiente.',
+  'help.focus_mode.enter_2':
+    ' para ver solo el equipo de esa persona como un organigrama independiente.',
   'help.focus_mode.exit_1': 'Presione ',
   'help.focus_mode.exit_kbd': 'Escape',
   'help.focus_mode.exit_2': ' o haga clic en ',
   'help.focus_mode.exit_strong': 'Mostrar organigrama completo',
   'help.focus_mode.exit_3': ' en el banner para volver al organigrama completo.',
-  'help.focus_mode.export': 'La exportación a PowerPoint y las estadísticas de la barra de estado reflejan automáticamente la sub-organización enfocada.',
+  'help.focus_mode.export':
+    'La exportación a PowerPoint y las estadísticas de la barra de estado reflejan automáticamente la sub-organización enfocada.',
 
   // Help: Headcount Badges
   'help.headcount.title': 'Insignias de personal',
-  'help.headcount.enable_1': 'Los gerentes pueden mostrar una insignia con su recuento total de personal (número de personas en su organización). Habilítelo en ',
+  'help.headcount.enable_1':
+    'Los gerentes pueden mostrar una insignia con su recuento total de personal (número de personas en su organización). Habilítelo en ',
   'help.headcount.enable_settings': 'Configuración',
   'help.headcount.enable_2': ' en la pestaña ',
   'help.headcount.enable_strong': 'Insignias',
   'help.headcount.enable_3': '.',
-  'help.headcount.customize': 'La apariencia de la insignia (color, tamaño, radio) se puede personalizar en la misma pestaña Insignias.',
+  'help.headcount.customize':
+    'La apariencia de la insignia (color, tamaño, radio) se puede personalizar en la misma pestaña Insignias.',
 
   // Help: Your Data
   'help.your_data.title': 'Sus datos',
-  'help.your_data.privacy_1': 'Arbol se ejecuta completamente en su navegador. Sus organigramas, versiones y preferencias se almacenan en el almacenamiento de su navegador (IndexedDB y localStorage) y ',
+  'help.your_data.privacy_1':
+    'Arbol se ejecuta completamente en su navegador. Sus organigramas, versiones y preferencias se almacenan en el almacenamiento de su navegador (IndexedDB y localStorage) y ',
   'help.your_data.privacy_strong': 'nunca salen de su dispositivo',
   'help.your_data.privacy_2': '.',
-  'help.your_data.no_server': 'No hay servidor, ni base de datos, ni rastreo, ni cuenta requerida. Sus datos permanecen en su máquina​–​nadie más puede verlos.',
+  'help.your_data.no_server':
+    'No hay servidor, ni base de datos, ni rastreo, ni cuenta requerida. Sus datos permanecen en su máquina​–​nadie más puede verlos.',
 
   // Help: Settings & Persistence
   'help.settings.title': 'Configuración',
-  'help.settings.auto_save': 'Toda la configuración visual se guarda automáticamente en su navegador y se restaura en la siguiente visita.',
-  'help.settings.modal': 'Abra Configuración (botón ⚙️ o Ctrl+,) para acceder a 10 pestañas: Preajustes, Disposición, Tipografía, Tarjetas, Conectores, Opciones CI, Asesores, Insignias, Categorías y Respaldo.',
-  'help.settings.presets': 'Los preajustes de tema aplican un conjunto completo de colores y espaciado con un solo clic. También puede guardar sus propios preajustes personalizados.',
-  'help.settings.preview': 'Una vista previa en vivo a la derecha muestra los cambios mientras ajusta la configuración.',
+  'help.settings.auto_save':
+    'Toda la configuración visual se guarda automáticamente en su navegador y se restaura en la siguiente visita.',
+  'help.settings.modal':
+    'Abra Configuración (botón ⚙️ o Ctrl+,) para acceder a 10 pestañas: Preajustes, Disposición, Tipografía, Tarjetas, Conectores, Opciones CI, Asesores, Insignias, Categorías y Respaldo.',
+  'help.settings.presets':
+    'Los preajustes de tema aplican un conjunto completo de colores y espaciado con un solo clic. También puede guardar sus propios preajustes personalizados.',
+  'help.settings.preview':
+    'Una vista previa en vivo a la derecha muestra los cambios mientras ajusta la configuración.',
   'help.settings.backup_1': 'Utilice ',
   'help.settings.backup_strong': 'Crear respaldo',
-  'help.settings.backup_2': ' en la pestaña Respaldo para guardar todos sus organigramas, versiones y configuración en un solo archivo.',
+  'help.settings.backup_2':
+    ' en la pestaña Respaldo para guardar todos sus organigramas, versiones y configuración en un solo archivo.',
   'help.settings.restore_1': 'Utilice ',
   'help.settings.restore_strong': 'Restaurar',
-  'help.settings.restore_2': ' para cargar un respaldo. Puede elegir reemplazar todos los datos o combinarlos con sus organigramas existentes.',
+  'help.settings.restore_2':
+    ' para cargar un respaldo. Puede elegir reemplazar todos los datos o combinarlos con sus organigramas existentes.',
 
   // Help: Keyboard Shortcuts
   'help.shortcuts.title': 'Atajos de teclado',
@@ -926,14 +1012,18 @@ const es: Record<string, string> = {
   // Help: Exporting
   'help.exporting.title': 'Exportar',
   'help.exporting.pptx_label': 'Exportar PPTX',
-  'help.exporting.pptx_desc': ' — Descarga el organigrama como un archivo PowerPoint editable con formas nativas y texto.',
-  'help.exporting.versions': 'El diálogo de exportación permite seleccionar qué versiones guardadas incluir — cada versión se convierte en una diapositiva separada.',
-  'help.exporting.scale': 'La exportación se escala automáticamente para ajustarse a una diapositiva panorámica.',
+  'help.exporting.pptx_desc':
+    ' — Descarga el organigrama como un archivo PowerPoint editable con formas nativas y texto.',
+  'help.exporting.versions':
+    'El diálogo de exportación permite seleccionar qué versiones guardadas incluir — cada versión se convierte en una diapositiva separada.',
+  'help.exporting.scale':
+    'La exportación se escala automáticamente para ajustarse a una diapositiva panorámica.',
 
   // Help: Links
   'help.links.title': 'Enlaces',
   'help.links.built_with': '✦ Creado con Arbol — https://github.com/pedrofuentes/arbol',
-  'help.links.report_bugs': 'Reportar errores y solicitar funciones — https://github.com/pedrofuentes/arbol/issues',
+  'help.links.report_bugs':
+    'Reportar errores y solicitar funciones — https://github.com/pedrofuentes/arbol/issues',
 
   // ─── Comparison Banner ─────────────────────────────────────────────
   'comparison.working_tree': 'Árbol de trabajo',
@@ -949,7 +1039,8 @@ const es: Record<string, string> = {
 
   // ─── Import Wizard Steps ──────────────────────────────────────────
   'import_wizard.source_title': 'Elija su origen de datos',
-  'import_wizard.source_desc': 'Suba un archivo o pegue datos directamente. Soportamos formatos CSV, JSON y Excel.',
+  'import_wizard.source_desc':
+    'Suba un archivo o pegue datos directamente. Soportamos formatos CSV, JSON y Excel.',
   'import_wizard.drop_text': 'Suelte un archivo aquí o haga clic para examinar',
   'import_wizard.drop_hint': 'CSV, JSON o XLSX · Máx. 10,000 personas',
   'import_wizard.file_aria': 'Elegir archivo para importar',
@@ -958,9 +1049,11 @@ const es: Record<string, string> = {
   'import_wizard.paste_aria': 'Pegar datos de importación',
   'import_wizard.mapping_json': '✓ Formato JSON detectado — no se necesita mapeo de columnas.',
   'import_wizard.mapping_csv': 'Mapee sus columnas CSV a los campos correctos.',
-  'import_wizard.mapping_verify': 'Verifique el mapeo de columnas a continuación, luego haga clic en Siguiente.',
+  'import_wizard.mapping_verify':
+    'Verifique el mapeo de columnas a continuación, luego haga clic en Siguiente.',
   'import_wizard.preset_matched': '✓ Preajuste guardado encontrado: "{name}"',
-  'import_wizard.save_preset_prompt': '¿Guardar este mapeo de columnas como preajuste para futuras importaciones?',
+  'import_wizard.save_preset_prompt':
+    '¿Guardar este mapeo de columnas como preajuste para futuras importaciones?',
   'import_wizard.save_preset_label': 'Nombre del preajuste',
   'import_wizard.save_preset_placeholder': 'ej. Formato de exportación RRHH',
   'import_wizard.preview_success': '✓ {count} personas analizadas desde {format}',
@@ -992,9 +1085,12 @@ const es: Record<string, string> = {
   'settings.desc.node_height': 'Alto de la tarjeta de cada persona',
   'settings.desc.horizontal_spacing': 'Espacio mínimo entre tarjetas del mismo nivel',
   'settings.desc.branch_spacing': 'Espacio entre ramas separadas del árbol',
-  'settings.desc.top_vertical_spacing': 'Espacio desde la tarjeta del gerente hasta la línea conectora inferior',
-  'settings.desc.bottom_vertical_spacing': 'Espacio desde la línea conectora hasta las tarjetas subordinadas',
-  'settings.desc.ic_node_width': 'Ancho de las tarjetas de colaboradores individuales en la vista apilada',
+  'settings.desc.top_vertical_spacing':
+    'Espacio desde la tarjeta del gerente hasta la línea conectora inferior',
+  'settings.desc.bottom_vertical_spacing':
+    'Espacio desde la línea conectora hasta las tarjetas subordinadas',
+  'settings.desc.ic_node_width':
+    'Ancho de las tarjetas de colaboradores individuales en la vista apilada',
   'settings.desc.ic_gap': 'Espacio vertical entre tarjetas CI apiladas',
   'settings.desc.ic_container_padding': 'Relleno alrededor del contenedor del grupo CI',
   'settings.desc.ic_container_fill': 'Color de fondo del grupo CI',
@@ -1002,24 +1098,30 @@ const es: Record<string, string> = {
   'settings.desc.advisor_top_gap': 'Espacio sobre las tarjetas de asesores',
   'settings.desc.advisor_bottom_gap': 'Espacio debajo de las tarjetas de asesores',
   'settings.desc.advisor_row_gap': 'Espacio vertical entre filas de tarjetas de asesores',
-  'settings.desc.advisor_center_gap': 'Espacio horizontal entre columnas izquierda y derecha de asesores',
+  'settings.desc.advisor_center_gap':
+    'Espacio horizontal entre columnas izquierda y derecha de asesores',
   'settings.desc.name_font_size': 'Tamaño de fuente del nombre de la persona en cada tarjeta',
   'settings.desc.title_font_size': 'Tamaño de fuente del cargo en cada tarjeta',
-  'settings.desc.text_padding_top': 'Espacio desde la parte superior de la tarjeta hasta la primera línea de texto',
+  'settings.desc.text_padding_top':
+    'Espacio desde la parte superior de la tarjeta hasta la primera línea de texto',
   'settings.desc.text_gap': 'Espacio entre las líneas de texto de nombre y cargo',
   'settings.desc.text_alignment': 'Cómo se alinea el texto dentro de cada tarjeta',
-  'settings.desc.font_family': 'Fuente usada para todo el texto del organigrama (compatible con PowerPoint)',
-  'settings.desc.text_padding_horizontal': 'Relleno izquierdo/derecho del texto cuando está alineado a izquierda o derecha',
+  'settings.desc.font_family':
+    'Fuente usada para todo el texto del organigrama (compatible con PowerPoint)',
+  'settings.desc.text_padding_horizontal':
+    'Relleno izquierdo/derecho del texto cuando está alineado a izquierda o derecha',
   'settings.desc.name_color': 'Color del texto de nombres en las tarjetas',
   'settings.desc.title_color': 'Color del texto de cargos en las tarjetas',
   'settings.desc.link_width': 'Grosor de las líneas conectoras entre tarjetas',
   'settings.desc.link_color': 'Color de las líneas conectoras',
-  'settings.desc.dotted_line_pattern': 'Patrón de guiones para líneas de reporte punteadas (ej. "6,4")',
+  'settings.desc.dotted_line_pattern':
+    'Patrón de guiones para líneas de reporte punteadas (ej. "6,4")',
   'settings.desc.card_stroke_width': 'Grosor del borde de las tarjetas',
   'settings.desc.card_stroke': 'Color del borde de las tarjetas',
   'settings.desc.card_fill': 'Color de fondo de las tarjetas',
   'settings.desc.card_border_radius': 'Redondeo de esquinas de las tarjetas',
-  'settings.desc.show_headcount': 'Mostrar una insignia en las tarjetas de gerentes con el recuento total de reportes',
+  'settings.desc.show_headcount':
+    'Mostrar una insignia en las tarjetas de gerentes con el recuento total de reportes',
   'settings.desc.badge_font_size': 'Tamaño de fuente del número en la insignia de personal',
   'settings.desc.badge_height': 'Alto de la insignia de personal',
   'settings.desc.badge_radius': 'Redondeo de esquinas de la insignia de personal',
@@ -1034,20 +1136,32 @@ const es: Record<string, string> = {
   'settings.desc.legend_rows': 'Número de filas para la leyenda de categorías (0 = auto-ajuste)',
 
   // ─── Settings: Section Descriptions ─────────────────────────────────
-  'settings.section_desc.presets': 'Elija un tema visual o guarde su configuración actual como un preajuste personalizado.',
-  'settings.section_desc.categories': 'Defina categorías de color para resaltar roles especiales como posiciones abiertas u ofertas pendientes.',
-  'settings.section_desc.card_dimensions': 'Controle el tamaño de la tarjeta de cada persona en el organigrama.',
+  'settings.section_desc.presets':
+    'Elija un tema visual o guarde su configuración actual como un preajuste personalizado.',
+  'settings.section_desc.categories':
+    'Defina categorías de color para resaltar roles especiales como posiciones abiertas u ofertas pendientes.',
+  'settings.section_desc.card_dimensions':
+    'Controle el tamaño de la tarjeta de cada persona en el organigrama.',
   'settings.section_desc.tree_spacing': 'Ajuste los espacios entre tarjetas y ramas del árbol.',
-  'settings.section_desc.ic_options': 'Configure cómo se muestran los colaboradores individuales en grupos apilados.',
-  'settings.section_desc.advisor_options': 'Controle el espaciado de los nodos de asesores junto a los gerentes.',
-  'settings.section_desc.typography': 'Personalice fuentes, tamaños, colores y alineación del texto en las tarjetas.',
-  'settings.section_desc.link_style': 'Estilice las líneas conectoras entre tarjetas del organigrama.',
-  'settings.section_desc.card_style': 'Personalice bordes, color de fondo y redondeo de esquinas de las tarjetas.',
-  'settings.section_desc.headcount_badge': 'Muestre y estilice una insignia de personal en las tarjetas de gerentes.',
-  'settings.section_desc.level_badge': 'Muestre y estilice una insignia de nivel en todas las tarjetas.',
-  'settings.section_desc.categories_legend': 'Configure cómo aparece la leyenda de categorías de color en el organigrama.',
+  'settings.section_desc.ic_options':
+    'Configure cómo se muestran los colaboradores individuales en grupos apilados.',
+  'settings.section_desc.advisor_options':
+    'Controle el espaciado de los nodos de asesores junto a los gerentes.',
+  'settings.section_desc.typography':
+    'Personalice fuentes, tamaños, colores y alineación del texto en las tarjetas.',
+  'settings.section_desc.link_style':
+    'Estilice las líneas conectoras entre tarjetas del organigrama.',
+  'settings.section_desc.card_style':
+    'Personalice bordes, color de fondo y redondeo de esquinas de las tarjetas.',
+  'settings.section_desc.headcount_badge':
+    'Muestre y estilice una insignia de personal en las tarjetas de gerentes.',
+  'settings.section_desc.level_badge':
+    'Muestre y estilice una insignia de nivel en todas las tarjetas.',
+  'settings.section_desc.categories_legend':
+    'Configure cómo aparece la leyenda de categorías de color en el organigrama.',
   'settings.section_desc.settings_io': 'Exporte o importe su configuración como un archivo.',
-  'settings.section_desc.backup_restore': 'Cree respaldos completos de todos los organigramas, versiones y configuración.',
+  'settings.section_desc.backup_restore':
+    'Cree respaldos completos de todos los organigramas, versiones y configuración.',
 
   // ─── Settings: Layout Preset Descriptions ───────────────────────────
   'settings.layout_compact_desc': 'Espaciado ajustado para organizaciones grandes',
@@ -1070,7 +1184,8 @@ const es: Record<string, string> = {
   // ─── Settings: Category Enhancements ────────────────────────────────
   'settings.category_text_colors': 'Colores de texto:',
   'settings.category_confirm_delete': '¿Eliminar "{label}"?',
-  'settings.category_confirm_delete_message': 'Las personas que usan esta categoría volverán al color de tarjeta predeterminado.',
+  'settings.category_confirm_delete_message':
+    'Las personas que usan esta categoría volverán al color de tarjeta predeterminado.',
   'settings.category_preview_name': 'Nombre',
   'settings.category_preview_title': 'Cargo',
 
@@ -1101,9 +1216,11 @@ const es: Record<string, string> = {
   'export_dialog.cancel': 'Cancelar',
   'export_dialog.export': 'Exportar',
   'restore_dialog.title': 'Restaurar versión',
-  'restore_dialog.summary': '{chartCount} organigrama(s), {versionCount} versión(es) · Creado {backupDate} · v{appVersion}',
+  'restore_dialog.summary':
+    '{chartCount} organigrama(s), {versionCount} versión(es) · Creado {backupDate} · v{appVersion}',
   'restore_dialog.how': '¿Cómo desea restaurar?',
-  'restore_dialog.replace_all': '🔄 Reemplazar todo — borrar datos actuales y restaurar desde respaldo',
+  'restore_dialog.replace_all':
+    '🔄 Reemplazar todo — borrar datos actuales y restaurar desde respaldo',
   'restore_dialog.merge': '➕ Combinar — agregar organigramas nuevos, mantener los existentes',
   'restore_dialog.cancel': 'Cancelar',
   'comparison.dim_on': 'Atenuación: Sí',
@@ -1134,7 +1251,8 @@ const es: Record<string, string> = {
   'settings_modal.tab.level_mapping': 'Mapeo de niveles',
   'settings_modal.tab.backup': 'Respaldo',
   'utilities.heading': 'Normalización de texto',
-  'utilities.desc': 'Normalice el formato de texto de todos los nombres y cargos en el organigrama actual.',
+  'utilities.desc':
+    'Normalice el formato de texto de todos los nombres y cargos en el organigrama actual.',
   'utilities.name_format': 'Formato de nombre',
   'utilities.title_format': 'Formato de cargo',
   'utilities.apply_btn': 'Aplicar al organigrama',
@@ -1147,17 +1265,26 @@ const es: Record<string, string> = {
   'backup.backup_failed': 'Error al crear respaldo: {message}',
   'backup.restore_btn': '📂 Restaurar',
   'backup.replace_title': 'Reemplazar todos los datos',
-  'backup.replace_message': 'Esto reemplazará permanentemente todos los organigramas, versiones y configuraciones existentes con los datos del respaldo. Se ha descargado un respaldo de sus datos actuales.\n\n¿Continuar?',
+  'backup.replace_message':
+    'Esto reemplazará permanentemente todos los organigramas, versiones y configuraciones existentes con los datos del respaldo. Se ha descargado un respaldo de sus datos actuales.\n\n¿Continuar?',
+  'backup.replace_message_no_backup':
+    'Esto reemplazará permanentemente todos los organigramas, versiones y configuraciones existentes con los datos del respaldo. No se creó un respaldo de sus datos actuales.\n\n¿Continuar?',
   'backup.replace_confirm': 'Reemplazar todo',
   'backup.merge_title': 'Combinación completa',
-  'backup.merge_message': 'Se agregaron {chartsAdded} organigrama(s) y {versionsAdded} versión(es). Se omitieron {chartsSkipped} organigrama(s) que ya existían.\n\nLa página se recargará para aplicar los cambios.',
+  'backup.merge_message':
+    'Se agregaron {chartsAdded} organigrama(s) y {versionsAdded} versión(es). Se omitieron {chartsSkipped} organigrama(s) que ya existían.\n\nLa página se recargará para aplicar los cambios.',
   'backup.merge_confirm': 'OK',
   'backup.restore_failed': 'Error al restaurar: {message}',
   'backup.clear_btn': '🗑 Borrar todos los datos',
   'backup.clear_aria': 'Borrar todos los datos locales',
   'backup.clear_title': 'Borrar todos los datos',
-  'backup.clear_message': 'Esto eliminará permanentemente todos sus organigramas, versiones, configuraciones, temas y preferencias. Esta acción no se puede deshacer.\n\n¿Está seguro?',
+  'backup.clear_message':
+    'Esto eliminará permanentemente todos sus organigramas, versiones, configuraciones, temas y preferencias. Esta acción no se puede deshacer.\n\n¿Está seguro?',
   'backup.clear_confirm': 'Borrar todo',
+  'backup.clear_no_backup_title': 'Error al crear respaldo',
+  'backup.clear_no_backup_message':
+    'No se pudo crear un respaldo automático. Si continúa, sus datos se eliminarán permanentemente sin posibilidad de recuperación.\n\n¿Está seguro de que desea continuar sin respaldo?',
+  'backup.clear_no_backup_confirm': 'Continuar sin respaldo',
   'settings_io.export_btn': '\ud83d\udcbe Export',
   'settings_io.import_btn': '\ud83d\udcc2 Import',
   'settings_io.file_too_large': 'Archivo de configuración demasiado grande (máx. 1MB).',
@@ -1176,16 +1303,21 @@ const es: Record<string, string> = {
   'export.default_filename': 'organigrama',
   'app.fatal_error': 'Error al iniciar Arbol',
   'app.unexpected_error': 'Ocurrió un error inesperado',
-  'app.refresh_hint': 'Intenta recargar la página. Si el problema persiste, borra los datos del navegador para este sitio.',
+  'app.refresh_hint':
+    'Intenta recargar la página. Si el problema persiste, borra los datos del navegador para este sitio.',
 
   // ─── Help & Docs ──────────────────────────────────────────────────
-  'column_mapper.parent_ref_help': 'By Name matches the parent column to people\'s names. By ID matches a unique identifier.',
+  'column_mapper.parent_ref_help':
+    "By Name matches the parent column to people's names. By ID matches a unique identifier.",
   'footer.ics_tooltip': 'Individual Contributors \u2014 employees without direct reports',
   'help.comparison.title': 'Comparación de versiones',
-  'help.comparison.desc': 'Use la vista de comparación lado a lado para ver qué cambió entre dos versiones del organigrama.',
+  'help.comparison.desc':
+    'Use la vista de comparación lado a lado para ver qué cambió entre dos versiones del organigrama.',
   'help.interactions.dotted_label': 'Líneas punteadas',
-  'help.interactions.dotted_desc': ' \u2014 Toggle any link to a dotted line via right-click \u2192 Dotted/Solid. Useful for indicating temporary or informal reporting relationships.',
-  'export_dialog.versions_hint': 'Seleccione qué versiones guardadas incluir como diapositivas adicionales.',
+  'help.interactions.dotted_desc':
+    ' \u2014 Toggle any link to a dotted line via right-click \u2192 Dotted/Solid. Useful for indicating temporary or informal reporting relationships.',
+  'export_dialog.versions_hint':
+    'Seleccione qué versiones guardadas incluir como diapositivas adicionales.',
   'export.format_label': 'Formato',
   'export.format_pptx': 'PowerPoint (.pptx)',
   'export.format_svg': 'Imagen SVG (.svg)',
@@ -1198,12 +1330,14 @@ const es: Record<string, string> = {
   'export.exported_png': 'Exportado como PNG',
   // ─── Level Mapping ────────────────────────────────────────────────
   'settings.group.level_mapping': 'Mapeo de niveles',
-  'settings.section_desc.level_mapping': 'Define cómo los valores de nivel se muestran en las tarjetas.',
+  'settings.section_desc.level_mapping':
+    'Define cómo los valores de nivel se muestran en las tarjetas.',
   'settings.level_mapping_section': 'Mapeo de niveles',
   'settings.label.display_mode': 'Visualización de título',
   'settings.label.display_mode_original': 'Título original',
   'settings.label.display_mode_mapped': 'Título mapeado',
-  'settings.desc.display_mode': 'Cuando está en Mapeado, el título en las tarjetas se reemplaza con el título mapeado para ese nivel.',
+  'settings.desc.display_mode':
+    'Cuando está en Mapeado, el título en las tarjetas se reemplaza con el título mapeado para ese nivel.',
   'settings.label.add_mapping': 'Agregar mapeo',
   'settings.label.raw_level': 'Nivel original',
   'settings.label.display_title': 'Título de visualización',

@@ -49,7 +49,10 @@ export class BackupPanel {
         const backup = await createBackup(this.chartDB);
         downloadBackup(backup);
       } catch (e) {
-        showToast(t('settings.backup_failed', { error: e instanceof Error ? e.message : String(e) }), 'error');
+        showToast(
+          t('settings.backup_failed', { error: e instanceof Error ? e.message : String(e) }),
+          'error',
+        );
       }
     });
     backupBtnGroup.appendChild(backupBtn);
@@ -104,16 +107,29 @@ export class BackupPanel {
 
           if (strategy === 'replace') {
             // Auto-backup before destructive replace
+            let replaceBackupFailed = false;
             try {
               const autoBackup = await createBackup(this.chartDB);
               downloadBackup(autoBackup);
             } catch {
-              // If auto-backup fails, still let the user proceed
+              replaceBackupFailed = true;
+            }
+
+            if (replaceBackupFailed) {
+              const proceed = await showConfirmDialog({
+                title: t('backup.clear_no_backup_title'),
+                message: t('backup.clear_no_backup_message'),
+                confirmLabel: t('backup.clear_no_backup_confirm'),
+                danger: true,
+              });
+              if (!proceed) return;
             }
 
             const confirmed = await showConfirmDialog({
               title: t('backup.replace_title'),
-              message: t('backup.replace_message'),
+              message: t(
+                replaceBackupFailed ? 'backup.replace_message_no_backup' : 'backup.replace_message',
+              ),
               confirmLabel: t('backup.replace_confirm'),
               danger: true,
             });
@@ -135,7 +151,10 @@ export class BackupPanel {
             window.location.reload();
           }
         } catch (e) {
-          showToast(t('settings.restore_failed', { error: e instanceof Error ? e.message : String(e) }), 'error');
+          showToast(
+            t('settings.restore_failed', { error: e instanceof Error ? e.message : String(e) }),
+            'error',
+          );
         }
       });
       document.body.appendChild(input);
@@ -158,11 +177,23 @@ export class BackupPanel {
       'background:rgba(244,63,94,0.1);color:var(--danger);border:1px solid rgba(244,63,94,0.2);';
     clearDataBtn.addEventListener('click', async () => {
       // Auto-backup before destructive clear
+      let backupFailed = false;
       try {
         const autoBackup = await createBackup(this.chartDB);
         downloadBackup(autoBackup);
       } catch {
-        // If auto-backup fails, still allow the user to proceed
+        backupFailed = true;
+      }
+
+      // If backup failed, warn the user and require explicit acknowledgment
+      if (backupFailed) {
+        const proceed = await showConfirmDialog({
+          title: t('backup.clear_no_backup_title'),
+          message: t('backup.clear_no_backup_message'),
+          confirmLabel: t('backup.clear_no_backup_confirm'),
+          danger: true,
+        });
+        if (!proceed) return;
       }
 
       const confirmed = await showConfirmDialog({
