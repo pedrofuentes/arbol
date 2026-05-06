@@ -2,7 +2,13 @@ import 'fake-indexeddb/auto';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ChartDB } from '../../src/store/chart-db';
 import { ChartStore } from '../../src/store/chart-store';
-import type { OrgNode, ColorCategory, ChartBundle, LevelMapping, LevelDisplayMode } from '../../src/types';
+import type {
+  OrgNode,
+  ColorCategory,
+  ChartBundle,
+  LevelMapping,
+  LevelDisplayMode,
+} from '../../src/types';
 
 let idCounter = 0;
 vi.mock('../../src/utils/id', () => ({
@@ -13,9 +19,15 @@ const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
     getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, val: string) => { store[key] = val; }),
-    removeItem: vi.fn((key: string) => { delete store[key]; }),
-    clear: vi.fn(() => { store = {}; }),
+    setItem: vi.fn((key: string, val: string) => {
+      store[key] = val;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
   };
 })();
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
@@ -131,7 +143,10 @@ describe('ChartStore', () => {
       await db.open();
       store = new ChartStore(db);
 
-      localStorageMock.setItem('arbol-org-data', JSON.stringify(makeTree({ name: 'Should Not Appear' })));
+      localStorageMock.setItem(
+        'arbol-org-data',
+        JSON.stringify(makeTree({ name: 'Should Not Appear' })),
+      );
       const chart = await store.initialize();
 
       expect(chart.workingTree.name).not.toBe('Should Not Appear');
@@ -215,7 +230,9 @@ describe('ChartStore', () => {
     });
 
     it('createChart with categories copies them to the new chart', async () => {
-      const cats: ColorCategory[] = [{ id: 'c1', label: 'Eng', color: '#ff0000', nameColor: '#fff', titleColor: '#fff' }];
+      const cats: ColorCategory[] = [
+        { id: 'c1', label: 'Eng', color: '#ff0000', nameColor: '#fff', titleColor: '#fff' },
+      ];
       const chart = await store.createChart('With Cats', cats);
       expect(chart.categories).toEqual(cats);
     });
@@ -235,7 +252,10 @@ describe('ChartStore', () => {
     });
 
     it('createChartFromTree creates a chart with the provided tree', async () => {
-      const tree = makeTree({ name: 'Custom Root', children: [{ id: 'c1', name: 'Child', title: 'VP' }] });
+      const tree = makeTree({
+        name: 'Custom Root',
+        children: [{ id: 'c1', name: 'Child', title: 'VP' }],
+      });
       const chart = await store.createChartFromTree('Tree Chart', tree);
       expect(chart.name).toBe('Tree Chart');
       expect(chart.workingTree.name).toBe('Custom Root');
@@ -278,7 +298,10 @@ describe('ChartStore', () => {
 
     it('duplicateChart creates a copy with "Copy of" prefix', async () => {
       const original = await store.createChart('My Chart');
-      const tree = makeTree({ name: 'Custom Root', children: [{ id: 'c1', name: 'Child', title: 'VP' }] });
+      const tree = makeTree({
+        name: 'Custom Root',
+        children: [{ id: 'c1', name: 'Child', title: 'VP' }],
+      });
       await store.saveWorkingTree(tree, makeCategories());
 
       // Switch back to original to duplicate it with saved data
@@ -418,7 +441,13 @@ describe('ChartStore', () => {
     it('duplicateChart copies level mappings from source', async () => {
       const tree = makeTree();
       const levels = makeLevelMappings();
-      const original = await store.createChartFromTree('Source', tree, makeCategories(), levels, 'mapped');
+      const original = await store.createChartFromTree(
+        'Source',
+        tree,
+        makeCategories(),
+        levels,
+        'mapped',
+      );
 
       const copy = await store.duplicateChart(original.id);
       expect(copy.levelMappings).toEqual(levels);
@@ -593,8 +622,12 @@ describe('ChartStore', () => {
     });
 
     it('saveVersion throws if name is empty', async () => {
-      await expect(store.saveVersion('', makeTree())).rejects.toThrow('Version name cannot be empty');
-      await expect(store.saveVersion('   ', makeTree())).rejects.toThrow('Version name cannot be empty');
+      await expect(store.saveVersion('', makeTree())).rejects.toThrow(
+        'Version name cannot be empty',
+      );
+      await expect(store.saveVersion('   ', makeTree())).rejects.toThrow(
+        'Version name cannot be empty',
+      );
     });
 
     it('saveVersion throws if no active chart', async () => {
@@ -706,7 +739,11 @@ describe('ChartStore', () => {
     it('returns true when bundle has no categories but chart does', async () => {
       await store.createChartFromTree('Categorized', makeTree(), makeCategories());
       const bundle = makeBundle({
-        chart: { name: 'No Cats', workingTree: { id: 'r', name: 'Root', title: 'CEO' }, categories: [] },
+        chart: {
+          name: 'No Cats',
+          workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+          categories: [],
+        },
       });
       const result = await store.wouldReplaceCategories(bundle);
       expect(result).toBe(true);
@@ -716,7 +753,11 @@ describe('ChartStore', () => {
       const cats = makeCategories();
       await store.createChartFromTree('Same', makeTree(), cats);
       const bundle = makeBundle({
-        chart: { name: 'Same', workingTree: { id: 'r', name: 'Root', title: 'CEO' }, categories: cats },
+        chart: {
+          name: 'Same',
+          workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+          categories: cats,
+        },
       });
       const result = await store.wouldReplaceCategories(bundle);
       expect(result).toBe(false);
@@ -780,8 +821,16 @@ describe('ChartStore', () => {
       it('creates versions with correct names and trees', async () => {
         const bundle = makeBundle({
           versions: [
-            { name: 'v1', createdAt: '2026-01-01T00:00:00.000Z', tree: { id: 'r', name: 'Root v1', title: 'CEO' } },
-            { name: 'v2', createdAt: '2026-02-01T00:00:00.000Z', tree: { id: 'r', name: 'Root v2', title: 'CEO' } },
+            {
+              name: 'v1',
+              createdAt: '2026-01-01T00:00:00.000Z',
+              tree: { id: 'r', name: 'Root v1', title: 'CEO' },
+            },
+            {
+              name: 'v2',
+              createdAt: '2026-02-01T00:00:00.000Z',
+              tree: { id: 'r', name: 'Root v2', title: 'CEO' },
+            },
           ],
         });
         const chart = await store.importChartAsNew(bundle);
@@ -863,7 +912,11 @@ describe('ChartStore', () => {
       it('adds bundle versions as versions of the active chart', async () => {
         const bundle = makeBundle({
           versions: [
-            { name: 'imported-v1', createdAt: '2026-01-01T00:00:00.000Z', tree: { id: 'r', name: 'R1', title: 'CEO' } },
+            {
+              name: 'imported-v1',
+              createdAt: '2026-01-01T00:00:00.000Z',
+              tree: { id: 'r', name: 'R1', title: 'CEO' },
+            },
           ],
         });
         const chart = await store.importChartReplaceCurrent(bundle);
@@ -879,7 +932,11 @@ describe('ChartStore', () => {
         await store.saveVersion('existing-v1', makeTree());
         const bundle = makeBundle({
           versions: [
-            { name: 'imported-v1', createdAt: '2026-01-01T00:00:00.000Z', tree: { id: 'r', name: 'R1', title: 'CEO' } },
+            {
+              name: 'imported-v1',
+              createdAt: '2026-01-01T00:00:00.000Z',
+              tree: { id: 'r', name: 'R1', title: 'CEO' },
+            },
           ],
         });
         const chart = await store.importChartReplaceCurrent(bundle);
@@ -903,7 +960,9 @@ describe('ChartStore', () => {
 
       it('throws if no active chart', async () => {
         const freshStore = new ChartStore(db);
-        await expect(freshStore.importChartReplaceCurrent(makeBundle())).rejects.toThrow('No active chart');
+        await expect(freshStore.importChartReplaceCurrent(makeBundle())).rejects.toThrow(
+          'No active chart',
+        );
       });
 
       it('emits change event', async () => {
@@ -1004,6 +1063,168 @@ describe('ChartStore', () => {
         const bundle = makeBundle();
         const chart = await store.importChartAsNew(bundle);
         expect(chart.workingTree.name).toBe('Root');
+      });
+
+      it('importChartAsNew strips malformed categories from bundle', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'Bad Cats',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [{ id: 123, label: null, color: '' } as never],
+          },
+        });
+        const chart = await store.importChartAsNew(bundle);
+        expect(chart.categories).toHaveLength(0);
+      });
+
+      it('importChartAsNew rejects bundle with malformed levelMappings', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'Bad Levels',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [],
+            levelMappings: [{ rawLevel: '', displayTitle: 123 } as never],
+          },
+        });
+        await expect(store.importChartAsNew(bundle)).rejects.toThrow(/level/i);
+      });
+
+      it('importChartAsNew rejects bundle with invalid levelDisplayMode', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'Bad Mode',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [],
+            levelDisplayMode: 'invalid-mode' as never,
+          },
+        });
+        await expect(store.importChartAsNew(bundle)).rejects.toThrow(/levelDisplayMode/i);
+      });
+
+      it('importChartReplaceCurrent strips malformed categories from bundle', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'Bad Cats',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [{ id: 'ok', label: 'Ok', color: 42 } as never],
+          },
+        });
+        const chart = await store.importChartReplaceCurrent(bundle);
+        expect(chart.categories).toHaveLength(0);
+      });
+
+      it('importChartReplaceCurrent rejects bundle with malformed levelMappings', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'Bad Levels',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [],
+            levelMappings: [{ rawLevel: '', displayTitle: 123 } as never],
+          },
+        });
+        await expect(store.importChartReplaceCurrent(bundle)).rejects.toThrow(/level/i);
+      });
+
+      it('importChartReplaceCurrent rejects bundle with invalid levelDisplayMode', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'Bad Mode',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [],
+            levelDisplayMode: 'bogus' as never,
+          },
+        });
+        await expect(store.importChartReplaceCurrent(bundle)).rejects.toThrow(/levelDisplayMode/i);
+      });
+
+      it('importChartAsNew rejects bundle with non-array levelMappings', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'Non-Array',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [],
+            levelMappings: 'not-an-array' as never,
+          },
+        });
+        await expect(store.importChartAsNew(bundle)).rejects.toThrow(/level/i);
+      });
+
+      it('importChartAsNew strips invalid categories and keeps valid ones', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'Mixed Cats',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [
+              { id: 'good', label: 'Good', color: '#ff0000' },
+              { id: '', label: 'Bad', color: '#000' } as never,
+            ],
+          },
+        });
+        const chart = await store.importChartAsNew(bundle);
+        expect(chart.categories).toHaveLength(1);
+        expect(chart.categories[0].id).toBe('good');
+      });
+
+      it('importChartAsNew strips categories with non-hex color values', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'Bad Colors',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [
+              { id: 'valid', label: 'Valid', color: '#ff0000' },
+              { id: 'css-inject', label: 'Bad', color: 'red;position:absolute' },
+              { id: 'named', label: 'Named', color: 'blue' },
+            ],
+          },
+        });
+        const chart = await store.importChartAsNew(bundle);
+        expect(chart.categories).toHaveLength(1);
+        expect(chart.categories[0].id).toBe('valid');
+      });
+
+      it('importChartAsNew preserves valid levelMappings and levelDisplayMode', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'With Levels',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [],
+            levelMappings: [{ rawLevel: 'L5', displayTitle: 'Senior' }],
+            levelDisplayMode: 'mapped' as const,
+          },
+        });
+        const chart = await store.importChartAsNew(bundle);
+        expect(chart.levelMappings).toHaveLength(1);
+        expect(chart.levelMappings![0].rawLevel).toBe('L5');
+        expect(chart.levelDisplayMode).toBe('mapped');
+      });
+
+      it('importChartAsNew keeps valid entries and strips invalid ones in mixed levelMappings', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'Mixed Levels',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [],
+            levelMappings: [
+              { rawLevel: 'L5', displayTitle: 'Senior' },
+              { rawLevel: '', displayTitle: '' },
+            ],
+          },
+        });
+        const chart = await store.importChartAsNew(bundle);
+        expect(chart.levelMappings).toHaveLength(1);
+        expect(chart.levelMappings![0].rawLevel).toBe('L5');
+      });
+
+      it('importChartAsNew rejects null levelMappings', async () => {
+        const bundle = makeBundle({
+          chart: {
+            name: 'Null Levels',
+            workingTree: { id: 'r', name: 'Root', title: 'CEO' },
+            categories: [],
+            levelMappings: null as never,
+          },
+        });
+        await expect(store.importChartAsNew(bundle)).rejects.toThrow(/level/i);
       });
     });
   });

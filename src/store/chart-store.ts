@@ -1,4 +1,12 @@
-import type { OrgNode, ColorCategory, ChartRecord, VersionRecord, ChartBundle, LevelMapping, LevelDisplayMode } from '../types';
+import type {
+  OrgNode,
+  ColorCategory,
+  ChartRecord,
+  VersionRecord,
+  ChartBundle,
+  LevelMapping,
+  LevelDisplayMode,
+} from '../types';
 import { ChartDB } from './chart-db';
 import { validateTree } from './org-store';
 import { generateId } from '../utils/id';
@@ -14,6 +22,93 @@ const DEFAULT_ROOT: OrgNode = {
 
 const LS_ORG_KEY = 'arbol-org-data';
 const LS_CAT_KEY = 'arbol-categories';
+
+const VALID_LEVEL_DISPLAY_MODES: ReadonlySet<string> = new Set(['original', 'mapped']);
+
+const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+function isValidCategory(c: unknown): c is ColorCategory {
+  if (typeof c !== 'object' || c === null) return false;
+  const obj = c as Record<string, unknown>;
+  if (
+    typeof obj.id !== 'string' ||
+    obj.id.length === 0 ||
+    typeof obj.label !== 'string' ||
+    typeof obj.color !== 'string' ||
+    !HEX_COLOR_RE.test(obj.color)
+  ) {
+    return false;
+  }
+  if (
+    obj.nameColor !== undefined &&
+    (typeof obj.nameColor !== 'string' || !HEX_COLOR_RE.test(obj.nameColor))
+  ) {
+    return false;
+  }
+  if (
+    obj.titleColor !== undefined &&
+    (typeof obj.titleColor !== 'string' || !HEX_COLOR_RE.test(obj.titleColor))
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function isValidLevelMapping(m: unknown): m is LevelMapping {
+  if (typeof m !== 'object' || m === null) return false;
+  const obj = m as Record<string, unknown>;
+  return (
+    typeof obj.rawLevel === 'string' &&
+    obj.rawLevel.trim().length > 0 &&
+    typeof obj.displayTitle === 'string' &&
+    obj.displayTitle.trim().length > 0 &&
+    (obj.managerDisplayTitle === undefined || typeof obj.managerDisplayTitle === 'string')
+  );
+}
+
+function validateBundleMetadata(bundle: ChartBundle): {
+  categories: ColorCategory[];
+  levelMappings?: LevelMapping[];
+  levelDisplayMode?: LevelDisplayMode;
+} {
+  const categories = Array.isArray(bundle.chart.categories)
+    ? bundle.chart.categories.filter(isValidCategory)
+    : [];
+
+  let levelMappings: LevelMapping[] | undefined;
+  if (bundle.chart.levelMappings !== undefined) {
+    if (!Array.isArray(bundle.chart.levelMappings)) {
+      throw new Error(
+        t('chart_store.error_import_invalid_metadata', {
+          detail: 'levelMappings must be an array',
+        }),
+      );
+    }
+    const valid = bundle.chart.levelMappings.filter(isValidLevelMapping);
+    if (valid.length === 0 && bundle.chart.levelMappings.length > 0) {
+      throw new Error(
+        t('chart_store.error_import_invalid_metadata', {
+          detail: 'All level mappings are malformed',
+        }),
+      );
+    }
+    levelMappings = valid.length > 0 ? valid : undefined;
+  }
+
+  let levelDisplayMode: LevelDisplayMode | undefined;
+  if (bundle.chart.levelDisplayMode !== undefined) {
+    if (!VALID_LEVEL_DISPLAY_MODES.has(bundle.chart.levelDisplayMode)) {
+      throw new Error(
+        t('chart_store.error_import_invalid_metadata', {
+          detail: `Invalid levelDisplayMode: "${bundle.chart.levelDisplayMode}"`,
+        }),
+      );
+    }
+    levelDisplayMode = bundle.chart.levelDisplayMode;
+  }
+
+  return { categories, levelMappings, levelDisplayMode };
+}
 
 export class ChartStore extends EventEmitter {
   private db: ChartDB;
@@ -185,9 +280,17 @@ export class ChartStore extends EventEmitter {
 
     const clonedTree = structuredClone(source.workingTree);
     const clonedCategories = structuredClone(source.categories);
-    const clonedLevelMappings = source.levelMappings ? structuredClone(source.levelMappings) : undefined;
+    const clonedLevelMappings = source.levelMappings
+      ? structuredClone(source.levelMappings)
+      : undefined;
     const clonedDisplayMode = source.levelDisplayMode;
-    return this.createChartFromTree(copyName, clonedTree, clonedCategories, clonedLevelMappings, clonedDisplayMode);
+    return this.createChartFromTree(
+      copyName,
+      clonedTree,
+      clonedCategories,
+      clonedLevelMappings,
+      clonedDisplayMode,
+    );
   }
 
   async renameChart(id: string, name: string): Promise<void> {
@@ -340,8 +443,11 @@ export class ChartStore extends EventEmitter {
         t('chart_store.error_import_invalid_tree', {
           detail: e instanceof Error ? e.message : String(e),
         }),
+        { cause: e },
       );
     }
+
+    const metadata = validateBundleMetadata(bundle);
 
     let name = bundle.chart.name;
     if (await this.db.isChartNameTaken(name)) {
@@ -359,9 +465,9 @@ export class ChartStore extends EventEmitter {
       createdAt: now,
       updatedAt: now,
       workingTree: bundle.chart.workingTree,
-      categories: bundle.chart.categories,
-      ...(bundle.chart.levelMappings && { levelMappings: bundle.chart.levelMappings }),
-      ...(bundle.chart.levelDisplayMode && { levelDisplayMode: bundle.chart.levelDisplayMode }),
+      categories: metadata.categories,
+      ...(metadata.levelMappings && { levelMappings: metadata.levelMappings }),
+      ...(metadata.levelDisplayMode && { levelDisplayMode: metadata.levelDisplayMode }),
     };
     await this.db.putChart(chart);
 
@@ -396,18 +502,21 @@ export class ChartStore extends EventEmitter {
         t('chart_store.error_import_invalid_tree', {
           detail: e instanceof Error ? e.message : String(e),
         }),
+        { cause: e },
       );
     }
 
+    const metadata = validateBundleMetadata(bundle);
+
     chart.workingTree = bundle.chart.workingTree;
-    chart.categories = bundle.chart.categories;
-    if (bundle.chart.levelMappings) {
-      chart.levelMappings = bundle.chart.levelMappings;
+    chart.categories = metadata.categories;
+    if (metadata.levelMappings) {
+      chart.levelMappings = metadata.levelMappings;
     } else {
       delete chart.levelMappings;
     }
-    if (bundle.chart.levelDisplayMode) {
-      chart.levelDisplayMode = bundle.chart.levelDisplayMode;
+    if (metadata.levelDisplayMode) {
+      chart.levelDisplayMode = metadata.levelDisplayMode;
     } else {
       delete chart.levelDisplayMode;
     }
