@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { showFirstVisitHelp } from '../../src/init/first-visit-helper';
+import type { IStorage } from '../../src/utils/storage';
 
-function makeStorage(): Record<string, string> & {
+function makeStorage(): IStorage & {
   getItem: ReturnType<typeof vi.fn>;
   setItem: ReturnType<typeof vi.fn>;
-  removeItem: ReturnType<typeof vi.fn>;
 } {
   const store: Record<string, string> = {};
   return {
@@ -14,6 +14,9 @@ function makeStorage(): Record<string, string> & {
     }),
     removeItem: vi.fn((key: string) => {
       delete store[key];
+    }),
+    clear: vi.fn(() => {
+      Object.keys(store).forEach((key) => delete store[key]);
     }),
   };
 }
