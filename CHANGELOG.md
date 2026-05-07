@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **First-visit onboarding** — when Arbol is opened for the first time, the Help & Reference dialog opens automatically with the "Getting Started" section expanded, replacing the simple welcome banner
+- **`initialSection` option for help dialog** — `showHelpDialog()` now accepts an `initialSection` parameter to control which accordion section is expanded by default
+
 ### Fixed
 
 - **Backup restore with best-effort rollback** — `restoreFullReplace()` validates all data before deleting existing charts; if writing fails, original data is restored on a best-effort basis (#14)
