@@ -20,7 +20,7 @@ An interactive org chart editor for the browser — manage multiple org charts w
 - **Accessible org chart** — full keyboard navigation (arrow keys, Enter, Space), ARIA tree semantics, screen reader announcements
 - **Mobile responsive** — collapsible sidebar on tablet/phone, touch-friendly 44px targets, works at 200% zoom
 - **i18n ready** — translation infrastructure with 400+ extractable strings, RTL-ready CSS logical properties
-- **First-time guidance** — welcome banner for new users, contextual "no results" hints
+- **First-time guidance** — help dialog with Getting Started guide for new users, contextual "no results" hints
 - **Loading indicators** — visual feedback for exports, imports, chart switching
 - Interactive hierarchical org chart visualization
 - Four sidebar tabs: People (add/edit), Import (files, paste, JSON editor, text normalization), Settings (presets, categories, fine-tuning), Charts (chart & version management)

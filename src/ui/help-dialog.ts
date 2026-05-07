@@ -66,10 +66,7 @@ function getHelpSections(): HelpSection[] {
           { tag: 'strong', text: t('help.chart_works.managers_label') },
           t('help.chart_works.managers_desc'),
         ],
-        [
-          { tag: 'strong', text: t('help.chart_works.ics_label') },
-          t('help.chart_works.ics_desc'),
-        ],
+        [{ tag: 'strong', text: t('help.chart_works.ics_label') }, t('help.chart_works.ics_desc')],
         [
           { tag: 'strong', text: t('help.chart_works.advisors_label') },
           t('help.chart_works.advisors_desc'),
@@ -129,14 +126,8 @@ function getHelpSections(): HelpSection[] {
           t('help.importing.how_2'),
         ],
         [t('help.importing.wizard')],
-        [
-          { tag: 'strong', text: t('help.importing.json_label') },
-          t('help.importing.json_desc'),
-        ],
-        [
-          { tag: 'strong', text: t('help.importing.csv_label') },
-          t('help.importing.csv_desc'),
-        ],
+        [{ tag: 'strong', text: t('help.importing.json_label') }, t('help.importing.json_desc')],
+        [{ tag: 'strong', text: t('help.importing.csv_label') }, t('help.importing.csv_desc')],
         [t('help.importing.normalize')],
         [t('help.importing.limit')],
       ],
@@ -237,18 +228,9 @@ function getHelpSections(): HelpSection[] {
           { tag: 'strong', text: t('help.analytics.headcount_label') },
           t('help.analytics.headcount_desc'),
         ],
-        [
-          { tag: 'strong', text: t('help.analytics.depth_label') },
-          t('help.analytics.depth_desc'),
-        ],
-        [
-          { tag: 'strong', text: t('help.analytics.ratio_label') },
-          t('help.analytics.ratio_desc'),
-        ],
-        [
-          { tag: 'strong', text: t('help.analytics.span_label') },
-          t('help.analytics.span_desc'),
-        ],
+        [{ tag: 'strong', text: t('help.analytics.depth_label') }, t('help.analytics.depth_desc')],
+        [{ tag: 'strong', text: t('help.analytics.ratio_label') }, t('help.analytics.ratio_desc')],
+        [{ tag: 'strong', text: t('help.analytics.span_label') }, t('help.analytics.span_desc')],
         [
           { tag: 'strong', text: t('help.analytics.alerts_label') },
           t('help.analytics.alerts_desc'),
@@ -258,9 +240,7 @@ function getHelpSections(): HelpSection[] {
     },
     {
       titleKey: 'help.comparison.title',
-      items: [
-        [t('help.comparison.desc')],
-      ],
+      items: [[t('help.comparison.desc')]],
     },
     {
       titleKey: 'help.your_data.title',
@@ -296,20 +276,14 @@ function getHelpSections(): HelpSection[] {
     {
       titleKey: 'help.exporting.title',
       items: [
-        [
-          { tag: 'strong', text: t('help.exporting.pptx_label') },
-          t('help.exporting.pptx_desc'),
-        ],
+        [{ tag: 'strong', text: t('help.exporting.pptx_label') }, t('help.exporting.pptx_desc')],
         [t('help.exporting.versions')],
         [t('help.exporting.scale')],
       ],
     },
     {
       titleKey: 'help.links.title',
-      items: [
-        [t('help.links.built_with')],
-        [t('help.links.report_bugs')],
-      ],
+      items: [[t('help.links.built_with')], [t('help.links.report_bugs')]],
     },
   ];
 }
@@ -431,6 +405,7 @@ function buildSampleOrgButton(onLoad: () => void, closeDialog: () => void): HTML
 export interface HelpDialogOptions {
   storage?: IStorage;
   onLoadSample?: () => void;
+  initialSection?: number;
 }
 
 export function showHelpDialog(options: HelpDialogOptions = {}): void {
@@ -488,18 +463,19 @@ export function showHelpDialog(options: HelpDialogOptions = {}): void {
   content.style.scrollbarWidth = 'thin';
 
   const sections = getHelpSections();
+  const initialSection = options.initialSection ?? 0;
   const closeRef = { fn: () => {} };
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i];
-    const isFirst = i === 0;
+    const isInitial = i === initialSection;
 
     const sectionEl = document.createElement('div');
-    sectionEl.className = isFirst ? 'help-section open' : 'help-section';
+    sectionEl.className = isInitial ? 'help-section open' : 'help-section';
 
     // Accordion header (button for keyboard accessibility)
     const headerBtn = document.createElement('button');
     headerBtn.className = 'help-section-header';
-    headerBtn.setAttribute('aria-expanded', String(isFirst));
+    headerBtn.setAttribute('aria-expanded', String(isInitial));
     const sectionTitle = t(section.titleKey);
     headerBtn.setAttribute('aria-label', t('help.section_toggle_aria', { section: sectionTitle }));
 
