@@ -10,10 +10,13 @@ let config: AppConfig = {};
  * Gracefully no-ops on 404, network errors, or malformed JSON.
  */
 export async function loadAppConfig(): Promise<void> {
+  config = {};
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
-    const response = await fetch('/arbol.config.json', { signal: controller.signal });
+    const baseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
+    const configUrl = `${baseUrl.replace(/\/$/, '')}/arbol.config.json`;
+    const response = await fetch(configUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
 
     if (response.status === 404) return;
