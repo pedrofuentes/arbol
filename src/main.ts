@@ -82,8 +82,8 @@ async function main(): Promise<void> {
   }
 
   // Show loading state during IndexedDB initialization
-  // Load enterprise app config (non-blocking, graceful on missing file)
-  loadAppConfig();
+  // Load enterprise app config (awaited so config is ready before UI renders)
+  await loadAppConfig();
   const appLoadingEl = document.createElement('div');
   appLoadingEl.className = 'app-loading';
   appLoadingEl.setAttribute('role', 'status');
@@ -149,6 +149,7 @@ async function main(): Promise<void> {
   let onSettingsSaved: (() => void) | null = null;
 
   // Controllers (initialized after rerender is defined)
+  // eslint-disable-next-line prefer-const
   let focusMode: FocusModeController;
   const selection = new SelectionManager();
 
@@ -234,6 +235,7 @@ async function main(): Promise<void> {
   focusMode.onExit(() => announce(t('focus.exited')));
 
   // Initialize comparison handler now that rerender and focusMode are defined
+  // eslint-disable-next-line prefer-const -- assigned after rerender and focusMode are defined
   comparison = createComparisonHandler({
     store,
     renderer,
@@ -462,7 +464,7 @@ async function main(): Promise<void> {
       exportCurrentChart();
     },
   });
-  const { undoBtn, redoBtn, settingsBtn, importBtn } = toolbar;
+  const { settingsBtn, importBtn } = toolbar;
 
   // Chart name header (moved offscreen — name shown in sidebar)
   const chartNameContainer = document.createElement('div');

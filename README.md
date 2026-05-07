@@ -96,7 +96,7 @@ TypeScript, Vite, D3.js, pptxgenjs — no UI framework, no backend.
 
 When deploying Arbol for an organization, you can provide company-specific import instructions to help users prepare their CSV files.
 
-Create a `public/arbol.config.json` file (it gets served at `/arbol.config.json`):
+Create a `public/arbol.config.json` file (it gets served at `/arbol.config.json`). A sample is included at `public/arbol.config.example.json`:
 
 ```json
 {

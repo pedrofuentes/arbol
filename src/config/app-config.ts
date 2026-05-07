@@ -12,17 +12,28 @@ let config: AppConfig = {};
 export async function loadAppConfig(): Promise<void> {
   try {
     const response = await fetch('/arbol.config.json');
-    if (!response.ok) return;
+    if (response.status === 404) return;
+    if (!response.ok) {
+      console.warn(`[arbol] Failed to load config: HTTP ${response.status}`);
+      return;
+    }
 
-    const json = await response.json();
+    let json: unknown;
+    try {
+      json = await response.json();
+    } catch {
+      console.warn('[arbol] Failed to parse arbol.config.json: invalid JSON');
+      return;
+    }
+
     if (json && typeof json === 'object') {
       config = {};
-      if (typeof json.importInstructions === 'string') {
-        config.importInstructions = json.importInstructions;
+      if (typeof (json as Record<string, unknown>).importInstructions === 'string') {
+        config.importInstructions = (json as Record<string, unknown>).importInstructions as string;
       }
     }
   } catch {
-    // Network error or malformed JSON — keep empty config
+    // Network error — keep empty config
   }
 }
 
