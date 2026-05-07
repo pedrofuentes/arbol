@@ -285,4 +285,12 @@ label.textContent = 'Remove this person?'; // should be t('dialog.remove.message
 | `src/renderer/layout-engine.ts`  | Custom tree layout with advisor/IC handling                   |
 | `src/i18n/en.ts`                 | English translation strings (900+ keys)                       |
 | `src/style.css`                  | Global styles, CSS custom properties                          |
+| `src/config/app-config.ts`       | Enterprise config loader (optional `arbol.config.json`)       |
 | `tests/setup.ts`                 | Test setup — Map-backed localStorage                          |
+
+## Enterprise Configuration
+
+- **Build-time config**: `public/arbol.config.json` is loaded at app startup via `src/config/app-config.ts`. When absent (404), the app works identically to unconfigured mode.
+- **`importInstructions`**: Markdown string rendered in the import wizard (Step 1) and help dialog. Uses `src/utils/markdown.ts` — a DOM-building renderer that uses `createElement`/`textContent`/`appendChild` exclusively (never `innerHTML`). Only `http:`/`https:` links are allowed.
+- **Config access**: use `getAppConfig()` from `src/config/app-config.ts`. Config is loaded in parallel with IndexedDB during `main()` init.
+- See `public/arbol.config.example.json` for the sample config format.
