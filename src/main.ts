@@ -34,15 +34,26 @@ import { FocusModeController } from './controllers/focus-mode';
 import { SelectionManager } from './controllers/selection-manager';
 import { SearchController } from './controllers/search-controller';
 import { announce } from './ui/announcer';
-import { createShowSingleCardMenu, createShowMultiSelectMenu, type ContextMenuDeps } from './init/context-menu-handler';
+import {
+  createShowSingleCardMenu,
+  createShowMultiSelectMenu,
+  type ContextMenuDeps,
+} from './init/context-menu-handler';
 import { buildToolbar, type ToolbarElements } from './init/toolbar-builder';
 import { buildFooter } from './init/footer-builder';
-import { showWelcomeBanner } from './ui/welcome-banner';
+import { showHelpDialog } from './ui/help-dialog';
+import { SAMPLE_ORG } from './data/sample-org';
 import { PropertyPanel } from './ui/property-panel';
 import { SettingsModal } from './ui/settings-modal';
 import { SettingsEditor } from './editor/settings-editor';
 import { ImportWizard } from './ui/import-wizard';
-import { WizardState, renderSourceStep, renderMappingStep, renderPreviewStep, renderImportStep } from './ui/import-wizard-steps';
+import {
+  WizardState,
+  renderSourceStep,
+  renderMappingStep,
+  renderPreviewStep,
+  renderImportStep,
+} from './ui/import-wizard-steps';
 import { registerShortcuts } from './init/shortcuts-handler';
 import type { ChartRecord, VersionRecord } from './types';
 import { AnalyticsDrawer } from './ui/analytics-drawer';
@@ -54,7 +65,8 @@ async function main(): Promise<void> {
 
   // Offscreen host for editors that need to exist but aren't visible in the sidebar
   const offscreenHost = document.createElement('div');
-  offscreenHost.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden;';
+  offscreenHost.style.cssText =
+    'position:absolute;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden;';
   document.body.appendChild(offscreenHost);
 
   // Load saved locale preference, default to 'en'
@@ -111,14 +123,19 @@ async function main(): Promise<void> {
   // Load per-chart level mappings
   levelStore.loadFromChart(activeChart);
 
-  const resolveTitle = (originalTitle: string, rawLevel?: string, isManager?: boolean, pinnedTitle?: boolean): string => {
+  const resolveTitle = (
+    originalTitle: string,
+    rawLevel?: string,
+    isManager?: boolean,
+    pinnedTitle?: boolean,
+  ): string => {
     if (pinnedTitle) return originalTitle;
     if (!rawLevel) return originalTitle;
     const mapped = levelStore.resolveTitle(rawLevel, isManager);
     return mapped ?? originalTitle;
   };
 
-  const renderer= new ChartRenderer({
+  const renderer = new ChartRenderer({
     container: chartArea,
     ...savedSettings,
     textAlign: savedSettings.textAlign as 'left' | 'center' | 'right',
@@ -140,11 +157,20 @@ async function main(): Promise<void> {
 
   const debouncedSave = debounce(() => {
     const fullTree = store.getTree();
-    chartStore.saveWorkingTree(fullTree, categoryStore.getAll(), store.mutationVersion, levelStore.toChartData()).catch((err) => {
-      console.error('Failed to save working tree:', err);
-      const isQuota = err instanceof DOMException && (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED');
-      showToast(t(isQuota ? 'error.storage_save_failed' : 'footer.save_failed'), 'error');
-    });
+    chartStore
+      .saveWorkingTree(
+        fullTree,
+        categoryStore.getAll(),
+        store.mutationVersion,
+        levelStore.toChartData(),
+      )
+      .catch((err) => {
+        console.error('Failed to save working tree:', err);
+        const isQuota =
+          err instanceof DOMException &&
+          (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED');
+        showToast(t(isQuota ? 'error.storage_save_failed' : 'footer.save_failed'), 'error');
+      });
   }, 500);
 
   const rerender = () => {
@@ -170,14 +196,20 @@ async function main(): Promise<void> {
     // Update category legend on the chart
     const categories = categoryStore.getAll();
     if (categories.length > 0) {
-      showCategoryLegend({ categories, container: chartArea, legendRows: renderer.getOptions().legendRows });
+      showCategoryLegend({
+        categories,
+        container: chartArea,
+        legendRows: renderer.getOptions().legendRows,
+      });
     } else {
       dismissCategoryLegend();
     }
 
     // Hide legend when analytics drawer is open
     if (analyticsDrawer?.isOpen()) {
-      const legend = chartArea.querySelector('[data-testid="category-legend"]') as HTMLElement | null;
+      const legend = chartArea.querySelector(
+        '[data-testid="category-legend"]',
+      ) as HTMLElement | null;
       if (legend) legend.style.display = 'none';
     }
   };
@@ -215,13 +247,13 @@ async function main(): Promise<void> {
 
   // Settings modal (opens via header button)
   const SECTION_TAB_MAP: Record<string, string> = {
-    'presets': 'presets',
-    'categories': 'categories',
+    presets: 'presets',
+    categories: 'categories',
     'card-dimensions': 'layout',
     'tree-spacing': 'layout',
     'ic-options': 'ic',
     'advisor-options': 'advisors',
-    'typography': 'typography',
+    typography: 'typography',
     'link-style': 'connectors',
     'card-style': 'cards',
     'headcount-badge': 'badges',
@@ -230,7 +262,6 @@ async function main(): Promise<void> {
     'level-mapping': 'level_mapping',
     'settings-io': 'backup',
     'backup-restore': 'backup',
-
   };
 
   function filterSettingsSections(tabId: string): void {
@@ -280,7 +311,9 @@ async function main(): Promise<void> {
         settingsSnapshot = null;
       }
     },
-    onTabChange: (tabId) => { filterSettingsSections(tabId); },
+    onTabChange: (tabId) => {
+      filterSettingsSections(tabId);
+    },
   });
 
   // Import wizard (opens via header button)
@@ -293,13 +326,20 @@ async function main(): Promise<void> {
       { id: 'preview', label: t('import_wizard.step_preview') },
       { id: 'import', label: t('import_wizard.step_import') },
     ],
-    onClose: () => { wizardState = {}; },
+    onClose: () => {
+      wizardState = {};
+    },
     onStepChange: async (stepId) => {
       const content = importWizard.getStepContentArea();
       const setNext = (ready: boolean) => importWizard.setNextEnabled(ready);
 
       // Prompt to save preset when leaving mapping step with a new mapping
-      if (stepId === 'preview' && wizardState.format === 'CSV' && wizardState.mapping && !wizardState.matchedPresetName) {
+      if (
+        stepId === 'preview' &&
+        wizardState.format === 'CSV' &&
+        wizardState.mapping &&
+        !wizardState.matchedPresetName
+      ) {
         // Suggest name from filename (e.g. "hr-export.csv" → "hr-export")
         const suggestedName = wizardState.fileName
           ? wizardState.fileName.replace(/\.[^.]+$/, '')
@@ -318,10 +358,18 @@ async function main(): Promise<void> {
       }
 
       switch (stepId) {
-        case 'source': renderSourceStep(content, wizardState, setNext); break;
-        case 'mapping': renderMappingStep(content, wizardState, setNext, mappingStore.getPresets()); break;
-        case 'preview': renderPreviewStep(content, wizardState, setNext); break;
-        case 'import': renderImportStep(content, wizardState, setNext); break;
+        case 'source':
+          renderSourceStep(content, wizardState, setNext);
+          break;
+        case 'mapping':
+          renderMappingStep(content, wizardState, setNext, mappingStore.getPresets());
+          break;
+        case 'preview':
+          renderPreviewStep(content, wizardState, setNext);
+          break;
+        case 'import':
+          renderImportStep(content, wizardState, setNext);
+          break;
       }
     },
     onComplete: async () => {
@@ -330,7 +378,11 @@ async function main(): Promise<void> {
         let finalTree = wizardState.tree;
         if (wizardState.nameNormalization || wizardState.titleNormalization) {
           const { normalizeTreeText } = await import('./utils/text-normalize');
-          finalTree = normalizeTreeText(finalTree, wizardState.nameNormalization ?? 'none', wizardState.titleNormalization ?? 'none');
+          finalTree = normalizeTreeText(
+            finalTree,
+            wizardState.nameNormalization ?? 'none',
+            wizardState.titleNormalization ?? 'none',
+          );
         }
         if (wizardState.destination === 'new' && wizardState.chartName) {
           const chart = await chartStore.createChartFromTree(wizardState.chartName, finalTree);
@@ -403,7 +455,9 @@ async function main(): Promise<void> {
       const content = importWizard.getStepContentArea();
       renderSourceStep(content, wizardState, (ready) => importWizard.setNextEnabled(ready));
     },
-    onExportClick: () => { exportCurrentChart(); },
+    onExportClick: () => {
+      exportCurrentChart();
+    },
   });
   const { undoBtn, redoBtn, settingsBtn, importBtn } = toolbar;
 
@@ -666,7 +720,9 @@ async function main(): Promise<void> {
     tooltip: t('analytics.drawer_toggle_tooltip'),
     ariaLabel: t('analytics.drawer_toggle_tooltip'),
     ariaKeyshortcuts: 'Control+Shift+a',
-    onClick: () => { analyticsDrawer.toggle(); },
+    onClick: () => {
+      analyticsDrawer.toggle();
+    },
   });
   headerRight.insertBefore(analyticsToggleBtn, toolbar.themeBtn);
 
@@ -728,7 +784,9 @@ async function main(): Promise<void> {
       showAddPopover({
         anchor: rect,
         parentName: node.name,
-        onAdd: (name, title) => { store.addChild(nodeId, { name, title }); },
+        onAdd: (name, title) => {
+          store.addChild(nodeId, { name, title });
+        },
         onCancel: () => {},
       });
     },
@@ -746,15 +804,22 @@ async function main(): Promise<void> {
         title: t('picker.move_to', { name: node.name }),
         managers,
         showDottedLineOption: true,
-      }).then((result) => {
-        if (result) {
-          store.moveNode(nodeId, result.managerId, result.dottedLine);
-          const targetNode = findNodeById(tree, result.managerId);
-          announce(t('announce.moved', { name: node.name, target: targetNode?.name ?? t('announce.move_fallback_target') }));
-        }
-      }).catch((e) => {
-        showToast(e instanceof Error ? e.message : String(e), 'error');
-      });
+      })
+        .then((result) => {
+          if (result) {
+            store.moveNode(nodeId, result.managerId, result.dottedLine);
+            const targetNode = findNodeById(tree, result.managerId);
+            announce(
+              t('announce.moved', {
+                name: node.name,
+                target: targetNode?.name ?? t('announce.move_fallback_target'),
+              }),
+            );
+          }
+        })
+        .catch((e) => {
+          showToast(e instanceof Error ? e.message : String(e), 'error');
+        });
     },
     onRemove: (nodeId) => {
       const tree = store.getTree();
@@ -778,7 +843,10 @@ async function main(): Promise<void> {
         const descendantCount = descendants.length - 1;
         showConfirmDialog({
           title: t('dialog.remove_manager.title'),
-          message: t('dialog.remove_manager.message', { name: node.name, count: String(descendantCount) }),
+          message: t('dialog.remove_manager.message', {
+            name: node.name,
+            count: String(descendantCount),
+          }),
           confirmLabel: t('dialog.remove_manager.reassign'),
           cancelLabel: t('dialog.remove_manager.remove_all', { count: String(descendantCount) }),
           danger: false,
@@ -841,7 +909,9 @@ async function main(): Promise<void> {
     const directReports = node.children?.length ?? 0;
     const totalOrg = store.getDescendantCount(nodeId);
     const avgSpan = avgSpanOfControl(node);
-    const categories = categoryStore.getAll().map((c) => ({ id: c.id, label: c.label, color: c.color }));
+    const categories = categoryStore
+      .getAll()
+      .map((c) => ({ id: c.id, label: c.label, color: c.color }));
     propertyPanel.show(node, parent?.name ?? null, directReports, totalOrg, avgSpan, categories);
   };
 
@@ -857,8 +927,17 @@ async function main(): Promise<void> {
       const node = findNodeById(tree, panelNodeId);
       if (node) {
         const parent = findParent(tree, panelNodeId);
-        const categories = categoryStore.getAll().map((c) => ({ id: c.id, label: c.label, color: c.color }));
-        propertyPanel.update(node, parent?.name ?? null, node.children?.length ?? 0, store.getDescendantCount(panelNodeId), avgSpanOfControl(node), categories);
+        const categories = categoryStore
+          .getAll()
+          .map((c) => ({ id: c.id, label: c.label, color: c.color }));
+        propertyPanel.update(
+          node,
+          parent?.name ?? null,
+          node.children?.length ?? 0,
+          store.getDescendantCount(panelNodeId),
+          avgSpanOfControl(node),
+          categories,
+        );
       } else {
         propertyPanel.hide();
         renderer.setSelectedNode(null);
@@ -1021,7 +1100,15 @@ async function main(): Promise<void> {
   });
 
   rerender();
-  showWelcomeBanner(chartArea);
+
+  const WELCOME_KEY = 'arbol-welcome-seen';
+  if (!localStorage.getItem(WELCOME_KEY)) {
+    showHelpDialog({
+      initialSection: 1,
+      onLoadSample: () => store.fromJSON(JSON.stringify(SAMPLE_ORG)),
+    });
+    localStorage.setItem(WELCOME_KEY, 'true');
+  }
 }
 
 window.addEventListener('unhandledrejection', (event) => {
@@ -1045,7 +1132,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const message = document.createElement('p');
       message.textContent = e instanceof Error ? e.message : 'An unexpected error occurred';
       const hint = document.createElement('p');
-      hint.textContent = t('app.refresh_hint') || 'Try refreshing the page. If the issue persists, clear your browser data for this site.';
+      hint.textContent =
+        t('app.refresh_hint') ||
+        'Try refreshing the page. If the issue persists, clear your browser data for this site.';
       errorDiv.appendChild(heading);
       errorDiv.appendChild(message);
       errorDiv.appendChild(hint);
