@@ -5,6 +5,7 @@ import { extractHeaders, parseCsvToTree } from '../utils/csv-parser';
 import { normalizeText } from '../utils/text-normalize';
 import { flattenTree } from '../utils/tree';
 import { ColumnMapper } from './column-mapper';
+import { renderImportInstructions } from './import-instructions';
 
 export interface WizardState {
   rawText?: string;
@@ -40,6 +41,12 @@ export function renderSourceStep(
   desc.className = 'wizard-step-desc';
   desc.textContent = t('import_wizard.source_desc');
   container.appendChild(desc);
+
+  // Company-specific import instructions (from arbol.config.json)
+  const instructions = renderImportInstructions();
+  if (instructions) {
+    container.appendChild(instructions);
+  }
 
   // Drop zone
   const dropzone = document.createElement('div');
