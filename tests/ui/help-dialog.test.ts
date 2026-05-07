@@ -105,8 +105,8 @@ describe('showHelpDialog', () => {
     const headers = document.querySelectorAll('.help-section-header');
     expect(headers.length).toBeGreaterThan(0);
     const headerTexts = Array.from(headers).map((h) => h.textContent);
-    expect(headerTexts.some(t => t!.includes('Getting Started'))).toBe(true);
-    expect(headerTexts.some(t => t!.includes('Keyboard Shortcuts'))).toBe(true);
+    expect(headerTexts.some((t) => t!.includes('Getting Started'))).toBe(true);
+    expect(headerTexts.some((t) => t!.includes('Keyboard Shortcuts'))).toBe(true);
   });
 
   it('contains Your Data section with privacy message', () => {
@@ -118,14 +118,18 @@ describe('showHelpDialog', () => {
 
   it('renders Clear All Data button', () => {
     showHelpDialog();
-    const clearBtn = document.querySelector('[aria-label="Clear all local data"]') as HTMLButtonElement;
+    const clearBtn = document.querySelector(
+      '[aria-label="Clear all local data"]',
+    ) as HTMLButtonElement;
     expect(clearBtn).not.toBeNull();
     expect(clearBtn.textContent).toContain('Clear All Data');
   });
 
   it('Clear All Data button triggers confirmation dialog', async () => {
     showHelpDialog();
-    const clearBtn = document.querySelector('[aria-label="Clear all local data"]') as HTMLButtonElement;
+    const clearBtn = document.querySelector(
+      '[aria-label="Clear all local data"]',
+    ) as HTMLButtonElement;
     clearBtn.click();
 
     // Confirm dialog should appear with danger warning
@@ -242,25 +246,48 @@ describe('showHelpDialog', () => {
 
   it('renders sample org button when onLoadSample is provided', () => {
     showHelpDialog({ onLoadSample: vi.fn() });
-    const btn = Array.from(document.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Load Sample Org Chart'),
+    const btn = Array.from(document.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Load Sample Org Chart'),
     );
     expect(btn).toBeDefined();
   });
 
   it('does not render sample org button when onLoadSample is omitted', () => {
     showHelpDialog();
-    const btn = Array.from(document.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Load Sample Org Chart'),
+    const btn = Array.from(document.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Load Sample Org Chart'),
     );
     expect(btn).toBeUndefined();
   });
 
   it('sample org button has accessible aria-label', () => {
     showHelpDialog({ onLoadSample: vi.fn() });
-    const btn = Array.from(document.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('Load Sample Org Chart'),
+    const btn = Array.from(document.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Load Sample Org Chart'),
     );
     expect(btn!.getAttribute('aria-label')).toBe('Load a sample organization chart');
+  });
+
+  // ─── initialSection Tests ─────────────────────────────────────────
+
+  it('opens Getting Started section when initialSection is 1', () => {
+    showHelpDialog({ initialSection: 1 });
+    const sections = document.querySelectorAll('.help-section');
+    expect(sections[0].classList.contains('open')).toBe(false);
+    expect(sections[1].classList.contains('open')).toBe(true);
+  });
+
+  it('sets aria-expanded correctly for initialSection', () => {
+    showHelpDialog({ initialSection: 1 });
+    const headers = document.querySelectorAll('.help-section-header');
+    expect(headers[0].getAttribute('aria-expanded')).toBe('false');
+    expect(headers[1].getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('defaults to section 0 when initialSection is not provided', () => {
+    showHelpDialog();
+    const sections = document.querySelectorAll('.help-section');
+    expect(sections[0].classList.contains('open')).toBe(true);
+    expect(sections[1].classList.contains('open')).toBe(false);
   });
 });
