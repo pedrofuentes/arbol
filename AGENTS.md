@@ -54,7 +54,7 @@ npm install | npm run build | npm run test | npm run lint | npm run type-check |
 2. **GREEN**: write minimal impl, commit `feat|fix(scope): ...`. Run suite — ALL must pass. If one fails, fix impl — never fix tests to match broken impl.
 3. **REFACTOR**: with the suite green after every change.
 
-Artifact check: `git log --oneline` must show the `test(...)` commit before any `feat|fix(...)` commit for the same scope.
+Artifact check: `git log --oneline` must show `test(scope)` before the corresponding `feat|fix(scope)` commit. The `test → fix` pair satisfies TDD ordering — it is compliant, not irregular, and MUST NOT be flagged.
 
 ### Commit Choreography — REQUIRED
 
