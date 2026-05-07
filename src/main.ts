@@ -58,6 +58,7 @@ import { registerShortcuts } from './init/shortcuts-handler';
 import type { ChartRecord } from './types';
 import { AnalyticsDrawer } from './ui/analytics-drawer';
 import { AnalyticsEditor } from './editor/analytics-editor';
+import { loadAppConfig } from './config/app-config';
 
 async function main(): Promise<void> {
   const sidebar = document.getElementById('sidebar')!;
@@ -81,6 +82,8 @@ async function main(): Promise<void> {
   }
 
   // Show loading state during IndexedDB initialization
+  // Load enterprise app config (non-blocking, graceful on missing file)
+  loadAppConfig();
   const appLoadingEl = document.createElement('div');
   appLoadingEl.className = 'app-loading';
   appLoadingEl.setAttribute('role', 'status');

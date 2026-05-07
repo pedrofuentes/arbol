@@ -7,9 +7,7 @@ vi.mock('../../src/config/app-config', () => ({
 }));
 
 // Must import after mock setup
-const { renderImportInstructions } = await import(
-  '../../src/ui/import-instructions'
-);
+const { renderImportInstructions } = await import('../../src/ui/import-instructions');
 
 describe('renderImportInstructions', () => {
   beforeEach(() => {

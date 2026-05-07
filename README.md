@@ -92,6 +92,25 @@ Output goes to `dist/`.
 
 TypeScript, Vite, D3.js, pptxgenjs — no UI framework, no backend.
 
+## Enterprise Configuration
+
+When deploying Arbol for an organization, you can provide company-specific import instructions to help users prepare their CSV files.
+
+Create a `public/arbol.config.json` file (it gets served at `/arbol.config.json`):
+
+```json
+{
+  "importInstructions": "## How to export from Workday\n\n1. Go to **Reports** → People\n2. Select *Arbol Org Export*\n3. Click Export → CSV\n4. Upload the file here\n\n[Full guide](https://intranet.example.com/arbol)"
+}
+```
+
+The `importInstructions` field accepts **Markdown** (headings, bold, italic, links, lists, code blocks). Instructions appear in:
+
+- **Import wizard** — collapsible callout above the file upload area
+- **Help dialog** — dedicated accordion section
+
+When the config file is absent or `importInstructions` is not set, nothing changes — the app works the same as before.
+
 ## Project Structure
 
 ```

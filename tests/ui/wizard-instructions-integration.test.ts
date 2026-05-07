@@ -8,9 +8,7 @@ vi.mock('../../src/config/app-config', () => ({
   getAppConfig: mockGetAppConfig,
 }));
 
-const { renderSourceStep, WizardState } = await import(
-  '../../src/ui/import-wizard-steps'
-);
+const { renderSourceStep, WizardState } = await import('../../src/ui/import-wizard-steps');
 
 beforeAll(() => {
   setLocale('en', en);

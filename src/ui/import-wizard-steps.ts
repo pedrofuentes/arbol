@@ -62,9 +62,7 @@ export function renderSourceStep(
 
   const dropText = document.createElement('div');
   dropText.className = 'wizard-dropzone-text';
-  dropText.textContent = state.fileName
-    ? `✓ ${state.fileName}`
-    : t('import_wizard.drop_text');
+  dropText.textContent = state.fileName ? `✓ ${state.fileName}` : t('import_wizard.drop_text');
   dropzone.appendChild(dropText);
 
   const hint = document.createElement('div');
@@ -237,7 +235,10 @@ export function renderMappingStep(
   }
 }
 
-function findMatchingPreset(headers: string[], presets: MappingPreset[]): MappingPreset | undefined {
+function findMatchingPreset(
+  headers: string[],
+  presets: MappingPreset[],
+): MappingPreset | undefined {
   const headerSet = new Set(headers.map((h) => h.toLowerCase()));
   for (const preset of presets) {
     const m = preset.mapping;
@@ -365,7 +366,9 @@ export function renderPreviewStep(
     if (sampleNodes.length < state.nodeCount!) {
       const more = document.createElement('p');
       more.className = 'wizard-sample-more';
-      more.textContent = t('import_wizard.preview_more', { count: String(state.nodeCount! - sampleNodes.length) });
+      more.textContent = t('import_wizard.preview_more', {
+        count: String(state.nodeCount! - sampleNodes.length),
+      });
       tableWrap.appendChild(more);
     }
 

@@ -16,9 +16,7 @@ describe('app-config', () => {
   describe('loadAppConfig', () => {
     it('loads valid config with importInstructions', async () => {
       const config = { importInstructions: '## Hello' };
-      fetchSpy.mockResolvedValue(
-        new Response(JSON.stringify(config), { status: 200 }),
-      );
+      fetchSpy.mockResolvedValue(new Response(JSON.stringify(config), { status: 200 }));
 
       await loadAppConfig();
       const result = getAppConfig();
@@ -42,9 +40,7 @@ describe('app-config', () => {
     });
 
     it('returns empty config on malformed JSON', async () => {
-      fetchSpy.mockResolvedValue(
-        new Response('not json {{{', { status: 200 }),
-      );
+      fetchSpy.mockResolvedValue(new Response('not json {{{', { status: 200 }));
 
       await loadAppConfig();
       const result = getAppConfig();
