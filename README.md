@@ -96,7 +96,15 @@ TypeScript, Vite, D3.js, pptxgenjs — no UI framework, no backend.
 
 When deploying Arbol for an organization, you can provide company-specific import instructions to help users prepare their CSV files.
 
-Create a `public/arbol.config.json` file (it gets served at `/arbol.config.json`). A sample is included at `public/arbol.config.example.json`:
+### Quick setup
+
+1. Copy `public/arbol.config.example.json` to `public/arbol.config.json`
+2. Replace the example content with your company's instructions
+3. Build and deploy — the instructions appear automatically in the import wizard and help dialog
+
+### Config file format
+
+Create a `public/arbol.config.json` file (Vite serves it at `/arbol.config.json`):
 
 ```json
 {
@@ -104,12 +112,38 @@ Create a `public/arbol.config.json` file (it gets served at `/arbol.config.json`
 }
 ```
 
-The `importInstructions` field accepts **Markdown** (headings, bold, italic, links, lists, code blocks). Instructions appear in:
+The `importInstructions` value is a **Markdown string** (use `\n` for newlines in JSON). Instructions appear in:
 
 - **Import wizard** — collapsible callout above the file upload area
 - **Help dialog** — dedicated accordion section
 
 When the config file is absent or `importInstructions` is not set, nothing changes — the app works the same as before.
+
+### Supported markdown syntax
+
+The built-in renderer (`src/utils/markdown.ts`) supports a safe subset of Markdown using DOM APIs only (no `innerHTML`, zero dependencies):
+
+| Syntax                                     | Renders as               |
+| ------------------------------------------ | ------------------------ |
+| `# Heading` / `## Heading` / `### Heading` | `<h1>` / `<h2>` / `<h3>` |
+| `**bold**`                                 | `<strong>`               |
+| `*italic*`                                 | `<em>`                   |
+| `` `code` ``                               | `<code>`                 |
+| `[text](https://url)`                      | `<a>` (http/https only)  |
+| `- item`, `* item`, or `+ item`            | `<ul><li>`               |
+| `1. item`                                  | `<ol><li>`               |
+| ` ``` ` fenced code blocks                 | `<pre><code>`            |
+
+**Not supported:** tables, images, nested lists, HTML passthrough (intentionally omitted for security).
+
+### Tips for writing good instructions
+
+- **Keep it short** — 5–10 lines max. Users skim, not read.
+- **Use numbered steps** — "1. Open X → 2. Click Y → 3. Upload here" works best
+- **Name the specific HR system** — "Open **Workday**" not "Open your HR system"
+- **Link to internal docs** — `[Full guide](https://intranet.example.com/arbol)` for details
+- **Include column names** — mention `name`, `title`, `manager_name` so users know what to expect
+- **Test with real users** — have someone follow the instructions cold before deploying
 
 ## Project Structure
 

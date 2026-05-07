@@ -45,8 +45,26 @@ const SETTING_GROUPS: SettingGroup[] = [
     title: 'settings.group.card_dimensions',
     description: 'settings.section_desc.card_dimensions',
     settings: [
-      { key: 'nodeWidth', label: 'settings.label.node_width', description: 'settings.desc.node_width', type: 'range', min: 50, max: 250, step: 1, unit: 'px' },
-      { key: 'nodeHeight', label: 'settings.label.node_height', description: 'settings.desc.node_height', type: 'range', min: 16, max: 60, step: 1, unit: 'px' },
+      {
+        key: 'nodeWidth',
+        label: 'settings.label.node_width',
+        description: 'settings.desc.node_width',
+        type: 'range',
+        min: 50,
+        max: 250,
+        step: 1,
+        unit: 'px',
+      },
+      {
+        key: 'nodeHeight',
+        label: 'settings.label.node_height',
+        description: 'settings.desc.node_height',
+        type: 'range',
+        min: 16,
+        max: 60,
+        step: 1,
+        unit: 'px',
+      },
     ],
   },
   {
@@ -64,7 +82,16 @@ const SETTING_GROUPS: SettingGroup[] = [
         step: 1,
         unit: 'px',
       },
-      { key: 'branchSpacing', label: 'settings.label.branch_spacing', description: 'settings.desc.branch_spacing', type: 'range', min: 0, max: 60, step: 1, unit: 'px' },
+      {
+        key: 'branchSpacing',
+        label: 'settings.label.branch_spacing',
+        description: 'settings.desc.branch_spacing',
+        type: 'range',
+        min: 0,
+        max: 60,
+        step: 1,
+        unit: 'px',
+      },
       {
         key: 'topVerticalSpacing',
         label: 'settings.label.top_vertical_spacing',
@@ -92,8 +119,26 @@ const SETTING_GROUPS: SettingGroup[] = [
     title: 'settings.group.ic_options',
     description: 'settings.section_desc.ic_options',
     settings: [
-      { key: 'icNodeWidth', label: 'settings.label.ic_node_width', description: 'settings.desc.ic_node_width', type: 'range', min: 40, max: 220, step: 1, unit: 'px' },
-      { key: 'icGap', label: 'settings.label.ic_gap', description: 'settings.desc.ic_gap', type: 'range', min: 0, max: 20, step: 1, unit: 'px' },
+      {
+        key: 'icNodeWidth',
+        label: 'settings.label.ic_node_width',
+        description: 'settings.desc.ic_node_width',
+        type: 'range',
+        min: 40,
+        max: 220,
+        step: 1,
+        unit: 'px',
+      },
+      {
+        key: 'icGap',
+        label: 'settings.label.ic_gap',
+        description: 'settings.desc.ic_gap',
+        type: 'range',
+        min: 0,
+        max: 20,
+        step: 1,
+        unit: 'px',
+      },
       {
         key: 'icContainerPadding',
         label: 'settings.label.ic_container_padding',
@@ -104,7 +149,12 @@ const SETTING_GROUPS: SettingGroup[] = [
         step: 1,
         unit: 'px',
       },
-      { key: 'icContainerFill', label: 'settings.label.ic_container_fill', description: 'settings.desc.ic_container_fill', type: 'color' },
+      {
+        key: 'icContainerFill',
+        label: 'settings.label.ic_container_fill',
+        description: 'settings.desc.ic_container_fill',
+        type: 'color',
+      },
       {
         key: 'icContainerBorderRadius',
         label: 'settings.label.ic_container_border_radius',
@@ -122,9 +172,36 @@ const SETTING_GROUPS: SettingGroup[] = [
     title: 'settings.group.advisor_options',
     description: 'settings.section_desc.advisor_options',
     settings: [
-      { key: 'palTopGap', label: 'settings.label.advisor_top_gap', description: 'settings.desc.advisor_top_gap', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
-      { key: 'palBottomGap', label: 'settings.label.advisor_bottom_gap', description: 'settings.desc.advisor_bottom_gap', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
-      { key: 'palRowGap', label: 'settings.label.advisor_row_gap', description: 'settings.desc.advisor_row_gap', type: 'range', min: 0, max: 20, step: 1, unit: 'px' },
+      {
+        key: 'palTopGap',
+        label: 'settings.label.advisor_top_gap',
+        description: 'settings.desc.advisor_top_gap',
+        type: 'range',
+        min: 0,
+        max: 40,
+        step: 1,
+        unit: 'px',
+      },
+      {
+        key: 'palBottomGap',
+        label: 'settings.label.advisor_bottom_gap',
+        description: 'settings.desc.advisor_bottom_gap',
+        type: 'range',
+        min: 0,
+        max: 40,
+        step: 1,
+        unit: 'px',
+      },
+      {
+        key: 'palRowGap',
+        label: 'settings.label.advisor_row_gap',
+        description: 'settings.desc.advisor_row_gap',
+        type: 'range',
+        min: 0,
+        max: 20,
+        step: 1,
+        unit: 'px',
+      },
       {
         key: 'palCenterGap',
         label: 'settings.label.advisor_center_gap',
@@ -142,10 +219,46 @@ const SETTING_GROUPS: SettingGroup[] = [
     title: 'settings.group.typography',
     description: 'settings.section_desc.typography',
     settings: [
-      { key: 'nameFontSize', label: 'settings.label.name_font_size', description: 'settings.desc.name_font_size', type: 'range', min: 5, max: 20, step: 1, unit: 'px' },
-      { key: 'titleFontSize', label: 'settings.label.title_font_size', description: 'settings.desc.title_font_size', type: 'range', min: 5, max: 20, step: 1, unit: 'px' },
-      { key: 'textPaddingTop', label: 'settings.label.text_padding_top', description: 'settings.desc.text_padding_top', type: 'range', min: 0, max: 15, step: 1, unit: 'px' },
-      { key: 'textGap', label: 'settings.label.text_gap', description: 'settings.desc.text_gap', type: 'range', min: 0, max: 10, step: 1, unit: 'px' },
+      {
+        key: 'nameFontSize',
+        label: 'settings.label.name_font_size',
+        description: 'settings.desc.name_font_size',
+        type: 'range',
+        min: 5,
+        max: 20,
+        step: 1,
+        unit: 'px',
+      },
+      {
+        key: 'titleFontSize',
+        label: 'settings.label.title_font_size',
+        description: 'settings.desc.title_font_size',
+        type: 'range',
+        min: 5,
+        max: 20,
+        step: 1,
+        unit: 'px',
+      },
+      {
+        key: 'textPaddingTop',
+        label: 'settings.label.text_padding_top',
+        description: 'settings.desc.text_padding_top',
+        type: 'range',
+        min: 0,
+        max: 15,
+        step: 1,
+        unit: 'px',
+      },
+      {
+        key: 'textGap',
+        label: 'settings.label.text_gap',
+        description: 'settings.desc.text_gap',
+        type: 'range',
+        min: 0,
+        max: 10,
+        step: 1,
+        unit: 'px',
+      },
       {
         key: 'textAlign',
         label: 'settings.label.text_alignment',
@@ -158,7 +271,16 @@ const SETTING_GROUPS: SettingGroup[] = [
         label: 'settings.label.font_family',
         description: 'settings.desc.font_family',
         type: 'select',
-        options: ['Calibri', 'Arial', 'Verdana', 'Georgia', 'Tahoma', 'Trebuchet MS', 'Segoe UI', 'Microsoft Sans Serif'],
+        options: [
+          'Calibri',
+          'Arial',
+          'Verdana',
+          'Georgia',
+          'Tahoma',
+          'Trebuchet MS',
+          'Segoe UI',
+          'Microsoft Sans Serif',
+        ],
       },
       {
         key: 'textPaddingHorizontal',
@@ -170,8 +292,18 @@ const SETTING_GROUPS: SettingGroup[] = [
         step: 1,
         unit: 'px',
       },
-      { key: 'nameColor', label: 'settings.label.name_color', description: 'settings.desc.name_color', type: 'color' },
-      { key: 'titleColor', label: 'settings.label.title_color', description: 'settings.desc.title_color', type: 'color' },
+      {
+        key: 'nameColor',
+        label: 'settings.label.name_color',
+        description: 'settings.desc.name_color',
+        type: 'color',
+      },
+      {
+        key: 'titleColor',
+        label: 'settings.label.title_color',
+        description: 'settings.desc.title_color',
+        type: 'color',
+      },
     ],
   },
   {
@@ -179,9 +311,28 @@ const SETTING_GROUPS: SettingGroup[] = [
     title: 'settings.group.link_style',
     description: 'settings.section_desc.link_style',
     settings: [
-      { key: 'linkWidth', label: 'settings.label.link_width', description: 'settings.desc.link_width', type: 'range', min: 0.5, max: 5, step: 0.5, unit: 'px' },
-      { key: 'linkColor', label: 'settings.label.link_color', description: 'settings.desc.link_color', type: 'color' },
-      { key: 'dottedLineDash', label: 'settings.label.dotted_line_pattern', description: 'settings.desc.dotted_line_pattern', type: 'text' },
+      {
+        key: 'linkWidth',
+        label: 'settings.label.link_width',
+        description: 'settings.desc.link_width',
+        type: 'range',
+        min: 0.5,
+        max: 5,
+        step: 0.5,
+        unit: 'px',
+      },
+      {
+        key: 'linkColor',
+        label: 'settings.label.link_color',
+        description: 'settings.desc.link_color',
+        type: 'color',
+      },
+      {
+        key: 'dottedLineDash',
+        label: 'settings.label.dotted_line_pattern',
+        description: 'settings.desc.dotted_line_pattern',
+        type: 'text',
+      },
     ],
   },
   {
@@ -199,8 +350,18 @@ const SETTING_GROUPS: SettingGroup[] = [
         step: 0.5,
         unit: 'px',
       },
-      { key: 'cardStroke', label: 'settings.label.card_stroke', description: 'settings.desc.card_stroke', type: 'color' },
-      { key: 'cardFill', label: 'settings.label.card_fill', description: 'settings.desc.card_fill', type: 'color' },
+      {
+        key: 'cardStroke',
+        label: 'settings.label.card_stroke',
+        description: 'settings.desc.card_stroke',
+        type: 'color',
+      },
+      {
+        key: 'cardFill',
+        label: 'settings.label.card_fill',
+        description: 'settings.desc.card_fill',
+        type: 'color',
+      },
       {
         key: 'cardBorderRadius',
         label: 'settings.label.card_border_radius',
@@ -218,7 +379,12 @@ const SETTING_GROUPS: SettingGroup[] = [
     title: 'settings.group.headcount_badge',
     description: 'settings.section_desc.headcount_badge',
     settings: [
-      { key: 'showHeadcount', label: 'settings.label.show_headcount', description: 'settings.desc.show_headcount', type: 'checkbox' },
+      {
+        key: 'showHeadcount',
+        label: 'settings.label.show_headcount',
+        description: 'settings.desc.show_headcount',
+        type: 'checkbox',
+      },
       {
         key: 'headcountBadgeFontSize',
         label: 'settings.label.badge_font_size',
@@ -259,8 +425,18 @@ const SETTING_GROUPS: SettingGroup[] = [
         step: 1,
         unit: 'px',
       },
-      { key: 'headcountBadgeColor', label: 'settings.label.badge_color', description: 'settings.desc.badge_color', type: 'color' },
-      { key: 'headcountBadgeTextColor', label: 'settings.label.badge_text_color', description: 'settings.desc.badge_text_color', type: 'color' },
+      {
+        key: 'headcountBadgeColor',
+        label: 'settings.label.badge_color',
+        description: 'settings.desc.badge_color',
+        type: 'color',
+      },
+      {
+        key: 'headcountBadgeTextColor',
+        label: 'settings.label.badge_text_color',
+        description: 'settings.desc.badge_text_color',
+        type: 'color',
+      },
     ],
   },
   {
@@ -268,7 +444,12 @@ const SETTING_GROUPS: SettingGroup[] = [
     title: 'settings.group.level_badge',
     description: 'settings.section_desc.level_badge',
     settings: [
-      { key: 'showLevel', label: 'settings.label.show_level', description: 'settings.desc.show_level', type: 'checkbox' },
+      {
+        key: 'showLevel',
+        label: 'settings.label.show_level',
+        description: 'settings.desc.show_level',
+        type: 'checkbox',
+      },
       {
         key: 'levelBadgeFontSize',
         label: 'settings.label.level_badge_font_size',
@@ -289,8 +470,18 @@ const SETTING_GROUPS: SettingGroup[] = [
         step: 1,
         unit: 'px',
       },
-      { key: 'levelBadgeColor', label: 'settings.label.level_badge_color', description: 'settings.desc.level_badge_color', type: 'color' },
-      { key: 'levelBadgeTextColor', label: 'settings.label.level_badge_text_color', description: 'settings.desc.level_badge_text_color', type: 'color' },
+      {
+        key: 'levelBadgeColor',
+        label: 'settings.label.level_badge_color',
+        description: 'settings.desc.level_badge_color',
+        type: 'color',
+      },
+      {
+        key: 'levelBadgeTextColor',
+        label: 'settings.label.level_badge_text_color',
+        description: 'settings.desc.level_badge_text_color',
+        type: 'color',
+      },
     ],
   },
   {
@@ -358,10 +549,6 @@ const DEFAULT_SETTINGS: Record<string, number | string | boolean> = {
   levelBadgeSize: 22,
   legendRows: 0,
 };
-
-function sectionIdFromTitle(title: string): string {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-}
 
 export class SettingsEditor {
   private container: HTMLElement;
@@ -452,7 +639,10 @@ export class SettingsEditor {
     }
     const opts = this.renderer.getOptions();
     const categories = this.categoryStore?.getAll() ?? [];
-    this.previewRenderer = new PreviewRenderer(area, { ...opts, categories } as Partial<RendererOptions>);
+    this.previewRenderer = new PreviewRenderer(area, {
+      ...opts,
+      categories,
+    } as Partial<RendererOptions>);
     this.previewRenderer.render();
   }
 
@@ -561,7 +751,9 @@ export class SettingsEditor {
 
     // Unified Presets section
     this.container.appendChild(
-      this.createAccordionSection('presets', t('settings.presets_section'), () => this.presetPanel.build()),
+      this.createAccordionSection('presets', t('settings.presets_section'), () =>
+        this.presetPanel.build(),
+      ),
     );
 
     // Node Categories section
@@ -571,11 +763,12 @@ export class SettingsEditor {
 
       if (this.categoryPresetStore) {
         const toolbarContainer = document.createElement('div');
-        toolbarContainer.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid var(--border-subtle);';
+        toolbarContainer.style.cssText =
+          'margin-top:8px;padding-top:8px;border-top:1px solid var(--border-subtle);';
 
         new PresetToolbar({
           container: toolbarContainer,
-          presetNames: () => this.categoryPresetStore!.getPresets().map(p => p.name),
+          presetNames: () => this.categoryPresetStore!.getPresets().map((p) => p.name),
           chartEntries: () => this.cachedChartEntries,
           onSave: (name) => {
             if (!this.categoryStore) return;
@@ -595,7 +788,7 @@ export class SettingsEditor {
           onCopyFromChart: async (chartId) => {
             if (!this.chartStore) return;
             const charts = await this.chartStore.getCharts();
-            const chart = charts.find(c => c.id === chartId);
+            const chart = charts.find((c) => c.id === chartId);
             if (!chart || !this.categoryStore) return;
             this.categoryStore.replaceAll(chart.categories);
             this.rerenderCallback();
@@ -645,7 +838,11 @@ export class SettingsEditor {
 
     // Settings Import/Export section
     this.container.appendChild(
-      this.createAccordionSection('settings-io', t('settings.settings_section'), this.settingsIOPanel.build()),
+      this.createAccordionSection(
+        'settings-io',
+        t('settings.settings_section'),
+        this.settingsIOPanel.build(),
+      ),
     );
 
     // Level Mapping section
@@ -661,11 +858,12 @@ export class SettingsEditor {
 
       if (this.levelPresetStore) {
         const toolbarContainer = document.createElement('div');
-        toolbarContainer.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid var(--border-subtle);';
+        toolbarContainer.style.cssText =
+          'margin-top:8px;padding-top:8px;border-top:1px solid var(--border-subtle);';
 
         new PresetToolbar({
           container: toolbarContainer,
-          presetNames: () => this.levelPresetStore!.getPresets().map(p => p.name),
+          presetNames: () => this.levelPresetStore!.getPresets().map((p) => p.name),
           chartEntries: () => this.cachedChartEntries,
           onSave: (name) => {
             this.levelPresetStore!.savePreset({
@@ -686,12 +884,14 @@ export class SettingsEditor {
           onCopyFromChart: async (chartId) => {
             if (!this.chartStore) return;
             const charts = await this.chartStore.getCharts();
-            const chart = charts.find(c => c.id === chartId);
+            const chart = charts.find((c) => c.id === chartId);
             if (!chart) return;
             this.levelStore!.replaceAll(chart.levelMappings ?? []);
             this.levelStore!.setDisplayMode(chart.levelDisplayMode ?? 'original');
             this.rerenderCallback();
-            showToast(t('preset.copied', { type: t('preset.type_level_mappings'), name: chart.name }));
+            showToast(
+              t('preset.copied', { type: t('preset.type_level_mappings'), name: chart.name }),
+            );
           },
           onDelete: (name) => {
             this.levelPresetStore!.deletePreset(name);
@@ -704,14 +904,22 @@ export class SettingsEditor {
       }
 
       this.container.appendChild(
-        this.createAccordionSection('level-mapping', t('settings.level_mapping_section'), levelContainer),
+        this.createAccordionSection(
+          'level-mapping',
+          t('settings.level_mapping_section'),
+          levelContainer,
+        ),
       );
     }
 
     // Backup & Restore section
     if (this.backupPanel) {
       this.container.appendChild(
-        this.createAccordionSection('backup-restore', t('settings.backup_section'), this.backupPanel.build()),
+        this.createAccordionSection(
+          'backup-restore',
+          t('settings.backup_section'),
+          this.backupPanel.build(),
+        ),
       );
     }
 
@@ -722,16 +930,22 @@ export class SettingsEditor {
   private refreshChartEntries(): void {
     if (!this.chartStore) return;
     const activeId = this.chartStore.getActiveChartId();
-    this.chartStore.getCharts().then(charts => {
-      this.cachedChartEntries = charts
-        .filter(c => c.id !== activeId)
-        .map(c => ({ id: c.id, name: c.name }));
-    }).catch(() => {
-      this.cachedChartEntries = [];
-    });
+    this.chartStore
+      .getCharts()
+      .then((charts) => {
+        this.cachedChartEntries = charts
+          .filter((c) => c.id !== activeId)
+          .map((c) => ({ id: c.id, name: c.name }));
+      })
+      .catch(() => {
+        this.cachedChartEntries = [];
+      });
   }
 
-  private createControl(setting: SettingDef, currentValue: number | string | boolean): HTMLDivElement {
+  private createControl(
+    setting: SettingDef,
+    currentValue: number | string | boolean,
+  ): HTMLDivElement {
     const wrapper = document.createElement('div');
     wrapper.className = 'setting-row';
     const inputId = `setting-${setting.key}`;
@@ -771,8 +985,19 @@ export class SettingsEditor {
     if (isModified) resetBtn.classList.add('visible');
     resetBtn.textContent = '↺';
     if (defaultValue !== undefined) {
-      resetBtn.setAttribute('aria-label', t('settings.reset_setting_aria', { label: t(setting.label), default: String(defaultValue) }));
-      resetBtn.setAttribute('data-tooltip', t('settings.reset_setting_tooltip', { default: String(defaultValue) + (setting.unit ? ' ' + setting.unit : '') }));
+      resetBtn.setAttribute(
+        'aria-label',
+        t('settings.reset_setting_aria', {
+          label: t(setting.label),
+          default: String(defaultValue),
+        }),
+      );
+      resetBtn.setAttribute(
+        'data-tooltip',
+        t('settings.reset_setting_tooltip', {
+          default: String(defaultValue) + (setting.unit ? ' ' + setting.unit : ''),
+        }),
+      );
     }
 
     const updateModifiedState = (newValue: number | string | boolean) => {

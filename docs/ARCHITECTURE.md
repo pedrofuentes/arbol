@@ -19,6 +19,7 @@ Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 
                                      CategoryStore  ← per-chart (via ChartStore)
                                      ChartStore     ← IndexedDB (charts + versions)
                                      ChartDB        ← IndexedDB wrapper
+                                     AppConfig      ← /arbol.config.json (enterprise deploy-time config)
 ```
 
 **Data flow is unidirectional:** editors and on-canvas interactions mutate `OrgStore`, which emits `"change"` events, and the renderer re-draws the SVG. Settings flow through `SettingsStore` → `ChartRenderer.updateOptions()`.
@@ -31,6 +32,7 @@ Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 
 arbol/
 ├── src/
 │   ├── analytics/       # D3 visualization charts: sunburst-chart, span-chart, treemap-chart
+│   ├── config/          # app-config: enterprise config loader (arbol.config.json → AppConfig)
 │   ├── controllers/     # focus-mode, search-controller, selection-manager
 │   ├── i18n/            # i18n system (t(), tp(), setLocale()) + en.ts (900+ translation keys)
 │   ├── editor/          # Sidebar tabs: chart-editor, form-editor, import-editor, json-editor, settings-editor, tab-switcher, utilities-editor
@@ -38,8 +40,8 @@ arbol/
 │   ├── renderer/        # chart-renderer (D3 SVG), layout-engine, keyboard-nav, preview-renderer (vanilla DOM, no D3), side-by-side-renderer, zoom-manager
 │   ├── store/           # org-store, chart-store, chart-db, category-store, category-preset-store, level-store, level-preset-store, settings-store, mapping-store, backup-manager, theme-manager, theme-presets
 │   ├── ui/              # 32 components: context-menu, inline-editor, command-palette, property-panel, preset-toolbar, create-chart-dialog, settings-modal, import-wizard, confirm-dialog, manager-picker, toast, loading-overlay, etc.
-│   ├── utils/           # tree helpers (find/flatten/clone/isM1), csv-parser, contrast, shortcuts, event-emitter, filename, file-type, id, search, storage, text-normalize, tree-diff
-│   ├── types.ts         # All interfaces: OrgNode, ColumnMapping, ColorCategory, ChartRecord, VersionRecord, DiffStatus, CategoryPreset, LevelMappingPreset
+│   ├── utils/           # tree helpers (find/flatten/clone/isM1), csv-parser, markdown (safe DOM-building renderer), contrast, shortcuts, event-emitter, filename, file-type, id, search, storage, text-normalize, tree-diff
+│   ├── types.ts         # All interfaces: OrgNode, ColumnMapping, ColorCategory, ChartRecord, VersionRecord, DiffStatus, CategoryPreset, LevelMappingPreset, AppConfig
 │   ├── main.ts          # App entry — wires stores, renderer, editors, menus, shortcuts
 │   ├── version.ts       # App version (injected from package.json at build time)
 │   └── style.css        # Global styles, CSS custom properties, dark/light themes
@@ -56,15 +58,15 @@ arbol/
 
 ## Key Technical Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| No backend | Client-only (IndexedDB + localStorage) | Simplicity, privacy — all data stays in the user's browser |
-| D3.js for rendering | D3 tree layout + SVG | Mature tree layout algorithms, full SVG control |
-| No UI frameworks | Vanilla TypeScript + DOM APIs | Avoids ownership conflicts with D3's SVG control; smaller bundle |
-| pptxgenjs for export | PowerPoint generation in-browser | No server needed; direct PPTX creation |
-| Unidirectional data flow | OrgStore → events → Renderer | Predictable state management without a framework |
-| IndexedDB for charts | Per-chart storage with versions | Handles larger datasets than localStorage; supports multiple charts |
-| i18n from day one | `t('key')` system with flat dot-notation | RTL support, future locale additions |
+| Decision                 | Choice                                   | Rationale                                                           |
+| ------------------------ | ---------------------------------------- | ------------------------------------------------------------------- |
+| No backend               | Client-only (IndexedDB + localStorage)   | Simplicity, privacy — all data stays in the user's browser          |
+| D3.js for rendering      | D3 tree layout + SVG                     | Mature tree layout algorithms, full SVG control                     |
+| No UI frameworks         | Vanilla TypeScript + DOM APIs            | Avoids ownership conflicts with D3's SVG control; smaller bundle    |
+| pptxgenjs for export     | PowerPoint generation in-browser         | No server needed; direct PPTX creation                              |
+| Unidirectional data flow | OrgStore → events → Renderer             | Predictable state management without a framework                    |
+| IndexedDB for charts     | Per-chart storage with versions          | Handles larger datasets than localStorage; supports multiple charts |
+| i18n from day one        | `t('key')` system with flat dot-notation | RTL support, future locale additions                                |
 
 ## Module Boundaries
 
@@ -101,12 +103,12 @@ The core data type is `OrgNode` (defined in `src/types.ts`):
 
 ```typescript
 interface OrgNode {
-  id: string;            // UUID via crypto.randomUUID()
-  name: string;          // Person's name (max 500 chars)
-  title: string;         // Job title (max 500 chars)
-  categoryId?: string;   // Optional color category reference
-  dottedLine?: boolean;  // When true, parent link renders as dotted line
-  children?: OrgNode[];  // Omit for leaf nodes
+  id: string; // UUID via crypto.randomUUID()
+  name: string; // Person's name (max 500 chars)
+  title: string; // Job title (max 500 chars)
+  categoryId?: string; // Optional color category reference
+  dottedLine?: boolean; // When true, parent link renders as dotted line
+  children?: OrgNode[]; // Omit for leaf nodes
 }
 ```
 
@@ -115,6 +117,7 @@ interface OrgNode {
 ## Spacing Model
 
 All spacing is configurable via `RendererOptions` — **never hardcode these values**:
+
 - **Card:** `nodeWidth`, `nodeHeight`, `cardFill`, `cardStroke`, `cardStrokeWidth`, `cardBorderRadius`
 - **Layout:** `horizontalSpacing`, `branchSpacing`, `topVerticalSpacing`, `bottomVerticalSpacing`
 - **Advisors:** `palTopGap`, `palBottomGap`, `palRowGap`, `palCenterGap`
@@ -128,73 +131,73 @@ All spacing is configurable via `RendererOptions` — **never hardcode these val
 
 All mutating methods call `snapshot()` (saves undo state) then `emit()` (notifies listeners).
 
-| Method | Signature |
-|--------|-----------|
-| `getTree()` | `(): OrgNode` |
-| `addChild()` | `(parentId, {name, title}): OrgNode` |
-| `removeNode()` | `(id): void` — must be leaf; errors on root |
-| `removeNodeWithReassign()` | `(nodeId, newParentId): void` — moves children, then deletes |
-| `updateNode()` | `(id, {name?, title?}): void` |
-| `moveNode()` | `(nodeId, newParentId): void` — validates no circular ancestry |
-| `bulkMoveNodes()` | `(ids[], newParentId): void` — single undo step |
-| `bulkRemoveNodes()` | `(ids[]): void` — leaf nodes only, single undo step |
-| `undo()` / `redo()` | `(): boolean` — max 50 entries |
-| `canUndo()` / `canRedo()` | `(): boolean` |
-| `toJSON()` / `fromJSON()` | Serialize/deserialize tree |
-| `onChange()` | `(listener): () => void` — returns unsubscribe fn |
-| `getDescendantCount()` | `(nodeId): number` |
-| `isDescendant()` | `(ancestorId, nodeId): boolean` |
-| `setNodeCategory()` | `(nodeId, categoryId \| null): void` |
-| `bulkSetCategory()` | `(ids[], categoryId \| null): void` — single undo step |
+| Method                     | Signature                                                      |
+| -------------------------- | -------------------------------------------------------------- |
+| `getTree()`                | `(): OrgNode`                                                  |
+| `addChild()`               | `(parentId, {name, title}): OrgNode`                           |
+| `removeNode()`             | `(id): void` — must be leaf; errors on root                    |
+| `removeNodeWithReassign()` | `(nodeId, newParentId): void` — moves children, then deletes   |
+| `updateNode()`             | `(id, {name?, title?}): void`                                  |
+| `moveNode()`               | `(nodeId, newParentId): void` — validates no circular ancestry |
+| `bulkMoveNodes()`          | `(ids[], newParentId): void` — single undo step                |
+| `bulkRemoveNodes()`        | `(ids[]): void` — leaf nodes only, single undo step            |
+| `undo()` / `redo()`        | `(): boolean` — max 50 entries                                 |
+| `canUndo()` / `canRedo()`  | `(): boolean`                                                  |
+| `toJSON()` / `fromJSON()`  | Serialize/deserialize tree                                     |
+| `onChange()`               | `(listener): () => void` — returns unsubscribe fn              |
+| `getDescendantCount()`     | `(nodeId): number`                                             |
+| `isDescendant()`           | `(ancestorId, nodeId): boolean`                                |
+| `setNodeCategory()`        | `(nodeId, categoryId \| null): void`                           |
+| `bulkSetCategory()`        | `(ids[], categoryId \| null): void` — single undo step         |
 
 ### ChartStore (`src/store/chart-store.ts`)
 
-| Method | Signature |
-|--------|-----------|
-| `init()` | `(): Promise<void>` — opens IndexedDB, migrates, loads last-used chart |
-| `getCharts()` | `(): ChartRecord[]` — sorted by updatedAt desc |
-| `getActiveChart()` | `(): ChartRecord \| null` |
-| `createChart()` | `(name, categories?, levelMappings?, levelDisplayMode?): Promise<ChartRecord>` |
-| `switchChart()` | `(chartId): Promise<void>` — saves current, loads target |
-| `deleteChart()` | `(chartId): Promise<void>` — cascades to versions |
-| `renameChart()` | `(chartId, name): Promise<void>` |
-| `saveWorkingTree()` | `(): Promise<void>` — persists to IndexedDB |
-| `isDirty()` | `(): boolean` |
-| `createVersion()` | `(name): Promise<VersionRecord>` — snapshots tree, clears dirty |
-| `getVersions()` | `(chartId): Promise<VersionRecord[]>` |
-| `deleteVersion()` | `(versionId): Promise<void>` |
-| `restoreVersion()` | `(versionId): Promise<void>` — replaces working tree |
-| `onChange()` | `(listener): () => void` |
+| Method              | Signature                                                                      |
+| ------------------- | ------------------------------------------------------------------------------ |
+| `init()`            | `(): Promise<void>` — opens IndexedDB, migrates, loads last-used chart         |
+| `getCharts()`       | `(): ChartRecord[]` — sorted by updatedAt desc                                 |
+| `getActiveChart()`  | `(): ChartRecord \| null`                                                      |
+| `createChart()`     | `(name, categories?, levelMappings?, levelDisplayMode?): Promise<ChartRecord>` |
+| `switchChart()`     | `(chartId): Promise<void>` — saves current, loads target                       |
+| `deleteChart()`     | `(chartId): Promise<void>` — cascades to versions                              |
+| `renameChart()`     | `(chartId, name): Promise<void>`                                               |
+| `saveWorkingTree()` | `(): Promise<void>` — persists to IndexedDB                                    |
+| `isDirty()`         | `(): boolean`                                                                  |
+| `createVersion()`   | `(name): Promise<VersionRecord>` — snapshots tree, clears dirty                |
+| `getVersions()`     | `(chartId): Promise<VersionRecord[]>`                                          |
+| `deleteVersion()`   | `(versionId): Promise<void>`                                                   |
+| `restoreVersion()`  | `(versionId): Promise<void>` — replaces working tree                           |
+| `onChange()`        | `(listener): () => void`                                                       |
 
 ### LevelStore (`src/store/level-store.ts`)
 
-| Method | Signature |
-|--------|-----------|
-| `getMappings()` | `(): LevelMapping[]` |
-| `getMapping()` | `(rawLevel): LevelMapping \| undefined` |
-| `addMapping()` | `(rawLevel, displayTitle, managerDisplayTitle?): void` |
-| `updateMapping()` | `(rawLevel, displayTitle, managerDisplayTitle?): void` |
-| `removeMapping()` | `(rawLevel): void` |
-| `replaceAll()` | `(mappings): void` |
-| `getDisplayMode()` | `(): LevelDisplayMode` |
-| `setDisplayMode()` | `(mode): void` |
-| `resolveTitle()` | `(rawLevel, isManager?): string \| undefined` |
-| `importFromCsv()` | `(csvText): number` |
-| `exportToCsv()` | `(): string` |
-| `loadFromChart()` | `(chart): void` |
-| `toChartData()` | `(): { levelMappings, levelDisplayMode }` |
+| Method             | Signature                                              |
+| ------------------ | ------------------------------------------------------ |
+| `getMappings()`    | `(): LevelMapping[]`                                   |
+| `getMapping()`     | `(rawLevel): LevelMapping \| undefined`                |
+| `addMapping()`     | `(rawLevel, displayTitle, managerDisplayTitle?): void` |
+| `updateMapping()`  | `(rawLevel, displayTitle, managerDisplayTitle?): void` |
+| `removeMapping()`  | `(rawLevel): void`                                     |
+| `replaceAll()`     | `(mappings): void`                                     |
+| `getDisplayMode()` | `(): LevelDisplayMode`                                 |
+| `setDisplayMode()` | `(mode): void`                                         |
+| `resolveTitle()`   | `(rawLevel, isManager?): string \| undefined`          |
+| `importFromCsv()`  | `(csvText): number`                                    |
+| `exportToCsv()`    | `(): string`                                           |
+| `loadFromChart()`  | `(chart): void`                                        |
+| `toChartData()`    | `(): { levelMappings, levelDisplayMode }`              |
 
 ## Interactions
 
-| Input | Target | Behavior |
-|-------|--------|----------|
-| **Click** | Card | Highlights card; shows property panel; clears multi-selection |
-| **Click** | Chart name in header | Opens inline editor for chart name |
-| **Right-click** | Card | Shows context menu |
-| **Shift+click** | Card | Toggles multi-select; root excluded |
-| **Drag** | Canvas | Pan chart (d3-zoom) |
-| **Scroll wheel** | Canvas | Zoom in/out (0.1x–4.0x via d3-zoom) |
-| **Type** | Search bar | Highlights matching nodes; dims non-matches |
+| Input            | Target               | Behavior                                                      |
+| ---------------- | -------------------- | ------------------------------------------------------------- |
+| **Click**        | Card                 | Highlights card; shows property panel; clears multi-selection |
+| **Click**        | Chart name in header | Opens inline editor for chart name                            |
+| **Right-click**  | Card                 | Shows context menu                                            |
+| **Shift+click**  | Card                 | Toggles multi-select; root excluded                           |
+| **Drag**         | Canvas               | Pan chart (d3-zoom)                                           |
+| **Scroll wheel** | Canvas               | Zoom in/out (0.1x–4.0x via d3-zoom)                           |
+| **Type**         | Search bar           | Highlights matching nodes; dims non-matches                   |
 
 ### Context Menu
 
@@ -208,14 +211,14 @@ Right-click a non-leaf node → `"Focus"` renders only that subtree. **Focus is 
 
 ### Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| `Ctrl+Z` | Undo |
-| `Ctrl+Shift+Z` / `Ctrl+Y` | Redo |
-| `Ctrl+E` | Export to PPTX |
-| `Ctrl+F` | Focus search input |
-| `Ctrl+K` | Command Palette |
-| `Escape` | Priority chain: (1) dismiss version viewer → (2) clear search → (3) exit focus mode → (4) clear multi-selection → (5) deselect node |
+| Key                       | Action                                                                                                                              |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `Ctrl+Z`                  | Undo                                                                                                                                |
+| `Ctrl+Shift+Z` / `Ctrl+Y` | Redo                                                                                                                                |
+| `Ctrl+E`                  | Export to PPTX                                                                                                                      |
+| `Ctrl+F`                  | Focus search input                                                                                                                  |
+| `Ctrl+K`                  | Command Palette                                                                                                                     |
+| `Escape`                  | Priority chain: (1) dismiss version viewer → (2) clear search → (3) exit focus mode → (4) clear multi-selection → (5) deselect node |
 
 ## i18n
 
@@ -248,7 +251,8 @@ container.appendChild(label);
 
 // Renderer using options — no hardcoded values
 const x = d.x - options.nodeWidth / 2;
-const rect = group.append('rect')
+const rect = group
+  .append('rect')
   .attr('width', options.nodeWidth)
   .attr('height', options.nodeHeight)
   .attr('rx', options.cardBorderRadius);
@@ -261,24 +265,24 @@ const rect = group.append('rect')
 container.innerHTML = `<span>${node.name}</span>`;
 
 // NEVER: hardcoded values
-const x = d.x - 120;  // magic number
-rect.attr('rx', 8);    // should be options.cardBorderRadius
+const x = d.x - 120; // magic number
+rect.attr('rx', 8); // should be options.cardBorderRadius
 
 // NEVER: hardcoded strings
-label.textContent = 'Remove this person?';  // should be t('dialog.remove.message')
+label.textContent = 'Remove this person?'; // should be t('dialog.remove.message')
 ```
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/main.ts` | App entry — wires stores, renderer, editors, menus, shortcuts |
-| `src/types.ts` | All TypeScript interfaces |
-| `src/store/org-store.ts` | Core tree data + mutations + undo/redo |
-| `src/store/chart-store.ts` | Chart persistence in IndexedDB |
-| `src/store/settings-store.ts` | User preferences in localStorage |
-| `src/renderer/chart-renderer.ts` | D3 SVG rendering |
-| `src/renderer/layout-engine.ts` | Custom tree layout with advisor/IC handling |
-| `src/i18n/en.ts` | English translation strings (900+ keys) |
-| `src/style.css` | Global styles, CSS custom properties |
-| `tests/setup.ts` | Test setup — Map-backed localStorage |
+| File                             | Purpose                                                       |
+| -------------------------------- | ------------------------------------------------------------- |
+| `src/main.ts`                    | App entry — wires stores, renderer, editors, menus, shortcuts |
+| `src/types.ts`                   | All TypeScript interfaces                                     |
+| `src/store/org-store.ts`         | Core tree data + mutations + undo/redo                        |
+| `src/store/chart-store.ts`       | Chart persistence in IndexedDB                                |
+| `src/store/settings-store.ts`    | User preferences in localStorage                              |
+| `src/renderer/chart-renderer.ts` | D3 SVG rendering                                              |
+| `src/renderer/layout-engine.ts`  | Custom tree layout with advisor/IC handling                   |
+| `src/i18n/en.ts`                 | English translation strings (900+ keys)                       |
+| `src/style.css`                  | Global styles, CSS custom properties                          |
+| `tests/setup.ts`                 | Test setup — Map-backed localStorage                          |
