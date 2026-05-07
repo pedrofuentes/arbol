@@ -39,9 +39,9 @@ import {
   createShowMultiSelectMenu,
   type ContextMenuDeps,
 } from './init/context-menu-handler';
-import { buildToolbar, type ToolbarElements } from './init/toolbar-builder';
+import { buildToolbar } from './init/toolbar-builder';
 import { buildFooter } from './init/footer-builder';
-import { showHelpDialog } from './ui/help-dialog';
+import { showFirstVisitHelp } from './init/first-visit-helper';
 import { SAMPLE_ORG } from './data/sample-org';
 import { PropertyPanel } from './ui/property-panel';
 import { SettingsModal } from './ui/settings-modal';
@@ -55,7 +55,7 @@ import {
   renderImportStep,
 } from './ui/import-wizard-steps';
 import { registerShortcuts } from './init/shortcuts-handler';
-import type { ChartRecord, VersionRecord } from './types';
+import type { ChartRecord } from './types';
 import { AnalyticsDrawer } from './ui/analytics-drawer';
 import { AnalyticsEditor } from './editor/analytics-editor';
 
@@ -1101,14 +1101,7 @@ async function main(): Promise<void> {
 
   rerender();
 
-  const WELCOME_KEY = 'arbol-welcome-seen';
-  if (!localStorage.getItem(WELCOME_KEY)) {
-    showHelpDialog({
-      initialSection: 1,
-      onLoadSample: () => store.fromJSON(JSON.stringify(SAMPLE_ORG)),
-    });
-    localStorage.setItem(WELCOME_KEY, 'true');
-  }
+  showFirstVisitHelp(() => store.fromJSON(JSON.stringify(SAMPLE_ORG)));
 }
 
 window.addEventListener('unhandledrejection', (event) => {
