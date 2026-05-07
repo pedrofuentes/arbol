@@ -2405,6 +2405,63 @@ textarea:focus-visible {
   font-family: var(--font-sans);
 }
 
+/* ─── Import Instructions (enterprise config) ─── */
+.import-instructions {
+  margin-bottom: 12px;
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  font-size: var(--text-sm);
+}
+.import-instructions summary {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  user-select: none;
+}
+.import-instructions summary:hover { color: var(--text-primary); }
+.import-instructions[open] summary { border-bottom: 1px solid var(--border-default); }
+.import-instructions-content {
+  padding: 12px 16px;
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+}
+.import-instructions-content h1,
+.import-instructions-content h2,
+.import-instructions-content h3 {
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+}
+.import-instructions-content p { margin: 0 0 8px; }
+.import-instructions-content ol,
+.import-instructions-content ul {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+.import-instructions-content li { margin-bottom: 4px; }
+.import-instructions-content a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.import-instructions-content a:hover { color: var(--accent-hover); }
+.import-instructions-content code {
+  background: var(--bg-muted);
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9em;
+}
+.import-instructions-content pre {
+  background: var(--bg-muted);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  margin: 0 0 8px;
+}
+
 .wizard-dropzone {
   border: 2px dashed var(--border-strong);
   border-radius: var(--radius-lg);

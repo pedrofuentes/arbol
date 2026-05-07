@@ -244,6 +244,10 @@ const en: Record<string, string> = {
   'settings_modal.preview_fit': 'Fit to view',
   'settings_modal.preview_reset': 'Reset to 100%',
 
+  // ─── Import Instructions ────────────────────────────────────────────
+  'import_instructions.summary': '📋 Import Instructions',
+  'import_instructions.help_title': 'Import Instructions',
+
   // ─── Import Wizard ──────────────────────────────────────────────────
   'import_wizard.title': '📂 Import Data',
   'import_wizard.aria_label': 'Import data wizard',

@@ -190,6 +190,10 @@ const es: Record<string, string> = {
   'settings_modal.preview_fit': 'Ajustar vista previa',
   'settings_modal.preview_reset': 'Restablecer vista previa',
 
+  // ─── Import Instructions ────────────────────────────────────────────
+  'import_instructions.summary': '📋 Instrucciones de importación',
+  'import_instructions.help_title': 'Instrucciones de importación',
+
   // ─── Import Wizard ──────────────────────────────────────────────────
   'import_wizard.title': 'Importar datos',
   'import_wizard.aria_label': 'Asistente de importación de datos',
