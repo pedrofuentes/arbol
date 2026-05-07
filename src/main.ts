@@ -58,6 +58,7 @@ import { registerShortcuts } from './init/shortcuts-handler';
 import type { ChartRecord } from './types';
 import { AnalyticsDrawer } from './ui/analytics-drawer';
 import { AnalyticsEditor } from './editor/analytics-editor';
+import { loadAppConfig } from './config/app-config';
 
 async function main(): Promise<void> {
   const sidebar = document.getElementById('sidebar')!;
@@ -94,9 +95,9 @@ async function main(): Promise<void> {
   appLoadingEl.appendChild(loadingText);
   chartArea.appendChild(appLoadingEl);
 
-  // Initialize chart database and store
+  // Initialize chart database and load enterprise config in parallel
   const chartDB = new ChartDB();
-  await chartDB.open();
+  await Promise.all([chartDB.open(), loadAppConfig()]);
   const chartStore = new ChartStore(chartDB);
   const activeChart = await chartStore.initialize();
 
@@ -146,6 +147,7 @@ async function main(): Promise<void> {
   let onSettingsSaved: (() => void) | null = null;
 
   // Controllers (initialized after rerender is defined)
+  // eslint-disable-next-line prefer-const
   let focusMode: FocusModeController;
   const selection = new SelectionManager();
 
@@ -231,6 +233,7 @@ async function main(): Promise<void> {
   focusMode.onExit(() => announce(t('focus.exited')));
 
   // Initialize comparison handler now that rerender and focusMode are defined
+  // eslint-disable-next-line prefer-const -- assigned after rerender and focusMode are defined
   comparison = createComparisonHandler({
     store,
     renderer,
@@ -459,7 +462,7 @@ async function main(): Promise<void> {
       exportCurrentChart();
     },
   });
-  const { undoBtn, redoBtn, settingsBtn, importBtn } = toolbar;
+  const { settingsBtn, importBtn } = toolbar;
 
   // Chart name header (moved offscreen — name shown in sidebar)
   const chartNameContainer = document.createElement('div');

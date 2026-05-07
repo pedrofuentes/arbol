@@ -2,6 +2,8 @@ import { createOverlay, trapFocus } from './dialog-utils';
 import { showConfirmDialog } from './confirm-dialog';
 import { t } from '../i18n';
 import { type IStorage, browserStorage } from '../utils/storage';
+import { getAppConfig } from '../config/app-config';
+import { renderMarkdown } from '../utils/markdown';
 
 const ARBOL_STORAGE_KEYS = [
   'arbol-org-data',
@@ -22,15 +24,16 @@ interface ShortcutEntry {
 
 interface HelpSection {
   titleKey: string;
-  type?: 'shortcuts-grid';
+  type?: 'shortcuts-grid' | 'markdown';
   shortcuts?: ShortcutEntry[];
   items?: HelpFragment[][];
+  markdown?: string;
   hasClearData?: boolean;
   hasSampleOrg?: boolean;
 }
 
 function getHelpSections(): HelpSection[] {
-  return [
+  const sections: HelpSection[] = [
     {
       titleKey: 'help.shortcuts.title',
       type: 'shortcuts-grid',
@@ -286,6 +289,21 @@ function getHelpSections(): HelpSection[] {
       items: [[t('help.links.built_with')], [t('help.links.report_bugs')]],
     },
   ];
+
+  // Conditionally add company-specific import instructions from config
+  const appConfig = getAppConfig();
+  if (appConfig.importInstructions?.trim()) {
+    // Insert after the "Importing Data" section
+    const importIdx = sections.findIndex((s) => s.titleKey === 'help.importing.title');
+    const insertAt = importIdx >= 0 ? importIdx + 1 : sections.length;
+    sections.splice(insertAt, 0, {
+      titleKey: 'import_instructions.help_title',
+      type: 'markdown',
+      markdown: appConfig.importInstructions,
+    });
+  }
+
+  return sections;
 }
 
 function buildHelpItem(fragments: HelpFragment[]): DocumentFragment {
@@ -513,6 +531,11 @@ export function showHelpDialog(options: HelpDialogOptions = {}): void {
 
     if (section.type === 'shortcuts-grid' && section.shortcuts) {
       body.appendChild(buildShortcutsGrid(section.shortcuts));
+    } else if (section.type === 'markdown' && section.markdown) {
+      const mdContent = document.createElement('div');
+      mdContent.className = 'import-instructions-content';
+      mdContent.appendChild(renderMarkdown(section.markdown));
+      body.appendChild(mdContent);
     } else if (section.items) {
       const list = document.createElement('ul');
       list.className = 'help-section-list';

@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **First-visit onboarding** — when Arbol is opened for the first time, the Help & Reference dialog opens automatically with the "Getting Started" section expanded, replacing the simple welcome banner
 - **`initialSection` option for help dialog** — `showHelpDialog()` now accepts an `initialSection` parameter to control which accordion section is expanded by default
+- **Enterprise import instructions** — deploy-time `arbol.config.json` lets organizations provide markdown-formatted CSV preparation instructions. Instructions appear as a collapsible callout in the import wizard (Step 1) and as a dedicated section in the help dialog. When no config is provided, the app behaves exactly as before.
+- **DOM-building markdown renderer** — safe subset renderer (`src/utils/markdown.ts`) using `createElement`/`textContent`/`appendChild` exclusively. Supports headings, bold, italic, code, links (http/https only), lists, and fenced code blocks with zero dependencies and structural XSS immunity.
 
 ### Fixed
 
