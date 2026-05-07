@@ -8,7 +8,8 @@ vi.mock('../../src/config/app-config', () => ({
   getAppConfig: mockGetAppConfig,
 }));
 
-const { renderSourceStep, WizardState } = await import('../../src/ui/import-wizard-steps');
+const { renderSourceStep } = await import('../../src/ui/import-wizard-steps');
+type WizardState = import('../../src/ui/import-wizard-steps').WizardState;
 
 beforeAll(() => {
   setLocale('en', en);
@@ -31,7 +32,7 @@ describe('renderSourceStep — import instructions integration', () => {
     mockGetAppConfig.mockReturnValue({
       importInstructions: '## Steps\n\n1. Do this',
     });
-    const state = {} as typeof WizardState;
+    const state = {} as WizardState;
     renderSourceStep(container, state, vi.fn());
     const instructions = container.querySelector('.import-instructions');
     expect(instructions).not.toBeNull();
@@ -39,7 +40,7 @@ describe('renderSourceStep — import instructions integration', () => {
 
   it('does not render import instructions when config is empty', () => {
     mockGetAppConfig.mockReturnValue({});
-    const state = {} as typeof WizardState;
+    const state = {} as WizardState;
     renderSourceStep(container, state, vi.fn());
     const instructions = container.querySelector('.import-instructions');
     expect(instructions).toBeNull();
@@ -49,7 +50,7 @@ describe('renderSourceStep — import instructions integration', () => {
     mockGetAppConfig.mockReturnValue({
       importInstructions: '## Guide\n\nFollow these steps',
     });
-    const state = {} as typeof WizardState;
+    const state = {} as WizardState;
     renderSourceStep(container, state, vi.fn());
     const instructions = container.querySelector('.import-instructions');
     const dropzone = container.querySelector('.wizard-dropzone');

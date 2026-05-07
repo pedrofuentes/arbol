@@ -82,8 +82,6 @@ async function main(): Promise<void> {
   }
 
   // Show loading state during IndexedDB initialization
-  // Load enterprise app config (awaited so config is ready before UI renders)
-  await loadAppConfig();
   const appLoadingEl = document.createElement('div');
   appLoadingEl.className = 'app-loading';
   appLoadingEl.setAttribute('role', 'status');
@@ -97,9 +95,9 @@ async function main(): Promise<void> {
   appLoadingEl.appendChild(loadingText);
   chartArea.appendChild(appLoadingEl);
 
-  // Initialize chart database and store
+  // Initialize chart database and load enterprise config in parallel
   const chartDB = new ChartDB();
-  await chartDB.open();
+  await Promise.all([chartDB.open(), loadAppConfig()]);
   const chartStore = new ChartStore(chartDB);
   const activeChart = await chartStore.initialize();
 

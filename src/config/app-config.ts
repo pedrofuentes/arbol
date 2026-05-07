@@ -11,7 +11,11 @@ let config: AppConfig = {};
  */
 export async function loadAppConfig(): Promise<void> {
   try {
-    const response = await fetch('/arbol.config.json');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const response = await fetch('/arbol.config.json', { signal: controller.signal });
+    clearTimeout(timeoutId);
+
     if (response.status === 404) return;
     if (!response.ok) {
       console.warn(`[arbol] Failed to load config: HTTP ${response.status}`);
@@ -33,7 +37,7 @@ export async function loadAppConfig(): Promise<void> {
       }
     }
   } catch {
-    // Network error — keep empty config
+    console.warn('[arbol] Failed to load config: network error or timeout');
   }
 }
 
