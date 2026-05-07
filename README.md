@@ -130,7 +130,7 @@ The built-in renderer (`src/utils/markdown.ts`) supports a safe subset of Markdo
 | `*italic*`                                 | `<em>`                   |
 | `` `code` ``                               | `<code>`                 |
 | `[text](https://url)`                      | `<a>` (http/https only)  |
-| `- item` or `* item`                       | `<ul><li>`               |
+| `- item`, `* item`, or `+ item`            | `<ul><li>`               |
 | `1. item`                                  | `<ol><li>`               |
 | ` ``` ` fenced code blocks                 | `<pre><code>`            |
 
