@@ -14,7 +14,8 @@ export async function loadAppConfig(): Promise<void> {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
-    const baseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
+    // Vite injects import.meta.env.BASE_URL at build time (typed via src/vite-env.d.ts)
+    const baseUrl = import.meta.env.BASE_URL || '/';
     const configUrl = `${baseUrl.replace(/\/$/, '')}/arbol.config.json`;
     const response = await fetch(configUrl, { signal: controller.signal });
     clearTimeout(timeoutId);
