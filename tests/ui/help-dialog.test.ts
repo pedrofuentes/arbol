@@ -149,14 +149,14 @@ describe('showHelpDialog', () => {
     expect(firstSection.querySelector('.help-section-body')).not.toBeNull();
   });
 
-  it('Keyboard Shortcuts is the first section', () => {
+  it('Getting Started is the first section', () => {
     showHelpDialog();
     const sections = document.querySelectorAll('.help-section');
     const firstHeader = sections[0].querySelector('.help-section-header');
-    expect(firstHeader!.textContent).toContain('Keyboard Shortcuts');
+    expect(firstHeader!.textContent).toContain('Getting Started');
   });
 
-  it('Keyboard Shortcuts section is expanded by default', () => {
+  it('first section is expanded by default', () => {
     showHelpDialog();
     const sections = document.querySelectorAll('.help-section');
     expect(sections[0].classList.contains('open')).toBe(true);

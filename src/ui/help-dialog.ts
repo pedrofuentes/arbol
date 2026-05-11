@@ -35,6 +35,15 @@ interface HelpSection {
 function getHelpSections(): HelpSection[] {
   const sections: HelpSection[] = [
     {
+      titleKey: 'help.getting_started.title',
+      hasSampleOrg: true,
+      items: [
+        [t('help.getting_started.pan_zoom')],
+        [t('help.getting_started.right_click')],
+        [t('help.getting_started.sidebar')],
+      ],
+    },
+    {
       titleKey: 'help.shortcuts.title',
       type: 'shortcuts-grid',
       shortcuts: [
@@ -51,15 +60,6 @@ function getHelpSections(): HelpSection[] {
         { keys: ['Space'], desc: t('help.shortcuts.nav_multiselect') },
         { keys: ['Home', 'End'], desc: t('help.shortcuts.nav_home_end') },
         { keys: ['Shift+F10'], desc: t('help.shortcuts.nav_context_menu') },
-      ],
-    },
-    {
-      titleKey: 'help.getting_started.title',
-      hasSampleOrg: true,
-      items: [
-        [t('help.getting_started.pan_zoom')],
-        [t('help.getting_started.right_click')],
-        [t('help.getting_started.sidebar')],
       ],
     },
     {
@@ -293,9 +293,11 @@ function getHelpSections(): HelpSection[] {
   // Conditionally add company-specific import instructions from config
   const appConfig = getAppConfig();
   if (appConfig.importInstructions?.trim()) {
-    // Insert after the "Importing Data" section
-    const importIdx = sections.findIndex((s) => s.titleKey === 'help.importing.title');
-    const insertAt = importIdx >= 0 ? importIdx + 1 : sections.length;
+    // Insert after "Getting Started" section
+    const gettingStartedIdx = sections.findIndex(
+      (s) => s.titleKey === 'help.getting_started.title',
+    );
+    const insertAt = gettingStartedIdx >= 0 ? gettingStartedIdx + 1 : 0;
     sections.splice(insertAt, 0, {
       titleKey: 'import_instructions.help_title',
       type: 'markdown',

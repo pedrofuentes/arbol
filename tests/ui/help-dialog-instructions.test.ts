@@ -55,4 +55,18 @@ describe('help dialog — import instructions section', () => {
     expect(body!.querySelector('h2')!.textContent).toBe('Guide');
     expect(body!.querySelectorAll('li').length).toBe(2);
   });
+
+  it('places import instructions as the second section (after Getting Started)', () => {
+    mockGetAppConfig.mockReturnValue({
+      importInstructions: '## Steps\n\n1. Do this',
+    });
+    showHelpDialog();
+    const headers = document.querySelectorAll('.help-section-header');
+    const texts = Array.from(headers).map((h) => h.textContent);
+
+    // First 3 sections should be: Getting Started, Import Instructions, Keyboard Shortcuts
+    expect(texts[0]).toContain('Getting Started');
+    expect(texts[1]).toContain('Import Instructions');
+    expect(texts[2]).toContain('Keyboard Shortcuts');
+  });
 });
