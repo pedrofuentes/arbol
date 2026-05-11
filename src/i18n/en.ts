@@ -245,8 +245,8 @@ const en: Record<string, string> = {
   'settings_modal.preview_reset': 'Reset to 100%',
 
   // ─── Import Instructions ────────────────────────────────────────────
-  'import_instructions.summary': '📋 Import Instructions',
-  'import_instructions.help_title': 'Import Instructions',
+  'import_instructions.summary': '📋 How to Export from Your HR System',
+  'import_instructions.help_title': 'How to Export from Your HR System',
 
   // ─── Import Wizard ──────────────────────────────────────────────────
   'import_wizard.title': '📂 Import Data',

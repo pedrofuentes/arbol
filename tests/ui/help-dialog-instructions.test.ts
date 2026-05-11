@@ -8,7 +8,7 @@ vi.mock('../../src/config/app-config', () => ({
 
 const { showHelpDialog } = await import('../../src/ui/help-dialog');
 
-describe('help dialog — import instructions section', () => {
+describe('help dialog — How to Export from Your HR System section', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     mockGetAppConfig.mockReset();
@@ -18,22 +18,22 @@ describe('help dialog — import instructions section', () => {
     document.body.innerHTML = '';
   });
 
-  it('shows import instructions section when config has importInstructions', () => {
+  it('shows How to Export from Your HR System section when config has importInstructions', () => {
     mockGetAppConfig.mockReturnValue({
       importInstructions: '## Steps\n\n1. Do this',
     });
     showHelpDialog();
     const headers = document.querySelectorAll('.help-section-header');
     const texts = Array.from(headers).map((h) => h.textContent);
-    expect(texts.some((t) => t?.includes('Import Instructions'))).toBe(true);
+    expect(texts.some((t) => t?.includes('How to Export from Your HR System'))).toBe(true);
   });
 
-  it('does not show import instructions section when config is empty', () => {
+  it('does not show How to Export from Your HR System section when config is empty', () => {
     mockGetAppConfig.mockReturnValue({});
     showHelpDialog();
     const headers = document.querySelectorAll('.help-section-header');
     const texts = Array.from(headers).map((h) => h.textContent);
-    expect(texts.some((t) => t?.includes('Import Instructions'))).toBe(false);
+    expect(texts.some((t) => t?.includes('How to Export from Your HR System'))).toBe(false);
   });
 
   it('renders markdown content in the help section body', () => {
@@ -41,11 +41,11 @@ describe('help dialog — import instructions section', () => {
       importInstructions: '## Guide\n\n- Step one\n- Step two',
     });
     showHelpDialog();
-    // Find the import instructions section
+    // Find the How to Export from Your HR System section
     const headers = document.querySelectorAll('.help-section-header');
     let targetSection: Element | null = null;
     headers.forEach((h) => {
-      if (h.textContent?.includes('Import Instructions')) {
+      if (h.textContent?.includes('How to Export from Your HR System')) {
         targetSection = h.closest('.help-section');
       }
     });
@@ -56,7 +56,7 @@ describe('help dialog — import instructions section', () => {
     expect(body!.querySelectorAll('li').length).toBe(2);
   });
 
-  it('places import instructions as the second section (after Getting Started)', () => {
+  it('places How to Export from Your HR System as the second section (after Getting Started)', () => {
     mockGetAppConfig.mockReturnValue({
       importInstructions: '## Steps\n\n1. Do this',
     });
@@ -64,9 +64,9 @@ describe('help dialog — import instructions section', () => {
     const headers = document.querySelectorAll('.help-section-header');
     const texts = Array.from(headers).map((h) => h.textContent);
 
-    // First 3 sections should be: Getting Started, Import Instructions, Keyboard Shortcuts
+    // First 3 sections should be: Getting Started, How to Export from Your HR System, Keyboard Shortcuts
     expect(texts[0]).toContain('Getting Started');
-    expect(texts[1]).toContain('Import Instructions');
+    expect(texts[1]).toContain('How to Export from Your HR System');
     expect(texts[2]).toContain('Keyboard Shortcuts');
   });
 });

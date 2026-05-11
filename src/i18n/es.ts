@@ -191,8 +191,8 @@ const es: Record<string, string> = {
   'settings_modal.preview_reset': 'Restablecer vista previa',
 
   // ─── Import Instructions ────────────────────────────────────────────
-  'import_instructions.summary': '📋 Instrucciones de importación',
-  'import_instructions.help_title': 'Instrucciones de importación',
+  'import_instructions.summary': '📋 Cómo exportar desde tu sistema de RRHH',
+  'import_instructions.help_title': 'Cómo exportar desde tu sistema de RRHH',
 
   // ─── Import Wizard ──────────────────────────────────────────────────
   'import_wizard.title': 'Importar datos',
