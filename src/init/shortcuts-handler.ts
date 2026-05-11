@@ -1,7 +1,7 @@
 import { t } from '../i18n';
 import { ShortcutManager } from '../utils/shortcuts';
 import { CommandPalette, type CommandItem } from '../ui/command-palette';
-import { showHelpDialog, type HelpDialogOptions } from '../ui/help-dialog';
+import { showHelpDialog } from '../ui/help-dialog';
 import { SAMPLE_ORG } from '../data/sample-org';
 import { showInputDialog } from '../ui/input-dialog';
 import { dismissVersionViewer, isVersionViewerActive } from '../ui/version-viewer';
@@ -70,7 +70,9 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
   shortcuts.register({
     key: 'z',
     ctrl: true,
-    handler: () => { if (store.undo()) announce(t('announce.undo')); },
+    handler: () => {
+      if (store.undo()) announce(t('announce.undo'));
+    },
     description: t('shortcut.undo'),
   });
 
@@ -78,14 +80,18 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
     key: 'z',
     ctrl: true,
     shift: true,
-    handler: () => { if (store.redo()) announce(t('announce.redo')); },
+    handler: () => {
+      if (store.redo()) announce(t('announce.redo'));
+    },
     description: t('shortcut.redo'),
   });
 
   shortcuts.register({
     key: 'y',
     ctrl: true,
-    handler: () => { if (store.redo()) announce(t('announce.redo')); },
+    handler: () => {
+      if (store.redo()) announce(t('announce.redo'));
+    },
     description: t('shortcut.redo_alt'),
   });
 
@@ -118,7 +124,9 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
         icon: '📊',
         shortcut: 'Ctrl+E',
         group: t('command_palette.group_actions'),
-        action: () => { exportCurrentChart(); },
+        action: () => {
+          exportCurrentChart();
+        },
       },
       {
         id: 'undo',
@@ -126,7 +134,11 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
         icon: '↩',
         shortcut: 'Ctrl+Z',
         group: t('command_palette.group_actions'),
-        action: () => { if (store.undo()) { announce(t('announce.undo')); } },
+        action: () => {
+          if (store.undo()) {
+            announce(t('announce.undo'));
+          }
+        },
       },
       {
         id: 'redo',
@@ -134,7 +146,11 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
         icon: '↪',
         shortcut: 'Ctrl+Shift+Z',
         group: t('command_palette.group_actions'),
-        action: () => { if (store.redo()) { announce(t('announce.redo')); } },
+        action: () => {
+          if (store.redo()) {
+            announce(t('announce.redo'));
+          }
+        },
       },
       {
         id: 'settings',
@@ -142,7 +158,9 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
         icon: '⚙️',
         shortcut: 'Ctrl+,',
         group: t('command_palette.group_actions'),
-        action: () => { settingsBtn.click(); },
+        action: () => {
+          settingsBtn.click();
+        },
       },
       {
         id: 'search',
@@ -150,7 +168,9 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
         icon: '🔍',
         shortcut: 'Ctrl+F',
         group: t('command_palette.group_navigation'),
-        action: () => { search.focus(); },
+        action: () => {
+          search.focus();
+        },
       },
       {
         id: 'help',
@@ -158,14 +178,18 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
         icon: '❓',
         shortcut: '?',
         group: t('command_palette.group_navigation'),
-        action: () => { showHelpDialog({ onLoadSample: () => store.fromJSON(JSON.stringify(SAMPLE_ORG)) }); },
+        action: () => {
+          showHelpDialog({ onLoadSample: () => store.fromJSON(JSON.stringify(SAMPLE_ORG)) });
+        },
       },
       {
         id: 'theme',
         label: t('command_palette.item_theme'),
         icon: themeManager.getTheme() === 'dark' ? '☀️' : '🌙',
         group: t('command_palette.group_actions'),
-        action: () => { themeManager.toggle(); },
+        action: () => {
+          themeManager.toggle();
+        },
       },
       {
         id: 'new-chart',
@@ -214,7 +238,9 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
         label: t('command_palette.item_import'),
         icon: '📥',
         group: t('command_palette.group_actions'),
-        action: () => { importBtn.click(); },
+        action: () => {
+          importBtn.click();
+        },
       },
     ];
 
@@ -301,14 +327,17 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
 
   shortcuts.register({
     key: '?',
-    handler: () => showHelpDialog({ onLoadSample: () => store.fromJSON(JSON.stringify(SAMPLE_ORG)) }),
+    handler: () =>
+      showHelpDialog({ onLoadSample: () => store.fromJSON(JSON.stringify(SAMPLE_ORG)) }),
     description: t('shortcut.help'),
   });
 
   shortcuts.register({
     key: ',',
     ctrl: true,
-    handler: () => { settingsBtn.click(); },
+    handler: () => {
+      settingsBtn.click();
+    },
     description: t('shortcut.settings'),
   });
 
