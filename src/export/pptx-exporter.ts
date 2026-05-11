@@ -22,12 +22,6 @@ function generateFileName(): string {
   return timestampedFilename(t('export.default_filename') + '.pptx');
 }
 
-const DEFAULT_CARD_STROKE = stripHash(DEFAULT_RENDERER_OPTIONS.cardStroke);
-const DEFAULT_CARD_FILL = stripHash(DEFAULT_RENDERER_OPTIONS.cardFill);
-const DEFAULT_IC_CONTAINER_FILL = stripHash(DEFAULT_RENDERER_OPTIONS.icContainerFill);
-const DEFAULT_LINK_COLOR = stripHash(DEFAULT_RENDERER_OPTIONS.linkColor);
-const DEFAULT_FONT_FAMILY = DEFAULT_RENDERER_OPTIONS.fontFamily;
-
 const MIN_LINE_DIM = 0.001;
 
 export interface PptxExportOptions {
@@ -59,7 +53,12 @@ export interface PptxExportOptions {
   levelBadgeFontSize?: number;
   levelBadgeSize?: number;
   /** Optional function to resolve job title based on level mapping. */
-  resolveTitle?: (originalTitle: string, rawLevel?: string, isManager?: boolean, pinnedTitle?: boolean) => string;
+  resolveTitle?: (
+    originalTitle: string,
+    rawLevel?: string,
+    isManager?: boolean,
+    pinnedTitle?: boolean,
+  ) => string;
   legendRows?: number;
   textAlign?: 'left' | 'center' | 'right' | 'start' | 'end';
   cardBorderRadius?: number;
@@ -119,17 +118,30 @@ export function resolveStyles(options?: PptxExportOptions): ResolvedStyles {
     titleColor: stripHash(options?.titleColor ?? d.titleColor),
     showHeadcount: options?.showHeadcount ?? d.showHeadcount,
     headcountBadgeColor: stripHash(options?.headcountBadgeColor ?? d.headcountBadgeColor),
-    headcountBadgeTextColor: stripHash(options?.headcountBadgeTextColor ?? d.headcountBadgeTextColor),
-    headcountBadgeFontSize: Math.max(3, Math.round((options?.headcountBadgeFontSize ?? d.headcountBadgeFontSize) * PX_TO_PT)),
+    headcountBadgeTextColor: stripHash(
+      options?.headcountBadgeTextColor ?? d.headcountBadgeTextColor,
+    ),
+    headcountBadgeFontSize: Math.max(
+      3,
+      Math.round((options?.headcountBadgeFontSize ?? d.headcountBadgeFontSize) * PX_TO_PT),
+    ),
     headcountBadgeHeight: options?.headcountBadgeHeight ?? d.headcountBadgeHeight,
     headcountBadgePadding: options?.headcountBadgePadding ?? d.headcountBadgePadding,
     headcountBadgeRadius: options?.headcountBadgeRadius ?? d.headcountBadgeRadius,
     showLevel: options?.showLevel ?? d.showLevel,
     levelBadgeColor: stripHash(options?.levelBadgeColor ?? d.levelBadgeColor),
     levelBadgeTextColor: stripHash(options?.levelBadgeTextColor ?? d.levelBadgeTextColor),
-    levelBadgeFontSize: Math.max(3, Math.round((options?.levelBadgeFontSize ?? d.levelBadgeFontSize) * PX_TO_PT)),
+    levelBadgeFontSize: Math.max(
+      3,
+      Math.round((options?.levelBadgeFontSize ?? d.levelBadgeFontSize) * PX_TO_PT),
+    ),
     levelBadgeSize: options?.levelBadgeSize ?? d.levelBadgeSize,
-    textAlign:options?.textAlign === 'start' ? 'left' : options?.textAlign === 'end' ? 'right' : options?.textAlign ?? d.textAlign as 'left' | 'center' | 'right',
+    textAlign:
+      options?.textAlign === 'start'
+        ? 'left'
+        : options?.textAlign === 'end'
+          ? 'right'
+          : (options?.textAlign ?? (d.textAlign as 'left' | 'center' | 'right')),
     cardBorderRadius: options?.cardBorderRadius ?? d.cardBorderRadius,
     fontFamily: options?.fontFamily ?? d.fontFamily,
   };
@@ -197,7 +209,12 @@ function addNodeShape(
   padding: number,
   styles: ResolvedStyles,
   categories?: ColorCategory[],
-  resolveTitle?: (originalTitle: string, rawLevel?: string, isManager?: boolean, pinnedTitle?: boolean) => string,
+  resolveTitle?: (
+    originalTitle: string,
+    rawLevel?: string,
+    isManager?: boolean,
+    pinnedTitle?: boolean,
+  ) => string,
   isManager?: boolean,
 ): void {
   const topLeft = convertCoordinates(
@@ -235,14 +252,19 @@ function addNodeShape(
     line: { color: styles.cardStroke, width: styles.cardStrokeWidth },
   };
   if (styles.cardBorderRadius > 0) {
-    shapeOpts.rectRadius = Math.min(styles.cardBorderRadius * PX_TO_INCHES / (h / 2), 1);
+    shapeOpts.rectRadius = Math.min((styles.cardBorderRadius * PX_TO_INCHES) / (h / 2), 1);
   }
   slide.addShape(shapeType as 'rect', shapeOpts);
 
   slide.addText(
     [
       { text: node.name, options: { bold: true, breakLine: true, fontSize: nameFontSize } },
-      { text: resolveTitle ? resolveTitle(node.title, node.level, isManager, node.pinnedTitle) : node.title, options: { fontSize: titleFontSize, color: nodeTitleColor } },
+      {
+        text: resolveTitle
+          ? resolveTitle(node.title, node.level, isManager, node.pinnedTitle)
+          : node.title,
+        options: { fontSize: titleFontSize, color: nodeTitleColor },
+      },
     ],
     {
       x: topLeft.x,
@@ -270,7 +292,10 @@ function addNodeShape(
     const charWidth = styles.headcountBadgeFontSize * 0.7;
     const estimatedTextWidth = badgeText.length * charWidth;
     const minBadgeWidth = styles.headcountBadgeHeight;
-    const badgePxWidth = Math.max(minBadgeWidth, estimatedTextWidth + styles.headcountBadgePadding * 2);
+    const badgePxWidth = Math.max(
+      minBadgeWidth,
+      estimatedTextWidth + styles.headcountBadgePadding * 2,
+    );
     const badgeW = badgePxWidth * scale * PX_TO_INCHES;
 
     const badgeX = topLeft.x + w - badgeW / 2;
@@ -474,12 +499,31 @@ export async function exportToPptx(
   // Layer 3: Nodes (all types)
   const categories = options?.categories;
   for (const node of layout.nodes) {
-    addNodeShape(slide, node, offsetX, offsetY, scale, padding, styles, categories, options?.resolveTitle, node.type === 'manager');
+    addNodeShape(
+      slide,
+      node,
+      offsetX,
+      offsetY,
+      scale,
+      padding,
+      styles,
+      categories,
+      options?.resolveTitle,
+      node.type === 'manager',
+    );
   }
 
   // Layer 4: Legend
   if (categories && categories.length > 0) {
-    addLegend(slide, categories, slideWidth, slideHeight, padding, options?.legendRows, styles.fontFamily);
+    addLegend(
+      slide,
+      categories,
+      slideWidth,
+      slideHeight,
+      padding,
+      options?.legendRows,
+      styles.fontFamily,
+    );
   }
 
   // Additional slides for selected versions
@@ -492,9 +536,7 @@ export async function exportToPptx(
       const vSlideW = Math.min(vChartW, MAX_SLIDE_DIMENSION) || slideWidth;
       const vSlideH = Math.min(vChartH, MAX_SLIDE_DIMENSION) || slideHeight;
       const vScale =
-        vLayout.nodes.length > 0
-          ? computeScale(vLayout.boundingBox, vSlideW, vSlideH, padding)
-          : 1;
+        vLayout.nodes.length > 0 ? computeScale(vLayout.boundingBox, vSlideW, vSlideH, padding) : 1;
 
       const vSlide = pres.addSlide();
       const vOffsetX = vLayout.boundingBox.minX;
@@ -520,10 +562,29 @@ export async function exportToPptx(
         addLinkLines(vSlide, link, vOffsetX, vOffsetY, vScale, padding, styles);
       }
       for (const node of vLayout.nodes) {
-        addNodeShape(vSlide, node, vOffsetX, vOffsetY, vScale, padding, styles, categories, options?.resolveTitle, node.type === 'manager');
+        addNodeShape(
+          vSlide,
+          node,
+          vOffsetX,
+          vOffsetY,
+          vScale,
+          padding,
+          styles,
+          categories,
+          options?.resolveTitle,
+          node.type === 'manager',
+        );
       }
       if (categories && categories.length > 0) {
-        addLegend(vSlide, categories, vSlideW, vSlideH, padding, options?.legendRows, styles.fontFamily);
+        addLegend(
+          vSlide,
+          categories,
+          vSlideW,
+          vSlideH,
+          padding,
+          options?.legendRows,
+          styles.fontFamily,
+        );
       }
     }
   }
