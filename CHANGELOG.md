@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.13.2] — 2026-05-13
+
+### Fixed
+
+- **Import wizard now handles `.arbol.json` chart bundles** — Exported charts can now be re-imported via the Import button. The wizard detects ChartBundle format, imports categories, level mappings, and saved versions. Previously it rejected these files with "Root node must have id, name, and title fields".
+
 ## [3.13.1] — 2026-05-11
 
 ### Changed
