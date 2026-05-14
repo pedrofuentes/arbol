@@ -381,10 +381,12 @@ async function main(): Promise<void> {
       try {
         // ChartBundle import — delegate to extracted handler
         if (wizardState.bundle) {
-          const chart = await importBundle(wizardState.bundle, wizardState.destination ?? 'new', {
-            chartStore,
-            showConfirmDialog,
-          });
+          const chart = await importBundle(
+            wizardState.bundle,
+            wizardState.destination ?? 'new',
+            { chartStore, showConfirmDialog },
+            wizardState.chartName,
+          );
           if (!chart) return;
           await chartEditor.refresh();
           store.replaceTree(chart.workingTree);

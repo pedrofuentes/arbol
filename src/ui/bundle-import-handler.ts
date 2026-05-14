@@ -17,15 +17,24 @@ export interface BundleImportDeps {
  * Handles the chart-store side of a bundle import: confirmation dialogs
  * for destructive replace and delegation to the appropriate chartStore method.
  *
+ * When chartName is provided, overrides the bundle's chart name (without
+ * mutating the original bundle object).
+ *
  * Returns the imported ChartRecord, or null if the user cancelled.
  */
 export async function importBundle(
   bundle: ChartBundle,
   destination: 'new' | 'replace',
   deps: BundleImportDeps,
+  chartName?: string,
 ): Promise<ChartRecord | null> {
+  const effectiveBundle =
+    chartName && chartName !== bundle.chart.name
+      ? { ...bundle, chart: { ...bundle.chart, name: chartName } }
+      : bundle;
+
   if (destination === 'replace') {
-    const wouldReplace = await deps.chartStore.wouldReplaceLevelMappings(bundle);
+    const wouldReplace = await deps.chartStore.wouldReplaceLevelMappings(effectiveBundle);
     if (wouldReplace) {
       const proceed = await deps.showConfirmDialog({
         title: t('dialog.replace_mappings.title'),
@@ -36,7 +45,7 @@ export async function importBundle(
       });
       if (!proceed) return null;
     }
-    return deps.chartStore.importChartReplaceCurrent(bundle);
+    return deps.chartStore.importChartReplaceCurrent(effectiveBundle);
   }
-  return deps.chartStore.importChartAsNew(bundle);
+  return deps.chartStore.importChartAsNew(effectiveBundle);
 }
