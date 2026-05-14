@@ -561,6 +561,13 @@ describe('renderPreviewStep — ChartBundle', () => {
     expect(info!.textContent).toContain('version');
   });
 
+  it('hides normalization dropdowns for bundle imports', () => {
+    const state: WizardState = { format: 'JSON', rawText: makeBundle() };
+    renderPreviewStep(container, state, vi.fn());
+    const selects = container.querySelectorAll('.wizard-field select');
+    expect(selects.length).toBe(0);
+  });
+
   it('shows error for unsupported bundle version', () => {
     const state: WizardState = {
       format: 'JSON',
