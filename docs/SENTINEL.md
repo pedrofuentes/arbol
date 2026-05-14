@@ -153,7 +153,7 @@ Status: APPROVED | REJECTED
 - Tests exist & meaningful: ✅/❌ (evidence)
 - Test-first history verified: ✅/❌ (evidence)
 - Full suite green on SHA: ✅/❌ (evidence)
-- Coverage: {{X}}% (threshold {{COVERAGE_THRESHOLD}}%) ✅/❌ (evidence)
+- Coverage: {{X}}% (threshold 80%) ✅/❌ (evidence)
 
 ### Phase 2 — Execution Log
 | Dim | Tool Call | Agent ID / Ref | Status |
