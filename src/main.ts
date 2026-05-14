@@ -54,6 +54,7 @@ import {
   renderPreviewStep,
   renderImportStep,
 } from './ui/import-wizard-steps';
+import { importBundle } from './ui/bundle-import-handler';
 import { registerShortcuts } from './init/shortcuts-handler';
 import type { ChartRecord } from './types';
 import { AnalyticsDrawer } from './ui/analytics-drawer';
@@ -378,25 +379,13 @@ async function main(): Promise<void> {
     onComplete: async () => {
       if (!wizardState.tree) return;
       try {
-        // ChartBundle import — delegate to chartStore for full bundle handling
+        // ChartBundle import — delegate to extracted handler
         if (wizardState.bundle) {
-          let chart;
-          if (wizardState.destination === 'replace') {
-            const wouldReplace = await chartStore.wouldReplaceLevelMappings(wizardState.bundle);
-            if (wouldReplace) {
-              const proceed = await showConfirmDialog({
-                title: t('dialog.replace_mappings.title'),
-                message: t('dialog.replace_mappings.message'),
-                confirmLabel: t('dialog.replace_mappings.confirm'),
-                cancelLabel: t('dialog.replace_mappings.cancel'),
-                danger: true,
-              });
-              if (!proceed) return;
-            }
-            chart = await chartStore.importChartReplaceCurrent(wizardState.bundle);
-          } else {
-            chart = await chartStore.importChartAsNew(wizardState.bundle);
-          }
+          const chart = await importBundle(wizardState.bundle, wizardState.destination ?? 'new', {
+            chartStore,
+            showConfirmDialog,
+          });
+          if (!chart) return;
           await chartEditor.refresh();
           store.replaceTree(chart.workingTree);
           categoryStore.replaceAll(chart.categories);
