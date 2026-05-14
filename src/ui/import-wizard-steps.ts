@@ -422,9 +422,17 @@ export function renderPreviewStep(
 
     container.appendChild(tableWrap);
 
-    // Normalization dropdowns — re-render sample on change
-    renderNormDropdown(container, 'name', t('import_wizard.norm_label_name'), state, renderRows);
-    renderNormDropdown(container, 'title', t('import_wizard.norm_label_title'), state, renderRows);
+    // Normalization dropdowns — skip for bundles (data is already finalized)
+    if (!state.bundle) {
+      renderNormDropdown(container, 'name', t('import_wizard.norm_label_name'), state, renderRows);
+      renderNormDropdown(
+        container,
+        'title',
+        t('import_wizard.norm_label_title'),
+        state,
+        renderRows,
+      );
+    }
 
     onReady(true);
   } catch (e) {
