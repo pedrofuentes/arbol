@@ -382,15 +382,25 @@ async function main(): Promise<void> {
         if (wizardState.bundle) {
           let chart;
           if (wizardState.destination === 'replace') {
+            const wouldReplace = await chartStore.wouldReplaceLevelMappings(wizardState.bundle);
+            if (wouldReplace) {
+              const proceed = await showConfirmDialog({
+                title: t('dialog.replace_mappings.title'),
+                message: t('dialog.replace_mappings.message'),
+                confirmLabel: t('dialog.replace_mappings.confirm'),
+                cancelLabel: t('dialog.replace_mappings.cancel'),
+                danger: true,
+              });
+              if (!proceed) return;
+            }
             chart = await chartStore.importChartReplaceCurrent(wizardState.bundle);
           } else {
             chart = await chartStore.importChartAsNew(wizardState.bundle);
           }
           await chartEditor.refresh();
           store.replaceTree(chart.workingTree);
-          if (chart.categories.length > 0) {
-            categoryStore.replaceAll(chart.categories);
-          }
+          categoryStore.replaceAll(chart.categories);
+          levelStore.loadFromChart(chart);
           chartNameHeader.setName(chart.name);
           chartNameHeader.setDirty(false);
           rerender();

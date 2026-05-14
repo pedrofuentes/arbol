@@ -302,6 +302,7 @@ export function renderPreviewStep(
         state.tree = root;
         state.nodeCount = countNodes(root);
       } else {
+        state.bundle = undefined;
         if (!parsed.id || !parsed.name || !parsed.title) {
           throw new Error(t('import_wizard.json_root_error'));
         }
@@ -309,6 +310,7 @@ export function renderPreviewStep(
         state.nodeCount = countNodes(parsed);
       }
     } else {
+      state.bundle = undefined;
       const result = parseCsvToTree(state.rawText!, state.mapping);
       state.tree = result.tree;
       state.nodeCount = result.nodeCount;
