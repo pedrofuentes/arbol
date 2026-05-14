@@ -378,6 +378,31 @@ async function main(): Promise<void> {
     onComplete: async () => {
       if (!wizardState.tree) return;
       try {
+        // ChartBundle import — delegate to chartStore for full bundle handling
+        if (wizardState.bundle) {
+          let chart;
+          if (wizardState.destination === 'replace') {
+            chart = await chartStore.importChartReplaceCurrent(wizardState.bundle);
+          } else {
+            chart = await chartStore.importChartAsNew(wizardState.bundle);
+          }
+          await chartEditor.refresh();
+          store.replaceTree(chart.workingTree);
+          if (chart.categories.length > 0) {
+            categoryStore.replaceAll(chart.categories);
+          }
+          chartNameHeader.setName(chart.name);
+          chartNameHeader.setDirty(false);
+          rerender();
+          renderer.getZoomManager()?.fitToContent();
+          announce(t('announce.chart_switched', { name: chart.name }));
+          importWizard.close();
+          wizardState = {};
+          showToast(t('footer.imported'), 'success');
+          return;
+        }
+
+        // Raw tree import (JSON/CSV)
         let finalTree = wizardState.tree;
         if (wizardState.nameNormalization || wizardState.titleNormalization) {
           const { normalizeTreeText } = await import('./utils/text-normalize');
@@ -390,9 +415,7 @@ async function main(): Promise<void> {
         if (wizardState.destination === 'new' && wizardState.chartName) {
           const chart = await chartStore.createChartFromTree(wizardState.chartName, finalTree);
           await chartStore.saveVersion(t('import_wizard.original_version'), chart.workingTree);
-          // Ensure sidebar chart list reflects the new active chart before continuing
           await chartEditor.refresh();
-          // Switch the live OrgStore to the new chart's tree
           store.replaceTree(chart.workingTree);
           if (chart.categories.length > 0) {
             categoryStore.replaceAll(chart.categories);
