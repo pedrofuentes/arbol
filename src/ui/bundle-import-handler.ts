@@ -17,8 +17,9 @@ export interface BundleImportDeps {
  * Handles the chart-store side of a bundle import: confirmation dialogs
  * for destructive replace and delegation to the appropriate chartStore method.
  *
- * When chartName is provided, overrides the bundle's chart name (without
- * mutating the original bundle object).
+ * For "new" imports, chartName overrides the bundle's chart name (without
+ * mutating the original bundle object). For "replace" imports, chartName
+ * is ignored since the existing chart retains its name.
  *
  * Returns the imported ChartRecord, or null if the user cancelled.
  */
@@ -28,8 +29,9 @@ export async function importBundle(
   deps: BundleImportDeps,
   chartName?: string,
 ): Promise<ChartRecord | null> {
+  // chartName override only applies to new chart imports
   const effectiveBundle =
-    chartName && chartName !== bundle.chart.name
+    destination === 'new' && chartName && chartName !== bundle.chart.name
       ? { ...bundle, chart: { ...bundle.chart, name: chartName } }
       : bundle;
 

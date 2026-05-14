@@ -301,6 +301,8 @@ export function renderPreviewStep(
         state.bundle = bundle;
         state.tree = root;
         state.nodeCount = countNodes(root);
+        state.destination = undefined;
+        state.chartName = undefined;
       } else {
         state.bundle = undefined;
         state.destination = undefined;
