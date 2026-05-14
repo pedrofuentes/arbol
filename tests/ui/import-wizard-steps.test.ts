@@ -597,4 +597,39 @@ describe('renderPreviewStep — ChartBundle', () => {
     expect(state.bundle).toBeDefined();
     expect(state.bundle!.versions).toHaveLength(0);
   });
+
+  it('clears stale bundle when switching to plain JSON', () => {
+    const state: WizardState = {
+      format: 'JSON',
+      rawText: makeBundle(),
+    };
+    renderPreviewStep(container, state, vi.fn());
+    expect(state.bundle).toBeDefined();
+
+    // Now switch to plain OrgNode JSON — bundle should be cleared by renderPreviewStep
+    state.rawText = JSON.stringify({ id: '1', name: 'Alice', title: 'CEO' });
+    renderPreviewStep(container, state, vi.fn());
+    expect(state.bundle).toBeUndefined();
+  });
+
+  it('clears stale bundle when switching to CSV', () => {
+    const state: WizardState = {
+      format: 'JSON',
+      rawText: makeBundle(),
+    };
+    renderPreviewStep(container, state, vi.fn());
+    expect(state.bundle).toBeDefined();
+
+    // Now switch to CSV
+    state.format = 'CSV';
+    state.rawText = 'name,title,manager_name\nAlice,CEO,\nBob,VP,Alice\n';
+    state.mapping = {
+      name: 'name',
+      title: 'title',
+      parentRef: 'manager_name',
+      parentRefType: 'name',
+    };
+    renderPreviewStep(container, state, vi.fn());
+    expect(state.bundle).toBeUndefined();
+  });
 });
