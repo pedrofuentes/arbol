@@ -135,4 +135,12 @@ describe('importBundle', () => {
     const passedBundle = deps.importChartAsNew.mock.calls[0][0] as ChartBundle;
     expect(passedBundle.chart.name).toBe('Test Chart');
   });
+
+  it('ignores chartName override for replace imports', async () => {
+    const bundle = makeBundle();
+    const deps = makeDeps({ wouldReplace: false });
+    await importBundle(bundle, 'replace', deps, 'Ignored Name');
+    const passedBundle = deps.importChartReplaceCurrent.mock.calls[0][0] as ChartBundle;
+    expect(passedBundle.chart.name).toBe('Test Chart');
+  });
 });
