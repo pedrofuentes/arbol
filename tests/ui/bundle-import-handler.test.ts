@@ -117,4 +117,22 @@ describe('importBundle', () => {
     expect(deps.wouldReplaceLevelMappings).not.toHaveBeenCalled();
     expect(deps.showConfirmDialog).not.toHaveBeenCalled();
   });
+
+  it('overrides bundle chart name with user-provided chartName', async () => {
+    const bundle = makeBundle();
+    const deps = makeDeps();
+    await importBundle(bundle, 'new', deps, 'Custom Name');
+    const passedBundle = deps.importChartAsNew.mock.calls[0][0] as ChartBundle;
+    expect(passedBundle.chart.name).toBe('Custom Name');
+    // Original bundle should not be mutated
+    expect(bundle.chart.name).toBe('Test Chart');
+  });
+
+  it('uses bundle chart name when no chartName override provided', async () => {
+    const bundle = makeBundle();
+    const deps = makeDeps();
+    await importBundle(bundle, 'new', deps);
+    const passedBundle = deps.importChartAsNew.mock.calls[0][0] as ChartBundle;
+    expect(passedBundle.chart.name).toBe('Test Chart');
+  });
 });

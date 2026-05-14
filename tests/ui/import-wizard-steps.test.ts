@@ -628,10 +628,16 @@ describe('renderPreviewStep — ChartBundle', () => {
     renderPreviewStep(container, state, vi.fn());
     expect(state.bundle).toBeDefined();
 
-    // Now switch to plain OrgNode JSON — bundle should be cleared by renderPreviewStep
+    // Simulate step 4 having set bundle-derived defaults
+    state.destination = 'new';
+    state.chartName = 'My Team';
+
+    // Now switch to plain OrgNode JSON — bundle-derived state should be cleared
     state.rawText = JSON.stringify({ id: '1', name: 'Alice', title: 'CEO' });
     renderPreviewStep(container, state, vi.fn());
     expect(state.bundle).toBeUndefined();
+    expect(state.destination).toBeUndefined();
+    expect(state.chartName).toBeUndefined();
   });
 
   it('clears stale bundle when switching to CSV', () => {
