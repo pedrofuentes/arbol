@@ -586,6 +586,28 @@ describe('renderPreviewStep — ChartBundle', () => {
     expect(onReady).toHaveBeenCalledWith(false);
   });
 
+  it('shows error when bundle working tree root lacks required fields', () => {
+    const state: WizardState = {
+      format: 'JSON',
+      rawText: JSON.stringify({
+        format: 'arbol-chart',
+        version: 1,
+        chart: {
+          name: 'Bad Chart',
+          workingTree: { foo: 'bar' },
+          categories: [],
+        },
+        versions: [],
+      }),
+    };
+    const onReady = vi.fn();
+    renderPreviewStep(container, state, onReady);
+    const error = container.querySelector('.wizard-error');
+    expect(error).not.toBeNull();
+    expect(error!.textContent).toContain('working tree root');
+    expect(onReady).toHaveBeenCalledWith(false);
+  });
+
   it('handles bundle with zero versions', () => {
     const state: WizardState = {
       format: 'JSON',
