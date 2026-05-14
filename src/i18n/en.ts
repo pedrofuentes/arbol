@@ -1289,6 +1289,11 @@ const en: Record<string, string> = {
   'category_legend.toggle_aria': 'Toggle category legend',
   'import_wizard.file_selected': '\u2713 {name}',
   'import_wizard.json_root_error': 'Root node must have id, name, and title fields',
+  'import_wizard.bundle_unsupported_version': 'Unsupported chart bundle version: {version}',
+  'import_wizard.bundle_missing_chart': 'Invalid chart bundle: missing chart name or working tree',
+  'import_wizard.bundle_invalid_root':
+    'Invalid chart bundle: working tree root must have id, name, and title',
+  'import_wizard.bundle_info': 'Chart "{name}" with {count} saved version(s)',
   'settings_modal.tab.presets': 'Presets',
   'settings_modal.tab.layout': 'Layout',
   'settings_modal.tab.typography': 'Typography',

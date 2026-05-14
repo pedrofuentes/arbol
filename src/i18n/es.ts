@@ -1245,6 +1245,13 @@ const es: Record<string, string> = {
   'category_legend.toggle_aria': 'Alternar leyenda de categorías',
   'import_wizard.file_selected': '\u2713 {name}',
   'import_wizard.json_root_error': 'El nodo raíz debe tener campos id, nombre y cargo',
+  'import_wizard.bundle_unsupported_version':
+    'Versión de paquete de organigrama no soportada: {version}',
+  'import_wizard.bundle_missing_chart':
+    'Paquete de organigrama inválido: falta el nombre o el árbol de trabajo',
+  'import_wizard.bundle_invalid_root':
+    'Paquete de organigrama inválido: el nodo raíz debe tener id, nombre y cargo',
+  'import_wizard.bundle_info': 'Organigrama "{name}" con {count} versión(es) guardada(s)',
   'settings_modal.tab.presets': 'Preajustes',
   'settings_modal.tab.layout': 'Disposición',
   'settings_modal.tab.typography': 'Tipografía',

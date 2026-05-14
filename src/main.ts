@@ -54,6 +54,7 @@ import {
   renderPreviewStep,
   renderImportStep,
 } from './ui/import-wizard-steps';
+import { importBundle } from './ui/bundle-import-handler';
 import { registerShortcuts } from './init/shortcuts-handler';
 import type { ChartRecord } from './types';
 import { AnalyticsDrawer } from './ui/analytics-drawer';
@@ -378,6 +379,31 @@ async function main(): Promise<void> {
     onComplete: async () => {
       if (!wizardState.tree) return;
       try {
+        // ChartBundle import — delegate to extracted handler
+        if (wizardState.bundle) {
+          const chart = await importBundle(
+            wizardState.bundle,
+            wizardState.destination ?? 'new',
+            { chartStore, showConfirmDialog },
+            wizardState.chartName,
+          );
+          if (!chart) return;
+          await chartEditor.refresh();
+          store.replaceTree(chart.workingTree);
+          categoryStore.replaceAll(chart.categories);
+          levelStore.loadFromChart(chart);
+          chartNameHeader.setName(chart.name);
+          chartNameHeader.setDirty(false);
+          rerender();
+          renderer.getZoomManager()?.fitToContent();
+          announce(t('announce.chart_switched', { name: chart.name }));
+          importWizard.close();
+          wizardState = {};
+          showToast(t('footer.imported'), 'success');
+          return;
+        }
+
+        // Raw tree import (JSON/CSV)
         let finalTree = wizardState.tree;
         if (wizardState.nameNormalization || wizardState.titleNormalization) {
           const { normalizeTreeText } = await import('./utils/text-normalize');
@@ -390,9 +416,7 @@ async function main(): Promise<void> {
         if (wizardState.destination === 'new' && wizardState.chartName) {
           const chart = await chartStore.createChartFromTree(wizardState.chartName, finalTree);
           await chartStore.saveVersion(t('import_wizard.original_version'), chart.workingTree);
-          // Ensure sidebar chart list reflects the new active chart before continuing
           await chartEditor.refresh();
-          // Switch the live OrgStore to the new chart's tree
           store.replaceTree(chart.workingTree);
           if (chart.categories.length > 0) {
             categoryStore.replaceAll(chart.categories);

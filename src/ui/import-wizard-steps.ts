@@ -1,4 +1,10 @@
-import type { ColumnMapping, MappingPreset, OrgNode, TextNormalization } from '../types';
+import type {
+  ChartBundle,
+  ColumnMapping,
+  MappingPreset,
+  OrgNode,
+  TextNormalization,
+} from '../types';
 import { t } from '../i18n';
 import { showToast } from './toast';
 import { extractHeaders, parseCsvToTree } from '../utils/csv-parser';
@@ -21,6 +27,7 @@ export interface WizardState {
   titleNormalization?: TextNormalization;
   destination?: 'new' | 'replace';
   chartName?: string;
+  bundle?: ChartBundle;
 }
 
 // ─── Step 1: Source ──────────────────────────────────────────────────
@@ -273,12 +280,43 @@ export function renderPreviewStep(
   try {
     if (state.format === 'JSON') {
       const parsed = JSON.parse(state.rawText!);
-      if (!parsed.id || !parsed.name || !parsed.title) {
-        throw new Error('Root node must have id, name, and title fields');
+
+      if (parsed.format === 'arbol-chart') {
+        // ChartBundle format
+        const bundle = parsed as ChartBundle;
+        if (bundle.version !== 1) {
+          throw new Error(
+            t('import_wizard.bundle_unsupported_version', {
+              version: String(bundle.version),
+            }),
+          );
+        }
+        if (!bundle.chart?.name || !bundle.chart?.workingTree) {
+          throw new Error(t('import_wizard.bundle_missing_chart'));
+        }
+        const root = bundle.chart.workingTree;
+        if (!root.id || !root.name || !root.title) {
+          throw new Error(t('import_wizard.bundle_invalid_root'));
+        }
+        state.bundle = bundle;
+        state.tree = root;
+        state.nodeCount = countNodes(root);
+        state.destination = undefined;
+        state.chartName = undefined;
+      } else {
+        state.bundle = undefined;
+        state.destination = undefined;
+        state.chartName = undefined;
+        if (!parsed.id || !parsed.name || !parsed.title) {
+          throw new Error(t('import_wizard.json_root_error'));
+        }
+        state.tree = parsed as OrgNode;
+        state.nodeCount = countNodes(parsed);
       }
-      state.tree = parsed as OrgNode;
-      state.nodeCount = countNodes(parsed);
     } else {
+      state.bundle = undefined;
+      state.destination = undefined;
+      state.chartName = undefined;
       const result = parseCsvToTree(state.rawText!, state.mapping);
       state.tree = result.tree;
       state.nodeCount = result.nodeCount;
@@ -291,6 +329,18 @@ export function renderPreviewStep(
       format: state.format!,
     });
     container.appendChild(success);
+
+    // Show bundle version info if applicable
+    if (state.bundle) {
+      const versionCount = state.bundle.versions?.length ?? 0;
+      const info = document.createElement('p');
+      info.className = 'wizard-bundle-info';
+      info.textContent = t('import_wizard.bundle_info', {
+        name: state.bundle.chart.name,
+        count: String(versionCount),
+      });
+      container.appendChild(info);
+    }
 
     // Sample table showing first 5 people
     const sampleNodes = flattenTree(state.tree!).slice(0, 5);
@@ -374,9 +424,17 @@ export function renderPreviewStep(
 
     container.appendChild(tableWrap);
 
-    // Normalization dropdowns — re-render sample on change
-    renderNormDropdown(container, 'name', t('import_wizard.norm_label_name'), state, renderRows);
-    renderNormDropdown(container, 'title', t('import_wizard.norm_label_title'), state, renderRows);
+    // Normalization dropdowns — skip for bundles (data is already finalized)
+    if (!state.bundle) {
+      renderNormDropdown(container, 'name', t('import_wizard.norm_label_name'), state, renderRows);
+      renderNormDropdown(
+        container,
+        'title',
+        t('import_wizard.norm_label_title'),
+        state,
+        renderRows,
+      );
+    }
 
     onReady(true);
   } catch (e) {
@@ -454,7 +512,14 @@ export function renderImportStep(
   group.className = 'wizard-radio-group';
   group.setAttribute('role', 'radiogroup');
 
-  if (!state.destination) state.destination = 'replace';
+  if (!state.destination) {
+    state.destination = state.bundle ? 'new' : 'replace';
+  }
+
+  // Pre-fill chart name from bundle
+  if (state.bundle && !state.chartName) {
+    state.chartName = state.bundle.chart.name;
+  }
 
   const replaceRadio = createRadioOption(
     'replace',
