@@ -224,7 +224,9 @@ describe('renderPreviewStep', () => {
     const state: WizardState = {
       format: 'JSON',
       rawText: JSON.stringify({
-        id: '1', name: 'Alice', title: 'CEO',
+        id: '1',
+        name: 'Alice',
+        title: 'CEO',
         children: [{ id: '2', name: 'Bob', title: 'VP' }],
       }),
     };
@@ -238,7 +240,9 @@ describe('renderPreviewStep', () => {
     const state: WizardState = {
       format: 'JSON',
       rawText: JSON.stringify({
-        id: '1', name: 'Alice', title: 'CEO',
+        id: '1',
+        name: 'Alice',
+        title: 'CEO',
         children: [{ id: '2', name: 'Bob', title: 'VP' }],
       }),
     };
@@ -454,5 +458,143 @@ describe('renderImportStep', () => {
     renderImportStep(container, state, vi.fn());
     const nameInput = container.querySelector('.wizard-field input') as HTMLInputElement;
     expect(nameInput.placeholder).toBe('My Org Chart');
+  });
+
+  it('defaults to new chart and pre-fills name when bundle is set', () => {
+    const bundle = {
+      format: 'arbol-chart' as const,
+      version: 1 as const,
+      chart: {
+        name: 'Engineering Org',
+        workingTree: { id: '1', name: 'Alice', title: 'CEO' },
+        categories: [],
+      },
+      versions: [],
+    };
+    const state: WizardState = { nodeCount: 3, format: 'JSON', bundle };
+    renderImportStep(container, state, vi.fn());
+    expect(state.destination).toBe('new');
+    expect(state.chartName).toBe('Engineering Org');
+    const newRadio = container.querySelectorAll('.wizard-radio')[1];
+    expect(newRadio.classList.contains('selected')).toBe(true);
+    const nameInput = container.querySelector('.wizard-field input') as HTMLInputElement;
+    expect(nameInput.value).toBe('Engineering Org');
+    const nameField = container.querySelectorAll('.wizard-field')[0] as HTMLElement;
+    expect(nameField.style.display).toBe('');
+  });
+});
+
+describe('renderPreviewStep — ChartBundle', () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+  });
+
+  function makeBundle(overrides?: Record<string, unknown>) {
+    return JSON.stringify({
+      format: 'arbol-chart',
+      version: 1,
+      chart: {
+        name: 'My Team',
+        workingTree: {
+          id: '1',
+          name: 'Alice',
+          title: 'CEO',
+          children: [{ id: '2', name: 'Bob', title: 'VP' }],
+        },
+        categories: [],
+      },
+      versions: [
+        {
+          name: 'v1',
+          createdAt: '2025-01-01T00:00:00Z',
+          tree: { id: '1', name: 'Alice', title: 'CEO' },
+        },
+      ],
+      ...overrides,
+    });
+  }
+
+  it('parses ChartBundle JSON and shows success with version count', () => {
+    const state: WizardState = { format: 'JSON', rawText: makeBundle() };
+    renderPreviewStep(container, state, vi.fn());
+    const success = container.querySelector('.wizard-success');
+    expect(success).not.toBeNull();
+    expect(success!.textContent).toContain('2 people');
+  });
+
+  it('stores bundle in state', () => {
+    const state: WizardState = { format: 'JSON', rawText: makeBundle() };
+    renderPreviewStep(container, state, vi.fn());
+    expect(state.bundle).toBeDefined();
+    expect(state.bundle!.format).toBe('arbol-chart');
+    expect(state.bundle!.chart.name).toBe('My Team');
+  });
+
+  it('extracts workingTree into state.tree', () => {
+    const state: WizardState = { format: 'JSON', rawText: makeBundle() };
+    renderPreviewStep(container, state, vi.fn());
+    expect(state.tree).toBeDefined();
+    expect(state.tree!.name).toBe('Alice');
+    expect(state.nodeCount).toBe(2);
+  });
+
+  it('calls onReady(true) for valid bundle', () => {
+    const state: WizardState = { format: 'JSON', rawText: makeBundle() };
+    const onReady = vi.fn();
+    renderPreviewStep(container, state, onReady);
+    expect(onReady).toHaveBeenCalledWith(true);
+  });
+
+  it('shows version info in success message', () => {
+    const state: WizardState = { format: 'JSON', rawText: makeBundle() };
+    renderPreviewStep(container, state, vi.fn());
+    const info = container.querySelector('.wizard-bundle-info');
+    expect(info).not.toBeNull();
+    expect(info!.textContent).toContain('1');
+    expect(info!.textContent).toContain('version');
+  });
+
+  it('shows error for unsupported bundle version', () => {
+    const state: WizardState = {
+      format: 'JSON',
+      rawText: makeBundle({ version: 99 }),
+    };
+    const onReady = vi.fn();
+    renderPreviewStep(container, state, onReady);
+    const error = container.querySelector('.wizard-error');
+    expect(error).not.toBeNull();
+    expect(error!.textContent).toContain('Unsupported');
+    expect(onReady).toHaveBeenCalledWith(false);
+  });
+
+  it('shows error when bundle is missing chart data', () => {
+    const state: WizardState = {
+      format: 'JSON',
+      rawText: JSON.stringify({ format: 'arbol-chart', version: 1 }),
+    };
+    const onReady = vi.fn();
+    renderPreviewStep(container, state, onReady);
+    const error = container.querySelector('.wizard-error');
+    expect(error).not.toBeNull();
+    expect(onReady).toHaveBeenCalledWith(false);
+  });
+
+  it('handles bundle with zero versions', () => {
+    const state: WizardState = {
+      format: 'JSON',
+      rawText: makeBundle({ versions: [] }),
+    };
+    renderPreviewStep(container, state, vi.fn());
+    const success = container.querySelector('.wizard-success');
+    expect(success).not.toBeNull();
+    expect(state.bundle).toBeDefined();
+    expect(state.bundle!.versions).toHaveLength(0);
   });
 });
