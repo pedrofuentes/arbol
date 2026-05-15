@@ -654,6 +654,9 @@ describe('renderPreviewStep — ChartBundle', () => {
     expect(state.bundle!.versions).toHaveLength(1);
     expect(state.bundle!.versions[0].name).toBe('v1');
     expect(warnSpy).toHaveBeenCalled();
+    const warning = container.querySelector('.wizard-warning');
+    expect(warning).not.toBeNull();
+    expect(warning!.textContent).toContain('Skipped 1 malformed saved version');
   });
 
   it('clears stale bundle when switching to plain JSON', () => {
