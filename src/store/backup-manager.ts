@@ -197,11 +197,7 @@ export async function restoreFullReplace(
 
   // Stage 2: Snapshot existing data for rollback
   const existingCharts = await db.getAllCharts();
-  const existingVersions: VersionRecord[] = [];
-  for (const chart of existingCharts) {
-    const versions = await db.getVersionsByChart(chart.id);
-    existingVersions.push(...versions);
-  }
+  const existingVersions = await db.getAllVersions();
   const existingLSValues: Record<string, string | null> = {};
   for (const key of ALL_ARBOL_LS_KEYS) {
     existingLSValues[key] = storage.getItem(key);
@@ -229,33 +225,35 @@ export async function restoreFullReplace(
 
     restoreLocalStorage(backup, storage);
   } catch (error) {
+    const rollbackErrors: unknown[] = [];
+
     // Best-effort rollback: attempt all recovery steps, never abort mid-recovery
     for (const id of writtenVersionIds) {
       try {
         await db.deleteVersion(id);
-      } catch {
-        /* best-effort */
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
       }
     }
     for (const id of writtenChartIds) {
       try {
         await db.deleteChart(id);
-      } catch {
-        /* best-effort */
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
       }
     }
     for (const chart of existingCharts) {
       try {
         await db.putChart(chart);
-      } catch {
-        /* best-effort */
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
       }
     }
     for (const version of existingVersions) {
       try {
         await db.putVersion(version);
-      } catch {
-        /* best-effort */
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
       }
     }
     for (const [key, value] of Object.entries(existingLSValues)) {
@@ -265,10 +263,19 @@ export async function restoreFullReplace(
         } else {
           storage.removeItem(key);
         }
-      } catch {
-        /* best-effort */
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
       }
     }
+
+    if (rollbackErrors.length > 0) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `${message} (rollback also failed: ${rollbackErrors.length} recovery step(s) failed)`,
+        { cause: error },
+      );
+    }
+
     throw error;
   }
 }

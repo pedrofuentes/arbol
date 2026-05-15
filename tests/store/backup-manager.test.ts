@@ -53,12 +53,17 @@ function makeVersion(id: string, chartId: string): VersionRecord {
   };
 }
 
-function createMockDB(charts: ChartRecord[] = [], versions: VersionRecord[] = []): ChartDB {
+type MockChartDB = ChartDB & {
+  getAllVersions: ReturnType<typeof vi.fn>;
+};
+
+function createMockDB(charts: ChartRecord[] = [], versions: VersionRecord[] = []): MockChartDB {
   const chartsMap = new Map(charts.map((c) => [c.id, { ...c }]));
   const versionsMap = new Map(versions.map((v) => [v.id, { ...v }]));
 
   return {
     getAllCharts: vi.fn(async () => [...chartsMap.values()]),
+    getAllVersions: vi.fn(async () => [...versionsMap.values()]),
     getChart: vi.fn(async (id: string) => chartsMap.get(id)),
     putChart: vi.fn(async (chart: ChartRecord) => {
       chartsMap.set(chart.id, chart);
@@ -80,7 +85,7 @@ function createMockDB(charts: ChartRecord[] = [], versions: VersionRecord[] = []
     }),
     _charts: chartsMap,
     _versions: versionsMap,
-  } as unknown as ChartDB;
+  } as unknown as MockChartDB;
 }
 
 function makeValidBackup(overrides?: Partial<ArbolBackup>): ArbolBackup {
@@ -523,6 +528,38 @@ describe('BackupManager', () => {
 
       // Despite e1 rollback failing, e2 should still have been attempted
       expect(putChartFn).toHaveBeenCalledTimes(3);
+    });
+
+    it('includes rollback failure details in the restore error message', async () => {
+      const existing = [makeChart('e1', 'Existing')];
+      const existingVersions = [makeVersion('ve1', 'e1')];
+      const db = createMockDB(existing, existingVersions);
+      const storage = {
+        getItem: vi.fn(() => null),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      };
+
+      const putChartFn = db.putChart as ReturnType<typeof vi.fn>;
+      putChartFn
+        .mockRejectedValueOnce(new Error('write fail'))
+        .mockRejectedValueOnce(new Error('rollback restore failed'));
+
+      await expect(restoreFullReplace(db, makeValidBackup(), storage)).rejects.toThrow(
+        'write fail (rollback also failed: 1 recovery step(s) failed)',
+      );
+    });
+
+    it('snapshots existing versions with a single bulk read before restore', async () => {
+      const existing = [makeChart('e1', 'Existing'), makeChart('e2', 'Existing 2')];
+      const existingVersions = [makeVersion('ve1', 'e1'), makeVersion('ve2', 'e2')];
+      const db = createMockDB(existing, existingVersions);
+
+      await restoreFullReplace(db, makeValidBackup());
+
+      expect(db.getAllVersions).toHaveBeenCalledTimes(1);
+      expect(db.getVersionsByChart).not.toHaveBeenCalled();
     });
 
     it('rolls back on version write failure', async () => {
