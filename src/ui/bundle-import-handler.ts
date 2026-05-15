@@ -29,10 +29,12 @@ export async function importBundle(
   deps: BundleImportDeps,
   chartName?: string,
 ): Promise<ChartRecord | null> {
+  const trimmedChartName = chartName?.trim();
+
   // chartName override only applies to new chart imports
   const effectiveBundle =
-    destination === 'new' && chartName && chartName !== bundle.chart.name
-      ? { ...bundle, chart: { ...bundle.chart, name: chartName } }
+    destination === 'new' && trimmedChartName && trimmedChartName !== bundle.chart.name
+      ? { ...bundle, chart: { ...bundle.chart, name: trimmedChartName } }
       : bundle;
 
   if (destination === 'replace') {

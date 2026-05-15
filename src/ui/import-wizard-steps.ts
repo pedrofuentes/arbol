@@ -1,11 +1,13 @@
 import type {
   ChartBundle,
+  ChartBundleVersion,
   ColumnMapping,
   MappingPreset,
   OrgNode,
   TextNormalization,
 } from '../types';
 import { t } from '../i18n';
+import { validateTree } from '../store/org-store';
 import { showToast } from './toast';
 import { extractHeaders, parseCsvToTree } from '../utils/csv-parser';
 import { normalizeText } from '../utils/text-normalize';
@@ -270,6 +272,46 @@ function countNodes(node: OrgNode): number {
   return count;
 }
 
+function validateBundleVersions(versions: unknown): ChartBundleVersion[] {
+  if (!Array.isArray(versions)) {
+    console.warn('Skipping malformed bundle versions array during preview');
+    return [];
+  }
+
+  const validVersions: ChartBundleVersion[] = [];
+  for (const [index, version] of versions.entries()) {
+    if (!version || typeof version !== 'object') {
+      console.warn(`Skipping malformed bundle version at index ${index}: expected an object`);
+      continue;
+    }
+
+    const candidate = version as Record<string, unknown>;
+    if (typeof candidate.name !== 'string' || !candidate.name.trim()) {
+      console.warn(`Skipping malformed bundle version at index ${index}: missing name`);
+      continue;
+    }
+    if (typeof candidate.createdAt !== 'string' || !candidate.createdAt.trim()) {
+      console.warn(`Skipping malformed bundle version at index ${index}: missing createdAt`);
+      continue;
+    }
+
+    try {
+      validateTree(candidate.tree);
+      validVersions.push({
+        name: candidate.name,
+        createdAt: candidate.createdAt,
+        tree: candidate.tree,
+      });
+    } catch (error) {
+      console.warn(
+        `Skipping malformed bundle version at index ${index}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  return validVersions;
+}
+
 export function renderPreviewStep(
   container: HTMLElement,
   state: WizardState,
@@ -298,7 +340,8 @@ export function renderPreviewStep(
         if (!root.id || !root.name || !root.title) {
           throw new Error(t('import_wizard.bundle_invalid_root'));
         }
-        state.bundle = bundle;
+        validateTree(root);
+        state.bundle = { ...bundle, versions: validateBundleVersions(bundle.versions) };
         state.tree = root;
         state.nodeCount = countNodes(root);
         state.destination = undefined;
@@ -549,7 +592,7 @@ export function renderImportStep(
   nameInput.placeholder = t('import_wizard.dest_name_placeholder');
   nameInput.value = state.chartName ?? '';
   nameInput.addEventListener('input', () => {
-    state.chartName = nameInput.value;
+    state.chartName = nameInput.value.trim();
   });
   nameField.appendChild(nameInput);
   container.appendChild(nameField);

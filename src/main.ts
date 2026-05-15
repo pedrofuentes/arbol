@@ -54,6 +54,7 @@ import {
   renderPreviewStep,
   renderImportStep,
 } from './ui/import-wizard-steps';
+import { completeBundleImportActivation } from './ui/bundle-import-activation';
 import { importBundle } from './ui/bundle-import-handler';
 import { registerShortcuts } from './init/shortcuts-handler';
 import type { ChartRecord } from './types';
@@ -388,18 +389,16 @@ async function main(): Promise<void> {
             wizardState.chartName,
           );
           if (!chart) return;
-          await chartEditor.refresh();
-          store.replaceTree(chart.workingTree);
-          categoryStore.replaceAll(chart.categories);
-          levelStore.loadFromChart(chart);
-          chartNameHeader.setName(chart.name);
-          chartNameHeader.setDirty(false);
-          rerender();
-          renderer.getZoomManager()?.fitToContent();
-          announce(t('announce.chart_switched', { name: chart.name }));
-          importWizard.close();
-          wizardState = {};
-          showToast(t('footer.imported'), 'success');
+          await completeBundleImportActivation(chart, {
+            refreshChartEditor: () => chartEditor.refresh(),
+            handleChartSwitched,
+            fitToContent: () => renderer.getZoomManager()?.fitToContent(),
+            closeWizard: () => importWizard.close(),
+            resetWizardState: () => {
+              wizardState = {};
+            },
+            showImportToast: () => showToast(t('footer.imported'), 'success'),
+          });
           return;
         }
 
