@@ -19,7 +19,7 @@ An interactive org chart editor for the browser — manage multiple org charts w
 - **Unsaved-changes warnings** — switching charts or restoring versions warns if the current tree has unsaved changes
 - **Accessible org chart** — full keyboard navigation (arrow keys, Enter, Space), ARIA tree semantics, screen reader announcements
 - **Mobile responsive** — collapsible sidebar on tablet/phone, touch-friendly 44px targets, works at 200% zoom
-- **i18n ready** — translation infrastructure with 400+ extractable strings, RTL-ready CSS logical properties
+- **i18n ready** — translation infrastructure with 1,180+ keys, Spanish locale, RTL-ready CSS logical properties
 - **First-time guidance** — help dialog with Getting Started guide for new users, contextual "no results" hints
 - **Loading indicators** — visual feedback for exports, imports, chart switching
 - Interactive hierarchical org chart visualization
@@ -63,11 +63,13 @@ Arbol follows WCAG 2.1 AA guidelines:
 
 Arbol includes a built-in i18n system:
 
-- 400+ user-facing strings extracted to `src/i18n/en.ts`
+- 1,180+ user-facing strings extracted to `src/i18n/en.ts`
+- Complete Spanish locale in `src/i18n/es.ts` (code-split, loaded on demand)
 - `t()` and `tp()` translation functions with interpolation and pluralization
 - RTL-ready CSS using logical properties
 - Locale-aware date formatting via `toLocaleString()`
 - Dynamic `dir` and `lang` attributes on `<html>`
+- Language switcher dropdown in settings modal (English / Español)
 
 To add a new language, create a translation file in `src/i18n/` and call `setLocale()`.
 
@@ -149,12 +151,17 @@ The built-in renderer (`src/utils/markdown.ts`) supports a safe subset of Markdo
 
 ```
 src/
+├── analytics/   # D3 visualization charts (sunburst, span, treemap)
+├── config/      # Enterprise config loader (arbol.config.json)
+├── constants/   # Renderer default values
 ├── controllers/ # Focus mode, search, selection state
-├── editor/      # Sidebar tab editors (People, Import, Settings, Charts)
+├── data/        # Built-in sample org chart
+├── editor/      # Sidebar tab editors (People, Import, Settings, Charts, Analytics)
+├── export/      # PowerPoint, SVG, and PNG export
 ├── i18n/        # Internationalization (translations, locale management)
+├── init/        # App initialization helpers
 ├── renderer/    # D3-based chart rendering, layout, and keyboard navigation
 ├── store/       # State management, IndexedDB, undo/redo
-├── export/      # PowerPoint export
 ├── ui/          # Panels, dialogs, controls, and accessibility utilities
 └── utils/       # Shared helpers and types
 ```

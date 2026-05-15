@@ -10,38 +10,46 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 ## 🚀 v3.13.2 — Import Wizard ChartBundle Support
 
-### Import
-- [x] Import wizard now handles `.arbol.json` chart bundles — exported charts can be re-imported via the Import button with auto-detection of ChartBundle format
-
-### Testing
-- [x] **2,914 tests across 120 files** — all passing
+- [x] Import wizard detects `.arbol.json` ChartBundle format
+- [x] Imports categories, level mappings, and saved versions from bundles
+- [x] Previously rejected these files with "Root node must have id, name, and title fields"
 
 ---
 
-## 🚀 v3.13.1 — Help Dialog Section Order
+## 🚀 v3.13.1 — Help Dialog Polish
 
-### UX
-- [x] Help dialog section order — "Getting Started" is now the first section, followed by "Import Instructions" (when configured) and "Keyboard Shortcuts"
+- [x] Help dialog section order — "Getting Started" first, then "Import Instructions", then "Keyboard Shortcuts"
 
 ---
 
-## 🚀 v3.13.0 — First-Visit Onboarding & Enterprise Config
+## 🚀 v3.13.0 — Enterprise Config & Onboarding
 
-### Added
-- [x] First-visit onboarding — Help & Reference dialog opens automatically on first visit with "Getting Started" section expanded
-- [x] `initialSection` option for help dialog — controls which accordion section is expanded by default
-- [x] Enterprise import instructions — deploy-time `arbol.config.json` for organization-specific CSV preparation instructions
-- [x] DOM-building markdown renderer (`src/utils/markdown.ts`) — safe subset with zero dependencies and structural XSS immunity
+### First-Visit Onboarding
+- [x] Help & Reference dialog opens automatically on first visit with "Getting Started" expanded
+- [x] `initialSection` option for `showHelpDialog()` to control which section opens
 
-### Fixed
-- [x] Backup restore with best-effort rollback — validates all data before deleting; original data restored on failure
-- [x] Clear-all blocks on backup failure — explicit warning dialog when auto-backup fails
-- [x] Version tree validation — malformed versions skipped with warning during restore
-- [x] Bundle import metadata validation — categories, levelMappings, levelDisplayMode validated and sanitized
-- [x] Layout engine performance — replaced O(n²) `shiftSubtree` with single-pass O(n) offset accumulation
+### Enterprise Import Instructions
+- [x] Deploy-time `arbol.config.json` with `importInstructions` field
+- [x] Markdown instructions in import wizard (Step 1) collapsible callout
+- [x] Dedicated section in help dialog
+- [x] App works identically when no config provided
+
+### DOM-Building Markdown Renderer
+- [x] Safe subset renderer (`src/utils/markdown.ts`) using `createElement`/`textContent`/`appendChild`
+- [x] Headings, bold, italic, code, links (http/https only), lists, fenced code blocks
+- [x] Zero dependencies, structural XSS immunity
+
+### Data Integrity
+- [x] Backup restore with best-effort rollback — validates before deleting, restores on failure (#14)
+- [x] Clear-all blocks on backup failure — warning dialog required (#15)
+- [x] Version tree validation — malformed versions skipped with warning (#16)
+- [x] Bundle import metadata validation — categories, levelMappings, levelDisplayMode sanitized (#17)
+
+### Performance
+- [x] Layout engine — O(n²) `shiftSubtree` replaced with O(n) offset accumulation (#18)
 
 ### Testing
-- [x] **2,894 tests across 118 files** — all passing
+- [x] **2,922 tests across 121 files** — all passing
 
 ---
 
