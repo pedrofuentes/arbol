@@ -118,10 +118,10 @@ describe('importBundle', () => {
     expect(deps.showConfirmDialog).not.toHaveBeenCalled();
   });
 
-  it('overrides bundle chart name with user-provided chartName', async () => {
+  it('overrides bundle chart name with a trimmed user-provided chartName', async () => {
     const bundle = makeBundle();
     const deps = makeDeps();
-    await importBundle(bundle, 'new', deps, 'Custom Name');
+    await importBundle(bundle, 'new', deps, '  Custom Name  ');
     const passedBundle = deps.importChartAsNew.mock.calls[0][0] as ChartBundle;
     expect(passedBundle.chart.name).toBe('Custom Name');
     // Original bundle should not be mutated
@@ -132,6 +132,22 @@ describe('importBundle', () => {
     const bundle = makeBundle();
     const deps = makeDeps();
     await importBundle(bundle, 'new', deps);
+    const passedBundle = deps.importChartAsNew.mock.calls[0][0] as ChartBundle;
+    expect(passedBundle.chart.name).toBe('Test Chart');
+  });
+
+  it('ignores whitespace-only chartName overrides for new imports', async () => {
+    const bundle = makeBundle();
+    const deps = makeDeps();
+    await importBundle(bundle, 'new', deps, '   ');
+    const passedBundle = deps.importChartAsNew.mock.calls[0][0] as ChartBundle;
+    expect(passedBundle.chart.name).toBe('Test Chart');
+  });
+
+  it('ignores chartName overrides that only differ by surrounding whitespace', async () => {
+    const bundle = makeBundle();
+    const deps = makeDeps();
+    await importBundle(bundle, 'new', deps, '  Test Chart  ');
     const passedBundle = deps.importChartAsNew.mock.calls[0][0] as ChartBundle;
     expect(passedBundle.chart.name).toBe('Test Chart');
   });

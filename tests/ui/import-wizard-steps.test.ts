@@ -437,11 +437,11 @@ describe('renderImportStep', () => {
     expect(state.destination).toBe('replace');
   });
 
-  it('stores chartName on input', () => {
+  it('stores trimmed chartName on input', () => {
     const state: WizardState = { nodeCount: 3, format: 'JSON', destination: 'new' };
     renderImportStep(container, state, vi.fn());
     const nameInput = container.querySelector('.wizard-field input') as HTMLInputElement;
-    nameInput.value = 'My Team Chart';
+    nameInput.value = '  My Team Chart  ';
     nameInput.dispatchEvent(new Event('input'));
     expect(state.chartName).toBe('My Team Chart');
   });
@@ -493,6 +493,7 @@ describe('renderPreviewStep — ChartBundle', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     document.body.removeChild(container);
   });
 
@@ -625,6 +626,34 @@ describe('renderPreviewStep — ChartBundle', () => {
     expect(success).not.toBeNull();
     expect(state.bundle).toBeDefined();
     expect(state.bundle!.versions).toHaveLength(0);
+  });
+
+  it('skips malformed bundle versions during preview and warns', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const state: WizardState = {
+      format: 'JSON',
+      rawText: makeBundle({
+        versions: [
+          {
+            name: 'v1',
+            createdAt: '2025-01-01T00:00:00Z',
+            tree: { id: '1', name: 'Alice', title: 'CEO' },
+          },
+          {
+            name: 'Broken version',
+            createdAt: '2025-01-02T00:00:00Z',
+            tree: { name: 'Missing id', title: 'VP' },
+          },
+        ],
+      }),
+    };
+
+    renderPreviewStep(container, state, vi.fn());
+
+    expect(state.bundle).toBeDefined();
+    expect(state.bundle!.versions).toHaveLength(1);
+    expect(state.bundle!.versions[0].name).toBe('v1');
+    expect(warnSpy).toHaveBeenCalled();
   });
 
   it('clears stale bundle when switching to plain JSON', () => {
