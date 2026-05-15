@@ -97,9 +97,21 @@ describe('ChartDB', () => {
     });
 
     it('getAllCharts returns charts sorted by createdAt ascending', async () => {
-      const oldest = makeChart({ id: 'c-old', name: 'Oldest', createdAt: '2025-01-01T00:00:00.000Z' });
-      const middle = makeChart({ id: 'c-mid', name: 'Middle', createdAt: '2025-03-01T00:00:00.000Z' });
-      const newest = makeChart({ id: 'c-new', name: 'Newest', createdAt: '2025-06-01T00:00:00.000Z' });
+      const oldest = makeChart({
+        id: 'c-old',
+        name: 'Oldest',
+        createdAt: '2025-01-01T00:00:00.000Z',
+      });
+      const middle = makeChart({
+        id: 'c-mid',
+        name: 'Middle',
+        createdAt: '2025-03-01T00:00:00.000Z',
+      });
+      const newest = makeChart({
+        id: 'c-new',
+        name: 'Newest',
+        createdAt: '2025-06-01T00:00:00.000Z',
+      });
 
       await db.putChart(oldest);
       await db.putChart(middle);
@@ -181,15 +193,55 @@ describe('ChartDB', () => {
     });
 
     it('getVersionsByChart returns versions sorted by createdAt descending', async () => {
-      const oldest = makeVersion({ id: 'v-old', chartId: 'chart-1', createdAt: '2025-01-01T00:00:00.000Z' });
-      const middle = makeVersion({ id: 'v-mid', chartId: 'chart-1', createdAt: '2025-03-01T00:00:00.000Z' });
-      const newest = makeVersion({ id: 'v-new', chartId: 'chart-1', createdAt: '2025-06-01T00:00:00.000Z' });
+      const oldest = makeVersion({
+        id: 'v-old',
+        chartId: 'chart-1',
+        createdAt: '2025-01-01T00:00:00.000Z',
+      });
+      const middle = makeVersion({
+        id: 'v-mid',
+        chartId: 'chart-1',
+        createdAt: '2025-03-01T00:00:00.000Z',
+      });
+      const newest = makeVersion({
+        id: 'v-new',
+        chartId: 'chart-1',
+        createdAt: '2025-06-01T00:00:00.000Z',
+      });
 
       await db.putVersion(oldest);
       await db.putVersion(middle);
       await db.putVersion(newest);
 
       const versions = await db.getVersionsByChart('chart-1');
+      expect(versions).toHaveLength(3);
+      expect(versions[0].id).toBe('v-new');
+      expect(versions[1].id).toBe('v-mid');
+      expect(versions[2].id).toBe('v-old');
+    });
+
+    it('getAllVersions returns all versions sorted by createdAt descending', async () => {
+      const oldest = makeVersion({
+        id: 'v-old',
+        chartId: 'chart-a',
+        createdAt: '2025-01-01T00:00:00.000Z',
+      });
+      const middle = makeVersion({
+        id: 'v-mid',
+        chartId: 'chart-b',
+        createdAt: '2025-03-01T00:00:00.000Z',
+      });
+      const newest = makeVersion({
+        id: 'v-new',
+        chartId: 'chart-a',
+        createdAt: '2025-06-01T00:00:00.000Z',
+      });
+
+      await db.putVersion(oldest);
+      await db.putVersion(middle);
+      await db.putVersion(newest);
+
+      const versions = await db.getAllVersions();
       expect(versions).toHaveLength(3);
       expect(versions[0].id).toBe('v-new');
       expect(versions[1].id).toBe('v-mid');
@@ -239,6 +291,11 @@ describe('ChartDB', () => {
     it('getAllCharts throws "Database not open" after close', () => {
       db.close();
       expect(() => db.getAllCharts()).toThrow('Database not open');
+    });
+
+    it('getAllVersions throws "Database not open" after close', () => {
+      db.close();
+      expect(() => db.getAllVersions()).toThrow('Database not open');
     });
 
     it('putChart throws "Database not open" after close', () => {
@@ -347,7 +404,10 @@ describe('ChartDB', () => {
       await db.putChart(chart);
 
       const newTree = makeTree({ name: 'Updated Root' });
-      await db.patchChart('chart-patch', { workingTree: newTree, updatedAt: '2025-06-15T00:00:00.000Z' });
+      await db.patchChart('chart-patch', {
+        workingTree: newTree,
+        updatedAt: '2025-06-15T00:00:00.000Z',
+      });
 
       const retrieved = await db.getChart('chart-patch');
       expect(retrieved!.workingTree.name).toBe('Updated Root');
