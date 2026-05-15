@@ -132,7 +132,9 @@ export class ChartDB {
 
       request.onsuccess = () => {
         const versions = request.result as VersionRecord[];
-        versions.sort((a, b) => (b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0));
+        versions.sort((a, b) =>
+          b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0,
+        );
         resolve(versions);
       };
 
@@ -140,6 +142,12 @@ export class ChartDB {
         reject(new Error(`Failed to get versions for chart ${chartId}: ${request.error?.message}`));
       };
     });
+  }
+
+  getAllVersions(): Promise<VersionRecord[]> {
+    return this.getAll<VersionRecord>(VERSIONS_STORE).then((versions) =>
+      versions.sort((a, b) => (b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0)),
+    );
   }
 
   getVersion(id: string): Promise<VersionRecord | undefined> {
@@ -164,7 +172,8 @@ export class ChartDB {
     const db = this.requireDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(VERSIONS_STORE, 'readwrite');
-      tx.onerror = () => reject(new Error(`Failed to delete versions for chart ${chartId}: ${tx.error?.message}`));
+      tx.onerror = () =>
+        reject(new Error(`Failed to delete versions for chart ${chartId}: ${tx.error?.message}`));
       tx.oncomplete = () => resolve();
 
       const index = tx.objectStore(VERSIONS_STORE).index('chartId');
