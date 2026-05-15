@@ -143,4 +143,4 @@ describe('ModuleName', () => {
 - Tests run automatically on every PR via GitHub Actions
 - All tests must pass before Sentinel review begins
 - Flaky tests must be fixed immediately, not skipped
-- Current test count: 2,798 tests across 112 files
+- Current test count: 2,922 tests across 121 files

@@ -71,7 +71,7 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`, `style`, `perf`
 ## Pull Request Process
 
 ### Before Opening a PR
-1. All 2,798+ tests pass: `npm run test`
+1. All 2,922+ tests pass: `npm run test`
 2. Linting passes: `npm run lint`
 3. Build succeeds: `npm run build`
 4. Commit messages follow the format
@@ -121,7 +121,7 @@ git pull origin main
 ```bash
 npm install          # Install dependencies
 npm run dev          # Start dev server (Vite HMR)
-npm run test         # Run all tests (2,798 across 112 files)
+npm run test         # Run all tests (2,922 across 121 files)
 npm run test:watch   # Watch mode
 npm run build        # Production build (tsc + vite build)
 npm run lint         # ESLint check

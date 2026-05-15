@@ -26,21 +26,24 @@ Editor (People / Import / Charts) → OrgStore (data + events) → Renderer (D3 
 
 ## Project Structure
 
-100 TypeScript source files in `src/`, organized by concern:
+107 TypeScript source files in `src/`, organized by concern:
 
 ```
 arbol/
 ├── src/
 │   ├── analytics/       # D3 visualization charts: sunburst-chart, span-chart, treemap-chart
 │   ├── config/          # app-config: enterprise config loader (arbol.config.json → AppConfig)
+│   ├── constants/       # defaults: single source of truth for renderer default values
 │   ├── controllers/     # focus-mode, search-controller, selection-manager
-│   ├── i18n/            # i18n system (t(), tp(), setLocale()) + en.ts (900+ translation keys)
-│   ├── editor/          # Sidebar tabs: chart-editor, form-editor, import-editor, json-editor, settings-editor, tab-switcher, utilities-editor
-│   ├── export/          # chart-exporter (orchestration), pptx-exporter (PowerPoint generation)
+│   ├── data/            # sample-org: built-in sample org chart for first-time users
+│   ├── i18n/            # i18n system (t(), tp(), setLocale()) + en.ts (1,180+ translation keys) + es.ts (Spanish)
+│   ├── init/            # App initialization helpers: comparison-handler, context-menu-handler, first-visit-helper, footer-builder, shortcuts-handler, toolbar-builder
+│   ├── editor/          # Sidebar tabs: analytics-editor, chart-editor, form-editor, import-editor, json-editor, settings-editor (with settings/ subdir: backup-panel, category-panel, level-mapping-panel, preset-panel, settings-io), tab-switcher, utilities-editor
+│   ├── export/          # chart-exporter (orchestration), pptx-exporter (PowerPoint), svg-png-exporter (SVG/PNG)
 │   ├── renderer/        # chart-renderer (D3 SVG), layout-engine, keyboard-nav, preview-renderer (vanilla DOM, no D3), side-by-side-renderer, zoom-manager
 │   ├── store/           # org-store, chart-store, chart-db, category-store, category-preset-store, level-store, level-preset-store, settings-store, mapping-store, backup-manager, theme-manager, theme-presets
-│   ├── ui/              # 32 components: context-menu, inline-editor, command-palette, property-panel, preset-toolbar, create-chart-dialog, settings-modal, import-wizard, confirm-dialog, manager-picker, toast, loading-overlay, etc.
-│   ├── utils/           # tree helpers (find/flatten/clone/isM1), csv-parser, markdown (safe DOM-building renderer), contrast, shortcuts, event-emitter, filename, file-type, id, search, storage, text-normalize, tree-diff
+│   ├── ui/              # 34 components: context-menu, inline-editor, command-palette, property-panel, preset-toolbar, create-chart-dialog, settings-modal, import-wizard, confirm-dialog, manager-picker, toast, loading-overlay, help-dialog, analytics-drawer, etc.
+│   ├── utils/           # tree helpers (find/flatten/clone/isM1), csv-parser, markdown (safe DOM-building renderer), contrast, shortcuts, event-emitter, filename, file-type, id, search, storage, text-normalize, tree-diff, analytics, dom-builder, debounce
 │   ├── types.ts         # All interfaces: OrgNode, ColumnMapping, ColorCategory, ChartRecord, VersionRecord, DiffStatus, CategoryPreset, LevelMappingPreset, AppConfig
 │   ├── main.ts          # App entry — wires stores, renderer, editors, menus, shortcuts
 │   ├── version.ts       # App version (injected from package.json at build time)
@@ -77,6 +80,9 @@ arbol/
 - `utils/` — Pure utility functions. No side effects, no store dependencies.
 - `export/` — PPTX/PNG/SVG export. Reads current state, produces output files.
 - `controllers/` — Cross-cutting concerns (focus mode, search, selection) that bridge stores and renderer.
+- `constants/` — Default values (renderer options). Single source of truth, no duplication.
+- `data/` — Built-in sample data (sample org chart for first-time users).
+- `init/` — App initialization helpers extracted from `main.ts` for readability.
 
 ## Data Flow
 
@@ -108,6 +114,8 @@ interface OrgNode {
   title: string; // Job title (max 500 chars)
   categoryId?: string; // Optional color category reference
   dottedLine?: boolean; // When true, parent link renders as dotted line
+  level?: string; // Optional level/grade label (e.g., 'L5', 'E10')
+  pinnedTitle?: boolean; // When true, title won't be overridden by level mapping
   children?: OrgNode[]; // Omit for leaf nodes
 }
 ```
@@ -149,6 +157,8 @@ All mutating methods call `snapshot()` (saves undo state) then `emit()` (notifie
 | `isDescendant()`           | `(ancestorId, nodeId): boolean`                                |
 | `setNodeCategory()`        | `(nodeId, categoryId \| null): void`                           |
 | `bulkSetCategory()`        | `(ids[], categoryId \| null): void` — single undo step         |
+| `pinTitle()`               | `(nodeId): void` — marks title as manually set (immune to level mapping) |
+| `unpinTitle()`             | `(nodeId): void` — removes manual title override                |
 
 ### ChartStore (`src/store/chart-store.ts`)
 
@@ -227,7 +237,9 @@ Lightweight i18n system in `src/i18n/`:
 - `t(key, params?)` — translate with optional `{param}` interpolation
 - `tp(key, count, params?)` — pluralization (`key.one` or `key.other`)
 - `setLocale(locale, messages)` — switch locale, sets `document.dir` and `document.lang`
-- English strings in `src/i18n/en.ts`: 900+ keys using flat dot-notation
+- English strings in `src/i18n/en.ts`: 1,180+ keys using flat dot-notation
+- Spanish locale in `src/i18n/es.ts`: complete translation, code-split and loaded on demand
+- Language switcher dropdown in settings modal (English / Español)
 
 ## Accessibility
 
