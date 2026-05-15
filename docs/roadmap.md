@@ -1,10 +1,47 @@
 # Arbol — Project Roadmap
 
-> Last updated: 2026-03-22
+> Last updated: 2026-05-14
 
 ## Overview
 
 Arbol is an interactive org chart editor for the browser, built with TypeScript, D3.js, and Vite. This roadmap tracks everything completed, in progress, and planned.
+
+---
+
+## 🚀 v3.13.2 — Import Wizard ChartBundle Support
+
+### Import
+- [x] Import wizard now handles `.arbol.json` chart bundles — exported charts can be re-imported via the Import button with auto-detection of ChartBundle format
+
+### Testing
+- [x] **2,914 tests across 120 files** — all passing
+
+---
+
+## 🚀 v3.13.1 — Help Dialog Section Order
+
+### UX
+- [x] Help dialog section order — "Getting Started" is now the first section, followed by "Import Instructions" (when configured) and "Keyboard Shortcuts"
+
+---
+
+## 🚀 v3.13.0 — First-Visit Onboarding & Enterprise Config
+
+### Added
+- [x] First-visit onboarding — Help & Reference dialog opens automatically on first visit with "Getting Started" section expanded
+- [x] `initialSection` option for help dialog — controls which accordion section is expanded by default
+- [x] Enterprise import instructions — deploy-time `arbol.config.json` for organization-specific CSV preparation instructions
+- [x] DOM-building markdown renderer (`src/utils/markdown.ts`) — safe subset with zero dependencies and structural XSS immunity
+
+### Fixed
+- [x] Backup restore with best-effort rollback — validates all data before deleting; original data restored on failure
+- [x] Clear-all blocks on backup failure — explicit warning dialog when auto-backup fails
+- [x] Version tree validation — malformed versions skipped with warning during restore
+- [x] Bundle import metadata validation — categories, levelMappings, levelDisplayMode validated and sanitized
+- [x] Layout engine performance — replaced O(n²) `shiftSubtree` with single-pass O(n) offset accumulation
+
+### Testing
+- [x] **2,894 tests across 118 files** — all passing
 
 ---
 
@@ -577,79 +614,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 
 > **Execution model:** One phase at a time. Each phase is implemented on a feature branch, reviewed, merged, and shipped before starting the next.
 
-### Phase 35 — v3.5.0: Bug Fix + Polish Sprint ✅
-
-- [x] Fix GitHub #4 — import shows previous chart instead of newly imported one
-- [x] i18n extraction — wrap remaining ~80 hardcoded user-facing strings with `t()` keys
-- [x] Accessibility: add `aria-label` to all ~20 icon-only buttons (verified: already done — 0 issues found)
-- [x] Accessibility: add `aria-invalid` + `aria-describedby` on form validation errors
-- [x] Accessibility: audit and fix focus restoration after modal dismiss (verified: already correct)
-- [x] Error resilience: add `window.onunhandledrejection` global handler
-- [x] Error resilience: surface localStorage failures as toast notifications
-- [x] Error resilience: add try/catch around D3 rendering operations
-- [x] Test coverage: chart-renderer target 75%+ (from ~52%)
-- [x] Test coverage: column-mapper branch coverage improvement
-- [x] Test coverage: add performance regression tests (layout time for 500/1,000/5,000 nodes)
-
-### Phase 36 — v3.6.0: Spanish Locale ✅
-
-- [x] Create `src/i18n/es.ts` — full Spanish translation of all ~1,035 keys
-- [x] Language switcher UI — locale picker in settings or command palette
-- [x] Validate all UI strings render correctly in both locales
-- [x] Locale-aware date/number formatting
-- [x] Tests for locale switching, fallback behavior, interpolation in Spanish
-
-### Phase 37 — v3.7.0: SVG/PNG Export ✅
-
-- [x] SVG export — serialize current SVG to downloadable `.svg` file
-- [x] PNG export — render SVG to canvas, export as `.png` (configurable resolution)
-- [x] Update export dialog with format picker (PPTX / SVG / PNG)
-- [x] Respect focus mode (export subtree only)
-- [x] Option to export in dark or light theme regardless of current
-
-### Phase 38 — v3.8.0: Level Metadata + Mapping + Analytics
-
-**Scope:** Add optional `level` field to OrgNode, level mapping system, analytics panel.
-**Complexity:** HIGH — touches 14+ files across data, UI, export, and storage layers.
-
-#### Data Model (types.ts, org-store.ts)
-- [ ] Add `level?: string` to `OrgNode` interface (e.g., "12", "L5", "Director")
-- [ ] Extend `updateNode()` fields to include `level`
-- [ ] Extend `addChild()` data to include `level`
-- [ ] Add level validation to tree validator (string, max 50 chars)
-
-#### Level Mapping System (new: level-store.ts)
-- [ ] Create `LevelStore` extending `EventEmitter` (follows CategoryStore pattern)
-- [ ] `LevelMapping` interface: `{ rawLevel: string, displayTitle: string }`
-- [ ] Many-to-one: multiple raw levels → single display title (e.g., 10, 11, 12 → "IC")
-- [ ] Configurable display mode: raw only, mapped only, or both ("L12 — Senior Engineer")
-- [ ] Per-chart mappings stored alongside categories in `ChartRecord`
-- [ ] Import mapping presets from CSV (level,title columns) or manual entry
-- [ ] Persist to IndexedDB via ChartStore
-
-#### UI — Cards & Editing
-- [ ] Render level on cards below title (chart-renderer.ts line ~574, after title text element)
-- [ ] Add `showLevel` toggle to `RendererOptions` + settings panel
-- [ ] Level editable via inline editor (add 3rd input field)
-- [ ] Level editable via property panel (add number input after title)
-- [ ] Level column in CSV import (extend `ColumnMapping` with `level?: string`)
-- [ ] Column mapper UI: add level dropdown to mapping form
-
-#### Export
-- [ ] Level text in PPTX export (pptx-exporter.ts `addNodeShape()` text array)
-- [ ] Level text in SVG/PNG export (rendered on cards, exports automatically)
-- [ ] Optional toggle to include/exclude level in exports
-
-#### Analytics Panel (new: src/ui/analytics-panel.ts)
-- [ ] New sidebar tab or command palette action
-- [ ] Total headcount
-- [ ] Headcount by level, grouped by mapped title ("Senior: 12 people across L10-L12")
-- [ ] Span of control: avg/min/max direct reports per manager
-- [ ] Tree depth
-- [ ] Level distribution across teams (respects focus mode)
-- [ ] Level-based auto-categories — auto-assign colors based on level ranges or mapped titles
-
-### Phase 39 — v3.9.0: Collapsible Subtrees
+### Phase 39 — v3.14.0: Collapsible Subtrees
 
 **Scope:** Collapse/expand branches in the org chart, persisted per chart.
 **Complexity:** MEDIUM — new controller + renderer filter + keyboard integration.
@@ -808,11 +773,11 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 ---
 
 ## Known Issues
-- **Open — GitHub #4:** When importing, current version shows previously selected chart instead of newly imported one
 - Fatima→Ethan vertical spacing required special-case logic for single-child non-Advisor managers (fixed, has regression tests)
 - Cross-parent boundary spacing required careful D3 separation override (fixed)
 - Imported settings can override defaults if not cleared from localStorage
 - HR system CSV exports with trailing metadata caused orphan reference errors (fixed in v1.1.0)
+- Open Sentinel findings: bundle import validation (#54, #55, #56), backup restore resilience (#25, #26) — see [GitHub Issues](https://github.com/pedrofuentes/arbol/issues)
 
 ---
 
