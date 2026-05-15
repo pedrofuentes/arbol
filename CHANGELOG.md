@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Import wizard now handles `.arbol.json` chart bundles** — Exported charts can now be re-imported via the Import button. The wizard detects ChartBundle format, imports categories, level mappings, and saved versions. Previously it rejected these files with "Root node must have id, name, and title fields".
+- **Bundle import validation hardening** — Preview now validates bundle version trees, trims chart-name overrides, warns when malformed saved versions are skipped, and routes imported charts through the shared chart-switch flow.
 
 ## [3.13.1] — 2026-05-11
 

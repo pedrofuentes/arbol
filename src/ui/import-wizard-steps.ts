@@ -1,11 +1,13 @@
 import type {
   ChartBundle,
+  ChartBundleVersion,
   ColumnMapping,
   MappingPreset,
   OrgNode,
   TextNormalization,
 } from '../types';
 import { t } from '../i18n';
+import { validateTree } from '../store/org-store';
 import { showToast } from './toast';
 import { extractHeaders, parseCsvToTree } from '../utils/csv-parser';
 import { normalizeText } from '../utils/text-normalize';
@@ -270,6 +272,54 @@ function countNodes(node: OrgNode): number {
   return count;
 }
 
+function validateBundleVersions(versions: unknown): {
+  versions: ChartBundleVersion[];
+  skippedCount: number;
+} {
+  if (!Array.isArray(versions)) {
+    console.warn('Skipping malformed bundle versions array during preview');
+    return { versions: [], skippedCount: 1 };
+  }
+
+  const validVersions: ChartBundleVersion[] = [];
+  let skippedCount = 0;
+  for (const [index, version] of versions.entries()) {
+    if (!version || typeof version !== 'object') {
+      skippedCount++;
+      console.warn(`Skipping malformed bundle version at index ${index}: expected an object`);
+      continue;
+    }
+
+    const candidate = version as Record<string, unknown>;
+    if (typeof candidate.name !== 'string' || !candidate.name.trim()) {
+      skippedCount++;
+      console.warn(`Skipping malformed bundle version at index ${index}: missing name`);
+      continue;
+    }
+    if (typeof candidate.createdAt !== 'string' || !candidate.createdAt.trim()) {
+      skippedCount++;
+      console.warn(`Skipping malformed bundle version at index ${index}: missing createdAt`);
+      continue;
+    }
+
+    try {
+      validateTree(candidate.tree);
+      validVersions.push({
+        name: candidate.name,
+        createdAt: candidate.createdAt,
+        tree: candidate.tree,
+      });
+    } catch (error) {
+      skippedCount++;
+      console.warn(
+        `Skipping malformed bundle version at index ${index}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  return { versions: validVersions, skippedCount };
+}
+
 export function renderPreviewStep(
   container: HTMLElement,
   state: WizardState,
@@ -298,13 +348,20 @@ export function renderPreviewStep(
         if (!root.id || !root.name || !root.title) {
           throw new Error(t('import_wizard.bundle_invalid_root'));
         }
-        state.bundle = bundle;
+        validateTree(root);
+        const { versions, skippedCount } = validateBundleVersions(bundle.versions);
+        state.bundle = { ...bundle, versions };
+        state.warning =
+          skippedCount > 0
+            ? t('import_wizard.bundle_versions_skipped', { count: String(skippedCount) })
+            : undefined;
         state.tree = root;
         state.nodeCount = countNodes(root);
         state.destination = undefined;
         state.chartName = undefined;
       } else {
         state.bundle = undefined;
+        state.warning = undefined;
         state.destination = undefined;
         state.chartName = undefined;
         if (!parsed.id || !parsed.name || !parsed.title) {
@@ -315,6 +372,7 @@ export function renderPreviewStep(
       }
     } else {
       state.bundle = undefined;
+      state.warning = undefined;
       state.destination = undefined;
       state.chartName = undefined;
       const result = parseCsvToTree(state.rawText!, state.mapping);
@@ -329,6 +387,13 @@ export function renderPreviewStep(
       format: state.format!,
     });
     container.appendChild(success);
+
+    if (state.warning) {
+      const warning = document.createElement('p');
+      warning.className = 'wizard-warning';
+      warning.textContent = state.warning;
+      container.appendChild(warning);
+    }
 
     // Show bundle version info if applicable
     if (state.bundle) {
@@ -438,6 +503,7 @@ export function renderPreviewStep(
 
     onReady(true);
   } catch (e) {
+    state.warning = undefined;
     const errorMsg = document.createElement('p');
     errorMsg.className = 'wizard-error';
     errorMsg.textContent = t('import_wizard.preview_error', {
@@ -549,7 +615,7 @@ export function renderImportStep(
   nameInput.placeholder = t('import_wizard.dest_name_placeholder');
   nameInput.value = state.chartName ?? '';
   nameInput.addEventListener('input', () => {
-    state.chartName = nameInput.value;
+    state.chartName = nameInput.value.trim();
   });
   nameField.appendChild(nameInput);
   container.appendChild(nameField);

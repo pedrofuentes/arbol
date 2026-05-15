@@ -1294,6 +1294,8 @@ const en: Record<string, string> = {
   'import_wizard.bundle_invalid_root':
     'Invalid chart bundle: working tree root must have id, name, and title',
   'import_wizard.bundle_info': 'Chart "{name}" with {count} saved version(s)',
+  'import_wizard.bundle_versions_skipped':
+    'Skipped {count} malformed saved version(s). Only valid versions will be imported.',
   'settings_modal.tab.presets': 'Presets',
   'settings_modal.tab.layout': 'Layout',
   'settings_modal.tab.typography': 'Typography',
