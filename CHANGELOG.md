@@ -4,13 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
+
+## [3.13.3] — 2026-05-14
+
+### Fixed
+
+- **Bundle import validation hardening** — Preview now validates bundle version trees and warns when malformed saved versions are skipped; chart-name overrides are trimmed (blank names rejected); imported charts route through the shared chart-switch flow instead of duplicating activation logic (#54, #55, #56)
+- **Backup restore rollback errors surfaced** — Rollback failures during `restoreFullReplace()` are now collected and included in the error message instead of being silently discarded; users see rollback failure details via toast (#25)
+- **Backup restore N+1 version scan eliminated** — `restoreFullReplace()` now uses a single bulk `getAllVersions()` read instead of one query per chart (#26)
+
 ## [3.13.2] — 2026-05-13
 
 ### Fixed
 
 - **Import wizard now handles `.arbol.json` chart bundles** — Exported charts can now be re-imported via the Import button. The wizard detects ChartBundle format, imports categories, level mappings, and saved versions. Previously it rejected these files with "Root node must have id, name, and title fields".
-- **Bundle import validation hardening** — Preview now validates bundle version trees, trims chart-name overrides, warns when malformed saved versions are skipped, and routes imported charts through the shared chart-switch flow.
 
 ## [3.13.1] — 2026-05-11
 
