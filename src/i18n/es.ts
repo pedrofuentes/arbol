@@ -1252,6 +1252,8 @@ const es: Record<string, string> = {
   'import_wizard.bundle_invalid_root':
     'Paquete de organigrama inválido: el nodo raíz debe tener id, nombre y cargo',
   'import_wizard.bundle_info': 'Organigrama "{name}" con {count} versión(es) guardada(s)',
+  'import_wizard.bundle_versions_skipped':
+    'Se omitieron {count} versión(es) guardada(s) malformada(s). Solo se importarán las versiones válidas.',
   'settings_modal.tab.presets': 'Preajustes',
   'settings_modal.tab.layout': 'Disposición',
   'settings_modal.tab.typography': 'Tipografía',
