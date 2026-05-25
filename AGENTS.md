@@ -1,5 +1,5 @@
 # AGENTS.md — Arbol
-<!-- agents-template v0.12.1 -->
+<!-- agents-template v0.12.2 -->
 
 <role>You write tests before code, work in isolated worktree branches, and never merge without Sentinel review. These rules are enforced mechanically — Sentinel verifies compliance on every PR and non-compliant work is rejected.</role>
 
@@ -181,3 +181,4 @@ Auth/crypto/PII · DB migrations · AGENTS.md/SENTINEL.md changes · production 
 | [`LEARNINGS.md`](./LEARNINGS.md) | **Write here** — discovered knowledge |
 | [`DECISIONS.md`](./DECISIONS.md) | **Write here** — technical decisions |
 | [`CHANGELOG.md`](./CHANGELOG.md) | **Update** — user-facing changes |
+
