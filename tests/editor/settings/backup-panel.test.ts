@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, type Mock } from 'vitest';
-import { setLocale } from '../../../src/i18n';
+import { setLocale, t } from '../../../src/i18n';
 import en from '../../../src/i18n/en';
 import { BackupPanel, type BackupPanelDeps } from '../../../src/editor/settings/backup-panel';
 import type { ChartDB } from '../../../src/store/chart-db';
@@ -77,6 +77,15 @@ function createMockChartDB(): ChartDB {
   } as unknown as ChartDB;
 }
 
+const arbolStorageKeys = [
+  'arbol-org-data',
+  'arbol-settings',
+  'arbol-categories',
+  'arbol-csv-mappings',
+  'arbol-custom-presets',
+  'arbol-theme',
+];
+
 function buildPanel(): { panel: BackupPanel; element: HTMLElement; deps: BackupPanelDeps } {
   const deps: BackupPanelDeps = {
     chartDB: createMockChartDB(),
@@ -148,6 +157,54 @@ describe('BackupPanel', () => {
       // Only the warning dialog, not the actual clear confirmation
       expect(showConfirmDialog).toHaveBeenCalledTimes(1);
     });
+
+    it('shows the final confirmation and clears data when user proceeds after backup failure warning', async () => {
+      const { element, deps } = buildPanel();
+      const clearBtn = getClearButton(element);
+      const deleteDatabase = vi.fn();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      vi.stubGlobal('indexedDB', { deleteDatabase });
+      (createBackup as Mock).mockRejectedValueOnce(new Error('fail'));
+      (showConfirmDialog as Mock).mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+
+      try {
+        clearBtn.click();
+
+        await vi.waitFor(() => {
+          expect(showConfirmDialog).toHaveBeenCalledTimes(2);
+          expect(deps.storage.removeItem).toHaveBeenCalledTimes(arbolStorageKeys.length);
+          expect(deleteDatabase).toHaveBeenCalledWith('arbol-db');
+        });
+
+        const firstCall = (showConfirmDialog as Mock).mock.calls[0][0];
+        const secondCall = (showConfirmDialog as Mock).mock.calls[1][0];
+
+        expect(firstCall).toEqual(
+          expect.objectContaining({
+            title: t('backup.clear_no_backup_title'),
+            message: t('backup.clear_no_backup_message'),
+            confirmLabel: t('backup.clear_no_backup_confirm'),
+            danger: true,
+          }),
+        );
+        expect(secondCall).toEqual(
+          expect.objectContaining({
+            title: t('backup.clear_title'),
+            message: t('backup.clear_message'),
+            confirmLabel: t('backup.clear_confirm'),
+            danger: true,
+          }),
+        );
+
+        for (const [index, key] of arbolStorageKeys.entries()) {
+          expect(deps.storage.removeItem).toHaveBeenNthCalledWith(index + 1, key);
+        }
+      } finally {
+        vi.unstubAllGlobals();
+        consoleErrorSpy.mockRestore();
+      }
+    });
   });
 
   describe('restore replace — backup failure path', () => {
@@ -164,17 +221,16 @@ describe('BackupPanel', () => {
       cleanup: () => void;
     } {
       let capturedInput: HTMLInputElement | null = null;
-      const originalAppendChild = document.body.appendChild.bind(document.body);
-      document.body.appendChild = ((node: Node) => {
+      const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation((node) => {
         if (node instanceof HTMLInputElement && node.type === 'file') {
           capturedInput = node;
         }
-        return originalAppendChild(node);
-      }) as typeof document.body.appendChild;
+        return Node.prototype.appendChild.call(document.body, node);
+      });
       return {
         getInput: () => capturedInput,
         cleanup: () => {
-          document.body.appendChild = originalAppendChild as typeof document.body.appendChild;
+          appendChildSpy.mockRestore();
         },
       };
     }
@@ -269,6 +325,59 @@ describe('BackupPanel', () => {
       // restoreFullReplace should NOT have been called
       expect(restoreFullReplace).not.toHaveBeenCalled();
       cleanup();
+    });
+
+    it('shows the final confirmation and replaces data when user proceeds after backup failure warning', async () => {
+      const { element, deps } = buildPanel();
+      const restoreBtn = getRestoreButton(element);
+      const { getInput, cleanup } = setupFileInputCapture();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      (readBackupFile as Mock).mockResolvedValue(validBackup);
+      (getBackupSummary as Mock).mockReturnValue({
+        chartCount: 1,
+        versionCount: 0,
+        appVersion: '1.0.0',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      });
+      (showRestoreStrategyDialog as Mock).mockResolvedValue('replace');
+      (createBackup as Mock).mockRejectedValueOnce(new Error('fail'));
+      (showConfirmDialog as Mock).mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+
+      try {
+        restoreBtn.click();
+        const input = getInput();
+        expect(input).not.toBeNull();
+        triggerFileChange(input!, validBackup);
+
+        await vi.waitFor(() => {
+          expect(showConfirmDialog).toHaveBeenCalledTimes(2);
+          expect(restoreFullReplace).toHaveBeenCalledWith(deps.chartDB, validBackup);
+        });
+
+        const firstCall = (showConfirmDialog as Mock).mock.calls[0][0];
+        const secondCall = (showConfirmDialog as Mock).mock.calls[1][0];
+
+        expect(firstCall).toEqual(
+          expect.objectContaining({
+            title: t('backup.clear_no_backup_title'),
+            message: t('backup.clear_no_backup_message'),
+            confirmLabel: t('backup.clear_no_backup_confirm'),
+            danger: true,
+          }),
+        );
+        expect(secondCall).toEqual(
+          expect.objectContaining({
+            title: t('backup.replace_title'),
+            message: t('backup.replace_message_no_backup'),
+            confirmLabel: t('backup.replace_confirm'),
+            danger: true,
+          }),
+        );
+      } finally {
+        cleanup();
+        consoleErrorSpy.mockRestore();
+      }
     });
   });
 });
