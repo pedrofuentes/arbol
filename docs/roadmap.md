@@ -13,6 +13,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Import wizard detects `.arbol.json` ChartBundle format
 - [x] Imports categories, level mappings, and saved versions from bundles
 - [x] Previously rejected these files with "Root node must have id, name, and title fields"
+- Note: This release shipped the core ChartBundle round-trip path; remaining Sentinel validation hardening follow-ups stay open in Known Issues (#54, #55, #56).
 
 ---
 
@@ -44,6 +45,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - [x] Clear-all blocks on backup failure — warning dialog required (#15)
 - [x] Version tree validation — malformed versions skipped with warning (#16)
 - [x] Bundle import metadata validation — categories, levelMappings, levelDisplayMode sanitized (#17)
+- Note: These completed items are the shipped baseline safeguards; remaining Sentinel backup/import hardening follow-ups stay open in Known Issues (#25, #26, #54, #55, #56).
 
 ### Performance
 - [x] Layout engine — O(n²) `shiftSubtree` replaced with O(n) offset accumulation (#18)
@@ -785,7 +787,7 @@ Arbol is an interactive org chart editor for the browser, built with TypeScript,
 - Cross-parent boundary spacing required careful D3 separation override (fixed)
 - Imported settings can override defaults if not cleared from localStorage
 - HR system CSV exports with trailing metadata caused orphan reference errors (fixed in v1.1.0)
-- Open Sentinel findings: bundle import validation (#54, #55, #56), backup restore resilience (#25, #26) — see [GitHub Issues](https://github.com/pedrofuentes/arbol/issues)
+- Open Sentinel follow-ups: remaining bundle import validation hardening (#54, #55, #56) and backup restore resilience hardening (#25, #26). The completed sections above capture the fixes already shipped; these follow-up issues are still open. See [GitHub Issues](https://github.com/pedrofuentes/arbol/issues)
 
 ---
 
