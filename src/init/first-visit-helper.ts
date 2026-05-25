@@ -1,4 +1,4 @@
-import { showHelpDialog } from '../ui/help-dialog';
+import { HELP_SECTION_IDS, showHelpDialog } from '../ui/help-dialog';
 import { type IStorage, browserStorage } from '../utils/storage';
 
 const WELCOME_KEY = 'arbol-welcome-seen';
@@ -10,7 +10,7 @@ export function showFirstVisitHelp(
   if (storage.getItem(WELCOME_KEY)) return false;
 
   showHelpDialog({
-    initialSection: 1,
+    initialSection: HELP_SECTION_IDS.gettingStarted,
     onLoadSample,
   });
   storage.setItem(WELCOME_KEY, 'true');
