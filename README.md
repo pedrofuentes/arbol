@@ -15,7 +15,7 @@ An interactive org chart editor for the browser — manage multiple org charts w
 - **Category & level mapping presets** — save reusable presets, copy from other charts, pick presets when creating new charts
 - **Chart name in header** — editable name with dirty-state indicator (●) and quick save button (💾)
 - **IndexedDB storage** — org data stored in IndexedDB for capacity across multiple charts and versions
-- **Import creates or replaces** — importing CSV/JSON asks whether to create a new chart or replace the current one
+- **Import creates or replaces** — importing CSV/JSON or re-importing `.arbol.json` ChartBundle exports asks whether to create a new chart or replace the current one
 - **Unsaved-changes warnings** — switching charts or restoring versions warns if the current tree has unsaved changes
 - **Accessible org chart** — full keyboard navigation (arrow keys, Enter, Space), ARIA tree semantics, screen reader announcements
 - **Mobile responsive** — collapsible sidebar on tablet/phone, touch-friendly 44px targets, works at 200% zoom
@@ -23,7 +23,7 @@ An interactive org chart editor for the browser — manage multiple org charts w
 - **First-time guidance** — help dialog with Getting Started guide for new users, contextual "no results" hints
 - **Loading indicators** — visual feedback for exports, imports, chart switching
 - Interactive hierarchical org chart visualization
-- Four sidebar tabs: People (add/edit), Import (files, paste, JSON editor, text normalization), Settings (presets, categories, fine-tuning), Charts (chart & version management)
+- Four sidebar tabs: People (add/edit), Import (files, paste, JSON editor, `.arbol.json` ChartBundle re-import, text normalization), Settings (presets, categories, fine-tuning), Charts (chart & version management)
 - Text normalization — normalize name/title casing (Title Case, UPPERCASE, lowercase) on import or for the existing org chart
 - Per-node color categories (Open Position, Offer Pending, Future Start + custom)
 - Color category legend on the chart (SVG overlay, included in PPTX export)
