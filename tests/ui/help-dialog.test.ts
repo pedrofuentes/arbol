@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { showHelpDialog } from '../../src/ui/help-dialog';
+import { HELP_SECTION_IDS, showHelpDialog } from '../../src/ui/help-dialog';
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
@@ -270,24 +270,25 @@ describe('showHelpDialog', () => {
 
   // ─── initialSection Tests ─────────────────────────────────────────
 
-  it('opens Getting Started section when initialSection is 1', () => {
-    showHelpDialog({ initialSection: 1 });
-    const sections = document.querySelectorAll('.help-section');
-    expect(sections[0].classList.contains('open')).toBe(false);
-    expect(sections[1].classList.contains('open')).toBe(true);
+  it('opens Getting Started section when initialSection uses a named section id', () => {
+    showHelpDialog({ initialSection: HELP_SECTION_IDS.gettingStarted });
+    const openSectionHeader = document.querySelector('.help-section.open .help-section-header');
+    expect(openSectionHeader?.textContent).toContain('Getting Started');
   });
 
-  it('sets aria-expanded correctly for initialSection', () => {
-    showHelpDialog({ initialSection: 1 });
+  it('sets aria-expanded correctly for a named initialSection', () => {
+    showHelpDialog({ initialSection: HELP_SECTION_IDS.gettingStarted });
     const headers = document.querySelectorAll('.help-section-header');
-    expect(headers[0].getAttribute('aria-expanded')).toBe('false');
-    expect(headers[1].getAttribute('aria-expanded')).toBe('true');
+    expect(headers[0].getAttribute('aria-expanded')).toBe('true');
+    expect(headers[1].getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('defaults to section 0 when initialSection is not provided', () => {
-    showHelpDialog();
-    const sections = document.querySelectorAll('.help-section');
-    expect(sections[0].classList.contains('open')).toBe(true);
-    expect(sections[1].classList.contains('open')).toBe(false);
-  });
+  it.each([-1, 999, undefined])(
+    'gracefully defaults to the first section when initialSection is %s',
+    (initialSection) => {
+      showHelpDialog({ initialSection });
+      const openSectionHeader = document.querySelector('.help-section.open .help-section-header');
+      expect(openSectionHeader?.textContent).toContain('Getting Started');
+    },
+  );
 });
