@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
-import { setLocale, getLocale, getSavedLocale, saveLocalePreference } from '../../src/i18n';
+import { setLocale, getSavedLocale, saveLocalePreference } from '../../src/i18n';
 import en from '../../src/i18n/en';
 import { SettingsModal } from '../../src/ui/settings-modal';
 

@@ -3,7 +3,7 @@ import { createIconButton } from '../utils/dom-builder';
 import type { ThemeManager } from '../store/theme-manager';
 import type { OrgStore } from '../store/org-store';
 import { announce } from '../ui/announcer';
-import { showHelpDialog, type HelpDialogOptions } from '../ui/help-dialog';
+import { showHelpDialog } from '../ui/help-dialog';
 import { SAMPLE_ORG } from '../data/sample-org';
 
 export interface ToolbarDeps {

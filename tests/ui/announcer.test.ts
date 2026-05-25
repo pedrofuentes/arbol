@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { announce, _resetForTesting } from '../../src/ui/announcer';
 
 function getRegion(): HTMLElement | null {

@@ -1,5 +1,3 @@
-import { t } from '../i18n';
-
 let overlay: HTMLDivElement | null = null;
 
 export function showLoading(message?: string): void {

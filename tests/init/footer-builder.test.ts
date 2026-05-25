@@ -33,18 +33,18 @@ function makeDeps(overrides: Partial<FooterDeps> = {}): FooterDeps {
         getRelativeZoomPercent: () => 100,
         onZoom: () => () => {},
       }),
-    } as any,
+    } as unknown as FooterDeps['renderer'],
     categoryStore: new CategoryStore(),
     chartStore: {
       getActiveChart: async () => null,
-    } as any,
+    } as unknown as FooterDeps['chartStore'],
     focusMode: {
       getVisibleTree: () => store.getTree(),
-    } as any,
+    } as unknown as FooterDeps['focusMode'],
     selection: {
       hasSelection: false,
       count: 0,
-    } as any,
+    } as unknown as FooterDeps['selection'],
     footer,
     getChartName: () => 'Test Chart',
     getSideBySideRenderer: () => null,

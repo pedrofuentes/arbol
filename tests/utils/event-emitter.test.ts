@@ -99,11 +99,10 @@ describe('EventEmitter', () => {
     it('unsubscribe during emit — skips deleted listener not yet visited', () => {
       const emitter = new TestEmitter();
       const b = vi.fn();
-      let unsub: () => void;
       emitter.onChange(() => {
         unsub();
       });
-      unsub = emitter.onChange(b);
+      const unsub: () => void = emitter.onChange(b);
       emitter.emit();
       // Set for-of skips entries deleted before they are visited
       expect(b).not.toHaveBeenCalled();

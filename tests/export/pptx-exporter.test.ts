@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ShapeProps, SHAPE_NAME, TextProps, TextPropsOptions } from 'pptxgenjs';
 import type {
   LayoutResult,
   LayoutNode,
@@ -13,12 +14,71 @@ const mockAddText = vi.fn().mockReturnThis();
 const mockAddShape = vi.fn().mockReturnThis();
 const mockAddSlide = vi.fn();
 
+type TextCall = [string | TextProps[], TextPropsOptions?];
+type TextArrayCall = [TextProps[], TextPropsOptions?];
+type StringTextCall = [string, TextPropsOptions?];
+type ShapeCall = [SHAPE_NAME, ShapeProps?];
+type MockSlide = { addText: typeof mockAddText; addShape: typeof mockAddShape };
+type SlideCall = [MockSlide];
+
+function expectDefined<T>(value: T | undefined): T {
+  expect(value).toBeDefined();
+  if (value === undefined) {
+    throw new Error('Expected value to be defined');
+  }
+  return value;
+}
+
+function isTextBlockArray(value: string | TextProps[]): value is TextProps[] {
+  return Array.isArray(value);
+}
+
+function isTextArrayCall(call: TextCall): call is TextArrayCall {
+  return isTextBlockArray(call[0]);
+}
+
+function isStringTextCall(call: TextCall): call is StringTextCall {
+  return typeof call[0] === 'string';
+}
+
+function getTextCalls(): TextCall[] {
+  return mockAddText.mock.calls as unknown as TextCall[];
+}
+
+function getShapeCalls(): ShapeCall[] {
+  return mockAddShape.mock.calls as unknown as ShapeCall[];
+}
+
+function getSlideCalls(): SlideCall[] {
+  return mockAddSlide.mock.calls as unknown as SlideCall[];
+}
+
+function getTextCallsFromSlide(slide: MockSlide): TextCall[] {
+  return slide.addText.mock.calls as unknown as TextCall[];
+}
+
+function getShapeCallsFromSlide(slide: MockSlide): ShapeCall[] {
+  return slide.addShape.mock.calls as unknown as ShapeCall[];
+}
+
+function getShapeOptions(call: ShapeCall | undefined): ShapeProps {
+  return expectDefined(call?.[1]);
+}
+
+function getTextOptions(call: TextCall | undefined): TextPropsOptions {
+  return expectDefined(call?.[1]);
+}
+
+function getTextBlocks(call: TextArrayCall | undefined): TextProps[] {
+  return expectDefined(call?.[0]);
+}
+
 vi.mock('pptxgenjs', () => {
   return {
     default: class MockPptxGenJS {
       defineLayout = vi.fn();
       layout = '';
-      slides: any[] = [];
+      slides: MockSlide[] = [];
       addSlide = () => {
         const slide = {
           addText: mockAddText,
@@ -162,12 +222,12 @@ describe('pptx-exporter', () => {
       await exportToPptx(layout);
       // Manager node should produce addText (card) and addShape (border rect)
       expect(mockAddText).toHaveBeenCalled();
-      const textCalls = mockAddText.mock.calls;
-      const hasManagerText = textCalls.some((call: any) => {
+      const textCalls = getTextCalls();
+      const hasManagerText = textCalls.some((call) => {
         const textBlocks = call[0];
         return (
-          Array.isArray(textBlocks) &&
-          textBlocks.some((t: any) => typeof t.text === 'string' && t.text.includes('Boss'))
+          isTextBlockArray(textBlocks) &&
+          textBlocks.some((t) => typeof t.text === 'string' && t.text.includes('Boss'))
         );
       });
       expect(hasManagerText).toBe(true);
@@ -181,12 +241,12 @@ describe('pptx-exporter', () => {
         ],
       });
       await exportToPptx(layout);
-      const textCalls = mockAddText.mock.calls;
-      const hasIcText = textCalls.some((call: any) => {
+      const textCalls = getTextCalls();
+      const hasIcText = textCalls.some((call) => {
         const textBlocks = call[0];
         return (
-          Array.isArray(textBlocks) &&
-          textBlocks.some((t: any) => typeof t.text === 'string' && t.text.includes('Dev'))
+          isTextBlockArray(textBlocks) &&
+          textBlocks.some((t) => typeof t.text === 'string' && t.text.includes('Dev'))
         );
       });
       expect(hasIcText).toBe(true);
@@ -200,12 +260,12 @@ describe('pptx-exporter', () => {
         ],
       });
       await exportToPptx(layout);
-      const textCalls = mockAddText.mock.calls;
-      const hasPalText = textCalls.some((call: any) => {
+      const textCalls = getTextCalls();
+      const hasPalText = textCalls.some((call) => {
         const textBlocks = call[0];
         return (
-          Array.isArray(textBlocks) &&
-          textBlocks.some((t: any) => typeof t.text === 'string' && t.text.includes('Advisor'))
+          isTextBlockArray(textBlocks) &&
+          textBlocks.some((t) => typeof t.text === 'string' && t.text.includes('Advisor'))
         );
       });
       expect(hasPalText).toBe(true);
@@ -219,8 +279,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout);
       // IC containers are drawn as addShape calls with grey fill
-      const shapeCalls = mockAddShape.mock.calls;
-      const hasGreyRect = shapeCalls.some((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const hasGreyRect = shapeCalls.some((call) => {
         const opts = call[1];
         return opts && opts.fill && opts.fill.color === 'E5E7EB';
       });
@@ -235,8 +295,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout);
       // Links are drawn as addShape lines
-      const shapeCalls = mockAddShape.mock.calls;
-      const hasLine = shapeCalls.some((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const hasLine = shapeCalls.some((call) => {
         const opts = call[1];
         return opts && opts.line && opts.line.color;
       });
@@ -303,8 +363,8 @@ describe('pptx-exporter', () => {
         links: [link],
       });
       await exportToPptx(layout);
-      const shapeCalls = mockAddShape.mock.calls;
-      const lineWithDash = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const lineWithDash = shapeCalls.find((call) => {
         const opts = call[1];
         return opts && opts.line && opts.line.dashType === 'dash';
       });
@@ -324,8 +384,8 @@ describe('pptx-exporter', () => {
         links: [link],
       });
       await exportToPptx(layout);
-      const shapeCalls = mockAddShape.mock.calls;
-      const lineWithDash = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const lineWithDash = shapeCalls.find((call) => {
         const opts = call[1];
         return opts && opts.line && opts.line.dashType;
       });
@@ -346,8 +406,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { categories });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const cardRect = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const cardRect = shapeCalls.find((call) => {
         const opts = call[1];
         return opts && opts.fill && opts.fill.color === '3B82F6' && opts.line;
       });
@@ -365,8 +425,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { categories });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const cardRect = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const cardRect = shapeCalls.find((call) => {
         const opts = call[1];
         return opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line;
       });
@@ -382,8 +442,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { categories });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const cardRect = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const cardRect = shapeCalls.find((call) => {
         const opts = call[1];
         return opts && opts.fill && opts.fill.color === 'FFFFFF' && opts.line;
       });
@@ -408,8 +468,8 @@ describe('pptx-exporter', () => {
       await exportToPptx(layout, { categories });
 
       // Legend background rect (white fill with E2E8F0 border)
-      const shapeCalls = mockAddShape.mock.calls;
-      const legendBg = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const legendBg = shapeCalls.find((call) => {
         const opts = call[1];
         return (
           opts &&
@@ -425,17 +485,15 @@ describe('pptx-exporter', () => {
       expect(legendBg![1].line.width).toBe(0.5);
 
       // Legend swatch rects
-      const swatchCalls = shapeCalls.filter((call: any) => {
+      const swatchCalls = shapeCalls.filter((call) => {
         const opts = call[1];
         return opts && opts.fill && opts.line && opts.line.color === 'CBD5E1';
       });
       expect(swatchCalls.length).toBe(categories.length);
 
       // Legend label texts
-      const textCalls = mockAddText.mock.calls;
-      const legendLabels = textCalls.filter((call: any) => {
-        return typeof call[0] === 'string';
-      });
+      const textCalls = getTextCalls();
+      const legendLabels = textCalls.filter(isStringTextCall);
       expect(legendLabels.length).toBe(categories.length);
     });
 
@@ -446,8 +504,8 @@ describe('pptx-exporter', () => {
       await exportToPptx(layout);
 
       // No legend background (white fill with E2E8F0 line) should exist
-      const shapeCalls = mockAddShape.mock.calls;
-      const legendBg = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const legendBg = shapeCalls.find((call) => {
         const opts = call[1];
         return (
           opts &&
@@ -460,8 +518,8 @@ describe('pptx-exporter', () => {
       expect(legendBg).toBeUndefined();
 
       // No string-based text calls (legend labels)
-      const textCalls = mockAddText.mock.calls;
-      const legendLabels = textCalls.filter((call: any) => typeof call[0] === 'string');
+      const textCalls = getTextCalls();
+      const legendLabels = textCalls.filter(isStringTextCall);
       expect(legendLabels.length).toBe(0);
     });
 
@@ -477,18 +535,18 @@ describe('pptx-exporter', () => {
       await exportToPptx(layout, { categories: threeCategories });
 
       // 3 swatch rects (CBD5E1 border)
-      const shapeCalls = mockAddShape.mock.calls;
-      const swatchCalls = shapeCalls.filter((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const swatchCalls = shapeCalls.filter((call) => {
         const opts = call[1];
         return opts && opts.line && opts.line.color === 'CBD5E1';
       });
       expect(swatchCalls.length).toBe(3);
 
       // 3 label texts (string args)
-      const textCalls = mockAddText.mock.calls;
-      const legendLabels = textCalls.filter((call: any) => typeof call[0] === 'string');
+      const textCalls = getTextCalls();
+      const legendLabels = textCalls.filter(isStringTextCall);
       expect(legendLabels.length).toBe(3);
-      expect(legendLabels.map((c: any) => c[0])).toEqual(['Alpha', 'Beta', 'Gamma']);
+      expect(legendLabels.map((c) => c[0])).toEqual(['Alpha', 'Beta', 'Gamma']);
     });
 
     it('default (no legendRows) produces single-column layout', async () => {
@@ -502,13 +560,13 @@ describe('pptx-exporter', () => {
       await exportToPptx(layout, { categories: fourCategories });
 
       // All 4 swatches should have the same x position (single column)
-      const shapeCalls = mockAddShape.mock.calls;
-      const swatchCalls = shapeCalls.filter((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const swatchCalls = shapeCalls.filter((call) => {
         const opts = call[1];
         return opts && opts.line && opts.line.color === 'CBD5E1';
       });
       expect(swatchCalls.length).toBe(4);
-      const xPositions = new Set(swatchCalls.map((c: any) => c[1].x));
+      const xPositions = new Set(swatchCalls.map((c) => c[1].x));
       expect(xPositions.size).toBe(1);
     });
 
@@ -522,15 +580,15 @@ describe('pptx-exporter', () => {
       const layout = makeLayout({ nodes: [makeNode({ categoryId: 'a' })] });
       await exportToPptx(layout, { categories: fourCategories, legendRows: 1 });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const swatchCalls = shapeCalls.filter((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const swatchCalls = shapeCalls.filter((call) => {
         const opts = call[1];
         return opts && opts.line && opts.line.color === 'CBD5E1';
       });
       expect(swatchCalls.length).toBe(4);
       // 4 different x positions (4 columns), all same y (1 row)
-      const xPositions = new Set(swatchCalls.map((c: any) => c[1].x));
-      const yPositions = new Set(swatchCalls.map((c: any) => c[1].y));
+      const xPositions = new Set(swatchCalls.map((c) => c[1].x));
+      const yPositions = new Set(swatchCalls.map((c) => c[1].y));
       expect(xPositions.size).toBe(4);
       expect(yPositions.size).toBe(1);
     });
@@ -545,14 +603,14 @@ describe('pptx-exporter', () => {
       const layout = makeLayout({ nodes: [makeNode({ categoryId: 'a' })] });
       await exportToPptx(layout, { categories: fourCategories, legendRows: 2 });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const swatchCalls = shapeCalls.filter((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const swatchCalls = shapeCalls.filter((call) => {
         const opts = call[1];
         return opts && opts.line && opts.line.color === 'CBD5E1';
       });
       expect(swatchCalls.length).toBe(4);
-      const xPositions = new Set(swatchCalls.map((c: any) => c[1].x));
-      const yPositions = new Set(swatchCalls.map((c: any) => c[1].y));
+      const xPositions = new Set(swatchCalls.map((c) => c[1].x));
+      const yPositions = new Set(swatchCalls.map((c) => c[1].y));
       expect(xPositions.size).toBe(2);
       expect(yPositions.size).toBe(2);
     });
@@ -568,14 +626,14 @@ describe('pptx-exporter', () => {
       const layout = makeLayout({ nodes: [makeNode({ categoryId: 'a' })] });
       await exportToPptx(layout, { categories: fiveCategories, legendRows: 2 });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const swatchCalls = shapeCalls.filter((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const swatchCalls = shapeCalls.filter((call) => {
         const opts = call[1];
         return opts && opts.line && opts.line.color === 'CBD5E1';
       });
       expect(swatchCalls.length).toBe(5);
-      const xPositions = new Set(swatchCalls.map((c: any) => c[1].x));
-      const yPositions = new Set(swatchCalls.map((c: any) => c[1].y));
+      const xPositions = new Set(swatchCalls.map((c) => c[1].x));
+      const yPositions = new Set(swatchCalls.map((c) => c[1].y));
       // 3 columns (ceil(5/2)=3), 2 rows
       expect(xPositions.size).toBe(3);
       expect(yPositions.size).toBe(2);
@@ -589,14 +647,14 @@ describe('pptx-exporter', () => {
       const layout = makeLayout({ nodes: [makeNode({ categoryId: 'a' })] });
       await exportToPptx(layout, { categories: twoCategories, legendRows: 10 });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const swatchCalls = shapeCalls.filter((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const swatchCalls = shapeCalls.filter((call) => {
         const opts = call[1];
         return opts && opts.line && opts.line.color === 'CBD5E1';
       });
       expect(swatchCalls.length).toBe(2);
       // Should clamp to 2 rows (same as count), so single column
-      const xPositions = new Set(swatchCalls.map((c: any) => c[1].x));
+      const xPositions = new Set(swatchCalls.map((c) => c[1].x));
       expect(xPositions.size).toBe(1);
     });
 
@@ -611,9 +669,9 @@ describe('pptx-exporter', () => {
       await exportToPptx(layout, { categories: fourCategories, legendRows: 2 });
 
       // Check text label order: Cat1, Cat2 in row 0; Cat3, Cat4 in row 1
-      const textCalls = mockAddText.mock.calls;
-      const legendLabels = textCalls.filter((call: any) => typeof call[0] === 'string');
-      expect(legendLabels.map((c: any) => c[0])).toEqual(['Cat1', 'Cat2', 'Cat3', 'Cat4']);
+      const textCalls = getTextCalls();
+      const legendLabels = textCalls.filter(isStringTextCall);
+      expect(legendLabels.map((c) => c[0])).toEqual(['Cat1', 'Cat2', 'Cat3', 'Cat4']);
 
       // Cat1 and Cat2 same y, Cat3 and Cat4 same y, different from row 0
       const y0 = legendLabels[0][1].y;
@@ -634,22 +692,23 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { showHeadcount: true });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      const shapeCalls = getShapeCalls();
+      const roundRect = shapeCalls.find((call) => call[0] === 'roundRect');
       expect(roundRect).not.toBeUndefined();
       expect(roundRect![1].fill.color).toBe('9CA3AF');
       expect(roundRect![1].w).toBeGreaterThan(0);
       expect(roundRect![1].h).toBeGreaterThan(0);
 
-      const textCalls = mockAddText.mock.calls;
-      const badgeText = textCalls.find((call: any) => call[0] === '12');
+      const textCalls = getTextCalls();
+      const badgeText = textCalls.find((call) => call[0] === '12');
       expect(badgeText).not.toBeUndefined();
-      expect(badgeText![1].bold).toBe(true);
-      expect(badgeText![1].color).toBe('1E293B');
-      expect(badgeText![1].align).toBe('center');
-      expect(badgeText![1].valign).toBe('middle');
-      expect(badgeText![1].fontFace).toBe('Calibri');
-      expect(badgeText![1].fontSize).toBeGreaterThanOrEqual(3);
+      const badgeTextOptions = getTextOptions(badgeText);
+      expect(badgeTextOptions.bold).toBe(true);
+      expect(badgeTextOptions.color).toBe('1E293B');
+      expect(badgeTextOptions.align).toBe('center');
+      expect(badgeTextOptions.valign).toBe('middle');
+      expect(badgeTextOptions.fontFace).toBe('Calibri');
+      expect(badgeTextOptions.fontSize).toBeGreaterThanOrEqual(3);
     });
 
     it('does not render badge when showHeadcount is false', async () => {
@@ -658,8 +717,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout);
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      const shapeCalls = getShapeCalls();
+      const roundRect = shapeCalls.find((call) => call[0] === 'roundRect');
       expect(roundRect).toBeUndefined();
     });
 
@@ -669,8 +728,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { showHeadcount: true });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      const shapeCalls = getShapeCalls();
+      const roundRect = shapeCalls.find((call) => call[0] === 'roundRect');
       expect(roundRect).toBeUndefined();
     });
 
@@ -680,8 +739,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { showHeadcount: true });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      const shapeCalls = getShapeCalls();
+      const roundRect = shapeCalls.find((call) => call[0] === 'roundRect');
       expect(roundRect).toBeUndefined();
     });
 
@@ -691,8 +750,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { showHeadcount: true });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      const shapeCalls = getShapeCalls();
+      const roundRect = shapeCalls.find((call) => call[0] === 'roundRect');
       expect(roundRect).toBeUndefined();
     });
 
@@ -706,15 +765,15 @@ describe('pptx-exporter', () => {
         headcountBadgeTextColor: '#00FF00',
       });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const roundRect = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      const shapeCalls = getShapeCalls();
+      const roundRect = shapeCalls.find((call) => call[0] === 'roundRect');
       expect(roundRect).not.toBeUndefined();
       expect(roundRect![1].fill.color).toBe('FF0000');
       expect(roundRect![1].w).toBeGreaterThan(0);
       expect(roundRect![1].h).toBeGreaterThan(0);
 
-      const textCalls = mockAddText.mock.calls;
-      const badgeText = textCalls.find((call: any) => call[0] === '5');
+      const textCalls = getTextCalls();
+      const badgeText = textCalls.find((call) => call[0] === '5');
       expect(badgeText).not.toBeUndefined();
       expect(badgeText![1].color).toBe('00FF00');
       expect(badgeText![1].bold).toBe(true);
@@ -731,9 +790,9 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { showLevel: true });
 
-      const shapeCalls = mockAddShape.mock.calls;
+      const shapeCalls = getShapeCalls();
       // Find the level badge rect (not the card rect — card uses card fill color)
-      const levelBadges = shapeCalls.filter((call: any) => call[1].fill?.color === '6366F1');
+      const levelBadges = shapeCalls.filter((call) => call[1].fill?.color === '6366F1');
       expect(levelBadges.length).toBeGreaterThanOrEqual(1);
       const levelBadge = levelBadges[0];
       expect(levelBadge[0]).toBe('rect');
@@ -742,8 +801,8 @@ describe('pptx-exporter', () => {
       // Square: w === h
       expect(levelBadge[1].w).toBeCloseTo(levelBadge[1].h);
 
-      const textCalls = mockAddText.mock.calls;
-      const badgeText = textCalls.find((call: any) => call[0] === 'L5');
+      const textCalls = getTextCalls();
+      const badgeText = textCalls.find((call) => call[0] === 'L5');
       expect(badgeText).not.toBeUndefined();
       expect(badgeText![1].bold).toBe(true);
       expect(badgeText![1].color).toBe('FFFFFF');
@@ -759,8 +818,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout);
 
-      const textCalls = mockAddText.mock.calls;
-      const badgeText = textCalls.find((call: any) => call[0] === 'L5');
+      const textCalls = getTextCalls();
+      const badgeText = textCalls.find((call) => call[0] === 'L5');
       expect(badgeText).toBeUndefined();
     });
 
@@ -770,8 +829,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { showLevel: true });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const levelBadges = shapeCalls.filter((call: any) => call[1].fill?.color === '6366F1');
+      const shapeCalls = getShapeCalls();
+      const levelBadges = shapeCalls.filter((call) => call[1].fill?.color === '6366F1');
       expect(levelBadges.length).toBe(0);
     });
 
@@ -781,8 +840,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { showLevel: true });
 
-      const textCalls = mockAddText.mock.calls;
-      const badgeText = textCalls.find((call: any) => call[0] === 'Director');
+      const textCalls = getTextCalls();
+      const badgeText = textCalls.find((call) => call[0] === 'Director');
       expect(badgeText).not.toBeUndefined();
       expect(badgeText![1].wrap).toBe(false);
     });
@@ -797,12 +856,12 @@ describe('pptx-exporter', () => {
         levelBadgeTextColor: '#00FF55',
       });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const levelBadges = shapeCalls.filter((call: any) => call[1].fill?.color === 'FF5500');
+      const shapeCalls = getShapeCalls();
+      const levelBadges = shapeCalls.filter((call) => call[1].fill?.color === 'FF5500');
       expect(levelBadges.length).toBeGreaterThanOrEqual(1);
 
-      const textCalls = mockAddText.mock.calls;
-      const badgeText = textCalls.find((call: any) => call[0] === 'L3');
+      const textCalls = getTextCalls();
+      const badgeText = textCalls.find((call) => call[0] === 'L3');
       expect(badgeText).not.toBeUndefined();
       expect(badgeText![1].color).toBe('00FF55');
     });
@@ -816,21 +875,21 @@ describe('pptx-exporter', () => {
         resolveTitle: (title: string, level?: string) => (level === 'L5' ? 'Senior' : title),
       });
 
-      const textCalls = mockAddText.mock.calls;
-      const hasResolvedTitle = textCalls.some((call: any) => {
+      const textCalls = getTextCalls();
+      const hasResolvedTitle = textCalls.some((call) => {
         const textBlocks = call[0];
         return (
-          Array.isArray(textBlocks) &&
-          textBlocks.some((t: any) => t.text === 'Senior')
+          isTextBlockArray(textBlocks) &&
+          textBlocks.some((t) => t.text === 'Senior')
         );
       });
       expect(hasResolvedTitle).toBe(true);
       // Original title 'Manager' should NOT appear in card text
-      const hasOriginalTitle = textCalls.some((call: any) => {
+      const hasOriginalTitle = textCalls.some((call) => {
         const textBlocks = call[0];
         return (
-          Array.isArray(textBlocks) &&
-          textBlocks.some((t: any) => t.text === 'Manager')
+          isTextBlockArray(textBlocks) &&
+          textBlocks.some((t) => t.text === 'Manager')
         );
       });
       expect(hasOriginalTitle).toBe(false);
@@ -842,8 +901,8 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { showLevel: true });
 
-      const textCalls = mockAddText.mock.calls;
-      const badgeText = textCalls.find((call: any) => call[0] === 'L5');
+      const textCalls = getTextCalls();
+      const badgeText = textCalls.find((call) => call[0] === 'L5');
       expect(badgeText).not.toBeUndefined();
     });
   });
@@ -955,13 +1014,13 @@ describe('pptx-exporter', () => {
       await exportToPptx(layout);
 
       // At scale=1, node width in inches = 110 * PX_TO_INCHES
-      const shapeCalls = mockAddShape.mock.calls;
-      const cardRect = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const cardRect = shapeCalls.find((call) => {
         const opts = call[1];
         return opts && opts.fill && opts.w;
       });
       expect(cardRect).not.toBeUndefined();
-      const opts = cardRect![1] as any;
+      const opts = getShapeOptions(cardRect);
       expect(opts.w).toBeCloseTo(110 * PX_TO_INCHES);
       expect(opts.h).toBeCloseTo(22 * PX_TO_INCHES);
       expect(opts.fill).toBeDefined();
@@ -974,17 +1033,17 @@ describe('pptx-exporter', () => {
       await exportToPptx(layout);
 
       // Chart width = 6000px = 62.5 inches > 56" max → should scale down
-      const shapeCalls = mockAddShape.mock.calls;
-      const cardRect = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const cardRect = shapeCalls.find((call) => {
         const opts = call[1];
         return opts && opts.fill && opts.w;
       });
       expect(cardRect).not.toBeUndefined();
-      const opts = cardRect![1] as any;
+      const opts = getShapeOptions(cardRect);
       expect(opts.w).toBeLessThan(6000 * PX_TO_INCHES);
       expect(opts.w).toBeGreaterThan(0);
-      expect(opts.fill.color).toBe('FFFFFF');
-      expect(opts.line.color).toBe('22C55E');
+      expect(opts.fill?.color).toBe('FFFFFF');
+      expect(opts.line?.color).toBe('22C55E');
     });
 
     it('uses fit-to-slide when slideWidth/slideHeight explicitly provided', async () => {
@@ -994,16 +1053,16 @@ describe('pptx-exporter', () => {
       await exportToPptx(layout, { slideWidth: 13.33, slideHeight: 7.5 });
 
       // With explicit slide dimensions, the small chart should be scaled up
-      const shapeCalls = mockAddShape.mock.calls;
-      const cardRect = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const cardRect = shapeCalls.find((call) => {
         const opts = call[1];
         return opts && opts.fill && opts.w;
       });
       expect(cardRect).not.toBeUndefined();
-      const opts = cardRect![1] as any;
+      const opts = getShapeOptions(cardRect);
       expect(opts.w).toBeGreaterThan(110 * PX_TO_INCHES);
-      expect(opts.fill.color).toBe('FFFFFF');
-      expect(opts.line.color).toBe('22C55E');
+      expect(opts.fill?.color).toBe('FFFFFF');
+      expect(opts.line?.color).toBe('22C55E');
     });
   });
 
@@ -1013,30 +1072,31 @@ describe('pptx-exporter', () => {
       const layout = makeLayout({ nodes: [makeNode()] });
       await exportToPptx(layout, { nameFontSize: 12, titleFontSize: 10 });
 
-      const textCalls = mockAddText.mock.calls;
-      const nodeText = textCalls.find((call: any) => Array.isArray(call[0]));
+      const textCalls = getTextCalls();
+      const nodeText = textCalls.find(isTextArrayCall);
       expect(nodeText).not.toBeUndefined();
-      const blocks = nodeText![0] as any[];
+      const blocks = getTextBlocks(nodeText);
       expect(blocks[0].text).toBe('Alice');
-      expect(blocks[0].options.bold).toBe(true);
-      expect(blocks[0].options.fontSize).toBe(Math.round(12 * PX_TO_PT));
+      expect(blocks[0].options?.bold).toBe(true);
+      expect(blocks[0].options?.fontSize).toBe(Math.round(12 * PX_TO_PT));
       expect(blocks[1].text).toBe('Manager');
-      expect(blocks[1].options.fontSize).toBe(Math.round(10 * PX_TO_PT));
+      expect(blocks[1].options?.fontSize).toBe(Math.round(10 * PX_TO_PT));
     });
 
     it('uses provided card colors', async () => {
       const layout = makeLayout({ nodes: [makeNode()] });
       await exportToPptx(layout, { cardFill: '#ff0000', cardStroke: '#00ff00' });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const cardRect = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const cardRect = shapeCalls.find((call) => {
         const opts = call[1];
         return opts && opts.fill && opts.fill.color === 'FF0000';
       });
       expect(cardRect).not.toBeUndefined();
-      expect((cardRect![1] as any).fill.color).toBe('FF0000');
-      expect((cardRect![1] as any).line.color).toBe('00FF00');
-      expect((cardRect![1] as any).line.width).toBeCloseTo(1 * PX_TO_PT);
+      const cardRectOptions = getShapeOptions(cardRect);
+      expect(cardRectOptions.fill?.color).toBe('FF0000');
+      expect(cardRectOptions.line?.color).toBe('00FF00');
+      expect(cardRectOptions.line?.width).toBeCloseTo(1 * PX_TO_PT);
     });
 
     it('uses provided IC container fill', async () => {
@@ -1044,8 +1104,8 @@ describe('pptx-exporter', () => {
       const layout = makeLayout({ nodes: [makeNode()], icContainers: [container] });
       await exportToPptx(layout, { icContainerFill: '#aabbcc' });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const containerRect = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const containerRect = shapeCalls.find((call) => {
         const opts = call[1];
         return opts && opts.fill && opts.fill.color === 'AABBCC';
       });
@@ -1063,15 +1123,16 @@ describe('pptx-exporter', () => {
       });
       await exportToPptx(layout, { linkColor: '#ff00ff', linkWidth: 3 });
 
-      const shapeCalls = mockAddShape.mock.calls;
-      const lineShape = shapeCalls.find((call: any) => {
+      const shapeCalls = getShapeCalls();
+      const lineShape = shapeCalls.find((call) => {
         const opts = call[1];
         return opts && opts.line && opts.line.color === 'FF00FF';
       });
       expect(lineShape).not.toBeUndefined();
-      expect((lineShape![1] as any).line.color).toBe('FF00FF');
-      expect((lineShape![1] as any).line.width).toBeCloseTo(3 * PX_TO_PT);
-      expect((lineShape![1] as any).line.dashType).toBeUndefined();
+      const lineShapeOptions = getShapeOptions(lineShape);
+      expect(lineShapeOptions.line?.color).toBe('FF00FF');
+      expect(lineShapeOptions.line?.width).toBeCloseTo(3 * PX_TO_PT);
+      expect(lineShapeOptions.line?.dashType).toBeUndefined();
     });
   });
 
@@ -1081,11 +1142,11 @@ describe('pptx-exporter', () => {
         nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
       });
       await exportToPptx(layout);
-      const textCalls = mockAddText.mock.calls;
-      const nodeTextCall = textCalls.find((call: any) => {
+      const textCalls = getTextCalls();
+      const nodeTextCall = textCalls.find((call) => {
         const textBlocks = call[0];
-        return Array.isArray(textBlocks) &&
-          textBlocks.some((t: any) => t.text === 'Boss');
+        return isTextBlockArray(textBlocks) &&
+          textBlocks.some((t) => t.text === 'Boss');
       });
       expect(nodeTextCall).not.toBeUndefined();
       expect(nodeTextCall![1].align).toBe('center');
@@ -1099,11 +1160,11 @@ describe('pptx-exporter', () => {
         nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
       });
       await exportToPptx(layout, { textAlign: 'left' });
-      const textCalls = mockAddText.mock.calls;
-      const nodeTextCall = textCalls.find((call: any) => {
+      const textCalls = getTextCalls();
+      const nodeTextCall = textCalls.find((call) => {
         const textBlocks = call[0];
-        return Array.isArray(textBlocks) &&
-          textBlocks.some((t: any) => t.text === 'Boss');
+        return isTextBlockArray(textBlocks) &&
+          textBlocks.some((t) => t.text === 'Boss');
       });
       expect(nodeTextCall).not.toBeUndefined();
       expect(nodeTextCall![1].align).toBe('left');
@@ -1117,11 +1178,11 @@ describe('pptx-exporter', () => {
         nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
       });
       await exportToPptx(layout, { textAlign: 'right' });
-      const textCalls = mockAddText.mock.calls;
-      const nodeTextCall = textCalls.find((call: any) => {
+      const textCalls = getTextCalls();
+      const nodeTextCall = textCalls.find((call) => {
         const textBlocks = call[0];
-        return Array.isArray(textBlocks) &&
-          textBlocks.some((t: any) => t.text === 'Boss');
+        return isTextBlockArray(textBlocks) &&
+          textBlocks.some((t) => t.text === 'Boss');
       });
       expect(nodeTextCall).not.toBeUndefined();
       expect(nodeTextCall![1].align).toBe('right');
@@ -1137,8 +1198,8 @@ describe('pptx-exporter', () => {
         nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
       });
       await exportToPptx(layout, { cardBorderRadius: 0 });
-      const shapeCalls = mockAddShape.mock.calls;
-      const rectCall = shapeCalls.find((call: any) => call[0] === 'rect');
+      const shapeCalls = getShapeCalls();
+      const rectCall = shapeCalls.find((call) => call[0] === 'rect');
       expect(rectCall).not.toBeUndefined();
       expect(rectCall![1].fill.color).toBe('FFFFFF');
       expect(rectCall![1].line.color).toBe('22C55E');
@@ -1150,8 +1211,8 @@ describe('pptx-exporter', () => {
         nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
       });
       await exportToPptx(layout, { cardBorderRadius: 6 });
-      const shapeCalls = mockAddShape.mock.calls;
-      const roundRectCall = shapeCalls.find((call: any) => call[0] === 'roundRect');
+      const shapeCalls = getShapeCalls();
+      const roundRectCall = shapeCalls.find((call) => call[0] === 'roundRect');
       expect(roundRectCall).not.toBeUndefined();
       expect(roundRectCall![1].rectRadius).toBeGreaterThan(0);
       expect(roundRectCall![1].fill.color).toBe('FFFFFF');
@@ -1165,11 +1226,11 @@ describe('pptx-exporter', () => {
         nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
       });
       await exportToPptx(layout);
-      const textCalls = mockAddText.mock.calls;
-      const nodeTextCall = textCalls.find((call: any) => {
+      const textCalls = getTextCalls();
+      const nodeTextCall = textCalls.find((call) => {
         const textBlocks = call[0];
-        return Array.isArray(textBlocks) &&
-          textBlocks.some((t: any) => t.text === 'Boss');
+        return isTextBlockArray(textBlocks) &&
+          textBlocks.some((t) => t.text === 'Boss');
       });
       expect(nodeTextCall).not.toBeUndefined();
       expect(nodeTextCall![1].fontFace).toBe('Calibri');
@@ -1182,11 +1243,11 @@ describe('pptx-exporter', () => {
         nodes: [makeNode({ type: 'manager', name: 'Boss', title: 'CEO' })],
       });
       await exportToPptx(layout, { fontFamily: 'Segoe UI' });
-      const textCalls = mockAddText.mock.calls;
-      const nodeTextCall = textCalls.find((call: any) => {
+      const textCalls = getTextCalls();
+      const nodeTextCall = textCalls.find((call) => {
         const textBlocks = call[0];
-        return Array.isArray(textBlocks) &&
-          textBlocks.some((t: any) => t.text === 'Boss');
+        return isTextBlockArray(textBlocks) &&
+          textBlocks.some((t) => t.text === 'Boss');
       });
       expect(nodeTextCall).not.toBeUndefined();
       expect(nodeTextCall![1].fontFace).toBe('Segoe UI');
@@ -1238,11 +1299,11 @@ describe('pptx-exporter', () => {
       });
 
       // Second addSlide call is the version slide
-      const versionSlide = mockAddSlide.mock.calls[1][0];
-      const versionTextCalls = versionSlide.addText.mock.calls;
+      const versionSlide = expectDefined(getSlideCalls()[1])[0];
+      const versionTextCalls = getTextCallsFromSlide(versionSlide);
       const nodeTexts = versionTextCalls
-        .filter((call: any) => Array.isArray(call[0]))
-        .flatMap((call: any) => call[0].map((block: any) => block.text));
+        .filter(isTextArrayCall)
+        .flatMap((call) => call[0].map((block) => block.text));
       expect(nodeTexts).toContain('Version Alice');
       expect(nodeTexts).toContain('Version Bob');
     });
@@ -1258,12 +1319,12 @@ describe('pptx-exporter', () => {
         additionalLayouts: [{ layout: versionLayout, title: 'Q3 Reorg' }],
       });
 
-      const versionSlide = mockAddSlide.mock.calls[1][0];
-      const titleCall = versionSlide.addText.mock.calls.find(
-        (call: any) => typeof call[0] === 'string' && call[0] === 'Q3 Reorg',
+      const versionSlide = expectDefined(getSlideCalls()[1])[0];
+      const titleCall = getTextCallsFromSlide(versionSlide).find(
+        (call) => isStringTextCall(call) && call[0] === 'Q3 Reorg',
       );
       expect(titleCall).toBeDefined();
-      expect(titleCall![1].fontSize).toBe(10);
+      expect(getTextOptions(titleCall).fontSize).toBe(10);
     });
 
     it('skips additionalLayouts with zero nodes', async () => {
@@ -1299,11 +1360,11 @@ describe('pptx-exporter', () => {
         additionalLayouts: [{ layout: versionLayout }],
       });
 
-      const versionSlide = mockAddSlide.mock.calls[1][0];
+      const versionSlide = expectDefined(getSlideCalls()[1])[0];
       // Legend adds shape calls (background rect + swatch rect) and text calls (label)
-      const shapeCalls = versionSlide.addShape.mock.calls;
+      const shapeCalls = getShapeCallsFromSlide(versionSlide);
       const legendBg = shapeCalls.find(
-        (call: any) => call[0] === 'rect' && call[1]?.fill?.color === 'FFFFFF' && call[1]?.line?.color === 'E2E8F0',
+        (call) => call[0] === 'rect' && call[1]?.fill?.color === 'FFFFFF' && call[1]?.line?.color === 'E2E8F0',
       );
       expect(legendBg).toBeDefined();
     });

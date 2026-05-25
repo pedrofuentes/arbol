@@ -2,6 +2,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as d3 from 'd3';
 import { ZoomManager } from '../../src/renderer/zoom-manager';
 
+type ZoomAwareSvg = SVGSVGElement & { __zoom?: d3.ZoomTransform };
+
+function getInternalZoomData(svg: SVGSVGElement): d3.ZoomTransform | undefined {
+  return (svg as ZoomAwareSvg).__zoom;
+}
+
 describe('ZoomManager', () => {
   let container: HTMLElement;
   let svgEl: SVGSVGElement;
@@ -23,7 +29,7 @@ describe('ZoomManager', () => {
   it('creates zoom behavior on the SVG element', () => {
     const zm = new ZoomManager(svgEl, gEl);
     // d3-zoom attaches __zoom datum to the SVG element
-    const zoomData = (svgEl as any).__zoom;
+    const zoomData = getInternalZoomData(svgEl);
     expect(zoomData).toBeDefined();
     expect(zm).toBeInstanceOf(ZoomManager);
   });
@@ -189,7 +195,7 @@ describe('ZoomManager', () => {
     it('removes D3 zoom event handlers from the SVG', () => {
       const zm = new ZoomManager(svgEl, gEl);
       // Before destroy, zoom handler is attached
-      expect((svgEl as any).__zoom).toBeDefined();
+      expect(getInternalZoomData(svgEl)).toBeDefined();
       zm.destroy();
       // After destroy, zoom event listeners are removed
       const sel = d3.select(svgEl);
@@ -212,7 +218,7 @@ describe('ZoomManager', () => {
     it('creates a valid ZoomManager instance', () => {
       const zm = new ZoomManager(svgEl, gEl, { programmaticOnly: true });
       expect(zm).toBeInstanceOf(ZoomManager);
-      expect((svgEl as any).__zoom).toBeDefined();
+      expect(getInternalZoomData(svgEl)).toBeDefined();
     });
 
     it('removes user interaction event listeners from SVG', () => {

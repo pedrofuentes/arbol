@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { showVersionPicker, VersionPickerResult } from '../../src/ui/version-picker';
+import { showVersionPicker } from '../../src/ui/version-picker';
 import { VersionRecord } from '../../src/types';
 
 const sampleVersions: VersionRecord[] = [

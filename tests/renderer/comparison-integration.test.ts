@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { compareTrees, buildMergedTree, getDiffStats } from '../../src/utils/tree-diff';
 import { ChartRenderer, RendererOptions } from '../../src/renderer/chart-renderer';
 import { SideBySideRenderer } from '../../src/renderer/side-by-side-renderer';
-import { OrgNode, DiffEntry } from '../../src/types';
+import { OrgNode } from '../../src/types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -23,7 +23,7 @@ function minimalOpts(container: HTMLElement): RendererOptions {
   };
 }
 
-function badgeTexts(container: HTMLElement): string[] {
+function _badgeTexts(container: HTMLElement): string[] {
   return Array.from(container.querySelectorAll('.diff-badge text'))
     .map(el => (el.textContent ?? '').trim());
 }

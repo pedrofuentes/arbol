@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { ChartRecord, VersionRecord, OrgNode, ColorCategory } from '../../src/types';
+import type { ChartRecord, VersionRecord, OrgNode } from '../../src/types';
 import { ChartEditor, ChartEditorOptions } from '../../src/editor/chart-editor';
 
 vi.mock('../../src/ui/chart-export-dialog', () => ({
@@ -178,7 +178,6 @@ describe('ChartEditor – Export button', () => {
     exportBtn.click();
 
     await vi.waitFor(() => {
-      const errorEl = container.querySelector('div');
       const allText = container.textContent ?? '';
       expect(allText).toContain('DB error');
     });

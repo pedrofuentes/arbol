@@ -4,7 +4,6 @@ import en from '../../../src/i18n/en';
 import {
   PresetPanel,
   COMBINED_PRESETS,
-  type PresetPanelDeps,
 } from '../../../src/editor/settings/preset-panel';
 import type { ChartRenderer, ResolvedOptions } from '../../../src/renderer/chart-renderer';
 import type { IStorage } from '../../../src/utils/storage';

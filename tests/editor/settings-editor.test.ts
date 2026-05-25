@@ -4,14 +4,17 @@ import { CategoryStore } from '../../src/store/category-store';
 import { CategoryPresetStore } from '../../src/store/category-preset-store';
 import { LevelPresetStore } from '../../src/store/level-preset-store';
 import { LevelStore } from '../../src/store/level-store';
+import type { ChartDB } from '../../src/store/chart-db';
 import type { ChartStore } from '../../src/store/chart-store';
 import type {
   ChartRenderer,
   RendererOptions,
   ResolvedOptions,
 } from '../../src/renderer/chart-renderer';
+import type { ChartRecord } from '../../src/types';
+import type { IStorage } from '../../src/utils/storage';
 
-const localStorageMock = (() => {
+const localStorageMock: IStorage = (() => {
   let store: Record<string, string> = {};
   return {
     getItem: vi.fn((key: string) => store[key] ?? null),
@@ -595,7 +598,7 @@ describe('SettingsEditor', () => {
   });
 
   describe('backup & restore section', () => {
-    function createMockChartDB() {
+    function createMockChartDB(): ChartDB {
       return {
         open: vi.fn(),
         close: vi.fn(),
@@ -608,12 +611,12 @@ describe('SettingsEditor', () => {
         deleteVersion: vi.fn(),
         deleteVersionsByChart: vi.fn(),
         isChartNameTaken: vi.fn(),
-      };
+      } as unknown as ChartDB;
     }
 
     it('renders Backup & Restore section when chartDB is provided', () => {
       const db = createMockChartDB();
-      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
+      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db);
       const titles = getAccordionTitles(container);
       expect(titles).toContain('Backup & Restore');
     });
@@ -633,7 +636,7 @@ describe('SettingsEditor', () => {
       document.body.appendChild(container);
 
       const db = createMockChartDB();
-      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
+      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db);
       const sectionsWith = container.querySelectorAll('[data-section-id]').length;
 
       expect(sectionsWith).toBe(sectionsWithout + 1);
@@ -641,7 +644,7 @@ describe('SettingsEditor', () => {
 
     it('Backup & Restore section appears before Clear All Data button', () => {
       const db = createMockChartDB();
-      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
+      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db);
 
       const sections = Array.from(container.querySelectorAll('[data-section-id]'));
       const backupSection = sections.find((s) => {
@@ -655,13 +658,12 @@ describe('SettingsEditor', () => {
 
       // Both are direct children of container — verify DOM order via compareDocumentPosition
       const position = backupSection!.compareDocumentPosition(clearBtn!);
-      // eslint-disable-next-line no-bitwise
       expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
     it('Create Backup button exists', () => {
       const db = createMockChartDB();
-      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
+      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db);
 
       const backupSection = Array.from(container.querySelectorAll('.accordion-section')).find(
         (s) => s.querySelector('.accordion-title')?.textContent === 'Backup & Restore',
@@ -673,7 +675,7 @@ describe('SettingsEditor', () => {
 
     it('Restore button exists', () => {
       const db = createMockChartDB();
-      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db as any);
+      new SettingsEditor(container, renderer, rerenderCb, undefined, undefined, db);
 
       const backupSection = Array.from(container.querySelectorAll('.accordion-section')).find(
         (s) => s.querySelector('.accordion-title')?.textContent === 'Backup & Restore',
@@ -1147,7 +1149,7 @@ describe('SettingsEditor', () => {
     it('range slider debounces renderer updates', () => {
       vi.useFakeTimers();
       try {
-        const editor = new SettingsEditor(container, renderer, rerenderCb);
+        const _editor = new SettingsEditor(container, renderer, rerenderCb);
         const cardSection = findSectionByTitle(container, 'Card Dimensions')!;
         expect(cardSection).toBeDefined();
         const rangeInput = cardSection.querySelector<HTMLInputElement>('input[type="range"]')!;
@@ -1177,7 +1179,7 @@ describe('SettingsEditor', () => {
     it('range slider updates display immediately', () => {
       vi.useFakeTimers();
       try {
-        const editor = new SettingsEditor(container, renderer, rerenderCb);
+        const _editor = new SettingsEditor(container, renderer, rerenderCb);
         const cardSection = findSectionByTitle(container, 'Card Dimensions')!;
         const rangeInput = cardSection.querySelector<HTMLInputElement>('input[type="range"]')!;
         const valueSpan = rangeInput.closest('.setting-control')!.querySelector('.setting-value')!;
@@ -1246,22 +1248,46 @@ describe('SettingsEditor', () => {
   });
 
   describe('preset toolbar wiring', () => {
-    function createMockChartStore(charts: { id: string; name: string; categories: any[]; levelMappings?: any[]; levelDisplayMode?: string }[] = []): ChartStore {
+    type MockStoredChart = Pick<
+      ChartRecord,
+      'id' | 'name' | 'categories' | 'levelMappings' | 'levelDisplayMode'
+    >;
+
+    function createMockChartStore(charts: MockStoredChart[] = []): ChartStore {
+      const chartRecords: ChartRecord[] = charts.map((chart) => ({
+        id: chart.id,
+        name: chart.name,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+        workingTree: { id: 'root', name: 'Root', title: 'CEO' },
+        categories: chart.categories,
+        levelMappings: chart.levelMappings,
+        levelDisplayMode: chart.levelDisplayMode,
+      }));
+
       return {
-        getCharts: vi.fn(async () => charts),
+        getCharts: vi.fn(async () => chartRecords),
         getActiveChartId: vi.fn(() => 'active-1'),
-        getActiveChart: vi.fn(async () => charts.find(c => c.id === 'active-1')),
+        getActiveChart: vi.fn(async () => chartRecords.find((chart) => chart.id === 'active-1')),
       } as unknown as ChartStore;
     }
 
     it('renders category preset toolbar when preset store is provided', () => {
       const catStore = new CategoryStore();
-      const catPresetStore = new CategoryPresetStore(localStorageMock as any);
+      const catPresetStore = new CategoryPresetStore(localStorageMock);
       const mockChartStore = createMockChartStore();
       new SettingsEditor(
-        container, renderer, rerenderCb,
-        undefined, catStore, undefined, localStorageMock as any,
-        undefined, catPresetStore, undefined, mockChartStore,
+        container,
+        renderer,
+        rerenderCb,
+        undefined,
+        catStore,
+        undefined,
+        localStorageMock,
+        undefined,
+        catPresetStore,
+        undefined,
+        mockChartStore,
       );
       const catSection = findSectionByTitle(container, 'Color Categories');
       expect(catSection).toBeDefined();
@@ -1280,12 +1306,20 @@ describe('SettingsEditor', () => {
 
     it('renders level mapping preset toolbar when preset store is provided', () => {
       const levelStore = new LevelStore();
-      const levelPresetStore = new LevelPresetStore(localStorageMock as any);
+      const levelPresetStore = new LevelPresetStore(localStorageMock);
       const mockChartStore = createMockChartStore();
       new SettingsEditor(
-        container, renderer, rerenderCb,
-        undefined, undefined, undefined, localStorageMock as any,
-        levelStore, undefined, levelPresetStore, mockChartStore,
+        container,
+        renderer,
+        rerenderCb,
+        undefined,
+        undefined,
+        undefined,
+        localStorageMock,
+        levelStore,
+        undefined,
+        levelPresetStore,
+        mockChartStore,
       );
       const levelSection = findSectionByTitle(container, 'Level Mapping');
       expect(levelSection).toBeDefined();
@@ -1296,8 +1330,14 @@ describe('SettingsEditor', () => {
     it('does not render level mapping preset toolbar when preset store is missing', () => {
       const levelStore = new LevelStore();
       new SettingsEditor(
-        container, renderer, rerenderCb,
-        undefined, undefined, undefined, localStorageMock as any, levelStore,
+        container,
+        renderer,
+        rerenderCb,
+        undefined,
+        undefined,
+        undefined,
+        localStorageMock,
+        levelStore,
       );
       const levelSection = findSectionByTitle(container, 'Level Mapping');
       expect(levelSection).toBeDefined();
@@ -1307,11 +1347,19 @@ describe('SettingsEditor', () => {
 
     it('category preset save callback persists to store', () => {
       const catStore = new CategoryStore();
-      const catPresetStore = new CategoryPresetStore(localStorageMock as any);
+      const catPresetStore = new CategoryPresetStore(localStorageMock);
       new SettingsEditor(
-        container, renderer, rerenderCb,
-        undefined, catStore, undefined, localStorageMock as any,
-        undefined, catPresetStore, undefined, createMockChartStore(),
+        container,
+        renderer,
+        rerenderCb,
+        undefined,
+        catStore,
+        undefined,
+        localStorageMock,
+        undefined,
+        catPresetStore,
+        undefined,
+        createMockChartStore(),
       );
       const saveBtn = container.querySelector<HTMLButtonElement>(
         '[data-section-id="categories"] [data-testid="preset-save-btn"]',
@@ -1321,22 +1369,29 @@ describe('SettingsEditor', () => {
 
     it('category preset load callback applies to category store', () => {
       const catStore = new CategoryStore();
-      const catPresetStore = new CategoryPresetStore(localStorageMock as any);
+      const catPresetStore = new CategoryPresetStore(localStorageMock);
       const cats = catStore.getAll();
       catPresetStore.savePreset({ name: 'Test', categories: cats });
       const replaceSpy = vi.spyOn(catStore, 'replaceAll');
 
       new SettingsEditor(
-        container, renderer, rerenderCb,
-        undefined, catStore, undefined, localStorageMock as any,
-        undefined, catPresetStore, undefined, createMockChartStore(),
+        container,
+        renderer,
+        rerenderCb,
+        undefined,
+        catStore,
+        undefined,
+        localStorageMock,
+        undefined,
+        catPresetStore,
+        undefined,
+        createMockChartStore(),
       );
 
       const loadSelect = container.querySelector<HTMLSelectElement>(
         '[data-section-id="categories"] [data-testid="preset-load-select"]',
       );
       expect(loadSelect).not.toBeNull();
-      // Select the preset
       loadSelect!.value = 'Test';
       loadSelect!.dispatchEvent(new Event('change'));
       expect(replaceSpy).toHaveBeenCalledWith(cats);
@@ -1345,31 +1400,43 @@ describe('SettingsEditor', () => {
 
     it('category preset delete callback removes from store', () => {
       const catStore = new CategoryStore();
-      const catPresetStore = new CategoryPresetStore(localStorageMock as any);
+      const catPresetStore = new CategoryPresetStore(localStorageMock);
       catPresetStore.savePreset({ name: 'ToDelete', categories: catStore.getAll() });
       expect(catPresetStore.getPreset('ToDelete')).toBeDefined();
 
-      const deleteSpy = vi.spyOn(catPresetStore, 'deletePreset');
       new SettingsEditor(
-        container, renderer, rerenderCb,
-        undefined, catStore, undefined, localStorageMock as any,
-        undefined, catPresetStore, undefined, createMockChartStore(),
+        container,
+        renderer,
+        rerenderCb,
+        undefined,
+        catStore,
+        undefined,
+        localStorageMock,
+        undefined,
+        catPresetStore,
+        undefined,
+        createMockChartStore(),
       );
 
-      // The load select should have the delete option embedded
-      // But the preset toolbar exposes delete through the load select's change handler
-      // Just verify the store integration by calling deletePreset directly
       catPresetStore.deletePreset('ToDelete');
       expect(catPresetStore.getPreset('ToDelete')).toBeUndefined();
     });
 
     it('level preset save button is rendered', () => {
       const levelStore = new LevelStore();
-      const levelPresetStore = new LevelPresetStore(localStorageMock as any);
+      const levelPresetStore = new LevelPresetStore(localStorageMock);
       new SettingsEditor(
-        container, renderer, rerenderCb,
-        undefined, undefined, undefined, localStorageMock as any,
-        levelStore, undefined, levelPresetStore, createMockChartStore(),
+        container,
+        renderer,
+        rerenderCb,
+        undefined,
+        undefined,
+        undefined,
+        localStorageMock,
+        levelStore,
+        undefined,
+        levelPresetStore,
+        createMockChartStore(),
       );
       const saveBtn = container.querySelector<HTMLButtonElement>(
         '[data-section-id="level-mapping"] [data-testid="preset-save-btn"]',
@@ -1381,23 +1448,30 @@ describe('SettingsEditor', () => {
       const levelStore = new LevelStore();
       levelStore.addMapping('L1', 'Junior');
       levelStore.addMapping('L2', 'Senior');
-      const levelPresetStore = new LevelPresetStore(localStorageMock as any);
+      const levelPresetStore = new LevelPresetStore(localStorageMock);
       levelPresetStore.savePreset({
         name: 'TestLevels',
         levelMappings: levelStore.getMappings(),
         levelDisplayMode: 'mapped',
       });
 
-      // Reset the store
       levelStore.replaceAll([]);
       levelStore.setDisplayMode('original');
       const replaceAllSpy = vi.spyOn(levelStore, 'replaceAll');
       const setModeSpy = vi.spyOn(levelStore, 'setDisplayMode');
 
       new SettingsEditor(
-        container, renderer, rerenderCb,
-        undefined, undefined, undefined, localStorageMock as any,
-        levelStore, undefined, levelPresetStore, createMockChartStore(),
+        container,
+        renderer,
+        rerenderCb,
+        undefined,
+        undefined,
+        undefined,
+        localStorageMock,
+        levelStore,
+        undefined,
+        levelPresetStore,
+        createMockChartStore(),
       );
 
       const loadSelect = container.querySelector<HTMLSelectElement>(
@@ -1413,20 +1487,39 @@ describe('SettingsEditor', () => {
 
     it('chart entries excludes active chart', async () => {
       const catStore = new CategoryStore();
-      const catPresetStore = new CategoryPresetStore(localStorageMock as any);
-      const charts = [
-        { id: 'active-1', name: 'Active', categories: [], levelMappings: [], levelDisplayMode: 'original' },
-        { id: 'other-1', name: 'Other Chart', categories: [], levelMappings: [], levelDisplayMode: 'original' },
+      const catPresetStore = new CategoryPresetStore(localStorageMock);
+      const charts: MockStoredChart[] = [
+        {
+          id: 'active-1',
+          name: 'Active',
+          categories: [],
+          levelMappings: [],
+          levelDisplayMode: 'original',
+        },
+        {
+          id: 'other-1',
+          name: 'Other Chart',
+          categories: [],
+          levelMappings: [],
+          levelDisplayMode: 'original',
+        },
       ];
       const mockChartStore = createMockChartStore(charts);
       new SettingsEditor(
-        container, renderer, rerenderCb,
-        undefined, catStore, undefined, localStorageMock as any,
-        undefined, catPresetStore, undefined, mockChartStore,
+        container,
+        renderer,
+        rerenderCb,
+        undefined,
+        catStore,
+        undefined,
+        localStorageMock,
+        undefined,
+        catPresetStore,
+        undefined,
+        mockChartStore,
       );
 
-      // Wait for async chart entries to load
-      await new Promise(r => setTimeout(r, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const copySelect = container.querySelector<HTMLSelectElement>(
         '[data-section-id="categories"] [data-testid="preset-copy-select"]',

@@ -122,12 +122,12 @@ export class SideBySideRenderer {
     // Click handling for toggle selection
     const wireClickPane = (
       sourceContainer: HTMLDivElement,
-      targetContainer: HTMLDivElement
+      _targetContainer: HTMLDivElement
     ): void => {
       sourceContainer.querySelectorAll(`${nodeSelector} rect`).forEach((rect) => {
         rect.addEventListener(
           'click',
-          (e) => {
+          (_e) => {
             const group = rect.closest(nodeSelector);
             const nodeId = group?.getAttribute('data-id');
             if (!nodeId) return;
