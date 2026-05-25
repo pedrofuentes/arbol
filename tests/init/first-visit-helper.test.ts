@@ -56,13 +56,12 @@ describe('showFirstVisitHelp', () => {
     expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 
-  it('opens Getting Started section (index 1) by default', () => {
+  it('opens the Getting Started section on first visit', () => {
     const storage = makeStorage();
     showFirstVisitHelp(vi.fn(), storage);
 
-    const sections = document.querySelectorAll('.help-section');
-    expect(sections[0].classList.contains('open')).toBe(false);
-    expect(sections[1].classList.contains('open')).toBe(true);
+    const openSectionHeader = document.querySelector('.help-section.open .help-section-header');
+    expect(openSectionHeader?.textContent).toContain('Getting Started');
   });
 
   it('passes onLoadSample to help dialog', () => {

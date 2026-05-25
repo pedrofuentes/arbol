@@ -22,6 +22,12 @@ interface ShortcutEntry {
   desc: string;
 }
 
+export const HELP_SECTION_IDS = {
+  gettingStarted: 'help.getting_started.title',
+} as const;
+
+export type HelpSectionId = (typeof HELP_SECTION_IDS)[keyof typeof HELP_SECTION_IDS];
+
 interface HelpSection {
   titleKey: string;
   type?: 'shortcuts-grid' | 'markdown';
@@ -30,6 +36,22 @@ interface HelpSection {
   markdown?: string;
   hasClearData?: boolean;
   hasSampleOrg?: boolean;
+}
+
+function resolveInitialSectionIndex(
+  sections: HelpSection[],
+  initialSection: number | HelpSectionId | undefined,
+): number {
+  if (typeof initialSection === 'string') {
+    const sectionIndex = sections.findIndex((section) => section.titleKey === initialSection);
+    return sectionIndex >= 0 ? sectionIndex : 0;
+  }
+
+  if (typeof initialSection === 'number') {
+    return initialSection >= 0 && initialSection < sections.length ? initialSection : 0;
+  }
+
+  return 0;
 }
 
 function getHelpSections(): HelpSection[] {
@@ -295,7 +317,7 @@ function getHelpSections(): HelpSection[] {
   if (appConfig.importInstructions?.trim()) {
     // Insert after "Getting Started" section
     const gettingStartedIdx = sections.findIndex(
-      (s) => s.titleKey === 'help.getting_started.title',
+      (section) => section.titleKey === HELP_SECTION_IDS.gettingStarted,
     );
     const insertAt = gettingStartedIdx >= 0 ? gettingStartedIdx + 1 : 0;
     sections.splice(insertAt, 0, {
@@ -425,7 +447,7 @@ function buildSampleOrgButton(onLoad: () => void, closeDialog: () => void): HTML
 export interface HelpDialogOptions {
   storage?: IStorage;
   onLoadSample?: () => void;
-  initialSection?: number;
+  initialSection?: number | HelpSectionId;
 }
 
 export function showHelpDialog(options: HelpDialogOptions = {}): void {
@@ -483,7 +505,7 @@ export function showHelpDialog(options: HelpDialogOptions = {}): void {
   content.style.scrollbarWidth = 'thin';
 
   const sections = getHelpSections();
-  const initialSection = options.initialSection ?? 0;
+  const initialSection = resolveInitialSectionIndex(sections, options.initialSection);
   const closeRef = { fn: () => {} };
   for (let i = 0; i < sections.length; i++) {
     const section = sections[i];

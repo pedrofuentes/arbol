@@ -19,12 +19,12 @@ function makeAnchor(overrides: Partial<DOMRect> = {}): DOMRect {
 }
 
 describe('AddPopover', () => {
-  let onAdd: (...args: any[]) => any;
-  let onCancel: (...args: any[]) => any;
+  let onAdd: ReturnType<typeof vi.fn<(name: string, title: string) => void>>;
+  let onCancel: ReturnType<typeof vi.fn<() => void>>;
 
   beforeEach(() => {
-    onAdd = vi.fn();
-    onCancel = vi.fn();
+    onAdd = vi.fn<(name: string, title: string) => void>();
+    onCancel = vi.fn<() => void>();
   });
 
   afterEach(() => {

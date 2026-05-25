@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { showManagerPicker, ManagerPickerItem, ManagerPickerResult } from '../../src/ui/manager-picker';
+import { showManagerPicker, ManagerPickerItem } from '../../src/ui/manager-picker';
 
 const sampleManagers: ManagerPickerItem[] = [
   { id: 'm1', name: 'Alice Johnson', title: 'VP Engineering' },

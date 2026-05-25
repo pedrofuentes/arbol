@@ -138,7 +138,7 @@ describe('AnalyticsEditor', () => {
   });
 
   it('refreshes on store change', () => {
-    const editor = new AnalyticsEditor({ container, orgStore: store });
+    const _editor = new AnalyticsEditor({ container, orgStore: store });
     const textBefore = container.textContent!;
     expect(textBefore).toContain('7');
 

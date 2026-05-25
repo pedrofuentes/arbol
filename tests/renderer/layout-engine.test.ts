@@ -6,8 +6,10 @@ import {
   precomputeDescendantCounts,
   ADVISORS_PER_ROW,
 } from '../../src/renderer/layout-engine';
-import { ResolvedOptions } from '../../src/renderer/chart-renderer';
+import { ChartRenderer } from '../../src/renderer/chart-renderer';
+import type { ResolvedOptions } from '../../src/renderer/chart-renderer';
 import { OrgNode } from '../../src/types';
+import { makeDeepTree } from '../helpers/factories';
 
 // --- Default options matching the test renderer ---
 
@@ -149,6 +151,38 @@ function nodesByType(result: LayoutResult, type: LayoutNode['type']): LayoutNode
   return result.nodes.filter((n) => n.type === type);
 }
 
+function nodeById(result: LayoutResult, id: string): LayoutNode {
+  const node = result.nodes.find((candidate) => candidate.id === id);
+  expect(node, `Expected layout node ${id} to exist`).toBeDefined();
+  return node!;
+}
+
+function renderedBounds(result: LayoutResult, ids: string[]): { minX: number; maxX: number } {
+  const idSet = new Set(ids);
+  let minX = Infinity;
+  let maxX = -Infinity;
+
+  for (const node of result.nodes) {
+    if (!idSet.has(node.id)) continue;
+    minX = Math.min(minX, node.x - node.width / 2);
+    maxX = Math.max(maxX, node.x + node.width / 2);
+  }
+
+  expect(minX).not.toBe(Infinity);
+
+  for (const container of result.icContainers) {
+    const centerX = container.x + container.width / 2;
+    const belongsToSubtree = result.nodes.some(
+      (node) => idSet.has(node.id) && Math.abs(node.x - centerX) < 0.001,
+    );
+    if (!belongsToSubtree) continue;
+    minX = Math.min(minX, container.x);
+    maxX = Math.max(maxX, container.x + container.width);
+  }
+
+  return { minX, maxX };
+}
+
 // --- Tests ---
 
 describe('computeLayout', () => {
@@ -280,6 +314,178 @@ describe('computeLayout', () => {
       for (const link of result.links) {
         expect(link.path).toMatch(/^M[\d.\-e]+,[\d.\-e]+ L/);
       }
+    });
+  });
+
+  describe('accumulated offset regression coverage', () => {
+    it('accumulates PAL stack height into deeper manager levels', () => {
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          { id: 'pal1', name: 'Advisor 1', title: 'Advisor' },
+          { id: 'pal2', name: 'Advisor 2', title: 'Advisor' },
+          { id: 'pal3', name: 'Advisor 3', title: 'Advisor' },
+          {
+            id: 'leader',
+            name: 'Leader',
+            title: 'VP',
+            children: [
+              {
+                id: 'eng-manager',
+                name: 'Eng Manager',
+                title: 'Director',
+                children: [{ id: 'eng-ic', name: 'Engineer', title: 'Engineer' }],
+              },
+              {
+                id: 'ops-manager',
+                name: 'Ops Manager',
+                title: 'Director',
+                children: [{ id: 'ops-ic', name: 'Operator', title: 'Operator' }],
+              },
+            ],
+          },
+        ],
+      };
+      const opts = defaultOpts();
+      const depthSpacing = opts.nodeHeight + opts.topVerticalSpacing + opts.bottomVerticalSpacing;
+      const rows = Math.ceil(3 / ADVISORS_PER_ROW);
+      const palHeight =
+        opts.palTopGap +
+        opts.palRowGap +
+        rows * opts.nodeHeight +
+        (rows - 1) * opts.palRowGap +
+        opts.palBottomGap;
+      const multiChildShift = opts.bottomVerticalSpacing - opts.topVerticalSpacing;
+      const result = computeLayout(tree, opts);
+
+      expect(nodeById(result, 'leader').y).toBe(depthSpacing + palHeight);
+      expect(nodeById(result, 'eng-manager').y).toBe(depthSpacing * 2 + palHeight + multiChildShift);
+      expect(nodeById(result, 'ops-manager').y).toBe(depthSpacing * 2 + palHeight + multiChildShift);
+    });
+
+    it('compresses single-child chains by reusing the accumulated offset at each depth', () => {
+      const chain = makeDeepTree(6, { id: 'chain-0', name: 'Chain 0', title: 'Level 0' });
+      const opts = defaultOpts();
+      const singleChildStep = opts.nodeHeight + opts.bottomVerticalSpacing;
+      const result = computeLayout(chain, opts);
+
+      expect(nodeById(result, 'deep-1').y).toBe(singleChildStep);
+      expect(nodeById(result, 'deep-2').y).toBe(singleChildStep * 2);
+      expect(nodeById(result, 'deep-3').y).toBe(singleChildStep * 3);
+      expect(nodeById(result, 'deep-4').y).toBe(singleChildStep * 4);
+    });
+
+    it('keeps adjacent multi-child subtrees separated by branchSpacing', () => {
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          {
+            id: 'left',
+            name: 'Left',
+            title: 'VP',
+            children: [
+              {
+                id: 'left-mid',
+                name: 'Left Mid',
+                title: 'Director',
+                children: [{ id: 'left-leaf', name: 'Left Leaf', title: 'Lead' }],
+              },
+            ],
+          },
+          {
+            id: 'middle',
+            name: 'Middle',
+            title: 'VP',
+            children: [
+              {
+                id: 'middle-mid',
+                name: 'Middle Mid',
+                title: 'Director',
+                children: [{ id: 'middle-leaf', name: 'Middle Leaf', title: 'Lead' }],
+              },
+            ],
+          },
+          {
+            id: 'right',
+            name: 'Right',
+            title: 'VP',
+            children: [
+              {
+                id: 'right-mid',
+                name: 'Right Mid',
+                title: 'Director',
+                children: [{ id: 'right-leaf', name: 'Right Leaf', title: 'Lead' }],
+              },
+            ],
+          },
+        ],
+      };
+      const opts = defaultOpts();
+      const result = computeLayout(tree, opts);
+      const leftBounds = renderedBounds(result, ['left', 'left-mid', 'left-leaf']);
+      const middleBounds = renderedBounds(result, ['middle', 'middle-mid', 'middle-leaf']);
+      const rightBounds = renderedBounds(result, ['right', 'right-mid', 'right-leaf']);
+
+      expect(middleBounds.minX - leftBounds.maxX).toBeCloseTo(opts.branchSpacing, 6);
+      expect(rightBounds.minX - middleBounds.maxX).toBeCloseTo(opts.branchSpacing, 6);
+    });
+
+    it('preserves accumulated offsets on deep, skewed branches after a multi-child split', () => {
+      const tree: OrgNode = {
+        id: 'root',
+        name: 'CEO',
+        title: 'CEO',
+        children: [
+          {
+            id: 'deep-branch-1',
+            name: 'Deep 1',
+            title: 'VP',
+            children: [
+              {
+                id: 'deep-branch-2',
+                name: 'Deep 2',
+                title: 'Director',
+                children: [
+                  {
+                    id: 'deep-branch-3',
+                    name: 'Deep 3',
+                    title: 'Manager',
+                    children: [
+                      {
+                        id: 'deep-branch-4',
+                        name: 'Deep 4',
+                        title: 'Lead',
+                        children: [{ id: 'deep-ic', name: 'Deep IC', title: 'Engineer' }],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'short-branch',
+            name: 'Short',
+            title: 'VP',
+            children: [{ id: 'short-ic', name: 'Short IC', title: 'Engineer' }],
+          },
+        ],
+      };
+      const opts = defaultOpts();
+      const depthSpacing = opts.nodeHeight + opts.topVerticalSpacing + opts.bottomVerticalSpacing;
+      const multiChildShift = opts.bottomVerticalSpacing - opts.topVerticalSpacing;
+      const singleChildStep = opts.nodeHeight + opts.bottomVerticalSpacing;
+      const result = computeLayout(tree, opts);
+
+      expect(nodeById(result, 'deep-branch-1').y).toBe(depthSpacing + multiChildShift);
+      expect(nodeById(result, 'short-branch').y).toBe(depthSpacing + multiChildShift);
+      expect(nodeById(result, 'deep-branch-2').y).toBe(depthSpacing * 2);
+      expect(nodeById(result, 'deep-branch-3').y).toBe(depthSpacing * 2 + singleChildStep);
+      expect(nodeById(result, 'deep-branch-4').y).toBe(depthSpacing * 2 + singleChildStep * 2);
     });
   });
 
@@ -560,8 +766,7 @@ describe('computeLayout', () => {
   });
 
   describe('getLastLayout integration', () => {
-    it('ChartRenderer exposes layout after render', async () => {
-      const { ChartRenderer } = await import('../../src/renderer/chart-renderer');
+    it('ChartRenderer exposes layout after render', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
       const renderer = new ChartRenderer({

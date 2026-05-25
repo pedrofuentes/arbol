@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LevelStore } from '../../src/store/level-store';
-import type { ChartRecord, OrgNode } from '../../src/types';
+import type { ChartRecord, LevelDisplayMode, OrgNode } from '../../src/types';
 
 function makeChart(overrides: Partial<ChartRecord> = {}): ChartRecord {
   const tree: OrgNode = { id: 'root', name: 'Root', title: 'CEO' };
@@ -159,7 +159,7 @@ describe('LevelStore', () => {
     });
 
     it('setDisplayMode throws on invalid mode', () => {
-      expect(() => store.setDisplayMode('invalid' as any)).toThrow();
+      expect(() => store.setDisplayMode('invalid' as unknown as LevelDisplayMode)).toThrow();
     });
   });
 

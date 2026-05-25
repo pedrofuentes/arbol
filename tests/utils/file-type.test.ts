@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectArbolFileType, type ArbolFileType } from '../../src/utils/file-type';
+import { detectArbolFileType } from '../../src/utils/file-type';
 
 describe('detectArbolFileType', () => {
   // ── Backup format ──────────────────────────────────────────────────────────

@@ -455,18 +455,17 @@ export class ChartRenderer {
     this.g
       .selectAll<SVGGElement, unknown>('.node[data-id], .ic-node[data-id], .pal-node[data-id]')
       .each(function () {
-        const el = this;
-        const nodeId = el.getAttribute('data-id');
+        const nodeId = this.getAttribute('data-id');
         if (!nodeId) return;
-        el.setAttribute('role', 'treeitem');
+        this.setAttribute('role', 'treeitem');
         const level = depthMap.get(nodeId);
-        if (level !== undefined) el.setAttribute('aria-level', String(level));
+        if (level !== undefined) this.setAttribute('aria-level', String(level));
         if (hasChildren.get(nodeId)) {
-          el.setAttribute('aria-expanded', 'true');
+          this.setAttribute('aria-expanded', 'true');
         } else {
-          el.removeAttribute('aria-expanded');
+          this.removeAttribute('aria-expanded');
         }
-        el.setAttribute('tabindex', nodeId === rootId ? '0' : '-1');
+        this.setAttribute('tabindex', nodeId === rootId ? '0' : '-1');
       });
   }
 

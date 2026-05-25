@@ -168,7 +168,7 @@ export async function restoreFullReplace(
   backup: ArbolBackup,
   storage: IStorage = browserStorage,
 ): Promise<void> {
-  // Stage 1: Validate all backup data before any destructive operations
+  // Stage 1 validates first so a malformed backup cannot erase working data before we know what is safe to import.
   const validChartIds = new Set<string>();
   const validCharts: ChartRecord[] = [];
   for (const chart of backup.data.charts) {
@@ -181,7 +181,7 @@ export async function restoreFullReplace(
     }
   }
 
-  // Filter versions to only those belonging to valid charts
+  // Versions for rejected charts are excluded to preserve referential integrity in the recovered dataset.
   const validVersions: VersionRecord[] = [];
   for (const version of backup.data.versions) {
     if (!validChartIds.has(version.chartId)) continue;
@@ -195,7 +195,7 @@ export async function restoreFullReplace(
     }
   }
 
-  // Stage 2: Snapshot existing data for rollback
+  // Stage 2 snapshots the current state because `ChartDB` cannot replace everything in one atomic transaction.
   const existingCharts = await db.getAllCharts();
   const existingVersions = await db.getAllVersions();
   const existingLSValues: Record<string, string | null> = {};
@@ -203,7 +203,7 @@ export async function restoreFullReplace(
     existingLSValues[key] = storage.getItem(key);
   }
 
-  // Stage 3: Clear existing data, write backup, restore localStorage — all rollback-protected
+  // Stage 3 delays destructive writes until rollback data exists, so a partial restore can be unwound instead of becoming permanent.
   const writtenChartIds: string[] = [];
   const writtenVersionIds: string[] = [];
   try {
@@ -227,7 +227,7 @@ export async function restoreFullReplace(
   } catch (error) {
     const rollbackErrors: unknown[] = [];
 
-    // Best-effort rollback: attempt all recovery steps, never abort mid-recovery
+    // Rollback stays best-effort so one failed recovery step does not prevent the rest of the user's pre-restore data from coming back.
     for (const id of writtenVersionIds) {
       try {
         await db.deleteVersion(id);

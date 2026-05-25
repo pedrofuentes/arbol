@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { showExportDialog } from '../../src/ui/export-dialog';
 import type { ExportFormat } from '../../src/ui/export-dialog';
-import type { VersionRecord } from '../../src/types';
+import type { OrgNode, VersionRecord } from '../../src/types';
+
+const defaultTree: OrgNode = { id: 'root', name: 'CEO', title: 'Chief', children: [] };
 
 function makeVersion(overrides: Partial<VersionRecord> = {}): VersionRecord {
   return {
@@ -9,7 +11,7 @@ function makeVersion(overrides: Partial<VersionRecord> = {}): VersionRecord {
     chartId: overrides.chartId ?? 'chart-1',
     name: overrides.name ?? 'Version 1',
     createdAt: overrides.createdAt ?? '2024-01-15T10:30:00.000Z',
-    tree: overrides.tree ?? ({ id: 'root', name: 'CEO', title: 'Chief', children: [] } as any),
+    tree: overrides.tree ?? defaultTree,
   };
 }
 

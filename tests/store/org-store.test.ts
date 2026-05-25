@@ -8,6 +8,15 @@ function makeRoot(): OrgNode {
   return makeShallowTree();
 }
 
+interface HistoryStacks {
+  undoStack: string[];
+  redoStack: string[];
+}
+
+function getHistoryStacks(store: OrgStore): HistoryStacks {
+  return store as unknown as HistoryStacks;
+}
+
 describe('OrgStore', () => {
   describe('constructor & getTree', () => {
     it('stores and returns the tree', () => {
@@ -326,7 +335,7 @@ describe('OrgStore', () => {
       const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
       store.updateNode('r', { name: 'Valid' });
       // Inject corrupted snapshots on top of the valid one
-      (store as any).undoStack.push('NOT_JSON_1', 'NOT_JSON_2', 'NOT_JSON_3');
+      getHistoryStacks(store).undoStack.push('NOT_JSON_1', 'NOT_JSON_2', 'NOT_JSON_3');
 
       expect(store.undo()).toBe(true);
       expect(store.getTree().name).toBe('Root');
@@ -334,7 +343,7 @@ describe('OrgStore', () => {
 
     it('undo returns false when all snapshots are corrupted', () => {
       const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
-      (store as any).undoStack.push('BAD1', 'BAD2');
+      getHistoryStacks(store).undoStack.push('BAD1', 'BAD2');
 
       expect(store.undo()).toBe(false);
       expect(store.getUndoStackSize()).toBe(0);
@@ -346,7 +355,7 @@ describe('OrgStore', () => {
       store.updateNode('r', { name: 'Updated' });
       store.undo();
       // Inject corrupted snapshots on top of the valid redo entry
-      (store as any).redoStack.push('BAD1', 'BAD2');
+      getHistoryStacks(store).redoStack.push('BAD1', 'BAD2');
 
       expect(store.redo()).toBe(true);
       expect(store.getTree().name).toBe('Updated');
@@ -354,7 +363,7 @@ describe('OrgStore', () => {
 
     it('redo returns false when all snapshots are corrupted', () => {
       const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
-      (store as any).redoStack.push('CORRUPT1', 'CORRUPT2');
+      getHistoryStacks(store).redoStack.push('CORRUPT1', 'CORRUPT2');
 
       expect(store.redo()).toBe(false);
       expect(store.getRedoStackSize()).toBe(0);
@@ -363,7 +372,7 @@ describe('OrgStore', () => {
     it('undo with many corrupted snapshots does not cause stack overflow', () => {
       const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
       for (let i = 0; i < 50; i++) {
-        (store as any).undoStack.push('CORRUPT');
+        getHistoryStacks(store).undoStack.push('CORRUPT');
       }
 
       expect(store.undo()).toBe(false);
@@ -372,8 +381,7 @@ describe('OrgStore', () => {
 
     it('redo stack respects MAX_HISTORY limit', () => {
       const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
-      const redoStack = (store as any).redoStack as string[];
-      const undoStack = (store as any).undoStack as string[];
+      const { redoStack, undoStack } = getHistoryStacks(store);
       // Pre-fill redo with 55 entries
       for (let i = 0; i < 55; i++) {
         redoStack.push(JSON.stringify({ id: 'r', name: `Redo ${i}`, title: 'CEO' }));
@@ -386,8 +394,7 @@ describe('OrgStore', () => {
 
     it('discards oldest redo entries when exceeding MAX_HISTORY', () => {
       const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
-      const redoStack = (store as any).redoStack as string[];
-      const undoStack = (store as any).undoStack as string[];
+      const { redoStack, undoStack } = getHistoryStacks(store);
       // Pre-fill redo with exactly MAX_HISTORY entries
       for (let i = 0; i < 50; i++) {
         redoStack.push(JSON.stringify({ id: 'r', name: `Redo ${i}`, title: 'CEO' }));
@@ -407,8 +414,7 @@ describe('OrgStore', () => {
 
     it('redo still works correctly after trimming', () => {
       const store = new OrgStore({ id: 'r', name: 'Root', title: 'CEO' });
-      const redoStack = (store as any).redoStack as string[];
-      const undoStack = (store as any).undoStack as string[];
+      const { redoStack, undoStack } = getHistoryStacks(store);
       // Pre-fill redo past the limit
       for (let i = 0; i < 55; i++) {
         redoStack.push(JSON.stringify({ id: 'r', name: `Redo ${i}`, title: 'CEO' }));

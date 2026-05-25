@@ -144,7 +144,7 @@ describe('createShowSingleCardMenu', () => {
 
   it('move action still filters out descendants correctly', async () => {
     const deps = makeDeps();
-    const tree = (deps.store.getTree as Mock)();
+    const _tree = (deps.store.getTree as Mock)();
     const showMenu = createShowSingleCardMenu(deps);
     const menuMock = captureMenuItems();
 

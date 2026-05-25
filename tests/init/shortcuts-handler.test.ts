@@ -4,16 +4,38 @@ import en from '../../src/i18n/en';
 import { registerShortcuts } from '../../src/init/shortcuts-handler';
 import type { ShortcutsDeps } from '../../src/init/shortcuts-handler';
 
+type MockCommandPalette = {
+  isOpen: ReturnType<typeof vi.fn>;
+  open: ReturnType<typeof vi.fn>;
+  close: ReturnType<typeof vi.fn>;
+  setItems: ReturnType<typeof vi.fn>;
+};
+
+async function getCommandPaletteMock(): Promise<{ instances: MockCommandPalette[] }> {
+  const module = (await import('../../src/ui/command-palette')) as typeof import('../../src/ui/command-palette') & {
+    __mock: { instances: MockCommandPalette[] };
+  };
+
+  return module.__mock;
+}
+
 vi.mock('../../src/ui/command-palette', () => {
+  const instances: MockCommandPalette[] = [];
+
+  class CommandPalette {
+    isOpen = vi.fn(() => false);
+    open = vi.fn();
+    close = vi.fn();
+    setItems = vi.fn();
+
+    constructor() {
+      instances.push(this);
+    }
+  }
+
   return {
-    CommandPalette: class {
-      isOpen() {
-        return false;
-      }
-      open() {}
-      close() {}
-      setItems() {}
-    },
+    CommandPalette,
+    __mock: { instances },
   };
 });
 vi.mock('../../src/ui/help-dialog', () => ({ showHelpDialog: vi.fn() }));
@@ -80,8 +102,15 @@ function makeDeps(overrides?: Partial<ShortcutsDeps>): ShortcutsDeps {
 }
 
 describe('shortcuts-handler save-version error handling', () => {
+  let cleanup: (() => void) | null = null;
+
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup?.();
+    cleanup = null;
   });
 
   it('announces success when saveVersion succeeds', async () => {
@@ -89,17 +118,22 @@ describe('shortcuts-handler save-version error handling', () => {
     const { announce } = await import('../../src/ui/announcer');
     (showInputDialog as ReturnType<typeof vi.fn>).mockResolvedValue('My Version');
 
-    const deps = makeDeps();
-    const { buildCommandItems } = registerShortcuts(deps);
+    const tree = { id: 'root', name: 'Root', title: 'CEO' };
+    const mutationVersion = 7;
+    const deps = makeDeps({
+      store: {
+        ...makeDeps().store,
+        getTree: vi.fn(() => tree),
+        mutationVersion,
+      } as unknown as ShortcutsDeps['store'],
+    });
+    const { buildCommandItems, shortcuts } = registerShortcuts(deps);
+    cleanup = () => shortcuts.destroy();
     const items = await buildCommandItems();
     const saveItem = items.find((i) => i.id === 'save-version')!;
     await saveItem.action();
 
-    expect(deps.chartStore.saveVersion).toHaveBeenCalledWith(
-      'My Version',
-      expect.anything(),
-      expect.anything(),
-    );
+    expect(deps.chartStore.saveVersion).toHaveBeenCalledWith('My Version', tree, mutationVersion);
     expect(announce).toHaveBeenCalledWith(t('announce.chart_saved'));
   });
 
@@ -116,7 +150,8 @@ describe('shortcuts-handler save-version error handling', () => {
         getCharts: vi.fn().mockResolvedValue([]),
       } as unknown as ShortcutsDeps['chartStore'],
     });
-    const { buildCommandItems } = registerShortcuts(deps);
+    const { buildCommandItems, shortcuts } = registerShortcuts(deps);
+    cleanup = () => shortcuts.destroy();
     const items = await buildCommandItems();
     const saveItem = items.find((i) => i.id === 'save-version')!;
     await saveItem.action();
@@ -130,7 +165,8 @@ describe('shortcuts-handler save-version error handling', () => {
     (showInputDialog as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
     const deps = makeDeps();
-    const { buildCommandItems } = registerShortcuts(deps);
+    const { buildCommandItems, shortcuts } = registerShortcuts(deps);
+    cleanup = () => shortcuts.destroy();
     const items = await buildCommandItems();
     const saveItem = items.find((i) => i.id === 'save-version')!;
     await saveItem.action();
@@ -356,12 +392,103 @@ describe('shortcuts-handler — Escape precedence', () => {
 
 describe('shortcuts-handler — command palette actions', () => {
   let cleanup: (() => void) | null = null;
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    const commandPaletteMock = await getCommandPaletteMock();
+    commandPaletteMock.instances.length = 0;
   });
   afterEach(() => {
     cleanup?.();
     cleanup = null;
+  });
+
+  function fireKey(key: string, opts: Partial<KeyboardEventInit> = {}): void {
+    const event = new KeyboardEvent('keydown', { key, bubbles: true, ...opts });
+    Object.defineProperty(event, 'target', { value: document.body });
+    document.dispatchEvent(event);
+  }
+
+  it('Ctrl+K opens the command palette with the expected items', async () => {
+    const deps = makeDeps();
+    const result = registerShortcuts(deps);
+    cleanup = () => result.shortcuts.destroy();
+
+    fireKey('k', { ctrlKey: true });
+
+    const commandPaletteMock = await getCommandPaletteMock();
+    const palette = commandPaletteMock.instances.at(-1)!;
+
+    await vi.waitFor(() => {
+      expect(palette.setItems).toHaveBeenCalledTimes(1);
+      expect(palette.open).toHaveBeenCalledTimes(1);
+    });
+
+    const [items] = palette.setItems.mock.calls[0] as [
+      Array<{ id: string; label: string; group: string; shortcut?: string }>,
+    ];
+
+    expect(items.map(({ id, label, group, shortcut }) => ({ id, label, group, shortcut }))).toEqual([
+      {
+        id: 'export',
+        label: t('command_palette.item_export'),
+        group: t('command_palette.group_actions'),
+        shortcut: 'Ctrl+E',
+      },
+      {
+        id: 'undo',
+        label: t('command_palette.item_undo'),
+        group: t('command_palette.group_actions'),
+        shortcut: 'Ctrl+Z',
+      },
+      {
+        id: 'redo',
+        label: t('command_palette.item_redo'),
+        group: t('command_palette.group_actions'),
+        shortcut: 'Ctrl+Shift+Z',
+      },
+      {
+        id: 'settings',
+        label: t('command_palette.item_settings'),
+        group: t('command_palette.group_actions'),
+        shortcut: 'Ctrl+,',
+      },
+      {
+        id: 'search',
+        label: t('command_palette.item_search'),
+        group: t('command_palette.group_navigation'),
+        shortcut: 'Ctrl+F',
+      },
+      {
+        id: 'help',
+        label: t('command_palette.item_help'),
+        group: t('command_palette.group_navigation'),
+        shortcut: '?',
+      },
+      {
+        id: 'theme',
+        label: t('command_palette.item_theme'),
+        group: t('command_palette.group_actions'),
+        shortcut: undefined,
+      },
+      {
+        id: 'new-chart',
+        label: t('command_palette.item_new_chart'),
+        group: t('command_palette.group_charts'),
+        shortcut: undefined,
+      },
+      {
+        id: 'save-version',
+        label: t('command_palette.item_save_version'),
+        group: t('command_palette.group_charts'),
+        shortcut: undefined,
+      },
+      {
+        id: 'import',
+        label: t('command_palette.item_import'),
+        group: t('command_palette.group_actions'),
+        shortcut: undefined,
+      },
+    ]);
   });
 
   it('theme action toggles theme', async () => {

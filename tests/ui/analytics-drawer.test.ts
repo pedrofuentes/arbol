@@ -167,7 +167,7 @@ describe('AnalyticsDrawer', () => {
     it('pointerup saves height to localStorage', () => {
       const drawer = new AnalyticsDrawer(parent);
       const handle = parent.querySelector('.analytics-drawer-handle') as HTMLElement;
-      const root = parent.querySelector('.analytics-drawer') as HTMLElement;
+      const _root = parent.querySelector('.analytics-drawer') as HTMLElement;
 
       handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientY: 300 }));
       document.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientY: 250 }));
