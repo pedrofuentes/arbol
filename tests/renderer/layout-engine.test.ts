@@ -6,7 +6,8 @@ import {
   precomputeDescendantCounts,
   ADVISORS_PER_ROW,
 } from '../../src/renderer/layout-engine';
-import { ResolvedOptions } from '../../src/renderer/chart-renderer';
+import { ChartRenderer } from '../../src/renderer/chart-renderer';
+import type { ResolvedOptions } from '../../src/renderer/chart-renderer';
 import { OrgNode } from '../../src/types';
 import { makeDeepTree } from '../helpers/factories';
 
@@ -765,8 +766,7 @@ describe('computeLayout', () => {
   });
 
   describe('getLastLayout integration', () => {
-    it('ChartRenderer exposes layout after render', async () => {
-      const { ChartRenderer } = await import('../../src/renderer/chart-renderer');
+    it('ChartRenderer exposes layout after render', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
       const renderer = new ChartRenderer({
