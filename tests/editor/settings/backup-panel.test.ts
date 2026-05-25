@@ -164,18 +164,17 @@ describe('BackupPanel', () => {
       cleanup: () => void;
     } {
       let capturedInput: HTMLInputElement | null = null;
-      const origClick = HTMLInputElement.prototype.click;
-      HTMLInputElement.prototype.click = function (this: HTMLInputElement) {
-        if (this.type === 'file') {
-          capturedInput = this;
-        } else {
-          origClick.call(this);
+      const originalAppendChild = document.body.appendChild.bind(document.body);
+      document.body.appendChild = ((node: Node) => {
+        if (node instanceof HTMLInputElement && node.type === 'file') {
+          capturedInput = node;
         }
-      };
+        return originalAppendChild(node);
+      }) as typeof document.body.appendChild;
       return {
         getInput: () => capturedInput,
         cleanup: () => {
-          HTMLInputElement.prototype.click = origClick;
+          document.body.appendChild = originalAppendChild as typeof document.body.appendChild;
         },
       };
     }

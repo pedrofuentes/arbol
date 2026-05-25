@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { exportSvg, exportPng } from '../../src/export/svg-png-exporter';
-import type { SvgExportOptions, PngExportOptions } from '../../src/export/svg-png-exporter';
+import type { PngExportOptions } from '../../src/export/svg-png-exporter';
 
 function createMockSvg(): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

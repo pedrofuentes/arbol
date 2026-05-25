@@ -370,7 +370,6 @@ describe('SettingsStore', () => {
     it('writeToStorage uses cached settings instead of reading storage', () => {
       const spy = vi.spyOn(localStorage, 'getItem');
       store.load(DEFAULTS);
-      const loadCalls = spy.mock.calls.filter(([k]) => k === 'arbol-settings').length;
       spy.mockClear();
 
       store.saveImmediate({ nodeWidth: 300 });

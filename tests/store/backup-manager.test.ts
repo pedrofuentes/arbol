@@ -9,7 +9,7 @@ import {
   type ArbolBackup,
 } from '../../src/store/backup-manager';
 import type { ChartDB } from '../../src/store/chart-db';
-import type { ChartRecord, VersionRecord } from '../../src/types';
+import type { ChartRecord, OrgNode, VersionRecord } from '../../src/types';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -320,7 +320,7 @@ describe('BackupManager', () => {
       const validChart = makeChart('c1', 'Valid');
       const invalidChart: ChartRecord = {
         ...makeChart('c2', 'Invalid'),
-        workingTree: { id: '', name: 'Bad', title: 'No ID' } as any,
+        workingTree: { id: '', name: 'Bad', title: 'No ID' } as unknown as OrgNode,
       };
       const db = createMockDB();
 
@@ -344,7 +344,7 @@ describe('BackupManager', () => {
 
     it('skips charts with deeply nested tree exceeding max depth', async () => {
       // Build a tree >100 levels deep
-      let tree: any = { id: 'leaf', name: 'Leaf', title: 'IC' };
+      let tree: OrgNode = { id: 'leaf', name: 'Leaf', title: 'IC' };
       for (let i = 100; i >= 0; i--) {
         tree = { id: `n${i}`, name: `Node ${i}`, title: 'Mgr', children: [tree] };
       }
@@ -686,7 +686,7 @@ describe('BackupManager', () => {
     it('skips charts with invalid workingTree during merge', async () => {
       const invalidChart: ChartRecord = {
         ...makeChart('bad', 'Bad'),
-        workingTree: { id: 'root', name: 123, title: 'CEO' } as any,
+        workingTree: { id: 'root', name: 123, title: 'CEO' } as unknown as OrgNode,
       };
       const db = createMockDB();
 

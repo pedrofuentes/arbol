@@ -96,7 +96,7 @@ describe('Integration Workflows', () => {
       // Step 3a: Create chart and save initial version
       const chartStore = new ChartStore(db, storage);
       await chartStore.initialize();
-      const chart = await chartStore.createChartFromTree('CSV Import', structuredClone(orgStore.getTree()));
+      const _chart = await chartStore.createChartFromTree('CSV Import', structuredClone(orgStore.getTree()));
       const initialVersion = await chartStore.saveVersion('v1-initial', orgStore.getTree());
 
       // Step 3b: Make edits — addChild
@@ -338,13 +338,13 @@ describe('Integration Workflows', () => {
           { id: 'carol', name: 'Carol', title: 'VP Design', categoryId: 'cat-des' },
         ],
       };
-      const chart = await chartStore.createChartFromTree('Test Chart', tree, categories);
+      const _chart = await chartStore.createChartFromTree('Test Chart', tree, categories);
 
       // Create versions
-      const v1 = await chartStore.saveVersion('Release 1.0', tree);
+      const _v1 = await chartStore.saveVersion('Release 1.0', tree);
       const modifiedTree = structuredClone(tree);
       modifiedTree.children![0].title = 'CTO';
-      const v2 = await chartStore.saveVersion('Release 2.0', modifiedTree);
+      const _v2 = await chartStore.saveVersion('Release 2.0', modifiedTree);
 
       // Save settings to storage
       storage.setItem('arbol-settings', JSON.stringify({ fontFamily: 'Arial' }));

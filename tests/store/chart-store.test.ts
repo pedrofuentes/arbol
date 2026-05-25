@@ -164,7 +164,7 @@ describe('ChartStore', () => {
     });
 
     it('falls back to default root when migrated tree exceeds max depth', async () => {
-      let tree: any = { id: 'leaf', name: 'Leaf', title: 'IC' };
+      let tree: OrgNode = { id: 'leaf', name: 'Leaf', title: 'IC' };
       for (let i = 100; i >= 0; i--) {
         tree = { id: `n${i}`, name: `Node ${i}`, title: 'Mgr', children: [tree] };
       }
@@ -987,19 +987,19 @@ describe('ChartStore', () => {
     describe('tree validation on import', () => {
       it('importChartAsNew rejects bundle with invalid workingTree (missing name)', async () => {
         const bundle = makeBundle();
-        bundle.chart.workingTree = { id: 'r', title: 'CEO' } as any;
+        bundle.chart.workingTree = { id: 'r', title: 'CEO' } as unknown as OrgNode;
         await expect(store.importChartAsNew(bundle)).rejects.toThrow();
       });
 
       it('importChartAsNew rejects bundle with invalid workingTree (non-object)', async () => {
         const bundle = makeBundle();
-        bundle.chart.workingTree = 'not a tree' as any;
+        bundle.chart.workingTree = 'not a tree' as unknown as OrgNode;
         await expect(store.importChartAsNew(bundle)).rejects.toThrow();
       });
 
       it('importChartAsNew rejects bundle with excessively deep tree', async () => {
         // Build a tree with depth > 100
-        let tree: any = { id: 'leaf', name: 'Leaf', title: 'IC' };
+        let tree: OrgNode = { id: 'leaf', name: 'Leaf', title: 'IC' };
         for (let i = 0; i < 110; i++) {
           tree = { id: `n${i}`, name: `N${i}`, title: 'Mgr', children: [tree] };
         }
@@ -1014,7 +1014,7 @@ describe('ChartStore', () => {
             {
               name: 'bad-version',
               createdAt: '2026-01-01T00:00:00.000Z',
-              tree: { id: 'r', title: 'CEO' } as any, // missing name
+              tree: { id: 'r', title: 'CEO' } as unknown as OrgNode, // missing name
             },
           ],
         });
@@ -1024,7 +1024,7 @@ describe('ChartStore', () => {
       it('importChartAsNew does not persist anything when validation fails', async () => {
         const chartsBefore = await store.getCharts();
         const bundle = makeBundle();
-        bundle.chart.workingTree = 'invalid' as any;
+        bundle.chart.workingTree = 'invalid' as unknown as OrgNode;
         await expect(store.importChartAsNew(bundle)).rejects.toThrow();
         const chartsAfter = await store.getCharts();
         expect(chartsAfter).toHaveLength(chartsBefore.length);
@@ -1032,7 +1032,7 @@ describe('ChartStore', () => {
 
       it('importChartReplaceCurrent rejects bundle with invalid workingTree', async () => {
         const bundle = makeBundle();
-        bundle.chart.workingTree = { id: 'r', title: 'CEO' } as any;
+        bundle.chart.workingTree = { id: 'r', title: 'CEO' } as unknown as OrgNode;
         await expect(store.importChartReplaceCurrent(bundle)).rejects.toThrow();
       });
 
@@ -1053,7 +1053,7 @@ describe('ChartStore', () => {
         const originalChart = await store.getActiveChart();
         const originalTree = originalChart!.workingTree.name;
         const bundle = makeBundle();
-        bundle.chart.workingTree = null as any;
+        bundle.chart.workingTree = null as unknown as OrgNode;
         await expect(store.importChartReplaceCurrent(bundle)).rejects.toThrow();
         const afterChart = await store.getActiveChart();
         expect(afterChart!.workingTree.name).toBe(originalTree);
@@ -1245,10 +1245,10 @@ describe('ChartStore', () => {
         name: 'Corrupt',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        workingTree: { id: 123, name: 'Root', title: 'CEO' } as any, // id should be string
-        categories: 'not-an-array' as any, // should be array
-      };
-      await db.putChart(corruptChart as any);
+        workingTree: { id: 123, name: 'Root', title: 'CEO' } as unknown as OrgNode, // id should be string
+        categories: 'not-an-array' as unknown as ColorCategory[], // should be array
+      } as ChartRecord;
+      await db.putChart(corruptChart);
 
       // switchChart should sanitize and persist the repaired chart
       const chart = await store.switchChart('corrupt-chart');

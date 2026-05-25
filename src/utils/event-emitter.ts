@@ -13,7 +13,7 @@ export class EventEmitter<T = void> {
   protected emit(...args: T extends void ? [] : [T]): void {
     for (const listener of this.listeners) {
       try {
-        (listener as Function)(...args);
+        (listener as (...a: unknown[]) => void)(...args);
       } catch (e) {
         console.error(`${this.constructor.name} listener error:`, e);
       }
