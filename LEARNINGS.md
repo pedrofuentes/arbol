@@ -19,6 +19,11 @@
 
 <!-- Add new learnings below this line, most recent first -->
 
+### [2026-05-24] Fleet-mode sub-agents must NOT self-run Sentinel
+**Context**: Dispatched 7 parallel sub-agents in fleet mode for Sentinel debt cleanup. Each agent wrote code AND ran Sentinel, violating "Do NOT review your own code." PRs were merged based on self-reported approvals without independent verification.
+**Learning**: When dispatching fleet agents, instruct them to code + test + push + open PR only — stop before Sentinel. The parent agent must then dispatch *separate* Sentinel agents per PR before merging. Self-review is a process violation even when the Sentinel is a sub-agent of the coding agent.
+**Impact**: Always split fleet workflows into two phases: (1) code agents produce PRs, (2) separate Sentinel agents review them. Never merge based on a coding agent's self-reported Sentinel approval.
+
 ### [2026-05-05] Advisor rendering boundary calculations
 **Context**: Migrated from Common Pitfalls in original AGENTS.md.
 **Learning**: Single Advisors go left-only. Boundary calculations must account for Advisor width to prevent sibling overlap. Advisor rendering is one of the most complex parts of the layout engine.
