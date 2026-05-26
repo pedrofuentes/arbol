@@ -25,15 +25,19 @@ npm run test    # verify the full test suite passes
 
 3. **Implement the feature.** Follow the [coding standards](../AGENTS.md#coding-standards).
 
-4. **Run the full test suite:**
+4. **Run the full verification suite:**
    ```bash
-   npm run test
+   npm run type-check   # TypeScript type checking
+   npm run lint         # ESLint
+   npm run test         # All tests (2,922+ across 121 files)
    ```
 
-5. **Build for production** to catch TypeScript errors:
+5. **Build for production:**
    ```bash
    npm run build
    ```
+
+   > CI runs all of these automatically on every PR: type-check → lint → test.
 
 6. **Commit** with conventional message format:
    ```
@@ -88,7 +92,7 @@ Understanding these concepts is essential for working on the renderer:
 
 ## Testing Guidelines
 
-- Always run `npm run test` before committing
+- Always run `npm run type-check && npm run lint && npm run test` before committing
 - Spacing changes must include regression tests (see `chart-renderer.test.ts`)
 - Store modules should test persistence, serialization, and edge cases
 - UI modules with business logic need unit tests; purely presentational DOM builders are optional
@@ -119,14 +123,14 @@ Key naming convention: `area.component.specific` — e.g., `'menu.edit'`, `'dial
 
 ## Versioning
 
-Arbol follows [Semantic Versioning](https://semver.org/). Before every merge to `main`:
+Arbol follows [Semantic Versioning](https://semver.org/). Versioning is **automated** via [Release Please](https://github.com/googleapis/release-please) — do NOT manually bump `package.json` or edit `CHANGELOG.md`.
 
-1. **Bump the version** in `package.json` (`patch` for fixes, `minor` for features, `major` for breaking changes)
-2. **Update `CHANGELOG.md`** with what changed
-3. **Update `docs/roadmap.md`** to mark completed items
-4. **Update any other affected docs** (README, contributing, AGENTS.md)
+**How it works:**
+1. Use [conventional commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `perf:`, etc.)
+2. Release Please automatically opens a release PR that bumps the version and generates changelog entries
+3. Merging the release PR creates a GitHub Release
 
-The version in `package.json` is the single source of truth — it's injected into the app at build time and displayed in the footer. See [AGENTS.md — Version & Docs Update](../AGENTS.md#4-version--docs-update-pre-merge) for the full process.
+The version in `package.json` is the single source of truth — it's injected into the app at build time and displayed in the footer.
 
 ## Need Help?
 

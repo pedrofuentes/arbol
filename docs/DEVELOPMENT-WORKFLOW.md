@@ -71,23 +71,27 @@ Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`, `style`, `perf`
 ## Pull Request Process
 
 ### Before Opening a PR
-1. All 2,922+ tests pass: `npm run test`
+1. Type checking passes: `npm run type-check`
 2. Linting passes: `npm run lint`
-3. Build succeeds: `npm run build`
-4. Commit messages follow the format
-5. PR represents a single logical unit
+3. All 2,922+ tests pass: `npm run test`
+4. Build succeeds: `npm run build`
+5. Commit messages follow the format
+6. PR represents a single logical unit
 
-### Pre-Merge Version Bump (Final Commit)
+> **CI runs automatically** on every PR: `npm ci` → `npm audit --audit-level=high` → `type-check` → `lint` → `test`. All steps must pass before merge.
 
-Before requesting merge, the final commit must include:
+### Versioning (Release Please)
 
-1. **Bump `version` in `package.json`** — patch (bug fix), minor (new feature), major (breaking change)
-2. **Update `CHANGELOG.md`** — new `## [x.y.z]` section with Added/Changed/Fixed/Removed
-3. **Update `docs/roadmap.md`** — mark completed items `[x]`
-4. **Update other docs if affected** — `README.md`, `docs/contributing.md`, `AGENTS.md`
-5. **Commit:** `chore: bump version to x.y.z`
+Versioning is **automated** via [Release Please](https://github.com/googleapis/release-please). Do NOT manually bump `package.json` or edit `CHANGELOG.md` — Release Please handles both based on conventional commit messages.
+
+**How it works:**
+1. Merge PRs to `main` with conventional commits (`feat:`, `fix:`, `perf:`, etc.)
+2. Release Please opens/updates a release PR that bumps the version and generates changelog entries
+3. When the release PR is merged, a GitHub Release is created automatically
 
 The version in `package.json` is the single source of truth — injected into the app at build time and displayed in the footer.
+
+> **Note:** AGENTS.md still references manual version bumps in the 🚫 NEVER section (line 161). This needs a manual update to align with Release Please — see issue tracking.
 
 ### Sentinel Review
 → See [`docs/SENTINEL.md`](./SENTINEL.md) for the full process and invocation methods.
