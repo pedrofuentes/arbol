@@ -140,7 +140,9 @@ describe('ModuleName', () => {
 
 ## CI Integration
 
-- Tests run automatically on every PR via GitHub Actions
+- CI runs automatically on every PR via GitHub Actions (`ci.yml`)
+- Pipeline: `npm ci` → `npm audit --audit-level=high` → `type-check` → `lint` → `test`
+- All steps must pass before merge (enforced by branch protection)
 - All tests must pass before Sentinel review begins
 - Flaky tests must be fixed immediately, not skipped
 - Current test count: 2,922 tests across 121 files

@@ -22,6 +22,14 @@
 
 <!-- Add new decisions below this line, most recent first -->
 
+### ADR-008: uuid@14 override is safe for exceljs@4.4.0
+**Date**: 2026-05-25
+**Status**: Accepted
+**Context**: PR #89 added `"overrides": { "uuid": ">=11.1.1" }` to fix CVE-2024-22025 in transitive uuid@8 (via exceljs). Need to verify exceljs still works with uuid@14.
+**Decision**: Override is safe. exceljs uses uuid **only** in `lib/xlsx/xform/sheet/cf-ext/cf-rule-ext-xform.js` for generating conditional formatting rule IDs. The call is `v4()` with no arguments — the stable public API that is backward-compatible across all uuid major versions. The CVE's vulnerable code path (passing a `buf` argument to v3/v5/v6) is never triggered by exceljs.
+**Alternatives considered**: (1) Pin uuid to ^8.3.2 (patched within v8) — no such patch exists; v8 is unmaintained. (2) Remove exceljs entirely — it's used for .xlsx import (`import-editor.ts`). (3) Fork exceljs to remove uuid dependency — excessive maintenance burden.
+**Consequences**: Users can import .xlsx files with conditional formatting without issues. The override resolves the CVE audit finding while maintaining full exceljs compatibility.
+
 ### ADR-007: Atomic backup restore with rollback
 **Date**: 2026-05-05
 **Status**: Accepted
