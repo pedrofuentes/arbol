@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { ShapeProps, SHAPE_NAME, TextProps, TextPropsOptions } from 'pptxgenjs';
 import type {
   LayoutResult,
   LayoutNode,
@@ -8,16 +7,59 @@ import type {
 } from '../../src/renderer/layout-engine';
 import type { ColorCategory } from '../../src/types';
 
+// Local type definitions for pptxgenjs mock call assertions.
+// pptxgenjs v4 exports types only via namespace (PptxGenJS.ShapeProps etc.),
+// and all properties are optional. These local definitions make commonly-asserted
+// properties required so test assertions compile under strict null checks.
+interface ShapeFill {
+  color: string;
+  transparency?: number;
+}
+interface ShapeLine {
+  color: string;
+  width: number;
+  dashType?: string;
+}
+interface ShapeProps {
+  fill: ShapeFill;
+  line: ShapeLine;
+  w: number;
+  h: number;
+  x: number;
+  y: number;
+  rectRadius?: number;
+}
+type SHAPE_NAME = string;
+interface TextPropsOptions {
+  fill?: ShapeFill;
+  line?: ShapeLine;
+  color?: string;
+  bold?: boolean;
+  align?: string;
+  valign?: string;
+  fontFace?: string;
+  fontSize?: number;
+  wrap?: boolean;
+  x?: number;
+  y?: number;
+  w?: number;
+  h?: number;
+}
+interface TextProps {
+  text?: string;
+  options?: TextPropsOptions;
+}
+
 // Mock pptxgenjs before importing exporter
 const mockWriteFile = vi.fn().mockResolvedValue(undefined);
 const mockAddText = vi.fn().mockReturnThis();
 const mockAddShape = vi.fn().mockReturnThis();
 const mockAddSlide = vi.fn();
 
-type TextCall = [string | TextProps[], TextPropsOptions?];
-type TextArrayCall = [TextProps[], TextPropsOptions?];
-type StringTextCall = [string, TextPropsOptions?];
-type ShapeCall = [SHAPE_NAME, ShapeProps?];
+type TextCall = [string | TextProps[], TextPropsOptions];
+type TextArrayCall = [TextProps[], TextPropsOptions];
+type StringTextCall = [string, TextPropsOptions];
+type ShapeCall = [SHAPE_NAME, ShapeProps];
 type MockSlide = { addText: typeof mockAddText; addShape: typeof mockAddShape };
 type SlideCall = [MockSlide];
 

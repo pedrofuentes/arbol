@@ -6,6 +6,7 @@ import type {
   OrgNode,
   ColorCategory,
   ChartBundle,
+  ChartRecord,
   LevelMapping,
   LevelDisplayMode,
 } from '../../src/types';
