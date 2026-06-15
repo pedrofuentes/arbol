@@ -25,9 +25,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          pptxgenjs: ['pptxgenjs'],
-          exceljs: ['exceljs'],
+        manualChunks(id) {
+          if (id.includes('node_modules/pptxgenjs')) return 'pptxgenjs';
+          if (id.includes('node_modules/exceljs')) return 'exceljs';
         },
       },
     },
