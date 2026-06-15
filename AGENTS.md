@@ -15,7 +15,7 @@
 
 **Arbol** — An interactive org chart editor running entirely in the browser.
 
-- **Tech stack**: TypeScript, D3.js (tree layout + SVG), Vite (bundler), pptxgenjs (PowerPoint export) — versions: TS 5.9, D3 7.9, Vite 7.3
+- **Tech stack**: TypeScript, D3.js (tree layout + SVG), Vite (bundler), pptxgenjs (PowerPoint export) — versions: TS 6.0, D3 7.9, Vite 8.0
 - **Package manager**: npm | **Module system**: ES modules
 
 ## Commands
