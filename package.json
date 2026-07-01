@@ -34,7 +34,7 @@
   "bugs": {
     "url": "https://github.com/pedrofuentes/arbol/issues"
   },
-  "homepage": "https://arbol.pedrofuent.es",
+  "homepage": "https://arbol.pf.run",
   "type": "commonjs",
   "dependencies": {
     "d3": "^7.9.0",
