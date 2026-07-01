@@ -2,7 +2,7 @@
 
 An interactive org chart editor for the browser — manage multiple org charts with version snapshots, all running locally.
 
-**[Try Arbol →](https://arbol.pedrofuent.es)**
+**[Try Arbol →](https://arbol.pf.run)**
 
 ## Features
 
