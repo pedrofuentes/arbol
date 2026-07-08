@@ -24,6 +24,7 @@ import { showToast } from './ui/toast';
 import { showLoading, hideLoading } from './ui/loading-overlay';
 import { showInputDialog } from './ui/input-dialog';
 import { showCategoryLegend, dismissCategoryLegend } from './ui/category-legend';
+import { initOfflineBanner } from './ui/offline-banner';
 import { ChartDB } from './store/chart-db';
 import { ChartStore } from './store/chart-store';
 import { ChartEditor } from './editor/chart-editor';
@@ -1128,6 +1129,38 @@ async function main(): Promise<void> {
   rerender();
 
   showFirstVisitHelp(() => store.fromJSON(JSON.stringify(SAMPLE_ORG)));
+
+  initOfflineBanner(chartArea);
+  registerServiceWorker();
+}
+
+async function registerServiceWorker(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return;
+
+  const { registerSW } = await import('virtual:pwa-register');
+  const updateSW = registerSW({
+    onNeedRefresh() {
+      showConfirmDialog({
+        title: t('pwa.update_title'),
+        message: t('pwa.update_message'),
+        confirmLabel: t('pwa.update_confirm'),
+        cancelLabel: t('pwa.update_dismiss'),
+      }).then((confirmed) => {
+        if (confirmed) updateSW(true);
+      });
+    },
+    onOfflineReady() {
+      showToast(t('pwa.offline_ready'), 'success');
+    },
+    onRegisteredSW(_url, registration) {
+      if (registration) {
+        setInterval(() => registration.update(), 60 * 60 * 1000);
+      }
+    },
+    onRegisterError(error) {
+      console.error('Service worker registration failed:', error);
+    },
+  });
 }
 
 window.addEventListener('unhandledrejection', (event) => {

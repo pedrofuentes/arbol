@@ -8,6 +8,14 @@ const en: Record<string, string> = {
   'app.chart_area_label': 'Organization chart',
   'app.status_bar_label': 'Status bar',
 
+  // ─── PWA / Offline ─────────────────────────────────────────────────
+  'offline.banner_message': 'You are offline — changes are saved locally.',
+  'pwa.update_title': 'Update available',
+  'pwa.update_message': 'A new version of Arbol is ready. Reload to update?',
+  'pwa.update_confirm': 'Reload',
+  'pwa.update_dismiss': 'Later',
+  'pwa.offline_ready': 'Arbol is ready to work offline.',
+
   // ─── Toolbar ───────────────────────────────────────────────────────
   'toolbar.toggle_theme': 'Toggle theme',
   'toolbar.toggle_theme_aria': 'Toggle dark/light theme',
