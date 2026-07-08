@@ -8,6 +8,14 @@ const es: Record<string, string> = {
   'app.chart_area_label': 'Organigrama',
   'app.status_bar_label': 'Barra de estado',
 
+  // ─── PWA / Offline ─────────────────────────────────────────────────
+  'offline.banner_message': 'Estás sin conexión — los cambios se guardan localmente.',
+  'pwa.update_title': 'Actualización disponible',
+  'pwa.update_message': 'Hay una nueva versión de Arbol lista. ¿Recargar para actualizar?',
+  'pwa.update_confirm': 'Recargar',
+  'pwa.update_dismiss': 'Más tarde',
+  'pwa.offline_ready': 'Arbol ya está listo para funcionar sin conexión.',
+
   // ─── Toolbar ───────────────────────────────────────────────────────
   'toolbar.toggle_theme': 'Cambiar tema',
   'toolbar.toggle_theme_aria': 'Alternar tema claro/oscuro',
