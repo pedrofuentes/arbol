@@ -1,5 +1,9 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { appendIconLabel, createIcon, setIcon } from '../../src/ui/icon';
+
+const styles = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8');
 
 const REQUIRED_ICON_NAMES = [
   'add',
@@ -82,6 +86,20 @@ describe('semantic SVG icons', () => {
     expect(icon.classList.contains('search-icon')).toBe(true);
   });
 
+  it('sets explicit dimensions using the compact default size', () => {
+    const icon = createIcon('search');
+
+    expect(icon.getAttribute('width')).toBe('16');
+    expect(icon.getAttribute('height')).toBe('16');
+  });
+
+  it('sets explicit dimensions using a requested size', () => {
+    const icon = createIcon('search', 'search-icon', 18);
+
+    expect(icon.getAttribute('width')).toBe('18');
+    expect(icon.getAttribute('height')).toBe('18');
+  });
+
   it('updates an existing SVG in place', () => {
     const icon = createIcon('sun');
     const original = icon;
@@ -100,5 +118,17 @@ describe('semantic SVG icons', () => {
 
     expect(button.querySelector('svg')?.dataset.icon).toBe('save');
     expect(button.textContent).toBe('Create Backup');
+  });
+});
+
+describe('icon layout styles', () => {
+  it('limits full-canvas SVG sizing to the chart root', () => {
+    expect(styles).toMatch(/#chart-area\s*>\s*svg\s*\{[^}]*width:\s*100%;[^}]*height:\s*100%;/s);
+  });
+
+  it('spaces footer icons from their labels', () => {
+    expect(styles).toMatch(
+      /\.footer-btn\s*\{[^}]*display:\s*inline-flex;[^}]*align-items:\s*center;[^}]*gap:\s*var\(--space-1\);/s,
+    );
   });
 });
