@@ -4,6 +4,8 @@ import { ChartDB } from '../../src/store/chart-db';
 import { ChartStore } from '../../src/store/chart-store';
 import { OrgStore } from '../../src/store/org-store';
 import { CategoryStore } from '../../src/store/category-store';
+import { ChartEditor } from '../../src/editor/chart-editor';
+import { TrashPanel } from '../../src/editor/settings/trash-panel';
 import { createBackup, restoreFullReplace } from '../../src/store/backup-manager';
 import { parseCsvToTree } from '../../src/utils/csv-parser';
 import { findNodeById, flattenTree } from '../../src/utils/tree';
@@ -27,9 +29,15 @@ function createMemoryStorage(): IStorage {
   let store: Record<string, string> = {};
   return {
     getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, val: string) => { store[key] = val; },
-    removeItem: (key: string) => { delete store[key]; },
-    clear: () => { store = {}; },
+    setItem: (key: string, val: string) => {
+      store[key] = val;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
   };
 }
 
@@ -76,6 +84,51 @@ describe('Integration Workflows', () => {
     indexedDB.deleteDatabase('arbol-db');
   });
 
+  describe('Trash workflow', () => {
+    it('moves a chart to Trash, restores it there, and returns it to the sidebar', async () => {
+      const chartStore = new ChartStore(db, storage);
+      await chartStore.initialize();
+      const chart = await chartStore.createChart('Quarterly Plan');
+      await chartStore.createChart('Keep Active');
+      await chartStore.switchChart(chart.id);
+      const sidebar = document.createElement('div');
+      const editor = new ChartEditor({
+        container: sidebar,
+        chartStore,
+        onChartSwitch: vi.fn(),
+        onVersionRestore: vi.fn(),
+        onVersionView: vi.fn(),
+        onVersionCompare: vi.fn(),
+        onVersionDelete: vi.fn(),
+        getCurrentTree: () => makeTree(),
+        getCurrentCategories: () => [],
+        onBeforeSwitch: vi.fn(async () => true),
+      });
+      await vi.waitFor(() => {
+        expect(sidebar.querySelector('[data-chart-id="' + chart.id + '"]')).not.toBeNull();
+      });
+
+      await chartStore.deleteChart(chart.id);
+      await editor.refresh();
+      expect(sidebar.querySelector('[data-chart-id="' + chart.id + '"]')).toBeNull();
+
+      const trash = new TrashPanel({ chartStore }).build();
+      await vi.waitFor(() => {
+        expect(trash.querySelector('[data-trash-chart-id="' + chart.id + '"]')).not.toBeNull();
+      });
+      trash
+        .querySelector<HTMLButtonElement>(
+          '[data-trash-chart-id="' + chart.id + '"] [data-trash-action="restore"]',
+        )!
+        .click();
+      await vi.waitFor(() => expect(chartStore.getCharts()).resolves.toContainEqual(chart));
+      await editor.refresh();
+
+      expect(sidebar.querySelector('[data-chart-id="' + chart.id + '"]')).not.toBeNull();
+      editor.destroy();
+    });
+  });
+
   // =========================================================================
   // Workflow 1: Import CSV → Edit → Save Version
   // =========================================================================
@@ -96,7 +149,10 @@ describe('Integration Workflows', () => {
       // Step 3a: Create chart and save initial version
       const chartStore = new ChartStore(db, storage);
       await chartStore.initialize();
-      const _chart = await chartStore.createChartFromTree('CSV Import', structuredClone(orgStore.getTree()));
+      const _chart = await chartStore.createChartFromTree(
+        'CSV Import',
+        structuredClone(orgStore.getTree()),
+      );
       const initialVersion = await chartStore.saveVersion('v1-initial', orgStore.getTree());
 
       // Step 3b: Make edits — addChild
@@ -142,9 +198,7 @@ describe('Integration Workflows', () => {
 
       const versions = await chartStore.getVersions();
       expect(versions).toHaveLength(3);
-      expect(versions.map((v) => v.name)).toEqual(
-        expect.arrayContaining(['v1', 'v2', 'v3']),
-      );
+      expect(versions.map((v) => v.name)).toEqual(expect.arrayContaining(['v1', 'v2', 'v3']));
     });
 
     it('keeps a safety version of live edits when restoring an earlier version', async () => {
@@ -318,9 +372,11 @@ describe('Integration Workflows', () => {
     });
 
     it('redo stack is cleared when a new mutation follows undo', () => {
-      const orgStore = new OrgStore(makeTree({
-        children: [{ id: 'child1', name: 'Child', title: 'IC' }],
-      }));
+      const orgStore = new OrgStore(
+        makeTree({
+          children: [{ id: 'child1', name: 'Child', title: 'IC' }],
+        }),
+      );
 
       orgStore.addChild('root', { name: 'A', title: 'A' });
       orgStore.addChild('root', { name: 'B', title: 'B' });
@@ -465,9 +521,7 @@ describe('Integration Workflows', () => {
         id: 'root-b',
         name: 'Xavier',
         title: 'CEO',
-        children: [
-          { id: 'yara-b', name: 'Yara', title: 'VP Marketing', categoryId: 'b-cat-1' },
-        ],
+        children: [{ id: 'yara-b', name: 'Yara', title: 'VP Marketing', categoryId: 'b-cat-1' }],
       };
       const chartB = await chartStore.createChartFromTree('Chart B', treeB, categoriesB);
 
@@ -535,9 +589,7 @@ describe('Integration Workflows', () => {
       const chartStore = new ChartStore(db, storage);
       await chartStore.initialize();
 
-      const categories: ColorCategory[] = [
-        { id: 'cat-1', label: 'Open', color: '#fbbf24' },
-      ];
+      const categories: ColorCategory[] = [{ id: 'cat-1', label: 'Open', color: '#fbbf24' }];
       const tree: OrgNode = {
         id: 'root',
         name: 'Alice',

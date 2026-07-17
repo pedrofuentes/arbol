@@ -8,7 +8,9 @@ vi.mock('../../src/ui/chart-export-dialog', () => ({
   showChartExportDialog: vi.fn().mockReturnValue({ destroy: () => {} }),
 }));
 vi.mock('../../src/export/chart-exporter', () => ({
-  buildChartBundle: vi.fn().mockReturnValue({ format: 'arbol-chart', version: 1, chart: {}, versions: [] }),
+  buildChartBundle: vi
+    .fn()
+    .mockReturnValue({ format: 'arbol-chart', version: 1, chart: {}, versions: [] }),
   downloadChartBundle: vi.fn(),
 }));
 vi.mock('../../src/ui/confirm-dialog', () => ({
@@ -283,8 +285,8 @@ describe('ChartEditor – Compare button', () => {
 
     // Get buttons within the first version item's action row
     const allButtons = Array.from(container.querySelectorAll('button'));
-    const versionActionButtons = allButtons.filter(
-      (b) => ['Preview', 'Compare', 'Restore', 'Delete'].includes(b.getAttribute('data-tooltip') ?? ''),
+    const versionActionButtons = allButtons.filter((b) =>
+      ['Preview', 'Compare', 'Restore', 'Delete'].includes(b.getAttribute('data-tooltip') ?? ''),
     );
     // First group of 4 = first version item
     const labels = versionActionButtons.slice(0, 4).map((b) => b.getAttribute('data-tooltip'));
@@ -354,7 +356,9 @@ describe('ChartEditor – chart item keyboard accessibility', () => {
 
   it('Space key on inactive chart item switches chart', async () => {
     const inactiveItem = container.querySelector('[data-chart-id="chart-2"]') as HTMLElement;
-    inactiveItem.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+    inactiveItem.dispatchEvent(
+      new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }),
+    );
     await vi.waitFor(() => {
       expect(store.switchChart).toHaveBeenCalledWith('chart-2');
     });
@@ -547,9 +551,7 @@ describe('ChartEditor – version delta chips', () => {
   it('shows additions and removals against the previous chronological version', () => {
     const chip = container.querySelector('[data-version-id="current"] .version-delta-chip');
     expect(chip?.textContent).toBe('+1 −1');
-    expect(chip?.getAttribute('aria-label')).toBe(
-      '1 added, 1 removed since previous version',
-    );
+    expect(chip?.getAttribute('aria-label')).toBe('1 added, 1 removed since previous version');
   });
 
   it('shows a zero baseline for the oldest version', () => {
@@ -802,6 +804,73 @@ describe('ChartEditor – safe version restore', () => {
   });
 });
 
+describe('ChartEditor – trash safety', () => {
+  it('closes an active preview before moving its version to Trash', async () => {
+    const chart = makeChart();
+    const version = makeVersion();
+    const store = mockChartStore([chart], [version]);
+    const onVersionDelete = vi.fn();
+    const onVersionRestore = vi.fn();
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore,
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      onVersionDelete,
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+    await vi.waitFor(() => {
+      expect(container.querySelector(`[data-version-id="${version.id}"]`)).not.toBeNull();
+    });
+    editor.setViewingVersion(version.id, makeTree());
+
+    await editor.deleteVersion(version);
+
+    expect(onVersionDelete).toHaveBeenCalledWith(version);
+    expect(store.deleteVersion).toHaveBeenCalledWith(version.id);
+    editor.destroy();
+    container.remove();
+  });
+
+  it('uses recoverable Move to Trash confirmation copy', async () => {
+    const chart = makeChart();
+    const store = mockChartStore([chart], []);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      onVersionDelete: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+    await vi.waitFor(() => expect(container.querySelector('[data-chart-id]')).not.toBeNull());
+
+    await editor.deleteActiveChart(chart);
+
+    expect(showConfirmDialog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Move Chart to Trash?',
+        message: expect.stringContaining('restore it later from Settings → Data & Backup'),
+        confirmLabel: 'Move to Trash',
+      }),
+    );
+    editor.destroy();
+    container.remove();
+  });
+});
+
 describe('ChartEditor – keyboard access to row actions', () => {
   let container: HTMLElement;
   let editor: ChartEditor;
@@ -974,7 +1043,6 @@ describe('ChartEditor – rename via dialog', () => {
     expect(searchInput).not.toBeNull();
     expect(searchInput!.getAttribute('aria-label')).toBe('Search charts');
   });
-
 });
 
 describe('ChartEditor – shows newly imported chart as active after refresh', () => {
@@ -1121,14 +1189,40 @@ describe('ChartEditor – Create chart with sources', () => {
       getCurrentCategories: () => [],
       onBeforeSwitch: vi.fn().mockResolvedValue(true),
       categoryPresetStore: {
-        getPresets: () => [{ name: 'Eng', categories: [{ id: 'c1', label: 'Eng', color: '#f00', nameColor: '#fff', titleColor: '#fff' }] }],
+        getPresets: () => [
+          {
+            name: 'Eng',
+            categories: [
+              { id: 'c1', label: 'Eng', color: '#f00', nameColor: '#fff', titleColor: '#fff' },
+            ],
+          },
+        ],
         getPreset: (n: string) =>
-          n === 'Eng' ? { name: 'Eng', categories: [{ id: 'c1', label: 'Eng', color: '#f00', nameColor: '#fff', titleColor: '#fff' }] } : undefined,
+          n === 'Eng'
+            ? {
+                name: 'Eng',
+                categories: [
+                  { id: 'c1', label: 'Eng', color: '#f00', nameColor: '#fff', titleColor: '#fff' },
+                ],
+              }
+            : undefined,
       },
       levelPresetStore: {
-        getPresets: () => [{ name: 'Std', levelMappings: [{ rawLevel: 'L5', displayTitle: 'Sr' }], levelDisplayMode: 'mapped' as const }],
+        getPresets: () => [
+          {
+            name: 'Std',
+            levelMappings: [{ rawLevel: 'L5', displayTitle: 'Sr' }],
+            levelDisplayMode: 'mapped' as const,
+          },
+        ],
         getPreset: (n: string) =>
-          n === 'Std' ? { name: 'Std', levelMappings: [{ rawLevel: 'L5', displayTitle: 'Sr' }], levelDisplayMode: 'mapped' as const } : undefined,
+          n === 'Std'
+            ? {
+                name: 'Std',
+                levelMappings: [{ rawLevel: 'L5', displayTitle: 'Sr' }],
+                levelDisplayMode: 'mapped' as const,
+              }
+            : undefined,
       },
     });
 

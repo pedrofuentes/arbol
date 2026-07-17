@@ -108,7 +108,8 @@ function getSectionTitles(container: HTMLElement): string[] {
 /** Helper: find a section (accordion or flat) by its title text */
 function findSectionByTitle(container: HTMLElement, title: string): Element | undefined {
   return Array.from(container.querySelectorAll('[data-section-id]')).find((s) => {
-    const titleEl = s.querySelector('.accordion-title') ?? s.querySelector('.setting-section-title');
+    const titleEl =
+      s.querySelector('.accordion-title') ?? s.querySelector('.setting-section-title');
     return titleEl?.textContent === title;
   });
 }
@@ -140,6 +141,30 @@ describe('SettingsEditor', () => {
     expect(titles).not.toContain('Layout Presets');
   });
 
+  it('adds a Trash section without changing existing data-section IDs', () => {
+    const chartStore = {
+      getCharts: vi.fn(async () => []),
+      getAllVersions: vi.fn(async () => []),
+    } as unknown as ChartStore;
+    new SettingsEditor(
+      container,
+      renderer,
+      rerenderCb,
+      undefined,
+      undefined,
+      undefined,
+      localStorageMock,
+      undefined,
+      undefined,
+      undefined,
+      chartStore,
+    );
+
+    const trashSection = container.querySelector('[data-section-id="trash"]');
+    expect(trashSection).not.toBeNull();
+    expect(trashSection?.querySelector('.accordion-title')?.textContent).toBe('Trash');
+  });
+
   it('renders setting groups as flat sections with data-section-id', () => {
     new SettingsEditor(container, renderer, rerenderCb);
     const allSections = container.querySelectorAll('[data-section-id]');
@@ -162,12 +187,21 @@ describe('SettingsEditor', () => {
 
   it('flat setting section IDs match expected tab mapping keys', () => {
     new SettingsEditor(container, renderer, rerenderCb);
-    const sectionIds = Array.from(container.querySelectorAll('.setting-section'))
-      .map((el) => el.getAttribute('data-section-id'));
+    const sectionIds = Array.from(container.querySelectorAll('.setting-section')).map((el) =>
+      el.getAttribute('data-section-id'),
+    );
     // These IDs must match the SECTION_TAB_MAP keys in main.ts
     const expectedIds = [
-      'card-dimensions', 'tree-spacing', 'ic-options', 'advisor-options',
-      'typography', 'link-style', 'card-style', 'headcount-badge', 'level-badge', 'categories-legend',
+      'card-dimensions',
+      'tree-spacing',
+      'ic-options',
+      'advisor-options',
+      'typography',
+      'link-style',
+      'card-style',
+      'headcount-badge',
+      'level-badge',
+      'categories-legend',
     ];
     expect(sectionIds).toEqual(expectedIds);
   });
@@ -649,7 +683,8 @@ describe('SettingsEditor', () => {
 
       const sections = Array.from(container.querySelectorAll('[data-section-id]'));
       const backupSection = sections.find((s) => {
-        const titleEl = s.querySelector('.accordion-title') ?? s.querySelector('.setting-section-title');
+        const titleEl =
+          s.querySelector('.accordion-title') ?? s.querySelector('.setting-section-title');
         return titleEl?.textContent === 'Backup & Restore';
       });
       expect(backupSection).toBeDefined();
@@ -685,7 +720,6 @@ describe('SettingsEditor', () => {
       const restoreBtn = Array.from(btns).find((b) => b.textContent?.includes('Restore'));
       expect(restoreBtn).toBeDefined();
     });
-
   });
 
   describe('text alignment select control', () => {
@@ -697,9 +731,11 @@ describe('SettingsEditor', () => {
       expect(selects.length).toBeGreaterThanOrEqual(1);
       const textAlignSelect = Array.from(selects).find((s) => {
         const options = Array.from(s.querySelectorAll('option'));
-        return options.some((o) => o.value === 'left') &&
-               options.some((o) => o.value === 'center') &&
-               options.some((o) => o.value === 'right');
+        return (
+          options.some((o) => o.value === 'left') &&
+          options.some((o) => o.value === 'center') &&
+          options.some((o) => o.value === 'right')
+        );
       });
       expect(textAlignSelect).toBeDefined();
     });
@@ -710,9 +746,11 @@ describe('SettingsEditor', () => {
       const selects = typoSection.querySelectorAll('select');
       const textAlignSelect = Array.from(selects).find((s) => {
         const options = Array.from(s.querySelectorAll('option'));
-        return options.some((o) => o.value === 'left') &&
-               options.some((o) => o.value === 'center') &&
-               options.some((o) => o.value === 'right');
+        return (
+          options.some((o) => o.value === 'left') &&
+          options.some((o) => o.value === 'center') &&
+          options.some((o) => o.value === 'right')
+        );
       });
       expect(textAlignSelect).toBeDefined();
       expect(textAlignSelect!.value).toBe('center');
@@ -855,7 +893,9 @@ describe('SettingsEditor', () => {
       } as unknown as ChartRenderer;
       new SettingsEditor(container, exactDefaultRenderer, rerenderCb);
       const dots = container.querySelectorAll('.setting-modified-dot');
-      const visibleDots = Array.from(dots).filter(d => (d as HTMLElement).style.display !== 'none');
+      const visibleDots = Array.from(dots).filter(
+        (d) => (d as HTMLElement).style.display !== 'none',
+      );
       expect(visibleDots.length).toBe(0);
     });
 
@@ -921,7 +961,9 @@ describe('SettingsEditor', () => {
         updateOptions: vi.fn(),
       } as unknown as ChartRenderer;
       new SettingsEditor(container, modifiedRenderer, rerenderCb);
-      const visibleReset = container.querySelector<HTMLButtonElement>('.setting-reset-btn.visible')!;
+      const visibleReset = container.querySelector<HTMLButtonElement>(
+        '.setting-reset-btn.visible',
+      )!;
       expect(visibleReset).not.toBeNull();
       visibleReset.click();
       expect(modifiedRenderer.updateOptions).toHaveBeenCalled();
@@ -1528,11 +1570,10 @@ describe('SettingsEditor', () => {
       expect(copySelect).not.toBeNull();
       // Trigger focus to repopulate
       copySelect!.dispatchEvent(new Event('focus'));
-      await new Promise(r => setTimeout(r, 10));
-      const options = Array.from(copySelect!.options).map(o => o.textContent);
+      await new Promise((r) => setTimeout(r, 10));
+      const options = Array.from(copySelect!.options).map((o) => o.textContent);
       expect(options).toContain('Other Chart');
       expect(options).not.toContain('Active');
     });
   });
-
 });

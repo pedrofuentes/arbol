@@ -3,10 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const mainSource = readFileSync(
-  fileURLToPath(new URL('../src/main.ts', import.meta.url)),
-  'utf-8',
-);
+const mainSource = readFileSync(fileURLToPath(new URL('../src/main.ts', import.meta.url)), 'utf-8');
 
 describe('settings section group mapping', () => {
   it('assigns every existing section ID to one of the six settings groups', () => {
@@ -35,13 +32,12 @@ describe('settings section group mapping', () => {
       'level-mapping': 'levels_categories',
       'settings-io': 'data_backup',
       'backup-restore': 'data_backup',
+      trash: 'data_backup',
     });
   });
 
   it('annotates editor sections from the sole section group map for modal search', () => {
-    expect(mainSource).toContain(
-      'annotateTopLevelSettingsSections(contentArea, SECTION_TAB_MAP)',
-    );
+    expect(mainSource).toContain('annotateTopLevelSettingsSections(contentArea, SECTION_TAB_MAP)');
     expect(mainSource).toContain('settingsModal.refreshSectionVisibility()');
   });
 });

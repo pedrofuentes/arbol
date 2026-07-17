@@ -141,6 +141,38 @@ describe('ChartDB', () => {
       const all = await db.getAllCharts();
       expect(all).toEqual([]);
     });
+
+    it('keeps legacy chart records without deletedAt active and filters trashed charts by default', async () => {
+      const legacy = makeChart({ id: 'legacy-chart', name: 'Legacy Chart' });
+      const trashed = makeChart({
+        id: 'trashed-chart',
+        name: 'Trashed Chart',
+        deletedAt: 1_752_710_400_000,
+      });
+      await db.putChart(legacy);
+      await db.putChart(trashed);
+
+      expect((await db.getAllCharts()).map((chart) => chart.id)).toEqual(['legacy-chart']);
+      expect((await db.getAllCharts({ includeTrashed: true })).map((chart) => chart.id)).toEqual([
+        'legacy-chart',
+        'trashed-chart',
+      ]);
+      expect(await db.getChart('trashed-chart')).toBeUndefined();
+      expect(await db.getChart('trashed-chart', { includeTrashed: true })).toEqual(trashed);
+    });
+
+    it('keeps the IndexedDB schema at version 1 for migration safety', async () => {
+      const request = indexedDB.open('arbol-db');
+      const version = await new Promise<number>((resolve, reject) => {
+        request.onsuccess = () => {
+          resolve(request.result.version);
+          request.result.close();
+        };
+        request.onerror = () => reject(request.error);
+      });
+
+      expect(version).toBe(1);
+    });
   });
 
   describe('Chart-Version cascade', () => {
@@ -284,6 +316,29 @@ describe('ChartDB', () => {
       const versionsB = await db.getVersionsByChart('chart-b');
       expect(versionsB).toHaveLength(1);
       expect(versionsB[0].id).toBe('v-b1');
+    });
+
+    it('keeps legacy versions active and filters trashed versions from every default read', async () => {
+      const legacy = makeVersion({ id: 'legacy-version', name: 'Legacy Version' });
+      const trashed = makeVersion({
+        id: 'trashed-version',
+        name: 'Trashed Version',
+        deletedAt: 1_752_710_400_000,
+      });
+      await db.putVersion(legacy);
+      await db.putVersion(trashed);
+
+      expect((await db.getVersionsByChart('chart-1')).map((version) => version.id)).toEqual([
+        'legacy-version',
+      ]);
+      expect(
+        (await db.getVersionsByChart('chart-1', { includeTrashed: true })).map(
+          (version) => version.id,
+        ),
+      ).toEqual(['legacy-version', 'trashed-version']);
+      expect((await db.getAllVersions()).map((version) => version.id)).toEqual(['legacy-version']);
+      expect(await db.getVersion('trashed-version')).toBeUndefined();
+      expect(await db.getVersion('trashed-version', { includeTrashed: true })).toEqual(trashed);
     });
   });
 
