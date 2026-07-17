@@ -9,6 +9,8 @@ import { showContextMenu } from '../../src/ui/context-menu';
 import { showInlineEditor } from '../../src/ui/inline-editor';
 import { showManagerPicker } from '../../src/ui/manager-picker';
 import { showConfirmDialog } from '../../src/ui/confirm-dialog';
+import { showToast } from '../../src/ui/toast';
+import { announce } from '../../src/ui/announcer';
 
 vi.mock('../../src/ui/context-menu', () => ({
   showContextMenu: vi.fn(),
@@ -281,6 +283,46 @@ describe('createShowSingleCardMenu', () => {
 
     expect(deps.store.unpinTitle).toHaveBeenCalledWith('ic1');
     expect(deps.store.pinTitle).not.toHaveBeenCalled();
+  });
+
+  it('shows an error toast without announcing when the node was removed after the menu opened', () => {
+    const deps = makeDeps();
+    const removedTree: OrgNode = {
+      id: 'root', name: 'CEO', title: 'Chief Executive',
+    };
+    (deps.store.getTree as Mock).mockReturnValueOnce(makeTree()).mockReturnValue(removedTree);
+    (deps.store.pinTitle as Mock).mockImplementation(() => {
+      throw new Error('Node "ic1" not found');
+    });
+    const showMenu = createShowSingleCardMenu(deps);
+    const menuMock = captureMenuItems();
+
+    showMenu('ic1', new MouseEvent('contextmenu'));
+    const items = menuMock.mock.calls[0][0].items;
+    const pinItem = getItemByLabel(items, 'Pin title');
+
+    expect(() => pinItem!.action!()).not.toThrow();
+    expect(showToast).toHaveBeenCalledWith(en['footer.operation_failed'], 'error');
+    expect(announce).not.toHaveBeenCalled();
+  });
+
+  it('toggles the fresh pin state and announces success when the state changed after the menu opened', () => {
+    const deps = makeDeps();
+    const freshTree = makeTree();
+    freshTree.children![0].children![0].pinnedTitle = true;
+    (deps.store.getTree as Mock).mockReturnValueOnce(makeTree()).mockReturnValue(freshTree);
+    const showMenu = createShowSingleCardMenu(deps);
+    const menuMock = captureMenuItems();
+
+    showMenu('ic1', new MouseEvent('contextmenu'));
+    const items = menuMock.mock.calls[0][0].items;
+    const pinItem = getItemByLabel(items, 'Pin title');
+    pinItem!.action!();
+
+    expect(deps.store.unpinTitle).toHaveBeenCalledWith('ic1');
+    expect(deps.store.pinTitle).not.toHaveBeenCalled();
+    expect(announce).toHaveBeenCalledWith('Alice title unpinned');
+    expect(showToast).not.toHaveBeenCalled();
   });
 
   it('quick edit onSave omits title from updateNode when title is unchanged', () => {
