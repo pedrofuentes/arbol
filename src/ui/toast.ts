@@ -20,7 +20,6 @@ export function showToast(
     transform: 'translateX(-50%)',
     padding: '10px 20px',
     borderRadius: 'var(--radius-lg, 10px)',
-    zIndex: '10000',
     maxWidth: '400px',
     textAlign: 'center',
     fontSize: 'var(--text-base, 14px)',

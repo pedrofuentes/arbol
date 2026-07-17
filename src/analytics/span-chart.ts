@@ -194,7 +194,7 @@ export class SpanChart {
     tip.style.position = 'fixed';
     tip.style.display = 'none';
     tip.style.pointerEvents = 'none';
-    tip.style.zIndex = '9999';
+    tip.style.zIndex = 'var(--z-tooltip)';
     tip.style.backgroundColor = 'var(--bg-elevated)';
     tip.style.color = 'var(--text-primary)';
     tip.style.border = '1px solid var(--border-primary)';

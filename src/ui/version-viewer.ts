@@ -35,7 +35,7 @@ export function showVersionViewer(options: VersionViewerOptions): void {
     'top:8px',
     'left:50%',
     'transform:translateX(-50%)',
-    'z-index:100',
+    'z-index:var(--z-canvas-overlay)',
     'display:flex',
     'align-items:center',
     'gap:12px',

@@ -153,7 +153,7 @@ export class SunburstChart {
         'padding: 8px 12px',
         'font-size: 12px',
         'line-height: 1.4',
-        'z-index: 9999',
+        'z-index: var(--z-tooltip)',
         'max-width: 260px',
         'background: var(--bg-elevated)',
         'color: var(--text-primary)',

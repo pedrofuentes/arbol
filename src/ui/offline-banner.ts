@@ -43,7 +43,7 @@ function showOfflineBanner(container: HTMLElement): void {
     'top:var(--space-3)',
     'left:50%',
     'transform:translateX(-50%)',
-    'z-index:100',
+    'z-index:var(--z-canvas-overlay)',
     'display:flex',
     'align-items:center',
     'gap:var(--space-3)',

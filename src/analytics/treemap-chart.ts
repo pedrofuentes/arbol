@@ -116,7 +116,7 @@ export class TreemapChart {
     this.tooltip.style.position = 'fixed';
     this.tooltip.style.display = 'none';
     this.tooltip.style.pointerEvents = 'none';
-    this.tooltip.style.zIndex = '10000';
+    this.tooltip.style.zIndex = 'var(--z-tooltip)';
     this.tooltip.style.padding = '8px 12px';
     this.tooltip.style.borderRadius = 'var(--radius-md)';
     this.tooltip.style.backgroundColor = 'var(--bg-elevated)';

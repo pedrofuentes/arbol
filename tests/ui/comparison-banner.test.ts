@@ -95,7 +95,7 @@ describe('ComparisonBanner', () => {
       expect(style).toContain('position:absolute');
       expect(style).toContain('left:50%');
       expect(style).toContain('translateX(-50%)');
-      expect(style).toContain('z-index:100');
+      expect(style).toContain('z-index:var(--z-canvas-overlay)');
     });
 
     it('marks side-by-side mode so the surrounding layout can reserve its title band', () => {
