@@ -1,13 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import {
-  appendIconLabel,
-  createIcon,
-  isIconName,
-  setIcon,
-  type IconName,
-} from '../../src/ui/icon';
+import { appendIconLabel, createIcon, isIconName, setIcon, type IconName } from '../../src/ui/icon';
 
 const styles = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8');
 
