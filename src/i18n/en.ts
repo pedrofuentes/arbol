@@ -285,6 +285,8 @@ const en: Record<string, string> = {
   'announce.removed': '{name} removed',
   'announce.removed_with_org': '{name} and {count} people in their org removed',
   'announce.multi_removed': '{count} people removed',
+  'announce.title_pinned': '{name} title pinned',
+  'announce.title_unpinned': '{name} title unpinned',
   'announce.chart_switched': 'Switched to {name}',
   'announce.chart_saved': 'Chart saved',
   'announce.move_fallback_target': 'new manager',

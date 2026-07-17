@@ -90,7 +90,23 @@ export function createShowSingleCardMenu(
           label: node.pinnedTitle ? t('context_menu.unpin_title') : t('context_menu.pin_title'),
           icon: 'pin',
           action: () => {
-            setNodeTitlePinned(store, nodeId, !node.pinnedTitle);
+            try {
+              const fresh = findNodeById(store.getTree(), nodeId);
+              if (!fresh) {
+                showToast(t('footer.operation_failed'), 'error');
+                return;
+              }
+
+              const pinned = !fresh.pinnedTitle;
+              setNodeTitlePinned(store, nodeId, pinned);
+              announce(
+                t(pinned ? 'announce.title_pinned' : 'announce.title_unpinned', {
+                  name: fresh.name,
+                }),
+              );
+            } catch (e) {
+              showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
+            }
           },
         },
         {

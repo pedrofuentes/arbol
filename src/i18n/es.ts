@@ -233,6 +233,8 @@ const es: Record<string, string> = {
   'announce.removed': '{name} eliminado/a',
   'announce.removed_with_org': '{name} y {count} personas de su organización eliminados',
   'announce.multi_removed': '{count} personas eliminadas',
+  'announce.title_pinned': 'Cargo de {name} fijado',
+  'announce.title_unpinned': 'Cargo de {name} desfijado',
   'announce.chart_switched': 'Cambiado al organigrama {name}',
   'announce.chart_saved': 'Organigrama guardado',
   'announce.move_fallback_target': 'nuevo gerente',
