@@ -704,13 +704,7 @@ async function main(): Promise<void> {
           comparison.enterComparisonMode(version);
         },
         onRestore: async () => {
-          const shouldProceed = await handleBeforeSwitch();
-          if (!shouldProceed) return;
-          await chartStore.restoreVersion(version.id);
-          dismissVersionViewer();
-          chartEditor.setViewingVersion(null);
-          chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
-          rerender();
+          await chartEditor.restoreVersion(version);
         },
         onClose: () => {
           store.replaceTree(savedTree);

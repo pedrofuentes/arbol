@@ -13,7 +13,7 @@ import { generateId } from '../utils/id';
 import { EventEmitter } from '../utils/event-emitter';
 import { type IStorage, browserStorage } from '../utils/storage';
 import { flattenTree } from '../utils/tree';
-import { t } from '../i18n';
+import { getLocale, t } from '../i18n';
 import { compareTrees, getDiffStats } from '../utils/tree-diff';
 
 const DEFAULT_ROOT: OrgNode = {
@@ -457,9 +457,17 @@ export class ChartStore extends EventEmitter {
     return this.db.getVersion(id);
   }
 
-  async restoreVersion(versionId: string): Promise<OrgNode> {
+  async restoreVersion(versionId: string, currentTree?: OrgNode): Promise<OrgNode> {
     const version = await this.db.getVersion(versionId);
     if (!version) throw new Error(`Version not found: ${versionId}`);
+
+    if (currentTree && this.getEditsSinceLastVersion(currentTree) > 0) {
+      const name = t('chart_store.before_restore_version_name', {
+        name: version.name,
+        timestamp: new Date().toLocaleString(getLocale()),
+      });
+      await this.saveVersion(name, currentTree);
+    }
 
     this.lastSavedTree = JSON.stringify(version.tree);
     this.savedMutationVersion = null;

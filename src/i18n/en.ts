@@ -303,6 +303,10 @@ const en: Record<string, string> = {
   'dialog.switch_changes.message':
     'Your current chart is saved automatically. Switch to another chart?',
   'dialog.switch_changes.confirm': 'Switch chart',
+  'dialog.restore_version.title': 'Restore “{name}”?',
+  'dialog.restore_version.message':
+    'Your current chart will be saved first. Then “{name}” will become the current chart.',
+  'dialog.restore_version.confirm': 'Restore version',
   'dialog.remove_person.title': 'Remove Person',
   'dialog.remove_person.message': 'Remove "{name}"? You can undo this with Ctrl+Z.',
   'dialog.remove_person.confirm': 'Remove',
@@ -796,6 +800,7 @@ const en: Record<string, string> = {
   'chart_store.error_no_active': 'No active chart',
   'chart_store.error_version_name_empty': 'Version name cannot be empty',
   'chart_store.error_version_not_found': 'Version not found: {id}',
+  'chart_store.before_restore_version_name': 'Before restoring {name} · {timestamp}',
   'chart_store.error_import_invalid_tree': 'Imported file contains invalid tree data: {detail}',
   'chart_store.error_import_invalid_metadata': 'Imported file contains invalid metadata: {detail}',
 

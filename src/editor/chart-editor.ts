@@ -496,7 +496,7 @@ export class ChartEditor {
     actions.appendChild(compareBtn);
 
     const restoreBtn = this.createActionButton('restore', t('chart_editor.restore'));
-    restoreBtn.addEventListener('click', () => this.handleRestoreVersion(version.id));
+    restoreBtn.addEventListener('click', () => this.handleRestoreVersion(version));
     actions.appendChild(restoreBtn);
 
     const deleteBtn = this.createActionButton('remove', t('chart_editor.delete'), true);
@@ -554,7 +554,7 @@ export class ChartEditor {
   }
 
   async restoreVersion(version: VersionRecord): Promise<void> {
-    await this.handleRestoreVersion(version.id);
+    await this.handleRestoreVersion(version);
   }
 
   async deleteVersion(version: VersionRecord): Promise<void> {
@@ -732,12 +732,16 @@ export class ChartEditor {
     }
   }
 
-  private async handleRestoreVersion(versionId: string): Promise<void> {
-    const proceed = await this.onBeforeSwitch();
+  private async handleRestoreVersion(version: VersionRecord): Promise<void> {
+    const proceed = await showConfirmDialog({
+      title: t('dialog.restore_version.title', { name: version.name }),
+      message: t('dialog.restore_version.message', { name: version.name }),
+      confirmLabel: t('dialog.restore_version.confirm'),
+    });
     if (!proceed) return;
 
     try {
-      const tree = await this.chartStore.restoreVersion(versionId);
+      const tree = await this.chartStore.restoreVersion(version.id, this.getCurrentTree());
       this.onVersionRestore(tree);
       await this.refresh();
     } catch (err) {

@@ -250,6 +250,10 @@ const es: Record<string, string> = {
   'dialog.switch_changes.message':
     'El organigrama actual se guarda automáticamente. ¿Cambiar a otro organigrama?',
   'dialog.switch_changes.confirm': 'Cambiar de organigrama',
+  'dialog.restore_version.title': '¿Restaurar “{name}”?',
+  'dialog.restore_version.message':
+    'El organigrama actual se guardará primero. Después, “{name}” será el organigrama actual.',
+  'dialog.restore_version.confirm': 'Restaurar versión',
   'dialog.remove_person.title': 'Eliminar persona',
   'dialog.remove_person.message': '¿Eliminar "{name}"? Puede deshacer esto con Ctrl+Z.',
   'dialog.remove_person.confirm': 'Eliminar',
@@ -745,6 +749,7 @@ const es: Record<string, string> = {
   'chart_store.error_no_active': 'No hay organigrama activo',
   'chart_store.error_version_name_empty': 'El nombre de la versión no puede estar vacío',
   'chart_store.error_version_not_found': 'Versión no encontrada: {id}',
+  'chart_store.before_restore_version_name': 'Antes de restaurar {name} · {timestamp}',
   'chart_store.error_import_invalid_tree':
     'El archivo importado contiene datos de árbol no válidos: {detail}',
   'chart_store.error_import_invalid_metadata':
