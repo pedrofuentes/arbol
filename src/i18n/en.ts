@@ -600,7 +600,6 @@ const en: Record<string, string> = {
   'footer.fit_label': 'Fit',
   'footer.fit_aria': 'Fit chart to screen',
   'footer.fit_tooltip': 'Fit chart to screen',
-  'footer.reset_icon': '⟲ ',
   'footer.reset_label': 'Reset',
   'footer.reset_aria': 'Reset zoom',
   'footer.reset_tooltip': 'Reset zoom',

@@ -542,7 +542,6 @@ const es: Record<string, string> = {
   'footer.fit_label': 'Ajustar',
   'footer.fit_aria': 'Ajustar organigrama a la pantalla',
   'footer.fit_tooltip': 'Ajustar organigrama a la pantalla',
-  'footer.reset_icon': '⟲ ',
   'footer.reset_label': 'Restablecer',
   'footer.reset_aria': 'Restablecer zoom',
   'footer.reset_tooltip': 'Restablecer zoom',

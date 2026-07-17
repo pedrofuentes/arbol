@@ -312,10 +312,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
   const resetZoomBtn = document.createElement('button');
   resetZoomBtn.className = 'footer-btn';
   resetZoomBtn.dataset.action = 'reset-zoom';
-  const resetIcon = document.createElement('span');
-  resetIcon.setAttribute('aria-hidden', 'true');
-  resetIcon.textContent = t('footer.reset_icon');
-  resetZoomBtn.appendChild(resetIcon);
+  resetZoomBtn.appendChild(createIcon('reset'));
   resetZoomBtn.appendChild(document.createTextNode(t('footer.reset_label')));
   resetZoomBtn.setAttribute('aria-label', t('footer.reset_aria'));
   resetZoomBtn.setAttribute('data-tooltip', t('footer.reset_tooltip'));
