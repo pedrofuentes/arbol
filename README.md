@@ -16,7 +16,7 @@ An interactive org chart editor for the browser — manage multiple org charts w
 - **Chart name in header** — editable name with dirty-state indicator (●) and quick save button (💾)
 - **IndexedDB storage** — org data stored in IndexedDB for capacity across multiple charts and versions
 - **Import creates or replaces** — importing CSV/JSON or re-importing `.arbol.json` ChartBundle exports asks whether to create a new chart or replace the current one
-- **Unsaved-changes warnings** — switching charts or restoring versions warns if the current tree has unsaved changes
+- **Autosave and restore safety** — changes save automatically, and restoring a version first creates an automatic safety version when needed
 - **Accessible org chart** — full keyboard navigation (arrow keys, Enter, Space), ARIA tree semantics, screen reader announcements
 - **Mobile responsive** — collapsible sidebar on tablet/phone, touch-friendly 44px targets, works at 200% zoom
 - **i18n ready** — translation infrastructure with 1,180+ keys, Spanish locale, RTL-ready CSS logical properties
