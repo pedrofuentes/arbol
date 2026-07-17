@@ -233,11 +233,20 @@ describe('InlineEditor', () => {
     expect(container.style.zIndex).toBe('var(--z-menu)');
   });
 
+  it('uses shared non-modal panel chrome', () => {
+    showInlineEditor(defaultOptions());
+    const container = document.querySelector<HTMLElement>('[role="dialog"]')!;
+
+    expect(container.classList.contains('dialog-panel')).toBe(true);
+    expect(container.classList.contains('inline-editor')).toBe(true);
+    expect(container.hasAttribute('aria-modal')).toBe(false);
+  });
+
   it('name input is bold', () => {
     showInlineEditor(defaultOptions());
 
     const nameInput = document.querySelector('input[aria-label="Name"]') as HTMLInputElement;
-    expect(nameInput.style.fontWeight).toBe('bold');
+    expect(nameInput.classList.contains('inline-editor-name')).toBe(true);
   });
 
   it('dismissInlineEditor is safe to call when no editor is open', () => {
@@ -253,12 +262,10 @@ describe('InlineEditor', () => {
     const saveBtn = buttons[0] as HTMLButtonElement;
     const cancelBtn = buttons[1] as HTMLButtonElement;
     expect(saveBtn.textContent).toBe('Save');
-    expect(saveBtn.className).toBe('btn btn-primary');
-    expect(saveBtn.style.fontSize).toBe('11px');
+    expect(saveBtn.className).toBe('btn btn-primary inline-editor-action');
 
     expect(cancelBtn.textContent).toBe('Cancel');
-    expect(cancelBtn.className).toBe('btn btn-secondary');
-    expect(cancelBtn.style.fontSize).toBe('11px');
+    expect(cancelBtn.className).toBe('btn btn-secondary inline-editor-action');
   });
 
   it('Save button triggers onSave with current values', () => {

@@ -61,7 +61,9 @@ describe('ContextMenu', () => {
     });
 
     it('renders swatch circle when swatch color is provided', () => {
-      const items: ContextMenuItem[] = [{ label: 'Engineering', swatch: '#3b82f6', action: vi.fn() }];
+      const items: ContextMenuItem[] = [
+        { label: 'Engineering', swatch: '#3b82f6', action: vi.fn() },
+      ];
       showContextMenu({ x: 100, y: 100, items });
       const btn = getMenuItems()[0];
       const swatchEl = btn.querySelector('span[aria-hidden="true"]');
@@ -72,7 +74,9 @@ describe('ContextMenu', () => {
     });
 
     it('renders both icon and swatch when both provided', () => {
-      const items: ContextMenuItem[] = [{ label: 'Test', icon: '✓', swatch: '#ff0000', action: vi.fn() }];
+      const items: ContextMenuItem[] = [
+        { label: 'Test', icon: '✓', swatch: '#ff0000', action: vi.fn() },
+      ];
       showContextMenu({ x: 100, y: 100, items });
       const btn = getMenuItems()[0];
       const spans = btn.querySelectorAll('span');
@@ -82,10 +86,14 @@ describe('ContextMenu', () => {
       expect(spans[2].textContent).toBe('Test');
     });
 
-    it('uses position:fixed on the menu element', () => {
+    it('uses shared panel chrome while retaining dynamic positioning', () => {
       showContextMenu({ x: 100, y: 100, items: makeItems() });
       const menu = getMenu();
-      expect(menu!.getAttribute('style')).toContain('position:fixed');
+      expect(menu!.classList.contains('dialog-panel')).toBe(true);
+      expect(menu!.classList.contains('context-menu')).toBe(true);
+      expect(menu!.style.left).toBe('100px');
+      expect(menu!.style.top).toBe('100px');
+      expect(menu!.querySelector('style')).toBeNull();
     });
   });
 
@@ -93,13 +101,13 @@ describe('ContextMenu', () => {
     it('applies danger color to danger items', () => {
       showContextMenu({ x: 100, y: 100, items: makeItems() });
       const items = getMenuItems();
-      expect(items[2].style.color).toBe('var(--danger)');
+      expect(items[2].classList.contains('context-menu-item--danger')).toBe(true);
     });
 
     it('does not apply danger color to normal items', () => {
       showContextMenu({ x: 100, y: 100, items: makeItems() });
       const items = getMenuItems();
-      expect(items[0].style.color).not.toBe('var(--danger)');
+      expect(items[0].classList.contains('context-menu-item--danger')).toBe(false);
     });
   });
 
@@ -115,10 +123,10 @@ describe('ContextMenu', () => {
       expect(btns[1].disabled).toBe(false);
     });
 
-    it('applies reduced opacity to disabled items', () => {
+    it('uses the disabled state for reduced-opacity styling', () => {
       const items: ContextMenuItem[] = [{ label: 'Disabled', disabled: true, action: vi.fn() }];
       showContextMenu({ x: 100, y: 100, items });
-      expect(getMenuItems()[0].style.opacity).toBe('0.4');
+      expect(getMenuItems()[0].disabled).toBe(true);
     });
 
     it('does not fire action on disabled item click', () => {
@@ -260,26 +268,15 @@ describe('ContextMenu', () => {
     it('positions menu at the given coordinates', () => {
       showContextMenu({ x: 50, y: 60, items: makeItems() });
       const menu = getMenu();
-      const style = menu!.getAttribute('style')!;
-      expect(style).toContain('left:50px');
-      expect(style).toContain('top:60px');
+      expect(menu!.style.left).toBe('50px');
+      expect(menu!.style.top).toBe('60px');
     });
   });
 
   describe('styling', () => {
-    it('uses design system variables for background and border', () => {
+    it('uses shared class-based background, border, and animation chrome', () => {
       showContextMenu({ x: 100, y: 100, items: makeItems() });
-      const menu = getMenu();
-      const style = menu!.getAttribute('style')!;
-      expect(style).toContain('--bg-elevated');
-      expect(style).toContain('--border-default');
-      expect(style).toContain('--radius-md');
-    });
-
-    it('includes animation on menu', () => {
-      showContextMenu({ x: 100, y: 100, items: makeItems() });
-      const menu = getMenu();
-      expect(menu!.getAttribute('style')).toContain('contextMenuIn');
+      expect(getMenu()!.className).toContain('panel-chrome dialog-panel context-menu');
     });
   });
 
@@ -335,7 +332,10 @@ describe('ContextMenu', () => {
 
     it('renders submenu items with icons', () => {
       const items: ContextMenuItem[] = [
-        { label: 'Category', submenu: [{ label: 'Engineering', icon: 'settings', action: vi.fn() }] },
+        {
+          label: 'Category',
+          submenu: [{ label: 'Engineering', icon: 'settings', action: vi.fn() }],
+        },
       ];
       showContextMenu({ x: 100, y: 100, items });
       const btn = getMenuItems()[0];

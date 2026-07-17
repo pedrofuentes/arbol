@@ -53,6 +53,10 @@ describe('OfflineBanner', () => {
     expect(banner!.getAttribute('role')).toBe('status');
     expect(banner!.getAttribute('aria-live')).toBe('polite');
     expect(getBannerText()!.textContent).toBe('You are offline — changes are saved locally.');
+    expect(banner!.classList.contains('ui-banner')).toBe(true);
+    expect(banner!.classList.contains('offline-banner')).toBe(true);
+    expect(banner!.classList.contains('ui-banner--passive')).toBe(true);
+    expect(banner!.querySelector('style')).toBeNull();
   });
 
   it('hides the banner on online event', () => {

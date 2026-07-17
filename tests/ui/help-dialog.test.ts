@@ -42,6 +42,16 @@ describe('showHelpDialog', () => {
     expect(dialog!.getAttribute('aria-modal')).toBe('true');
   });
 
+  it('uses shared overlay and panel classes without runtime style injection', () => {
+    showHelpDialog();
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"]')!;
+
+    expect(dialog.classList.contains('dialog-panel')).toBe(true);
+    expect(dialog.classList.contains('help-dialog')).toBe(true);
+    expect(dialog.parentElement?.classList.contains('dialog-overlay')).toBe(true);
+    expect(dialog.querySelector('style')).toBeNull();
+  });
+
   it('contains keyboard shortcuts section', () => {
     showHelpDialog();
     expect(document.body.textContent).toContain('Keyboard Shortcuts');

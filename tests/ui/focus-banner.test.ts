@@ -89,19 +89,12 @@ describe('FocusBanner', () => {
   });
 
   describe('styling', () => {
-    it('uses CSS variables for theming', () => {
+    it('uses the shared class-based banner pattern', () => {
       showFocusBanner({ name: 'Ivan', container, onExit: vi.fn() });
       const banner = getBanner()!;
-      const style = banner.getAttribute('style') ?? '';
-      expect(style).toContain('var(--bg-elevated)');
-      expect(style).toContain('var(--accent)');
-    });
-
-    it('includes animation keyframe', () => {
-      showFocusBanner({ name: 'Judy', container, onExit: vi.fn() });
-      const styleEl = getBanner()!.querySelector('style');
-      expect(styleEl).not.toBeNull();
-      expect(styleEl!.textContent).toContain('focusBannerIn');
+      expect(banner.classList.contains('ui-banner')).toBe(true);
+      expect(banner.classList.contains('focus-banner')).toBe(true);
+      expect(banner.querySelector('style')).toBeNull();
     });
   });
 
@@ -109,8 +102,9 @@ describe('FocusBanner', () => {
     it('exit button has descriptive aria-label', () => {
       showFocusBanner({ name: 'Eve', container, onExit: vi.fn() });
       const exitBtn = getExitButton();
-      expect(exitBtn!.getAttribute('aria-label')).toBe('Exit focus mode and show full organization chart');
+      expect(exitBtn!.getAttribute('aria-label')).toBe(
+        'Exit focus mode and show full organization chart',
+      );
     });
   });
-
 });
