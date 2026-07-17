@@ -1,13 +1,16 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { globSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const repoRoot = fileURLToPath(new URL('../', import.meta.url));
+
 function readSource(relativePath: string): string {
-  return readFileSync(fileURLToPath(new URL(relativePath, import.meta.url)), 'utf8');
+  return readFileSync(resolve(repoRoot, relativePath), 'utf8');
 }
 
-const css = readSource('../src/style.css');
+const css = readSource('src/style.css');
 
 describe('z-index design tokens', () => {
   it('uses a semantic token for every CSS z-index declaration', () => {
@@ -36,26 +39,17 @@ describe('z-index design tokens', () => {
     expect(value('modal')).toBeLessThan(value('dialog'));
     expect(value('dialog')).toBeLessThan(value('menu'));
     expect(value('menu')).toBeLessThan(value('menu-submenu'));
-    expect(value('menu-submenu')).toBeLessThan(value('toast'));
-    expect(value('toast')).toBeLessThan(value('blocking'));
-    expect(value('blocking')).toBeLessThan(value('skip-link'));
+    expect(value('menu-submenu')).toBeLessThan(value('blocking'));
+    expect(value('blocking')).toBeLessThan(value('toast'));
+    expect(value('toast')).toBeLessThan(value('skip-link'));
   });
 
-  it('uses semantic z-index tokens in inline UI styles', () => {
-    const inlineStyleSources = [
-      '../src/ui/dialog-utils.ts',
-      '../src/ui/add-popover.ts',
-      '../src/ui/inline-editor.ts',
-      '../src/ui/context-menu.ts',
-      '../src/ui/comparison-banner.ts',
-      '../src/ui/focus-banner.ts',
-      '../src/ui/offline-banner.ts',
-      '../src/ui/version-viewer.ts',
-    ].map(readSource);
-    const hardcoded = inlineStyleSources.flatMap((source) => [
-      ...(source.match(/z-index\s*:\s*\d+/g) ?? []),
-      ...(source.match(/style\.zIndex\s*=\s*['"]\d+/g) ?? []),
-      ...(source.match(/createOverlay\(zIndex:\s*number\s*=\s*\d+/g) ?? []),
+  it('uses semantic z-index tokens in all TypeScript styles', () => {
+    const typescriptSources = globSync('src/**/*.ts', { cwd: repoRoot }).map(readSource);
+    const hardcoded = typescriptSources.flatMap((source) => [
+      ...(source.match(/\bstyle\.zIndex\s*=\s*['"]\d+['"]/g) ?? []),
+      ...(source.match(/\bzIndex\s*:\s*(?:['"]\d+['"]|\d+\b)/g) ?? []),
+      ...(source.match(/\bz-index\s*:\s*\d+\b/g) ?? []),
     ]);
 
     expect(hardcoded).toEqual([]);
