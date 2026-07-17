@@ -51,11 +51,11 @@ describe('dialog-utils', () => {
       }
     });
 
-    it('uses default z-index of 1000', () => {
+    it('uses the default dialog z-index token', () => {
       const spy = spyCssText();
       try {
         createOverlay();
-        expect(spy.calls[0]).toContain('z-index:1000');
+        expect(spy.calls[0]).toContain('z-index:var(--z-dialog)');
       } finally {
         spy.restore();
       }

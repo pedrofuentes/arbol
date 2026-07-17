@@ -226,11 +226,11 @@ describe('InlineEditor', () => {
     expect(onCancel).not.toHaveBeenCalled();
   });
 
-  it('container has z-index 1001', () => {
+  it('container uses the menu z-index token', () => {
     showInlineEditor(defaultOptions());
 
     const container = document.body.lastElementChild as HTMLElement;
-    expect(container.style.zIndex).toBe('1001');
+    expect(container.style.zIndex).toBe('var(--z-menu)');
   });
 
   it('name input is bold', () => {
