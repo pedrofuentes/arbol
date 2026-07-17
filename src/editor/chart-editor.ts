@@ -1,4 +1,13 @@
-import type { ChartRecord, VersionRecord, OrgNode, ColorCategory, LevelMapping, LevelDisplayMode, CategoryPreset, LevelMappingPreset } from '../types';
+import type {
+  ChartRecord,
+  VersionRecord,
+  OrgNode,
+  ColorCategory,
+  LevelMapping,
+  LevelDisplayMode,
+  CategoryPreset,
+  LevelMappingPreset,
+} from '../types';
 import type { ChartStore } from '../store/chart-store';
 import { showConfirmDialog } from '../ui/confirm-dialog';
 import { showInputDialog } from '../ui/input-dialog';
@@ -30,7 +39,8 @@ export interface ChartEditorOptions {
 }
 
 const INLINE_BTN_EXTRA = 'font-size:10px;padding:3px 8px;';
-const ACTION_BTN_STYLE = 'font-size:14px;padding:4px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;line-height:1;';
+const ACTION_BTN_STYLE =
+  'font-size:14px;padding:4px;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;line-height:1;';
 
 const ERROR_TIMEOUT_MS = 3000;
 
@@ -239,7 +249,11 @@ export class ChartEditor {
     }
   }
 
-  private createChartItem(chart: ChartRecord, isActive: boolean, versionCount: number): HTMLDivElement {
+  private createChartItem(
+    chart: ChartRecord,
+    isActive: boolean,
+    versionCount: number,
+  ): HTMLDivElement {
     const item = document.createElement('div');
     item.className = 'chart-item' + (isActive ? ' active' : '');
     item.setAttribute('role', 'listitem');
@@ -285,9 +299,8 @@ export class ChartEditor {
     const metaEl = document.createElement('div');
     metaEl.className = 'chart-item-meta';
     const peopleCount = flattenTree(chart.workingTree).length;
-    const vSuffix = versionCount === 1
-      ? t('chart_editor.version_suffix')
-      : t('chart_editor.versions_suffix');
+    const vSuffix =
+      versionCount === 1 ? t('chart_editor.version_suffix') : t('chart_editor.versions_suffix');
     metaEl.textContent = `${peopleCount} ${t('chart_editor.people_suffix')} · ${versionCount} ${vSuffix}`;
     infoEl.appendChild(metaEl);
 
@@ -398,7 +411,8 @@ export class ChartEditor {
 
     const dateEl = document.createElement('div');
     dateEl.className = 'version-item-date';
-    dateEl.textContent = t('chart_editor.saved_prefix') + new Date(version.createdAt).toLocaleString(getLocale());
+    dateEl.textContent =
+      t('chart_editor.saved_prefix') + new Date(version.createdAt).toLocaleString(getLocale());
     infoEl.appendChild(dateEl);
 
     item.appendChild(infoEl);
@@ -449,6 +463,38 @@ export class ChartEditor {
     return btn;
   }
 
+  async renameActiveChart(chart: ChartRecord): Promise<void> {
+    await this.handleRenameChart(chart);
+  }
+
+  async duplicateActiveChart(chart: ChartRecord): Promise<void> {
+    await this.handleDuplicateChart(chart);
+  }
+
+  async exportActiveChart(chart: ChartRecord): Promise<void> {
+    await this.handleExportChart(chart);
+  }
+
+  async deleteActiveChart(chart: ChartRecord): Promise<void> {
+    await this.handleDeleteChart(chart);
+  }
+
+  viewVersion(version: VersionRecord): void {
+    this.onVersionView(version);
+  }
+
+  compareVersion(version: VersionRecord): void {
+    this.onVersionCompare(version);
+  }
+
+  async restoreVersion(version: VersionRecord): Promise<void> {
+    await this.handleRestoreVersion(version.id);
+  }
+
+  async deleteVersion(version: VersionRecord): Promise<void> {
+    await this.handleDeleteVersion(version);
+  }
+
   // ── Handlers: Charts ───────────────────────────────────
 
   private async handleCreateChart(): Promise<void> {
@@ -458,9 +504,7 @@ export class ChartEditor {
     const result = await showCreateChartDialog({
       categoryPresets: this.categoryPresetStore?.getPresets().map((p) => p.name) ?? [],
       levelMappingPresets: this.levelPresetStore?.getPresets().map((p) => p.name) ?? [],
-      charts: charts
-        .filter((c) => c.id !== activeId)
-        .map((c) => ({ id: c.id, name: c.name })),
+      charts: charts.filter((c) => c.id !== activeId).map((c) => ({ id: c.id, name: c.name })),
     });
 
     if (!result) return;
@@ -489,7 +533,9 @@ export class ChartEditor {
       } else if (result.levelMappingSource.type === 'chart') {
         const sourceChart = charts.find((c) => c.id === result.levelMappingSource.id);
         if (sourceChart) {
-          levelMappings = sourceChart.levelMappings ? structuredClone(sourceChart.levelMappings) : undefined;
+          levelMappings = sourceChart.levelMappings
+            ? structuredClone(sourceChart.levelMappings)
+            : undefined;
           levelDisplayMode = sourceChart.levelDisplayMode;
         }
       }

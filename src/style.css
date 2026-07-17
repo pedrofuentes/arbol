@@ -1386,7 +1386,8 @@ textarea:focus-visible {
   border-radius: var(--radius-md);
   z-index: 1;
 }
-.chart-item:hover .chart-item-actions {
+.chart-item:hover .chart-item-actions,
+.chart-item:focus-within .chart-item-actions {
   display: flex;
 }
 
@@ -1446,7 +1447,8 @@ textarea:focus-visible {
   border-radius: var(--radius-md);
   z-index: 1;
 }
-.version-item:hover .version-item-actions {
+.version-item:hover .version-item-actions,
+.version-item:focus-within .version-item-actions {
   display: flex;
 }
 .version-item-actions .btn {
@@ -3291,6 +3293,12 @@ textarea:focus-visible {
   .footer-btn {
     min-height: 44px;
     padding: 0.5rem;
+  }
+
+  .chart-item-actions .btn,
+  .version-item-actions .btn {
+    min-width: 44px;
+    min-height: 44px;
   }
 
   /* Header: allow wrapping, hide zoom controls (use pinch on touch) */
