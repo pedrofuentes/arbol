@@ -45,9 +45,6 @@ const en: Record<string, string> = {
 
   // ─── Tabs ──────────────────────────────────────────────────────────
   'tabs.charts': 'Charts',
-  'tabs.people': 'People',
-  'tabs.import': 'Import',
-  'tabs.settings': 'Settings',
   'tabs.aria': 'Editor tabs',
   'analytics.drawer_toggle': 'Analytics',
   'analytics.drawer_toggle_tooltip': 'Toggle analytics panel (Ctrl+Shift+A)',
@@ -421,13 +418,6 @@ const en: Record<string, string> = {
   'version_viewer.restore': 'Restore',
   'version_viewer.close': '✕ Close',
 
-  // ─── Welcome Banner ────────────────────────────────────────────────
-  'welcome.message':
-    'Welcome to Arbol! This is a sample chart \u2014 tap, click, or right-click any card to edit, add, or move people. Click \u2753 for help.',
-  'welcome.dismiss': 'Got it \u2014 click \u2753 anytime for help',
-  'welcome.aria': 'Welcome guide',
-  'welcome.dismiss_aria': 'Dismiss welcome message',
-
   // ─── Chart Editor ──────────────────────────────────────────────────
   'chart_editor.new_chart_placeholder': 'New chart name',
   'chart_editor.add_chart': '+',
@@ -595,19 +585,6 @@ const en: Record<string, string> = {
   'preset_creator.error_columns_required': 'Name, Title, and Reports To columns are required.',
   'preset_creator.error_id_required':
     'ID column is required when parent reference type is "By ID".',
-
-  // ─── Import Editor ─────────────────────────────────────────────────
-  'import_editor.preset_heading': 'Mapping Preset',
-  'import_editor.no_presets': 'No saved presets.',
-  'import_editor.export_btn': 'Export',
-  'import_editor.paste_preset_placeholder': 'Paste preset JSON here...',
-  'import_editor.from_file_heading': 'From File',
-  'import_editor.browse_label': 'browse',
-  'import_editor.paste_heading': 'Or Paste Data',
-  'import_editor.paste_placeholder': 'Paste JSON or CSV here...',
-  'import_editor.parse_preview_btn': 'Parse & Preview',
-  'import_editor.apply_to_chart': 'Apply to Chart',
-  'import_editor.text_normalization': 'Text Normalization',
 
   // ─── Footer────────────────────────────────────────────────────────
   'footer.version': 'v{version}',
@@ -1315,16 +1292,6 @@ const en: Record<string, string> = {
   'settings_modal.tab.categories': 'Categories',
   'settings_modal.tab.level_mapping': 'Level Mapping',
   'settings_modal.tab.backup': 'Backup',
-  'utilities.heading': 'Text Normalization',
-  'utilities.desc': 'Normalize the text casing of all names and titles in the current org chart.',
-  'utilities.name_format': 'Name Format',
-  'utilities.title_format': 'Title Format',
-  'utilities.apply_btn': 'Apply to Org Chart',
-  'utilities.success': '\u2713 Org chart text normalized successfully.',
-  'utilities.norm_as_is': 'As is (no change)',
-  'utilities.norm_title_case': 'Title Case',
-  'utilities.norm_uppercase': 'UPPERCASE',
-  'utilities.norm_lowercase': 'lowercase',
   'backup.create_btn': '\ud83d\udcbe Create Backup',
   'backup.backup_failed': 'Backup failed: {message}',
   'backup.restore_btn': '\ud83d\udcc2 Restore',

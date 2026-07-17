@@ -45,9 +45,6 @@ const es: Record<string, string> = {
 
   // ─── Tabs ──────────────────────────────────────────────────────────
   'tabs.charts': 'Organigramas',
-  'tabs.people': 'Personas',
-  'tabs.import': 'Importar',
-  'tabs.settings': 'Configuración',
   'tabs.aria': 'Pestañas del editor',
   'analytics.drawer_toggle': 'Analíticas',
   'analytics.drawer_toggle_tooltip': 'Alternar panel de analíticas (Ctrl+Shift+A)',
@@ -361,12 +358,6 @@ const es: Record<string, string> = {
   'version_viewer.restore': 'Restaurar',
   'version_viewer.close': 'Cerrar',
 
-  // ─── Welcome Banner ────────────────────────────────────────────────
-  'welcome.message': 'Comienza importando datos o agrega personas manualmente.',
-  'welcome.dismiss': 'Entendido',
-  'welcome.aria': 'Guía de bienvenida',
-  'welcome.dismiss_aria': 'Cerrar banner de bienvenida',
-
   // ─── Chart Editor ──────────────────────────────────────────────────
   'chart_editor.new_chart_placeholder': 'Nombre del nuevo organigrama',
   'chart_editor.add_chart': '+',
@@ -536,19 +527,6 @@ const es: Record<string, string> = {
     'Las columnas de Nombre, Cargo y Reporta a son obligatorias.',
   'preset_creator.error_id_required':
     'La columna de ID es obligatoria cuando el tipo de referencia es "Por ID".',
-
-  // ─── Import Editor ─────────────────────────────────────────────────
-  'import_editor.preset_heading': 'Preajuste de mapeo',
-  'import_editor.no_presets': 'No hay preajustes guardados.',
-  'import_editor.export_btn': 'Exportar',
-  'import_editor.paste_preset_placeholder': 'Pega el JSON del preajuste aquí…',
-  'import_editor.from_file_heading': 'Desde archivo',
-  'import_editor.browse_label': 'examinar',
-  'import_editor.paste_heading': 'O pegar datos',
-  'import_editor.paste_placeholder': 'Pega JSON o CSV aquí…',
-  'import_editor.parse_preview_btn': 'Analizar y vista previa',
-  'import_editor.apply_to_chart': 'Aplicar al organigrama',
-  'import_editor.text_normalization': 'Normalización de texto',
 
   // ─── Footer────────────────────────────────────────────────────────
   'footer.version': 'v{version}',
@@ -1273,17 +1251,6 @@ const es: Record<string, string> = {
   'settings_modal.tab.categories': 'Categorías',
   'settings_modal.tab.level_mapping': 'Mapeo de niveles',
   'settings_modal.tab.backup': 'Respaldo',
-  'utilities.heading': 'Normalización de texto',
-  'utilities.desc':
-    'Normalice el formato de texto de todos los nombres y cargos en el organigrama actual.',
-  'utilities.name_format': 'Formato de nombre',
-  'utilities.title_format': 'Formato de cargo',
-  'utilities.apply_btn': 'Aplicar al organigrama',
-  'utilities.success': '\u2713 Org chart text normalized successfully.',
-  'utilities.norm_as_is': 'Tal cual (sin cambios)',
-  'utilities.norm_title_case': 'Tipo Título',
-  'utilities.norm_uppercase': 'MAYÚSCULAS',
-  'utilities.norm_lowercase': 'minúsculas',
   'backup.create_btn': '💾 Crear respaldo',
   'backup.backup_failed': 'Error al crear respaldo: {message}',
   'backup.restore_btn': '📂 Restaurar',

@@ -20,7 +20,6 @@ describe('help-and-docs', () => {
     it('advisor', () => { expect(en['help.chart_works.advisors_desc']).toContain('Chief of Staff'); });
   });
   describe('5c', () => {
-    it('welcome', () => { expect(en['welcome.message']).toContain('sample chart'); });
     it('ref_help', () => { expect(en['column_mapper.parent_ref_help']).toContain('By Name'); });
   });
   describe('5d', () => {

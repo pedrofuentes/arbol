@@ -14,39 +14,6 @@ const FILES_AND_FORBIDDEN_PATTERNS: Array<{
   patterns: RegExp[];
 }> = [
   {
-    file: 'src/editor/import-editor.ts',
-    patterns: [
-      /'Mapping preset'/,
-      /'\+ New'/,
-      /'📂 Import'/,
-      /'💾 Export All'/,
-      /'Import Presets'/,
-      /'Or load file'/,
-      /'Please paste JSON or load a file first\.'/,
-      /'Invalid JSON'/,
-      /'No presets to export'/,
-      /'Upload org chart file'/,
-      /'Supports \.json/,
-      /'Paste JSON or CSV data'/,
-      /Drop file or /,
-      /preset\$\{count === 1/,
-      /version\$\{versionCount === 1/,
-      /` people from \$\{result\.format\}`/,
-    ],
-  },
-  {
-    file: 'src/editor/utilities-editor.ts',
-    patterns: [
-      /label: 'As is \(no change\)'/,
-      /label: 'Title Case'/,
-      /label: 'UPPERCASE'/,
-      /label: 'lowercase'/,
-      /'Normalize the text casing/,
-      /createNormDropdown\('Name Format'\)/,
-      /createNormDropdown\('Title Format'\)/,
-    ],
-  },
-  {
     file: 'src/ui/help-dialog.ts',
     patterns: [
       /title: 'Clear All Data'/,
