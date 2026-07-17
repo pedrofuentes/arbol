@@ -833,9 +833,7 @@ const es: Record<string, string> = {
   'welcome.description': 'Cree y explore su organigrama, directamente en su navegador.',
   'welcome.import_hint': '¿Ya tiene datos? Use Importar en la barra de herramientas.',
   'welcome.load_sample': 'Cargar organigrama de ejemplo',
-  'welcome.load_sample_aria': 'Cargar el organigrama de ejemplo',
   'welcome.start_empty': 'Empezar vacío',
-  'welcome.start_empty_aria': 'Empezar con un organigrama vacío',
 
   // Help: Getting Started
   'help.getting_started.title': 'Primeros pasos',

@@ -875,9 +875,7 @@ const en: Record<string, string> = {
   'welcome.description': 'Build and explore your org chart, entirely in your browser.',
   'welcome.import_hint': 'Already have org data? Use Import in the toolbar to bring it in.',
   'welcome.load_sample': 'Load sample org chart',
-  'welcome.load_sample_aria': 'Load the sample organization chart',
   'welcome.start_empty': 'Start empty',
-  'welcome.start_empty_aria': 'Start with an empty organization chart',
 
   // Help: Getting Started
   'help.getting_started.title': 'Getting Started',

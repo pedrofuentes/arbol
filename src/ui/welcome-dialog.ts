@@ -36,14 +36,12 @@ export function showWelcomeDialog(onLoadSample: () => void): void {
   const sampleButton = document.createElement('button');
   sampleButton.type = 'button';
   sampleButton.className = 'btn btn-primary';
-  sampleButton.setAttribute('aria-label', t('welcome.load_sample_aria'));
   appendIconLabel(sampleButton, 'tree', t('welcome.load_sample'));
   actions.appendChild(sampleButton);
 
   const emptyButton = document.createElement('button');
   emptyButton.type = 'button';
   emptyButton.className = 'btn btn-secondary';
-  emptyButton.setAttribute('aria-label', t('welcome.start_empty_aria'));
   appendIconLabel(emptyButton, 'add', t('welcome.start_empty'));
   actions.appendChild(emptyButton);
 
