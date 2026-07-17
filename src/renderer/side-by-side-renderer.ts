@@ -210,7 +210,8 @@ export class SideBySideRenderer {
     const labelEl = document.createElement('div');
     labelEl.dataset.testid = `side-by-side-${side}-label`;
     Object.assign(labelEl.style, {
-      padding: '8px 12px',
+      padding: 'var(--space-2) var(--space-3)',
+      paddingBlockStart: 'var(--space-8)',
       fontFamily: 'var(--font-sans)',
       fontSize: '13px',
       fontWeight: '600',

@@ -95,6 +95,25 @@ describe('SideBySideRenderer', () => {
     expect(rightLabel!.textContent).toBe('Version B');
   });
 
+  it('reserves a banner row above both pane titles', () => {
+    renderer = new SideBySideRenderer({
+      container,
+      rendererOptions: makeBaseOptions(),
+      oldLabel: 'Version A',
+      newLabel: 'Version B',
+    });
+
+    const leftLabel = container.querySelector(
+      '[data-testid="side-by-side-left-label"]',
+    ) as HTMLElement;
+    const rightLabel = container.querySelector(
+      '[data-testid="side-by-side-right-label"]',
+    ) as HTMLElement;
+
+    expect(leftLabel.style.paddingBlockStart).toBe('var(--space-8)');
+    expect(rightLabel.style.paddingBlockStart).toBe('var(--space-8)');
+  });
+
   it('creates two SVG elements for charts', () => {
     renderer = new SideBySideRenderer({
       container,

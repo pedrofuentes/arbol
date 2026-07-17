@@ -31,6 +31,7 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   const banner = document.createElement('div');
   banner.setAttribute('role', 'status');
   banner.setAttribute('data-testid', 'comparison-banner');
+  banner.setAttribute('data-view-mode', options.viewMode);
 
   const bannerStyles = [
     'position:absolute',

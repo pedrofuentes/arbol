@@ -42,7 +42,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
   // Footer: Status area (left side)
   const footerLeft = document.createElement('div');
   footerLeft.className = 'footer-left';
-  footerLeft.style.cssText = 'display:flex;align-items:center;gap:8px;margin-right:auto;';
+  footerLeft.style.cssText = 'display:flex;align-items:center;gap:8px;margin-inline-end:auto;';
   footer.appendChild(footerLeft);
 
   const versionLabel = document.createElement('span');
@@ -54,6 +54,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
   footerLeft.appendChild(versionLabel);
 
   const versionSeparator = document.createElement('span');
+  versionSeparator.className = 'footer-version-separator';
   versionSeparator.style.cssText =
     'font-size:11px;color:var(--text-tertiary);font-family:var(--font-sans);';
   versionSeparator.textContent = t('footer.separator').trim();
@@ -68,6 +69,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
 
   // Save indicator — flashes briefly when settings are persisted
   const saveIndicator = document.createElement('span');
+  saveIndicator.className = 'footer-save-indicator';
   saveIndicator.style.cssText =
     'font-size:10px;color:var(--accent);font-family:var(--font-sans);font-weight:600;' +
     'opacity:0;transition:opacity 200ms ease;';
@@ -165,6 +167,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
 
   // Zoom indicator (will be appended to footer right, after Reset button)
   const zoomIndicator = document.createElement('span');
+  zoomIndicator.className = 'footer-zoom-indicator';
   zoomIndicator.style.cssText =
     'font-size:11px;color:var(--text-tertiary);font-family:var(--font-mono);min-width:36px;text-align:end;';
 
@@ -182,6 +185,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
 
   // Footer: Buttons (right side)
   const footerRight = document.createElement('div');
+  footerRight.className = 'footer-right';
   footerRight.style.cssText = 'display:flex;align-items:center;gap:var(--space-2);';
   footer.appendChild(footerRight);
 
@@ -330,6 +334,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
 
   // Zoom level indicator (right side, after Reset)
   const zoomSeparator = document.createElement('span');
+  zoomSeparator.className = 'footer-zoom-separator';
   zoomSeparator.style.cssText = 'width:1px;height:14px;background:var(--border-default);';
   footerRight.appendChild(zoomSeparator);
   footerRight.appendChild(zoomIndicator);
