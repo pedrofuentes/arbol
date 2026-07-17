@@ -246,8 +246,6 @@ export class PresetPanel {
 
     const presetGrid = document.createElement('div');
     presetGrid.className = 'preset-grid';
-    presetGrid.style.cssText =
-      'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;';
 
     for (const preset of allPresets) {
       const card = document.createElement('button');
