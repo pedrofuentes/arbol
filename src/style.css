@@ -932,7 +932,7 @@ g.pal-node:focus-visible > rect {
 }
 
 .ui-banner {
-  position: absolute;
+  position: fixed;
   top: var(--space-3);
   left: 50%;
   transform: translateX(-50%);

@@ -22,6 +22,29 @@ export interface DialogActivationOptions {
 
 const activeSurfaces: symbol[] = [];
 
+function removeSurface(token: symbol): void {
+  const index = activeSurfaces.indexOf(token);
+  if (index !== -1) activeSurfaces.splice(index, 1);
+}
+
+/** Adds an anonymous surface to the shared Escape stack. */
+export function pushSurface(): () => void {
+  const token = Symbol('active-surface');
+  let active = true;
+  activeSurfaces.push(token);
+
+  return () => {
+    if (!active) return;
+    active = false;
+    removeSurface(token);
+  };
+}
+
+/** Test-only observer for verifying surface cleanup. */
+export function __getActiveSurfaceCountForTests(): number {
+  return activeSurfaces.length;
+}
+
 /** Creates a modal overlay with shared class-based backdrop styling. */
 export function createOverlay(zIndex: DialogLayer = 'var(--z-dialog)'): HTMLDivElement {
   const overlay = document.createElement('div');
@@ -58,9 +81,8 @@ export function createBanner(
 
 /**
  * Owns Escape, optional focus trapping, and focus restoration for a surface.
- * Only the most recently activated surface responds to Escape, so nested
- * dialogs close one layer at a time and the application Escape chain does not
- * run underneath them.
+ * The top registered surface consumes Escape when the event comes from that
+ * surface (or the document body), but yields to an unregistered focused layer.
  */
 export function activateDialog(container: HTMLElement, opts: DialogActivationOptions): () => void {
   const token = Symbol('active-dialog');
@@ -72,6 +94,15 @@ export function activateDialog(container: HTMLElement, opts: DialogActivationOpt
 
   const escapeHandler = (event: KeyboardEvent) => {
     if (event.key !== 'Escape' || activeSurfaces.at(-1) !== token) return;
+    const target = event.target;
+    if (
+      target instanceof Node &&
+      target !== document &&
+      target !== document.body &&
+      !container.contains(target)
+    ) {
+      return;
+    }
     event.preventDefault();
     event.stopImmediatePropagation();
     opts.onEscape();
@@ -83,8 +114,7 @@ export function activateDialog(container: HTMLElement, opts: DialogActivationOpt
     active = false;
     removeTrap();
     document.removeEventListener('keydown', escapeHandler, true);
-    const index = activeSurfaces.indexOf(token);
-    if (index !== -1) activeSurfaces.splice(index, 1);
+    removeSurface(token);
     if (restoreFocusTo instanceof HTMLElement) restoreFocusTo.focus();
   };
 }
