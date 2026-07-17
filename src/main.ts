@@ -39,6 +39,7 @@ import { announce } from './ui/announcer';
 import {
   createShowSingleCardMenu,
   createShowMultiSelectMenu,
+  setNodeTitlePinned,
   type ContextMenuDeps,
 } from './init/context-menu-handler';
 import { buildToolbar } from './init/toolbar-builder';
@@ -748,14 +749,15 @@ async function main(): Promise<void> {
   });
 
   // Analytics toggle button in toolbar (icon-only, between settings and theme)
+  const toggleAnalyticsDrawer = () => {
+    analyticsDrawer.toggle();
+  };
   const analyticsToggleBtn = createIconButton({
     icon: 'analytics',
     tooltip: t('analytics.drawer_toggle_tooltip'),
     ariaLabel: t('analytics.drawer_toggle_tooltip'),
     ariaKeyshortcuts: 'Control+Shift+a',
-    onClick: () => {
-      analyticsDrawer.toggle();
-    },
+    onClick: toggleAnalyticsDrawer,
   });
   headerRight.insertBefore(analyticsToggleBtn, toolbar.themeBtn);
 
@@ -921,10 +923,10 @@ async function main(): Promise<void> {
       if (node) store.setDottedLine(nodeId, !node.dottedLine);
     },
     onPinTitle: (nodeId) => {
-      store.pinTitle(nodeId);
+      setNodeTitlePinned(store, nodeId, true);
     },
     onUnpinTitle: (nodeId) => {
-      store.unpinTitle(nodeId);
+      setNodeTitlePinned(store, nodeId, false);
     },
     onClose: () => {
       propertyPanel.hide();
@@ -946,6 +948,14 @@ async function main(): Promise<void> {
       .getAll()
       .map((c) => ({ id: c.id, label: c.label, color: c.color }));
     propertyPanel.show(node, parent?.name ?? null, directReports, totalOrg, avgSpan, categories);
+  };
+
+  const selectNodeForInspection = (nodeId: string) => {
+    renderer.setSelectedNode(nodeId);
+    const node = findNodeById(store.getTree(), nodeId);
+    if (!node) return;
+    announce(t('announce.selected', { name: node.name, title: node.title }));
+    showPropertyPanel(nodeId);
   };
 
   store.onChange(() => {
@@ -995,12 +1005,7 @@ async function main(): Promise<void> {
       }
     } else {
       clearMultiSelection();
-      renderer.setSelectedNode(nodeId);
-      const node = findNodeById(store.getTree(), nodeId);
-      if (node) {
-        announce(t('announce.selected', { name: node.name, title: node.title }));
-        showPropertyPanel(nodeId);
-      }
+      selectNodeForInspection(nodeId);
     }
   });
 
@@ -1013,7 +1018,14 @@ async function main(): Promise<void> {
   };
   renderer.getZoomManager()?.onZoom(dismissAllOverlays);
 
-  const contextMenuDeps: ContextMenuDeps = { store, categoryStore, renderer, focusMode, selection };
+  const contextMenuDeps: ContextMenuDeps = {
+    store,
+    categoryStore,
+    renderer,
+    focusMode,
+    selectNodeForInspection,
+    selection,
+  };
   const showSingleCardMenu = createShowSingleCardMenu(contextMenuDeps);
   const showMultiSelectMenu = createShowMultiSelectMenu(contextMenuDeps);
 
@@ -1036,12 +1048,7 @@ async function main(): Promise<void> {
   if (keyboardNav) {
     keyboardNav.setSelectHandler((nodeId: string) => {
       clearMultiSelection();
-      renderer.setSelectedNode(nodeId);
-      const node = findNodeById(store.getTree(), nodeId);
-      if (node) {
-        announce(t('announce.selected', { name: node.name, title: node.title }));
-        showPropertyPanel(nodeId);
-      }
+      selectNodeForInspection(nodeId);
     });
 
     keyboardNav.setMultiSelectHandler((nodeId: string) => {
@@ -1105,6 +1112,7 @@ async function main(): Promise<void> {
     settingsBtn,
     importBtn,
     exportCurrentChart,
+    toggleAnalyticsDrawer,
     exitComparisonMode: comparison.exitComparisonMode,
     clearMultiSelection,
     handleBeforeSwitch,
@@ -1123,14 +1131,6 @@ async function main(): Promise<void> {
   cmdKBtn.addEventListener('click', async () => {
     commandPalette.setItems(await buildCommandItems());
     commandPalette.open();
-  });
-
-  // Analytics drawer keyboard shortcut
-  document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-      e.preventDefault();
-      analyticsDrawer.toggle();
-    }
   });
 
   window.addEventListener('beforeunload', (e) => {

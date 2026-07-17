@@ -73,6 +73,7 @@ function getHelpSections(): HelpSection[] {
         { keys: ['Ctrl+Z'], desc: t('help.shortcuts.undo') },
         { keys: ['Ctrl+Shift+Z', 'Ctrl+Y'], desc: t('help.shortcuts.redo') },
         { keys: ['Ctrl+E'], desc: t('help.shortcuts.export') },
+        { keys: ['Ctrl+Shift+A'], desc: t('help.shortcuts.analytics') },
         { keys: ['Ctrl+F'], desc: t('help.shortcuts.search') },
         { keys: ['Ctrl+K'], desc: t('help.shortcuts.command_palette') },
         { keys: ['Ctrl+,'], desc: t('help.shortcuts.settings') },
@@ -180,6 +181,10 @@ function getHelpSections(): HelpSection[] {
         [
           { tag: 'strong', text: t('help.interactions.inline_label') },
           t('help.interactions.inline_desc'),
+        ],
+        [
+          { tag: 'strong', text: t('help.interactions.pin_title_label') },
+          t('help.interactions.pin_title_desc'),
         ],
         [
           { tag: 'strong', text: t('help.interactions.search_label') },

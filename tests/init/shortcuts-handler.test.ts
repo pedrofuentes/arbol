@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { setLocale, t } from '../../src/i18n';
 import en from '../../src/i18n/en';
 import { registerShortcuts } from '../../src/init/shortcuts-handler';
 import type { ShortcutsDeps } from '../../src/init/shortcuts-handler';
+
+const mainSource = readFileSync(resolve(process.cwd(), 'src/main.ts'), 'utf-8');
 
 type MockCommandPalette = {
   isOpen: ReturnType<typeof vi.fn>;
@@ -95,6 +99,7 @@ function makeDeps(overrides?: Partial<ShortcutsDeps>): ShortcutsDeps {
     settingsBtn: document.createElement('button'),
     importBtn: document.createElement('button'),
     exportCurrentChart: vi.fn(),
+    toggleAnalyticsDrawer: vi.fn(),
     exitComparisonMode: vi.fn(),
     clearMultiSelection: vi.fn(),
     handleBeforeSwitch: vi.fn().mockResolvedValue(true),
@@ -276,6 +281,34 @@ describe('shortcuts-handler — export, search, settings, help', () => {
     cleanup = () => result.shortcuts.destroy();
     fireKey('f', { ctrlKey: true });
     expect(deps.search.focus).toHaveBeenCalled();
+  });
+
+  it('Ctrl+Shift+A toggles analytics through ShortcutManager', () => {
+    const deps = makeDeps();
+    const result = registerShortcuts(deps);
+    cleanup = () => result.shortcuts.destroy();
+
+    fireKey('A', { ctrlKey: true, shiftKey: true });
+
+    expect(deps.toggleAnalyticsDrawer).toHaveBeenCalledOnce();
+  });
+
+  it('analytics shortcut requires Ctrl and Shift and does not substitute Meta', () => {
+    const deps = makeDeps();
+    const result = registerShortcuts(deps);
+    cleanup = () => result.shortcuts.destroy();
+
+    fireKey('A', { ctrlKey: true });
+    fireKey('A', { shiftKey: true });
+    fireKey('A', { metaKey: true, shiftKey: true });
+
+    expect(deps.toggleAnalyticsDrawer).not.toHaveBeenCalled();
+  });
+
+  it('main has no raw analytics keydown listener', () => {
+    expect(mainSource).not.toMatch(
+      /document\.addEventListener\('keydown',[\s\S]{0,200}analyticsDrawer\.toggle\(\)/,
+    );
   });
 
   it('Ctrl+, clicks settings button', () => {

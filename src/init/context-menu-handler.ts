@@ -19,12 +19,23 @@ export interface ContextMenuDeps {
   categoryStore: CategoryStore;
   renderer: ChartRenderer;
   focusMode: FocusModeController;
+  selectNodeForInspection: (nodeId: string) => void;
   selection: SelectionManager;
 }
 
-export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string, event: MouseEvent) => void {
+export function setNodeTitlePinned(store: OrgStore, nodeId: string, pinned: boolean): void {
+  if (pinned) {
+    store.pinTitle(nodeId);
+  } else {
+    store.unpinTitle(nodeId);
+  }
+}
+
+export function createShowSingleCardMenu(
+  deps: ContextMenuDeps,
+): (nodeId: string, event: MouseEvent) => void {
   return (nodeId: string, event: MouseEvent) => {
-    const { store, categoryStore, renderer, focusMode } = deps;
+    const { store, categoryStore, renderer, focusMode, selectNodeForInspection } = deps;
     const tree = store.getTree();
     const node = findNodeById(tree, nodeId);
     if (!node) return;
@@ -48,6 +59,13 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
           label: t('menu.edit'),
           icon: 'edit',
           action: () => {
+            selectNodeForInspection(nodeId);
+          },
+        },
+        {
+          label: t('context_menu.quick_edit'),
+          icon: 'type',
+          action: () => {
             const rect = renderer.getNodeScreenRect(nodeId);
             if (!rect) return;
             showInlineEditor({
@@ -66,6 +84,29 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
               },
               onCancel: () => {},
             });
+          },
+        },
+        {
+          label: node.pinnedTitle ? t('context_menu.unpin_title') : t('context_menu.pin_title'),
+          icon: 'pin',
+          action: () => {
+            try {
+              const fresh = findNodeById(store.getTree(), nodeId);
+              if (!fresh) {
+                showToast(t('footer.operation_failed'), 'error');
+                return;
+              }
+
+              const pinned = !fresh.pinnedTitle;
+              setNodeTitlePinned(store, nodeId, pinned);
+              announce(
+                t(pinned ? 'announce.title_pinned' : 'announce.title_unpinned', {
+                  name: fresh.name,
+                }),
+              );
+            } catch (e) {
+              showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
+            }
           },
         },
         {

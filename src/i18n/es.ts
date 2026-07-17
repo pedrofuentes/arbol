@@ -93,6 +93,9 @@ const es: Record<string, string> = {
 
   // ─── Context Menu ──────────────────────────────────────────────────
   'menu.edit': 'Editar',
+  'context_menu.quick_edit': 'Edición rápida',
+  'context_menu.pin_title': 'Fijar cargo',
+  'context_menu.unpin_title': 'Desfijar cargo',
   'menu.add': 'Agregar',
   'menu.focus': 'Enfocar',
   'menu.category': 'Categoría',
@@ -230,6 +233,8 @@ const es: Record<string, string> = {
   'announce.removed': '{name} eliminado/a',
   'announce.removed_with_org': '{name} y {count} personas de su organización eliminados',
   'announce.multi_removed': '{count} personas eliminadas',
+  'announce.title_pinned': 'Cargo de {name} fijado',
+  'announce.title_unpinned': 'Cargo de {name} desfijado',
   'announce.chart_switched': 'Cambiado al organigrama {name}',
   'announce.chart_saved': 'Organigrama guardado',
   'announce.move_fallback_target': 'nuevo gerente',
@@ -557,6 +562,7 @@ const es: Record<string, string> = {
   'shortcut.redo_alt': 'Rehacer (alt)',
   'shortcut.export': 'Exportar PPTX',
   'shortcut.search': 'Buscar',
+  'shortcut.analytics': 'Alternar panel de analíticas',
   'shortcut.escape': 'Deseleccionar / Limpiar búsqueda',
   'shortcut.settings': 'Configuración',
   'shortcut.help': 'Ayuda',
@@ -889,16 +895,19 @@ const es: Record<string, string> = {
   'help.interactions.click_desc': ' — Seleccionar y resaltar una tarjeta.',
   'help.interactions.right_click_label': 'Clic derecho',
   'help.interactions.right_click_desc':
-    ' — Menú contextual con Editar, Agregar, Enfocar, Categoría, Punteada/Sólida, Mover y Eliminar.',
+    ' — Menú contextual con Editar, Edición rápida, Fijar cargo, Agregar, Enfocar, Categoría, Punteada/Sólida, Mover y Eliminar.',
   'help.interactions.shift_click_label': 'Shift+clic',
   'help.interactions.shift_click_desc':
     ' — Selección múltiple de tarjetas, luego clic derecho para Categoría, Mover todos o Eliminar todos en masa.',
   'help.interactions.escape_label': 'Escape',
   'help.interactions.escape_desc':
     ' — Cerrar visor de versiones, limpiar búsqueda, salir del modo enfoque, limpiar selección múltiple o deseleccionar (en ese orden de prioridad).',
-  'help.interactions.inline_label': 'Edición en línea',
+  'help.interactions.inline_label': 'Edición rápida',
   'help.interactions.inline_desc':
-    ' — Haga clic derecho en una tarjeta y elija Editar para editar directamente sobre la tarjeta.',
+    ' — Haga clic derecho en una tarjeta y elija Edición rápida para editar directamente sobre la tarjeta.',
+  'help.interactions.pin_title_label': 'Fijar cargo',
+  'help.interactions.pin_title_desc':
+    ' — Evita que un cargo personalizado cambie con el mapeo de niveles; elija Desfijar cargo para reanudar el mapeo automático.',
   'help.interactions.search_label': 'Buscar',
   'help.interactions.search_desc':
     ' — Escriba en la barra de búsqueda para resaltar personas coincidentes. Las no coincidentes se atenúan.',
@@ -982,6 +991,7 @@ const es: Record<string, string> = {
   'help.shortcuts.redo': ' — Rehacer',
   'help.shortcuts.search': ' — Enfocar barra de búsqueda',
   'help.shortcuts.export': ' — Exportar a PowerPoint',
+  'help.shortcuts.analytics': ' — Alternar panel de analíticas',
   'help.shortcuts.escape': ' — Cerrar / limpiar / deseleccionar',
   'help.shortcuts.command_palette': ' — Abrir paleta de comandos',
   'help.shortcuts.settings': ' — Abrir configuración',
