@@ -74,4 +74,14 @@ describe('FooterBuilder', () => {
     const separatorSpan = spans[1];
     expect(separatorSpan.textContent).toBe(t('footer.separator').trim());
   });
+
+  it('renders the reset-zoom control with the semantic reset icon', () => {
+    const deps = makeDeps();
+    buildFooter(deps);
+
+    const resetButton = deps.footer.querySelector('[data-action="reset-zoom"]');
+
+    expect(resetButton?.querySelector('svg')?.dataset.icon).toBe('reset');
+    expect(resetButton?.textContent).toBe(t('footer.reset_label'));
+  });
 });
