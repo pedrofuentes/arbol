@@ -239,7 +239,7 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
       items: [
         {
           label: t('menu.multi_category', { count }),
-          icon: '🏷️',
+          icon: 'tag',
           submenu: [
             {
               label: t('menu.category_none'),
@@ -260,7 +260,7 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
         },
         {
           label: t('menu.multi_move', { count }),
-          icon: '↗️',
+          icon: 'move',
           action: async () => {
             try {
               const allNodes = getAllNodes();
@@ -290,7 +290,7 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
         },
         {
           label: t('menu.multi_remove', { count }),
-          icon: '🗑️',
+          icon: 'remove',
           danger: true,
           action: async () => {
             try {

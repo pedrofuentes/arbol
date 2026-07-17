@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { createIcon } from './icon';
 
 export interface ComparisonBannerOptions {
   container: HTMLElement;
@@ -65,11 +66,11 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   `;
   banner.appendChild(style);
 
-  // Label: 🔄 Comparing "oldLabel" → "newLabel"
   const label = document.createElement('span');
   label.setAttribute('data-testid', 'comparison-banner-label');
+  label.appendChild(createIcon('replace'));
 
-  const labelPrefix = document.createTextNode('🔄 Comparing \u201c');
+  const labelPrefix = document.createTextNode(' Comparing \u201c');
   label.appendChild(labelPrefix);
 
   const oldStrong = document.createElement('strong');

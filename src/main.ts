@@ -2,6 +2,7 @@ import { setLocale, t } from './i18n';
 import en from './i18n/en';
 import { OrgStore } from './store/org-store';
 import { createIconButton } from './utils/dom-builder';
+import { createIcon } from './ui/icon';
 import { ChartRenderer, type RendererOptions } from './renderer/chart-renderer';
 import { FormEditor } from './editor/form-editor';
 import { JsonEditor } from './editor/json-editor';
@@ -538,10 +539,7 @@ async function main(): Promise<void> {
   const searchWrapper = document.createElement('div');
   searchWrapper.className = 'search-float';
 
-  const searchIcon = document.createElement('span');
-  searchIcon.className = 'search-icon';
-  searchIcon.setAttribute('aria-hidden', 'true');
-  searchIcon.textContent = '🔍';
+  const searchIcon = createIcon('search', 'search-icon');
   searchWrapper.appendChild(searchIcon);
 
   const searchInput = document.createElement('input');
@@ -754,7 +752,7 @@ async function main(): Promise<void> {
 
   // Analytics toggle button in toolbar (icon-only, between settings and theme)
   const analyticsToggleBtn = createIconButton({
-    icon: '📊',
+    icon: 'analytics',
     tooltip: t('analytics.drawer_toggle_tooltip'),
     ariaLabel: t('analytics.drawer_toggle_tooltip'),
     ariaKeyshortcuts: 'Control+Shift+a',

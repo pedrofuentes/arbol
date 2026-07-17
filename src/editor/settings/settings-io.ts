@@ -88,7 +88,7 @@ export class SettingsIOPanel {
             const presetId = 'custom-' + presetName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
             addCustomPreset({
               id: presetId,
-              name: '⭐ ' + presetName,
+              name: presetName,
               description: t('settings.imported_custom_theme'),
               colors: {
                 cardFill: settings.cardFill,

@@ -1,5 +1,6 @@
 import { t } from '../i18n';
 import { trapFocus } from './dialog-utils';
+import { createIcon } from './icon';
 
 export interface WizardStep {
   id: string;
@@ -59,7 +60,7 @@ export class ImportWizard {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'import-wizard-close';
     closeBtn.setAttribute('aria-label', t('import_wizard.close_aria'));
-    closeBtn.textContent = '✕';
+    closeBtn.appendChild(createIcon('close'));
     closeBtn.addEventListener('click', () => this.close());
 
     header.appendChild(title);

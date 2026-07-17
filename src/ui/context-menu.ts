@@ -1,6 +1,8 @@
+import { createIcon, isIconName, type IconName } from './icon';
+
 export interface ContextMenuItem {
   label: string;
-  icon?: string;
+  icon?: IconName | string;
   swatch?: string;
   disabled?: boolean;
   danger?: boolean;
@@ -97,11 +99,15 @@ export function showContextMenu(options: ContextMenuOptions): void {
     `;
 
     if (item.icon) {
-      const iconSpan = document.createElement('span');
-      iconSpan.setAttribute('aria-hidden', 'true');
-      iconSpan.textContent = item.icon;
-      iconSpan.style.cssText = 'flex-shrink:0;width:16px;text-align:center;';
-      btn.appendChild(iconSpan);
+      if (isIconName(item.icon)) {
+        btn.appendChild(createIcon(item.icon));
+      } else {
+        const iconSpan = document.createElement('span');
+        iconSpan.setAttribute('aria-hidden', 'true');
+        iconSpan.textContent = item.icon;
+        iconSpan.style.cssText = 'flex-shrink:0;width:16px;text-align:center;';
+        btn.appendChild(iconSpan);
+      }
     }
 
     if (item.swatch) {
@@ -180,11 +186,15 @@ export function showContextMenu(options: ContextMenuOptions): void {
           `;
 
           if (subItem.icon) {
-            const iconSpan = document.createElement('span');
-            iconSpan.setAttribute('aria-hidden', 'true');
-            iconSpan.textContent = subItem.icon;
-            iconSpan.style.cssText = 'flex-shrink:0;width:16px;text-align:center;';
-            subBtn.appendChild(iconSpan);
+            if (isIconName(subItem.icon)) {
+              subBtn.appendChild(createIcon(subItem.icon));
+            } else {
+              const iconSpan = document.createElement('span');
+              iconSpan.setAttribute('aria-hidden', 'true');
+              iconSpan.textContent = subItem.icon;
+              iconSpan.style.cssText = 'flex-shrink:0;width:16px;text-align:center;';
+              subBtn.appendChild(iconSpan);
+            }
           }
 
           if (subItem.swatch) {

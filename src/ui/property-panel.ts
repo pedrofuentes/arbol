@@ -1,6 +1,7 @@
 import { t } from '../i18n';
 import type { OrgNode } from '../types';
 import { createButton } from '../utils/dom-builder';
+import { createIcon, type IconName } from './icon';
 
 export interface CategoryInfo {
   id: string;
@@ -74,7 +75,7 @@ export class PropertyPanel {
     const closeBtn = createButton({
       className: 'pp-close',
       ariaLabel: t('property_panel.close_aria'),
-      label: '✕',
+      icon: 'close',
       onClick: () => options.onClose(),
     });
 
@@ -100,6 +101,7 @@ export class PropertyPanel {
     this.pinBtn.className = 'pin-title-btn';
     this.pinBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:14px;padding:2px 4px;opacity:0.3;flex-shrink:0;';
     this.pinBtn.setAttribute('data-testid', 'pin-title-btn');
+    this.pinBtn.appendChild(createIcon('pin'));
 
     const titleRow = document.createElement('div');
     titleRow.style.cssText = 'display:flex;align-items:center;gap:4px;';
@@ -113,11 +115,11 @@ export class PropertyPanel {
     const meta = document.createElement('div');
     meta.className = 'pp-node-meta';
 
-    this.metaReportsTo = this.createMetaRow('📍', t('property_panel.reports_to'));
-    this.metaDirectReports = this.createMetaRow('👥', t('property_panel.direct_reports'));
-    this.metaTotalOrg = this.createMetaRow('📊', t('property_panel.total_org'));
-    this.metaSpanOfControl = this.createMetaRow('📐', t('property_panel.span_of_control'));
-    this.metaLevel = this.createMetaRow('🏷️', t('property_panel.level'));
+    this.metaReportsTo = this.createMetaRow('pin', t('property_panel.reports_to'));
+    this.metaDirectReports = this.createMetaRow('users', t('property_panel.direct_reports'));
+    this.metaTotalOrg = this.createMetaRow('hierarchy', t('property_panel.total_org'));
+    this.metaSpanOfControl = this.createMetaRow('ruler', t('property_panel.span_of_control'));
+    this.metaLevel = this.createMetaRow('tag', t('property_panel.level'));
 
     meta.appendChild(this.metaLevel);
     meta.appendChild(this.metaReportsTo);
@@ -315,7 +317,6 @@ export class PropertyPanel {
     this.titleDisplay.textContent = resolved;
 
     // Pin indicator
-    this.pinBtn.textContent = '📌';
     if (node.pinnedTitle) {
       this.pinBtn.style.opacity = '0.9';
       this.pinBtn.title = t('property_panel.unpin_title');
@@ -395,12 +396,9 @@ export class PropertyPanel {
     this.setDisabled(this.removeBtn, isRoot);
   }
 
-  private createMetaRow(icon: string, label: string): HTMLSpanElement {
+  private createMetaRow(icon: IconName, label: string): HTMLSpanElement {
     const span = document.createElement('span');
-    const iconEl = document.createElement('span');
-    iconEl.setAttribute('aria-hidden', 'true');
-    iconEl.textContent = icon;
-    span.appendChild(iconEl);
+    span.appendChild(createIcon(icon));
     span.appendChild(document.createTextNode(` ${label} `));
     const strong = document.createElement('strong');
     span.appendChild(strong);

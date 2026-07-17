@@ -17,6 +17,7 @@ import { flattenTree } from '../utils/tree';
 import { t, getLocale } from '../i18n';
 import { showCreateChartDialog } from '../ui/create-chart-dialog';
 import { createButton } from '../utils/dom-builder';
+import { createIcon, type IconName } from '../ui/icon';
 
 export interface ChartEditorOptions {
   container: HTMLElement;
@@ -277,7 +278,7 @@ export class ChartEditor {
     // Icon
     const iconEl = document.createElement('div');
     iconEl.className = 'chart-item-icon';
-    iconEl.textContent = '🌳';
+    iconEl.appendChild(createIcon('tree'));
     item.appendChild(iconEl);
 
     // Info container
@@ -311,28 +312,28 @@ export class ChartEditor {
       const actions = document.createElement('div');
       actions.className = 'chart-item-actions';
 
-      const renameBtn = this.createActionButton('✏️', t('chart_editor.rename'));
+      const renameBtn = this.createActionButton('edit', t('chart_editor.rename'));
       renameBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.handleRenameChart(chart);
       });
       actions.appendChild(renameBtn);
 
-      const duplicateBtn = this.createActionButton('📋', t('chart_editor.duplicate'));
+      const duplicateBtn = this.createActionButton('copy', t('chart_editor.duplicate'));
       duplicateBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.handleDuplicateChart(chart);
       });
       actions.appendChild(duplicateBtn);
 
-      const exportBtn = this.createActionButton('📤', t('chart_editor.export'));
+      const exportBtn = this.createActionButton('export', t('chart_editor.export'));
       exportBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.handleExportChart(chart);
       });
       actions.appendChild(exportBtn);
 
-      const deleteBtn = this.createActionButton('🗑️', t('chart_editor.delete'), true);
+      const deleteBtn = this.createActionButton('remove', t('chart_editor.delete'), true);
       deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.handleDeleteChart(chart);
@@ -358,7 +359,7 @@ export class ChartEditor {
 
     const workingIcon = document.createElement('span');
     workingIcon.className = 'version-item-icon';
-    workingIcon.textContent = '✏️';
+    workingIcon.appendChild(createIcon('edit'));
     workingItem.appendChild(workingIcon);
 
     const workingInfo = document.createElement('div');
@@ -399,7 +400,7 @@ export class ChartEditor {
     // Icon
     const iconEl = document.createElement('span');
     iconEl.className = 'version-item-icon';
-    iconEl.textContent = '📋';
+    iconEl.appendChild(createIcon('copy'));
     item.appendChild(iconEl);
 
     // Info
@@ -423,19 +424,19 @@ export class ChartEditor {
     const actions = document.createElement('div');
     actions.className = 'version-item-actions';
 
-    const viewBtn = this.createActionButton('👁', t('chart_editor.view'));
+    const viewBtn = this.createActionButton('eye', t('chart_editor.view'));
     viewBtn.addEventListener('click', () => this.onVersionView(version));
     actions.appendChild(viewBtn);
 
-    const compareBtn = this.createActionButton('⚖️', t('chart_editor.compare'));
+    const compareBtn = this.createActionButton('compare', t('chart_editor.compare'));
     compareBtn.addEventListener('click', () => this.onVersionCompare(version));
     actions.appendChild(compareBtn);
 
-    const restoreBtn = this.createActionButton('↩️', t('chart_editor.restore'));
+    const restoreBtn = this.createActionButton('restore', t('chart_editor.restore'));
     restoreBtn.addEventListener('click', () => this.handleRestoreVersion(version.id));
     actions.appendChild(restoreBtn);
 
-    const deleteBtn = this.createActionButton('🗑️', t('chart_editor.delete'), true);
+    const deleteBtn = this.createActionButton('remove', t('chart_editor.delete'), true);
     deleteBtn.addEventListener('click', () => this.handleDeleteVersion(version));
     actions.appendChild(deleteBtn);
 
@@ -454,10 +455,10 @@ export class ChartEditor {
     return btn;
   }
 
-  private createActionButton(icon: string, label: string, danger = false): HTMLButtonElement {
+  private createActionButton(icon: IconName, label: string, danger = false): HTMLButtonElement {
     const btn = createButton({
       className: danger ? 'btn btn-danger' : 'btn btn-ghost',
-      label: icon,
+      icon,
       ariaLabel: label,
     });
     btn.setAttribute('data-tooltip', label);

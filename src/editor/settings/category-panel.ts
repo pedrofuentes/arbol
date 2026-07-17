@@ -1,5 +1,6 @@
 import { CategoryStore } from '../../store/category-store';
 import { t } from '../../i18n';
+import { createIcon } from '../../ui/icon';
 
 export interface CategoryPanelDeps {
   categoryStore: CategoryStore;
@@ -121,7 +122,7 @@ export class CategoryPanel {
 
       // Delete button with confirmation
       const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = '×';
+      deleteBtn.appendChild(createIcon('remove'));
       deleteBtn.className = 'category-delete-btn';
       deleteBtn.style.cssText =
         'width:24px;height:24px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color 120ms ease,border-color 120ms ease,opacity 120ms ease;opacity:0.4;';
@@ -144,7 +145,7 @@ export class CategoryPanel {
             'padding:2px 8px;cursor:pointer;flex-shrink:0;';
           confirmTimeout = setTimeout(() => {
             isConfirming = false;
-            deleteBtn.textContent = '×';
+            deleteBtn.replaceChildren(createIcon('remove'));
             deleteBtn.className = '';
             deleteBtn.style.cssText =
               'width:24px;height:24px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 120ms ease;opacity:0.4;';

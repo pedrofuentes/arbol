@@ -1,5 +1,6 @@
 import { showToast } from './toast';
 import { t } from '../i18n';
+import { createIcon } from './icon';
 
 export interface ChartNameHeaderOptions {
   container: HTMLElement;
@@ -80,7 +81,7 @@ export class ChartNameHeader {
 
     this.saveBtn = document.createElement('button');
     this.saveBtn.setAttribute('data-testid', 'save-version-btn');
-    this.saveBtn.textContent = '💾';
+    this.saveBtn.appendChild(createIcon('save'));
     this.saveBtn.title = t('chart_header.save_version_tooltip');
     this.saveBtn.className = 'icon-btn';
     this.saveBtn.setAttribute('aria-label', t('chart_header.save_version_aria'));

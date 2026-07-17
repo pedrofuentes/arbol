@@ -4,6 +4,7 @@ import { t } from '../i18n';
 import { type IStorage, browserStorage } from '../utils/storage';
 import { getAppConfig } from '../config/app-config';
 import { renderMarkdown } from '../utils/markdown';
+import { createIcon } from './icon';
 
 const ARBOL_STORAGE_KEYS = [
   'arbol-org-data',
@@ -494,7 +495,7 @@ export function showHelpDialog(options: HelpDialogOptions = {}): void {
   const closeBtn = document.createElement('button');
   closeBtn.className = 'icon-btn';
   closeBtn.setAttribute('aria-label', t('help.close_aria'));
-  closeBtn.textContent = '✕';
+  closeBtn.appendChild(createIcon('close'));
   closeBtn.style.cssText += 'font-size:14px;width:28px;height:28px;';
   header.appendChild(closeBtn);
   dialog.appendChild(header);

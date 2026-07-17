@@ -3,6 +3,7 @@ import { CHART_THEME_PRESETS, type ChartThemePreset } from '../../store/theme-pr
 import { type IStorage } from '../../utils/storage';
 import { generateId } from '../../utils/id';
 import { t } from '../../i18n';
+import { createIcon, type IconName } from '../../ui/icon';
 
 export interface CombinedPreset {
   id: string;
@@ -12,10 +13,10 @@ export interface CombinedPreset {
   isCustom?: boolean;
 }
 
-export const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<RendererOptions> }[] = [
+export const LAYOUT_PRESETS: { name: string; icon: IconName; sizes: Partial<RendererOptions> }[] = [
   {
     name: 'Compact',
-    icon: '▪',
+    icon: 'cards',
     sizes: {
       nodeWidth: 110,
       nodeHeight: 22,
@@ -39,7 +40,7 @@ export const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<Render
   },
   {
     name: 'Default',
-    icon: '▫',
+    icon: 'layout',
     sizes: {
       nodeWidth: 160,
       nodeHeight: 34,
@@ -63,7 +64,7 @@ export const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<Render
   },
   {
     name: 'Spacious',
-    icon: '▢',
+    icon: 'fit',
     sizes: {
       nodeWidth: 190,
       nodeHeight: 42,
@@ -87,7 +88,7 @@ export const LAYOUT_PRESETS: { name: string; icon: string; sizes: Partial<Render
   },
   {
     name: 'Presentation',
-    icon: '▣',
+    icon: 'chart',
     sizes: {
       nodeWidth: 220,
       nodeHeight: 50,
@@ -269,7 +270,8 @@ export class PresetPanel {
       card.appendChild(swatch);
 
       const name = document.createElement('span');
-      name.textContent = preset.isCustom ? `⭐ ${preset.name}` : preset.name;
+      if (preset.isCustom) name.appendChild(createIcon('star'));
+      name.appendChild(document.createTextNode(preset.name));
       name.style.cssText =
         'font-size:11px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;';
       card.appendChild(name);
@@ -277,7 +279,7 @@ export class PresetPanel {
       if (preset.isCustom) {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'preset-delete';
-        deleteBtn.textContent = '×';
+        deleteBtn.appendChild(createIcon('close'));
         deleteBtn.setAttribute('aria-label', t('settings.delete_preset_aria', { name: preset.name }));
         deleteBtn.style.cssText = `
           position:absolute;top:2px;right:4px;font-size:13px;line-height:1;
@@ -353,7 +355,7 @@ export class PresetPanel {
 
       const dims = document.createElement('span');
       dims.className = 'layout-preset-dims';
-      dims.textContent = `${lp.sizes.nodeWidth} × ${lp.sizes.nodeHeight}`;
+      dims.textContent = `${lp.sizes.nodeWidth} \u00d7 ${lp.sizes.nodeHeight}`;
       btn.appendChild(dims);
 
       const descKey = `settings.layout_${lp.name.toLowerCase()}_desc`;

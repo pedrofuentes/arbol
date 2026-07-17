@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { createIcon } from './icon';
 
 export interface VersionViewerOptions {
   versionName: string;
@@ -61,11 +62,11 @@ export function showVersionViewer(options: VersionViewerOptions): void {
   `;
   banner.appendChild(style);
 
-  // Label: 📋 Viewing version "[name]"
   const label = document.createElement('span');
   label.setAttribute('data-testid', 'version-viewer-label');
+  label.appendChild(createIcon('copy'));
 
-  const labelPrefix = document.createTextNode('📋 Viewing version \u201c');
+  const labelPrefix = document.createTextNode(' Viewing version \u201c');
   label.appendChild(labelPrefix);
 
   const nameSpan = document.createElement('strong');

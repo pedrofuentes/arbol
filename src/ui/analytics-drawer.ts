@@ -1,5 +1,6 @@
 import { t } from '../i18n';
 import { EventEmitter } from '../utils/event-emitter';
+import { createIcon } from './icon';
 
 const STORAGE_KEY = 'arbol-analytics-drawer-height';
 const MIN_HEIGHT = 120;
@@ -40,7 +41,7 @@ export class AnalyticsDrawer extends EventEmitter {
     const closeBtn = document.createElement('button');
     closeBtn.className = 'analytics-drawer-close';
     closeBtn.setAttribute('aria-label', t('analytics.drawer_close'));
-    closeBtn.textContent = '✕';
+    closeBtn.appendChild(createIcon('close'));
     closeBtn.addEventListener('click', () => this.close());
     handle.appendChild(closeBtn);
 

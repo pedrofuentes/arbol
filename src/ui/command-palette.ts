@@ -1,11 +1,12 @@
 import { t } from '../i18n';
 import { trapFocus } from './dialog-utils';
+import { createIcon, isIconName, type IconName } from './icon';
 
 export interface CommandItem {
   id: string;
   label: string;
   description?: string;
-  icon?: string;
+  icon?: IconName | string;
   shortcut?: string;
   group: string;
   action: () => void;
@@ -52,8 +53,7 @@ export class CommandPalette {
 
     const icon = document.createElement('span');
     icon.className = 'cp-icon';
-    icon.setAttribute('aria-hidden', 'true');
-    icon.textContent = '🔍';
+    icon.appendChild(createIcon('search'));
 
     this.input = document.createElement('input');
     this.input.className = 'cp-input';
@@ -226,7 +226,8 @@ export class CommandPalette {
         if (item.icon) {
           const iconEl = document.createElement('div');
           iconEl.className = 'cp-item-icon';
-          iconEl.textContent = item.icon;
+          if (isIconName(item.icon)) iconEl.appendChild(createIcon(item.icon));
+          else iconEl.textContent = item.icon;
           itemEl.appendChild(iconEl);
         }
 
