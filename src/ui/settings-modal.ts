@@ -3,18 +3,20 @@ import { trapFocus } from './dialog-utils';
 import { createIcon, type IconName } from './icon';
 
 const PREVIEW_HINT_KEYS: Record<string, string> = {
+  appearance: 'settings_modal.preview_hint.appearance',
   presets: 'settings_modal.preview_hint.presets',
   layout: 'settings_modal.preview_hint.layout',
-  typography: 'settings_modal.preview_hint.typography',
-  cards: 'settings_modal.preview_hint.cards',
-  connectors: 'settings_modal.preview_hint.connectors',
-  ic: 'settings_modal.preview_hint.ic',
-  advisors: 'settings_modal.preview_hint.advisors',
-  badges: 'settings_modal.preview_hint.badges',
-  categories: 'settings_modal.preview_hint.categories',
+  cards_badges: 'settings_modal.preview_hint.cards_badges',
+  levels_categories: 'settings_modal.preview_hint.levels_categories',
 };
 
-const TABS_WITHOUT_PREVIEW = new Set(['backup', 'level_mapping']);
+const TABS_WITH_PREVIEW = new Set([
+  'appearance',
+  'layout',
+  'cards_badges',
+  'levels_categories',
+  'presets',
+]);
 
 export interface SettingsTab {
   id: string;
@@ -32,17 +34,16 @@ export interface SettingsModalOptions {
 
 function getDefaultTabs(): SettingsTab[] {
   return [
-    { id: 'presets', label: t('settings_modal.tab.presets'), icon: 'palette' },
+    { id: 'appearance', label: t('settings_modal.tab.appearance'), icon: 'palette' },
     { id: 'layout', label: t('settings_modal.tab.layout'), icon: 'layout' },
-    { id: 'typography', label: t('settings_modal.tab.typography'), icon: 'type' },
-    { id: 'cards', label: t('settings_modal.tab.cards'), icon: 'cards' },
-    { id: 'connectors', label: t('settings_modal.tab.connectors'), icon: 'link' },
-    { id: 'ic', label: t('settings_modal.tab.ic'), icon: 'person' },
-    { id: 'advisors', label: t('settings_modal.tab.advisors'), icon: 'paperclip' },
-    { id: 'badges', label: t('settings_modal.tab.badges'), icon: 'badge' },
-    { id: 'categories', label: t('settings_modal.tab.categories'), icon: 'tag' },
-    { id: 'level_mapping', label: t('settings_modal.tab.level_mapping'), icon: 'hierarchy' },
-    { id: 'backup', label: t('settings_modal.tab.backup'), icon: 'backup' },
+    { id: 'cards_badges', label: t('settings_modal.tab.cards_badges'), icon: 'cards' },
+    {
+      id: 'levels_categories',
+      label: t('settings_modal.tab.levels_categories'),
+      icon: 'hierarchy',
+    },
+    { id: 'presets', label: t('settings_modal.tab.presets'), icon: 'star' },
+    { id: 'data_backup', label: t('settings_modal.tab.data_backup'), icon: 'backup' },
   ];
 }
 
@@ -129,7 +130,7 @@ export class SettingsModal {
       const iconSpan = createIcon(tab.icon, 'nav-icon');
 
       btn.appendChild(iconSpan);
-      btn.appendChild(document.createTextNode(` ${tab.label}`));
+      btn.appendChild(document.createTextNode(tab.label));
 
       btn.addEventListener('click', () => this.setActiveTab(tab.id));
       nav.appendChild(btn);
@@ -201,7 +202,7 @@ export class SettingsModal {
     this.previewStrip.appendChild(this.previewArea);
 
     // Hide preview on tabs that don't need it
-    if (TABS_WITHOUT_PREVIEW.has(this.activeTab)) {
+    if (!TABS_WITH_PREVIEW.has(this.activeTab)) {
       this.previewStrip.classList.add('hidden');
     }
 
@@ -355,7 +356,7 @@ export class SettingsModal {
     }
 
     // Update preview strip visibility and hint
-    if (TABS_WITHOUT_PREVIEW.has(tabId)) {
+    if (!TABS_WITH_PREVIEW.has(tabId)) {
       this.previewStrip.classList.add('hidden');
     } else {
       this.previewStrip.classList.remove('hidden');

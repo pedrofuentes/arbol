@@ -265,20 +265,20 @@ async function main(): Promise<void> {
   // Settings modal (opens via header button)
   const SECTION_TAB_MAP: Record<string, string> = {
     presets: 'presets',
-    categories: 'categories',
+    categories: 'levels_categories',
     'card-dimensions': 'layout',
     'tree-spacing': 'layout',
-    'ic-options': 'ic',
-    'advisor-options': 'advisors',
-    typography: 'typography',
-    'link-style': 'connectors',
-    'card-style': 'cards',
-    'headcount-badge': 'badges',
-    'level-badge': 'badges',
-    'categories-legend': 'categories',
-    'level-mapping': 'level_mapping',
-    'settings-io': 'backup',
-    'backup-restore': 'backup',
+    'ic-options': 'layout',
+    'advisor-options': 'layout',
+    typography: 'appearance',
+    'link-style': 'appearance',
+    'card-style': 'appearance',
+    'headcount-badge': 'cards_badges',
+    'level-badge': 'cards_badges',
+    'categories-legend': 'levels_categories',
+    'level-mapping': 'levels_categories',
+    'settings-io': 'data_backup',
+    'backup-restore': 'data_backup',
   };
 
   function filterSettingsSections(tabId: string): void {
