@@ -1,5 +1,5 @@
 import { showToast } from './toast';
-import { t } from '../i18n';
+import { t, tp } from '../i18n';
 import { createIcon } from './icon';
 
 export interface ChartNameHeaderOptions {
@@ -14,7 +14,7 @@ const MAX_NAME_LENGTH = 100;
 export class ChartNameHeader {
   private wrapper: HTMLDivElement;
   private nameSpan: HTMLSpanElement;
-  private dirtyDot: HTMLSpanElement;
+  private statusPill: HTMLSpanElement;
   private saveBtn: HTMLButtonElement;
   private currentName: string;
   private editing = false;
@@ -69,14 +69,21 @@ export class ChartNameHeader {
       this.nameSpan.removeEventListener('mouseleave', onNameMouseLeave);
     });
 
-    this.dirtyDot = document.createElement('span');
-    this.dirtyDot.setAttribute('data-testid', 'dirty-indicator');
-    this.dirtyDot.textContent = '●';
-    this.dirtyDot.style.cssText = [
-      'color:var(--accent)',
-      'font-size:8px',
-      'margin-left:4px',
-      'display:none',
+    this.statusPill = document.createElement('span');
+    this.statusPill.setAttribute('data-testid', 'version-status');
+    this.statusPill.setAttribute('role', 'status');
+    this.statusPill.setAttribute('aria-live', 'polite');
+    this.statusPill.tabIndex = -1;
+    this.statusPill.textContent = t('chart_header.status_saved');
+    this.statusPill.style.cssText = [
+      'color:var(--text-tertiary)',
+      'background:var(--bg-subtle)',
+      'border:1px solid var(--border-subtle)',
+      'border-radius:var(--radius-full)',
+      'font-size:var(--text-xs)',
+      'font-family:var(--font-sans)',
+      'padding:var(--space-1) var(--space-2)',
+      'white-space:nowrap',
     ].join(';');
 
     this.saveBtn = document.createElement('button');
@@ -92,7 +99,7 @@ export class ChartNameHeader {
     this.cleanupFns.push(() => this.saveBtn.removeEventListener('click', onSaveClick));
 
     this.wrapper.appendChild(this.nameSpan);
-    this.wrapper.appendChild(this.dirtyDot);
+    this.wrapper.appendChild(this.statusPill);
     this.wrapper.appendChild(this.saveBtn);
     options.container.appendChild(this.wrapper);
   }
@@ -108,8 +115,9 @@ export class ChartNameHeader {
     return this.currentName;
   }
 
-  setDirty(dirty: boolean): void {
-    this.dirtyDot.style.display = dirty ? 'inline' : 'none';
+  setEditCount(count: number): void {
+    this.statusPill.textContent =
+      count === 0 ? t('chart_header.status_saved') : tp('chart_header.edits_since_version', count);
   }
 
   destroy(): void {

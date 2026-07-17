@@ -108,12 +108,17 @@ describe('Touch targets (44px min on mobile)', () => {
   });
 });
 describe('Sidebar row action accessibility', () => {
-  it('reveals chart and version actions when their rows contain focus', () => {
+  it('reveals chart actions when their rows contain focus', () => {
     expect(css).toMatch(
       /\.chart-item:hover\s+\.chart-item-actions,\s*\.chart-item:focus-within\s+\.chart-item-actions\s*\{\s*display:\s*flex;/,
     );
+  });
+
+  it('keeps version actions visible at low emphasis and emphasizes hover or focus', () => {
+    expect(css).toMatch(/\.version-item-actions\s*\{[^}]*display:\s*flex;[^}]*opacity:\s*0\.45;/s);
+    expect(css).not.toMatch(/\.version-item-actions\s*\{[^}]*display:\s*none;/s);
     expect(css).toMatch(
-      /\.version-item:hover\s+\.version-item-actions,\s*\.version-item:focus-within\s+\.version-item-actions\s*\{\s*display:\s*flex;/,
+      /\.version-item:hover\s+\.version-item-actions,\s*\.version-item:focus-within\s+\.version-item-actions\s*\{\s*opacity:\s*1;/,
     );
   });
 });

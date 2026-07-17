@@ -23,8 +23,8 @@ function getNameInput(container: HTMLElement): HTMLInputElement | null {
   return container.querySelector('[data-testid="chart-name-input"]');
 }
 
-function getDirtyDot(container: HTMLElement): HTMLSpanElement {
-  return container.querySelector('[data-testid="dirty-indicator"]') as HTMLSpanElement;
+function getStatusPill(container: HTMLElement): HTMLSpanElement {
+  return container.querySelector('[data-testid="version-status"]') as HTMLSpanElement;
 }
 
 function getSaveBtn(container: HTMLElement): HTMLButtonElement {
@@ -68,12 +68,16 @@ describe('ChartNameHeader', () => {
       expect(nameEl.style.cursor).toBe('pointer');
     });
 
-    it('renders the dirty dot hidden by default', () => {
+    it('renders a live, non-interactive saved-state status pill', () => {
       new ChartNameHeader(defaultOptions({ container }));
-      const dot = getDirtyDot(container);
-      expect(dot).toBeTruthy();
-      expect(dot.textContent).toBe('●');
-      expect(dot.style.display).toBe('none');
+      const status = getStatusPill(container);
+      expect(status).toBeTruthy();
+      expect(status.textContent).toBe('All changes saved');
+      expect(status.getAttribute('role')).toBe('status');
+      expect(status.getAttribute('aria-live')).toBe('polite');
+      expect(status.tabIndex).toBe(-1);
+      expect(status.style.color).toBe('var(--text-tertiary)');
+      expect(status.style.background).toBe('var(--bg-subtle)');
     });
 
     it('renders the save version button', () => {
@@ -82,15 +86,15 @@ describe('ChartNameHeader', () => {
       expect(btn).toBeTruthy();
       expect(btn.querySelector('svg')?.dataset.icon).toBe('save');
       expect(btn.textContent).toBe('');
-      expect(btn.title).toBe('Save version');
+      expect(btn.title).toBe('Save a version');
     });
 
     it('applies icon-btn class to the save button', () => {
       new ChartNameHeader(defaultOptions({ container }));
       const btn = getSaveBtn(container);
       expect(btn.className).toBe('icon-btn');
-      expect(btn.getAttribute('aria-label')).toBe('Save version');
-      expect(btn.getAttribute('data-tooltip')).toBe('Save version');
+      expect(btn.getAttribute('aria-label')).toBe('Save a version');
+      expect(btn.getAttribute('data-tooltip')).toBe('Save a version');
     });
   });
 
@@ -102,18 +106,24 @@ describe('ChartNameHeader', () => {
     });
   });
 
-  describe('setDirty', () => {
-    it('shows the dirty dot when set to true', () => {
+  describe('setEditCount', () => {
+    it('shows one edit since the last version', () => {
       const header = new ChartNameHeader(defaultOptions({ container }));
-      header.setDirty(true);
-      expect(getDirtyDot(container).style.display).toBe('inline');
+      header.setEditCount(1);
+      expect(getStatusPill(container).textContent).toBe('1 edit since last version');
     });
 
-    it('hides the dirty dot when set to false', () => {
+    it('shows multiple edits since the last version', () => {
       const header = new ChartNameHeader(defaultOptions({ container }));
-      header.setDirty(true);
-      header.setDirty(false);
-      expect(getDirtyDot(container).style.display).toBe('none');
+      header.setEditCount(3);
+      expect(getStatusPill(container).textContent).toBe('3 edits since last version');
+    });
+
+    it('returns to the clean saved state at zero edits', () => {
+      const header = new ChartNameHeader(defaultOptions({ container }));
+      header.setEditCount(2);
+      header.setEditCount(0);
+      expect(getStatusPill(container).textContent).toBe('All changes saved');
     });
   });
 
@@ -243,7 +253,7 @@ describe('ChartNameHeader', () => {
       // Input replaces span, so clicking again should be a no-op (no span to click)
       const input = getNameInput(container);
       expect(input).toBeTruthy();
-      // The wrapper should have exactly: input, dirtyDot, saveBtn
+      // The wrapper should have exactly: input, status pill, save button
       const wrapper = getWrapper(container);
       expect(wrapper.children.length).toBe(3);
     });

@@ -20,11 +20,16 @@ vi.mock('../../src/ui/input-dialog', () => ({
 vi.mock('../../src/ui/create-chart-dialog', () => ({
   showCreateChartDialog: vi.fn().mockResolvedValue(null),
 }));
+vi.mock('../../src/ui/toast', () => ({
+  showToast: vi.fn(),
+}));
 
 import { showChartExportDialog } from '../../src/ui/chart-export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../../src/export/chart-exporter';
 import { showInputDialog } from '../../src/ui/input-dialog';
 import { showCreateChartDialog } from '../../src/ui/create-chart-dialog';
+import { showConfirmDialog } from '../../src/ui/confirm-dialog';
+import { showToast } from '../../src/ui/toast';
 
 const appStyles = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf-8');
 
@@ -73,6 +78,7 @@ function mockChartStore(charts: ChartRecord[] = [], versions: VersionRecord[] = 
     restoreVersion: vi.fn().mockResolvedValue(makeTree()),
     deleteVersion: vi.fn().mockResolvedValue(undefined),
     isDirty: vi.fn().mockReturnValue(false),
+    getEditsSinceLastVersion: vi.fn().mockReturnValue(0),
   } as unknown as ChartEditorOptions['chartStore'];
 }
 
@@ -269,7 +275,7 @@ describe('ChartEditor – Compare button', () => {
     expect(calledWith).toHaveProperty('tree');
   });
 
-  it('places Compare button between View and Restore', async () => {
+  it('places Compare button between Preview and Restore', async () => {
     await vi.waitFor(() => {
       const allButtons = Array.from(container.querySelectorAll('button'));
       expect(allButtons.map((b) => b.getAttribute('data-tooltip'))).toContain('Compare');
@@ -278,11 +284,11 @@ describe('ChartEditor – Compare button', () => {
     // Get buttons within the first version item's action row
     const allButtons = Array.from(container.querySelectorAll('button'));
     const versionActionButtons = allButtons.filter(
-      (b) => ['View', 'Compare', 'Restore', 'Delete'].includes(b.getAttribute('data-tooltip') ?? ''),
+      (b) => ['Preview', 'Compare', 'Restore', 'Delete'].includes(b.getAttribute('data-tooltip') ?? ''),
     );
     // First group of 4 = first version item
     const labels = versionActionButtons.slice(0, 4).map((b) => b.getAttribute('data-tooltip'));
-    const viewIdx = labels.indexOf('View');
+    const viewIdx = labels.indexOf('Preview');
     const compareIdx = labels.indexOf('Compare');
     const restoreIdx = labels.indexOf('Restore');
     expect(compareIdx).toBe(viewIdx + 1);
@@ -416,17 +422,139 @@ describe('ChartEditor – action button accessibility', () => {
   it('version action buttons have data-tooltip and aria-label attributes', async () => {
     await vi.waitFor(() => {
       const buttons = Array.from(container.querySelectorAll('button'));
-      expect(buttons.map((b) => b.getAttribute('data-tooltip'))).toContain('View');
+      expect(buttons.map((b) => b.getAttribute('data-tooltip'))).toContain('Preview');
     });
 
     const buttons = Array.from(container.querySelectorAll('button'));
-    const expectedLabels = ['View', 'Compare', 'Restore', 'Delete'];
+    const expectedLabels = ['Preview', 'Compare', 'Restore', 'Delete'];
 
     for (const label of expectedLabels) {
       const btn = buttons.find((b) => b.getAttribute('data-tooltip') === label);
       expect(btn, `button with data-tooltip "${label}" should exist`).not.toBeUndefined();
       expect(btn!.getAttribute('aria-label')).toBe(label);
     }
+  });
+});
+
+describe('ChartEditor – consumer version vocabulary', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let store: ReturnType<typeof mockChartStore>;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = mockChartStore([makeChart()], [makeVersion()]);
+
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-version-id="ver-1"]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    container.remove();
+  });
+
+  it('labels the section and save action with consumer language', () => {
+    expect(container.querySelector('.version-section-title')?.textContent).toBe('Version history');
+    const saveButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Save a version',
+    );
+    expect(saveButton).toBeDefined();
+  });
+
+  it('labels the live state as the current chart with a saved status', () => {
+    const current = container.querySelector('.version-item:not([data-version-id])')!;
+    expect(current.querySelector('.version-item-name')?.textContent).toBe('Current chart');
+    expect(current.querySelector('.version-item-date')?.textContent).toBe('All changes saved');
+  });
+
+  it('shows the edit count since the last version', async () => {
+    store.getEditsSinceLastVersion = vi.fn().mockReturnValue(4);
+
+    await editor.refresh();
+
+    const current = container.querySelector('.version-item:not([data-version-id])')!;
+    expect(current.querySelector('.version-item-date')?.textContent).toBe(
+      '4 edits since last version',
+    );
+  });
+});
+
+describe('ChartEditor – version delta chips', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  const previous = makeVersion({
+    id: 'previous',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    tree: {
+      id: 'root',
+      name: 'Alice',
+      title: 'CEO',
+      children: [{ id: 'removed', name: 'Bob', title: 'VP' }],
+    },
+  });
+  const current = makeVersion({
+    id: 'current',
+    createdAt: '2026-01-02T00:00:00.000Z',
+    tree: {
+      id: 'root',
+      name: 'Alice',
+      title: 'CEO',
+      children: [{ id: 'added', name: 'Carol', title: 'VP' }],
+    },
+  });
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    editor = new ChartEditor({
+      container,
+      chartStore: mockChartStore([makeChart()], [current, previous]),
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-version-id="current"]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    container.remove();
+  });
+
+  it('shows additions and removals against the previous chronological version', () => {
+    const chip = container.querySelector('[data-version-id="current"] .version-delta-chip');
+    expect(chip?.textContent).toBe('+1 −1');
+    expect(chip?.getAttribute('aria-label')).toBe(
+      '1 added, 1 removed since previous version',
+    );
+  });
+
+  it('shows a zero baseline for the oldest version', () => {
+    const chip = container.querySelector('[data-version-id="previous"] .version-delta-chip');
+    expect(chip?.textContent).toBe('+0 −0');
   });
 });
 
@@ -483,7 +611,7 @@ describe('ChartEditor – public chart and version action wrappers', () => {
     handleDuplicateChart: (chart: ChartRecord) => Promise<void>;
     handleExportChart: (chart: ChartRecord) => Promise<void>;
     handleDeleteChart: (chart: ChartRecord) => Promise<void>;
-    handleRestoreVersion: (versionId: string) => Promise<void>;
+    handleRestoreVersion: (version: VersionRecord) => Promise<void>;
     handleDeleteVersion: (version: VersionRecord) => Promise<void>;
   };
 
@@ -579,13 +707,13 @@ describe('ChartEditor – public chart and version action wrappers', () => {
     expect(onVersionCompare).toHaveBeenCalledWith(version);
   });
 
-  it('restoreVersion delegates the version id to the restore handler', async () => {
+  it('restoreVersion delegates the whole version to the restore handler', async () => {
     const handler = vi.spyOn(handlers, 'handleRestoreVersion').mockResolvedValue(undefined);
 
     await editor.restoreVersion(version);
 
     expect(handler).toHaveBeenCalledOnce();
-    expect(handler).toHaveBeenCalledWith(version.id);
+    expect(handler).toHaveBeenCalledWith(version);
   });
 
   it('deleteVersion delegates the whole version to the delete handler', async () => {
@@ -595,6 +723,82 @@ describe('ChartEditor – public chart and version action wrappers', () => {
 
     expect(handler).toHaveBeenCalledOnce();
     expect(handler).toHaveBeenCalledWith(version);
+  });
+});
+
+describe('ChartEditor – safe version restore', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let store: ReturnType<typeof mockChartStore>;
+  let onVersionRestore: ReturnType<typeof vi.fn<(tree: OrgNode) => void>>;
+  const chart = makeChart();
+  const version = makeVersion({ name: 'Approved plan' });
+  const currentTree = makeTree();
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = mockChartStore([chart], [version]);
+    onVersionRestore = vi.fn();
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore,
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => currentTree,
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+    await vi.waitFor(() => {
+      expect(container.querySelector(`[data-version-id="${version.id}"]`)).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    container.remove();
+    (showConfirmDialog as ReturnType<typeof vi.fn>).mockReset().mockResolvedValue(true);
+  });
+
+  it('explains the safety snapshot before restoring', async () => {
+    await editor.restoreVersion(version);
+
+    expect(showConfirmDialog).toHaveBeenCalledWith({
+      title: 'Restore “Approved plan”?',
+      message:
+        'Your current chart will be saved first. Then “Approved plan” will become the current chart.',
+      confirmLabel: 'Restore version',
+    });
+    expect(store.restoreVersion).toHaveBeenCalledWith(version.id, currentTree);
+    expect(onVersionRestore).toHaveBeenCalledWith(makeTree());
+  });
+
+  it('does not restore when the safety confirmation is canceled', async () => {
+    (showConfirmDialog as ReturnType<typeof vi.fn>).mockResolvedValueOnce(false);
+
+    await editor.restoreVersion(version);
+
+    expect(store.restoreVersion).not.toHaveBeenCalled();
+    expect(onVersionRestore).not.toHaveBeenCalled();
+  });
+
+  it('shows a toast and logs the error when restore fails', async () => {
+    const error = new Error('storage full');
+    vi.mocked(store.restoreVersion).mockRejectedValueOnce(error);
+    const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      await editor.restoreVersion(version);
+
+      expect(showToast).toHaveBeenCalledWith('storage full', 'error');
+      expect(logError).toHaveBeenCalledWith(error);
+      expect(container.textContent).toContain('storage full');
+    } finally {
+      logError.mockRestore();
+    }
   });
 });
 

@@ -8,6 +8,10 @@ vi.mock('../../src/ui/input-dialog', () => ({
   showInputDialog: vi.fn().mockResolvedValue('Snapshot'),
 }));
 
+vi.mock('../../src/ui/confirm-dialog', () => ({
+  showConfirmDialog: vi.fn().mockResolvedValue(true),
+}));
+
 function makeTree(id: string, peopleCount: number): OrgNode {
   return {
     id,
@@ -95,6 +99,7 @@ function createChartStore(charts: ChartRecord[]) {
     duplicateChart: vi.fn(),
     deleteVersion: vi.fn(),
     isDirty: vi.fn(() => false),
+    getEditsSinceLastVersion: vi.fn(() => 0),
   };
 }
 

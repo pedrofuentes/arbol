@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { t, tp, setLocale, getLocale, getDirection } from '../../src/i18n';
 import en from '../../src/i18n/en';
+import es from '../../src/i18n/es';
 
 describe('i18n', () => {
   beforeEach(() => {
@@ -178,6 +179,70 @@ describe('i18n', () => {
 
     it('has footer.separator key for localization', () => {
       expect(en['footer.separator']).toBe(' \u00b7 ');
+    });
+
+    it('uses consumer vocabulary for version history in both locales', () => {
+      expect(en['chart_editor.current_chart']).toBe('Current chart');
+      expect(en['chart_editor.versions_heading']).toBe('Version history');
+      expect(en['chart_editor.save_version']).toBe('Save a version');
+      expect(en['chart_editor.preview']).toBe('Preview');
+      expect(en['chart_header.status_saved']).toBe('All changes saved');
+      expect(en['chart_header.edits_since_version.one']).toBe('1 edit since last version');
+      expect(en['chart_header.edits_since_version.other']).toBe(
+        '{count} edits since last version',
+      );
+
+      expect(es['chart_editor.current_chart']).toBe('Organigrama actual');
+      expect(es['chart_editor.versions_heading']).toBe('Historial de versiones');
+      expect(es['chart_editor.save_version']).toBe('Guardar una versión');
+      expect(es['chart_editor.preview']).toBe('Vista previa');
+      expect(es['chart_header.status_saved']).toBe('Todos los cambios guardados');
+      expect(es['chart_header.edits_since_version.one']).toBe(
+        '1 edición desde la última versión',
+      );
+      expect(es['chart_header.edits_since_version.other']).toBe(
+        '{count} ediciones desde la última versión',
+      );
+      expect(en['toast.version_saved']).toBe('Version saved · {name}');
+      expect(es['toast.version_saved']).toBe('Versión guardada · {name}');
+      expect(en['dialog.restore_version.title']).toBe('Restore “{name}”?');
+      expect(en['dialog.restore_version.message']).toBe(
+        'Your current chart will be saved first. Then “{name}” will become the current chart.',
+      );
+      expect(en['dialog.restore_version.confirm']).toBe('Restore version');
+      expect(en['chart_store.before_restore_version_name']).toBe(
+        'Before restoring {name} · {timestamp}',
+      );
+      expect(es['dialog.restore_version.title']).toBe('¿Restaurar “{name}”?');
+      expect(es['dialog.restore_version.message']).toBe(
+        'El organigrama actual se guardará primero. Después, “{name}” será el organigrama actual.',
+      );
+      expect(es['dialog.restore_version.confirm']).toBe('Restaurar versión');
+      expect(es['chart_store.before_restore_version_name']).toBe(
+        'Antes de restaurar {name} · {timestamp}',
+      );
+      expect(en['chart_editor.version_delta_aria']).toBe(
+        '{added} added, {removed} removed since previous version',
+      );
+      expect(es['chart_editor.version_delta_aria']).toBe(
+        '{added} agregadas, {removed} eliminadas desde la versión anterior',
+      );
+    });
+
+    it('never exposes technical or alarming edit-state vocabulary', () => {
+      expect(Object.values(en).join('\n')).not.toMatch(/working tree|unsaved|dirty/i);
+      expect(Object.values(es).join('\n')).not.toMatch(/árbol de trabajo|sin guardar|suci[oa]/i);
+    });
+
+    it('removes version keys named after the old user-facing vocabulary', () => {
+      expect(en['chart_editor.working_tree']).toBeUndefined();
+      expect(en['chart_editor.working_tree_dirty']).toBeUndefined();
+      expect(en['chart_editor.working_tree_saved']).toBeUndefined();
+      expect(en['chart_editor.view']).toBeUndefined();
+      expect(en['version_picker.working_tree']).toBeUndefined();
+      expect(en['comparison.working_tree']).toBeUndefined();
+      expect(en['dialog.unsaved.title']).toBeUndefined();
+      expect(en['help.charts_versions.unsaved']).toBeUndefined();
     });
 
     it('search.placeholder tells users what is searchable', () => {

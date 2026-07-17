@@ -612,7 +612,7 @@ describe('renderPreviewStep — ChartBundle', () => {
     renderPreviewStep(container, state, onReady);
     const error = container.querySelector('.wizard-error');
     expect(error).not.toBeNull();
-    expect(error!.textContent).toContain('working tree root');
+    expect(error!.textContent).toContain('current chart root');
     expect(onReady).toHaveBeenCalledWith(false);
   });
 

@@ -161,7 +161,7 @@ export function createComparisonHandler(deps: ComparisonDeps): ComparisonHandler
 
     if (target.type === 'working') {
       newTree = store.getTree();
-      newLabel = t('comparison.working_tree');
+      newLabel = t('comparison.current_chart');
     } else {
       newTree = target.version.tree;
       newLabel = target.version.name;

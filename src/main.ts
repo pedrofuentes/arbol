@@ -61,7 +61,7 @@ import {
 import { completeBundleImportActivation } from './ui/bundle-import-activation';
 import { importBundle } from './ui/bundle-import-handler';
 import { registerShortcuts } from './init/shortcuts-handler';
-import type { ChartRecord } from './types';
+import type { ChartRecord, OrgNode } from './types';
 import { AnalyticsDrawer } from './ui/analytics-drawer';
 import { AnalyticsEditor } from './editor/analytics-editor';
 import { loadAppConfig } from './config/app-config';
@@ -262,6 +262,7 @@ async function main(): Promise<void> {
 
   // Theme manager + header references
   const themeManager = new ThemeManager();
+  const headerCenter = document.getElementById('header-center')!;
   const headerRight = document.getElementById('header-right')!;
 
   // Settings modal (opens via header button)
@@ -431,7 +432,7 @@ async function main(): Promise<void> {
             categoryStore.replaceAll(chart.categories);
           }
           chartNameHeader.setName(chart.name);
-          chartNameHeader.setDirty(false);
+          chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
           rerender();
           renderer.getZoomManager()?.fitToContent();
           announce(t('announce.chart_switched', { name: wizardState.chartName }));
@@ -498,10 +499,10 @@ async function main(): Promise<void> {
   });
   const { settingsBtn, importBtn } = toolbar;
 
-  // Chart name header (moved offscreen — name shown in sidebar)
+  // Chart name and version status in the visible header
   const chartNameContainer = document.createElement('div');
   chartNameContainer.style.cssText = 'display:flex;align-items:center;margin-left:12px;';
-  offscreenHost.appendChild(chartNameContainer);
+  headerCenter.appendChild(chartNameContainer);
 
   const chartNameHeader = new ChartNameHeader({
     container: chartNameContainer,
@@ -520,6 +521,8 @@ async function main(): Promise<void> {
       if (name?.trim()) {
         try {
           await chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
+          chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
+          showToast(t('toast.version_saved', { name: name.trim() }), 'success');
           announce(t('announce.chart_saved'));
         } catch {
           showToast(t('error.version_save_failed'), 'error');
@@ -530,7 +533,7 @@ async function main(): Promise<void> {
 
   // Update dirty indicator on every store change
   store.onChange(() => {
-    chartNameHeader.setDirty(chartStore.isDirty(store.getTree(), store.mutationVersion));
+    chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
   });
 
   // Search UI — floating over the chart canvas
@@ -633,18 +636,21 @@ async function main(): Promise<void> {
   const handleBeforeSwitch = async (): Promise<boolean> => {
     if (!chartStore.isDirty(store.getTree(), store.mutationVersion)) return true;
     const confirmed = await showConfirmDialog({
-      title: t('dialog.unsaved.title'),
-      message: t('dialog.unsaved.message'),
-      confirmLabel: t('dialog.unsaved.confirm'),
-      danger: true,
+      title: t('dialog.switch_changes.title'),
+      message: t('dialog.switch_changes.message'),
+      confirmLabel: t('dialog.switch_changes.confirm'),
     });
     return confirmed;
   };
+
+  let prePreviewTree: OrgNode | null = null;
 
   const handleChartSwitched = (chart: ChartRecord) => {
     showLoading(t('loading.switching_chart'));
     try {
       focusMode.clear();
+      prePreviewTree = null;
+      chartEditor?.setViewingVersion(null);
       dismissVersionViewer();
       clearMultiSelection();
       store.replaceTree(chart.workingTree);
@@ -655,7 +661,7 @@ async function main(): Promise<void> {
       }
       levelStore.loadFromChart(chart);
       chartNameHeader.setName(chart.name);
-      chartNameHeader.setDirty(false);
+      chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
       rerender();
       renderer.getZoomManager()?.fitToContent();
       formEditor.refresh();
@@ -676,44 +682,42 @@ async function main(): Promise<void> {
     categoryPresetStore,
     levelPresetStore,
     onVersionRestore: (tree) => {
+      prePreviewTree = null;
       dismissVersionViewer();
       store.replaceTree(tree);
-      chartNameHeader.setDirty(false);
+      chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
       rerender();
       renderer.getZoomManager()?.fitToContent();
       formEditor.refresh();
       jsonEditor.refresh();
     },
     onVersionView: (version) => {
-      const savedTree = store.getTree();
+      const savedTree = prePreviewTree ?? store.getTree();
+      prePreviewTree = savedTree;
+      chartEditor.setViewingVersion(version.id, savedTree);
       store.replaceTree(version.tree);
       rerender();
       renderer.getZoomManager()?.fitToContent();
-      chartEditor.setViewingVersion(version.id);
       showVersionViewer({
         versionName: version.name,
         container: chartArea,
         onCompare: () => {
-          store.replaceTree(savedTree);
+          const treeToRestore = chartEditor.setViewingVersion(null) ?? savedTree;
+          prePreviewTree = null;
+          store.replaceTree(treeToRestore);
           dismissVersionViewer();
-          chartEditor.setViewingVersion(null);
           rerender();
           renderer.getZoomManager()?.fitToContent();
           comparison.enterComparisonMode(version);
         },
         onRestore: async () => {
-          const shouldProceed = await handleBeforeSwitch();
-          if (!shouldProceed) return;
-          await chartStore.restoreVersion(version.id);
-          dismissVersionViewer();
-          chartEditor.setViewingVersion(null);
-          chartNameHeader.setDirty(false);
-          rerender();
+          await chartEditor.restoreVersion(version, savedTree);
         },
         onClose: () => {
-          store.replaceTree(savedTree);
+          const treeToRestore = chartEditor.setViewingVersion(null) ?? savedTree;
+          prePreviewTree = null;
+          store.replaceTree(treeToRestore);
           dismissVersionViewer();
-          chartEditor.setViewingVersion(null);
           rerender();
           renderer.getZoomManager()?.fitToContent();
         },

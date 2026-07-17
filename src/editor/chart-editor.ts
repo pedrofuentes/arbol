@@ -14,10 +14,12 @@ import { showInputDialog } from '../ui/input-dialog';
 import { showChartExportDialog } from '../ui/chart-export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../export/chart-exporter';
 import { flattenTree } from '../utils/tree';
-import { t, getLocale } from '../i18n';
+import { t, tp, getLocale } from '../i18n';
 import { showCreateChartDialog } from '../ui/create-chart-dialog';
 import { createButton } from '../utils/dom-builder';
 import { createIcon, type IconName } from '../ui/icon';
+import { VersionDeltaCache, type VersionDelta } from '../utils/version-delta';
+import { showToast } from '../ui/toast';
 
 export interface ChartEditorOptions {
   container: HTMLElement;
@@ -65,6 +67,7 @@ export class ChartEditor {
   private versionErrorEl!: HTMLDivElement;
   private chartSearchTerm = '';
   private viewingVersionId: string | null = null;
+  private prePreviewTree: OrgNode | null = null;
 
   private unsubscribe: (() => void) | null = null;
   private unsubscribeWorkingTreeSaved: (() => void) | null = null;
@@ -75,6 +78,7 @@ export class ChartEditor {
   private pendingPeopleCounts = new Map<string, number>();
   private versionCounts = new Map<string, number>();
   private chartNames = new Map<string, string>();
+  private versionDeltaCache = new VersionDeltaCache();
 
   constructor(options: ChartEditorOptions) {
     this.container = options.container;
@@ -128,9 +132,16 @@ export class ChartEditor {
     this.container.innerHTML = '';
   }
 
-  setViewingVersion(versionId: string | null): void {
+  setViewingVersion(versionId: string | null, prePreviewTree?: OrgNode): OrgNode | null {
+    const treeToRestore = this.prePreviewTree;
+    if (versionId === null) {
+      this.prePreviewTree = null;
+    } else if (this.prePreviewTree === null && prePreviewTree) {
+      this.prePreviewTree = structuredClone(prePreviewTree);
+    }
     this.viewingVersionId = versionId;
     this.renderVersionList();
+    return versionId === null ? treeToRestore : this.prePreviewTree;
   }
 
   // ── Build ──────────────────────────────────────────────
@@ -429,15 +440,16 @@ export class ChartEditor {
 
     const workingName = document.createElement('div');
     workingName.className = 'version-item-name';
-    workingName.textContent = t('chart_editor.working_tree');
+    workingName.textContent = t('chart_editor.current_chart');
     workingInfo.appendChild(workingName);
 
     const workingDate = document.createElement('div');
     workingDate.className = 'version-item-date';
-    const isDirty = this.chartStore.isDirty(this.getCurrentTree());
-    workingDate.textContent = isDirty
-      ? t('chart_editor.working_tree_dirty')
-      : t('chart_editor.working_tree_saved');
+    const editCount = this.chartStore.getEditsSinceLastVersion(this.getCurrentTree());
+    workingDate.textContent =
+      editCount === 0
+        ? t('chart_editor.current_chart_saved')
+        : tp('chart_editor.edits_since_version', editCount);
     workingInfo.appendChild(workingDate);
 
     workingItem.appendChild(workingInfo);
@@ -445,13 +457,15 @@ export class ChartEditor {
 
     // Saved versions
     const versions = await this.chartStore.getVersions();
+    this.versionDeltaCache.retain(versions);
 
-    for (const version of versions) {
-      this.versionListEl.appendChild(this.createVersionItem(version));
+    for (const [index, version] of versions.entries()) {
+      const delta = this.versionDeltaCache.get(version, versions[index + 1]);
+      this.versionListEl.appendChild(this.createVersionItem(version, delta));
     }
   }
 
-  private createVersionItem(version: VersionRecord): HTMLDivElement {
+  private createVersionItem(version: VersionRecord, delta: VersionDelta): HTMLDivElement {
     const item = document.createElement('div');
     const isViewing = this.viewingVersionId === version.id;
     item.className = 'version-item' + (isViewing ? ' viewing' : '');
@@ -480,13 +494,25 @@ export class ChartEditor {
       t('chart_editor.saved_prefix') + new Date(version.createdAt).toLocaleString(getLocale());
     infoEl.appendChild(dateEl);
 
+    const deltaEl = document.createElement('span');
+    deltaEl.className = 'version-delta-chip';
+    deltaEl.textContent = `+${delta.added} −${delta.removed}`;
+    deltaEl.setAttribute(
+      'aria-label',
+      t('chart_editor.version_delta_aria', {
+        added: delta.added,
+        removed: delta.removed,
+      }),
+    );
+    infoEl.appendChild(deltaEl);
+
     item.appendChild(infoEl);
 
-    // Action buttons (hover-reveal)
+    // Action buttons
     const actions = document.createElement('div');
     actions.className = 'version-item-actions';
 
-    const viewBtn = this.createActionButton('eye', t('chart_editor.view'));
+    const viewBtn = this.createActionButton('eye', t('chart_editor.preview'));
     viewBtn.addEventListener('click', () => this.onVersionView(version));
     actions.appendChild(viewBtn);
 
@@ -495,7 +521,7 @@ export class ChartEditor {
     actions.appendChild(compareBtn);
 
     const restoreBtn = this.createActionButton('restore', t('chart_editor.restore'));
-    restoreBtn.addEventListener('click', () => this.handleRestoreVersion(version.id));
+    restoreBtn.addEventListener('click', () => this.handleRestoreVersion(version));
     actions.appendChild(restoreBtn);
 
     const deleteBtn = this.createActionButton('remove', t('chart_editor.delete'), true);
@@ -552,8 +578,12 @@ export class ChartEditor {
     this.onVersionCompare(version);
   }
 
-  async restoreVersion(version: VersionRecord): Promise<void> {
-    await this.handleRestoreVersion(version.id);
+  async restoreVersion(version: VersionRecord, currentTree?: OrgNode): Promise<void> {
+    if (currentTree) {
+      await this.handleRestoreVersion(version, currentTree);
+      return;
+    }
+    await this.handleRestoreVersion(version);
   }
 
   async deleteVersion(version: VersionRecord): Promise<void> {
@@ -731,16 +761,27 @@ export class ChartEditor {
     }
   }
 
-  private async handleRestoreVersion(versionId: string): Promise<void> {
-    const proceed = await this.onBeforeSwitch();
+  private async handleRestoreVersion(
+    version: VersionRecord,
+    currentTree = this.prePreviewTree ?? this.getCurrentTree(),
+  ): Promise<void> {
+    const proceed = await showConfirmDialog({
+      title: t('dialog.restore_version.title', { name: version.name }),
+      message: t('dialog.restore_version.message', { name: version.name }),
+      confirmLabel: t('dialog.restore_version.confirm'),
+    });
     if (!proceed) return;
 
     try {
-      const tree = await this.chartStore.restoreVersion(versionId);
+      const tree = await this.chartStore.restoreVersion(version.id, currentTree);
+      this.setViewingVersion(null);
       this.onVersionRestore(tree);
       await this.refresh();
     } catch (err) {
-      this.showError(this.versionErrorEl, (err as Error).message);
+      const message = (err as Error).message || t('footer.operation_failed');
+      this.showError(this.versionErrorEl, message);
+      showToast(message, 'error');
+      console.error(err);
     }
   }
 

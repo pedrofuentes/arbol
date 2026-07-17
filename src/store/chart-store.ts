@@ -13,7 +13,8 @@ import { generateId } from '../utils/id';
 import { EventEmitter } from '../utils/event-emitter';
 import { type IStorage, browserStorage } from '../utils/storage';
 import { flattenTree } from '../utils/tree';
-import { t } from '../i18n';
+import { getLocale, t } from '../i18n';
+import { compareTrees, getDiffStats } from '../utils/tree-diff';
 
 const DEFAULT_ROOT: OrgNode = {
   id: 'root',
@@ -132,6 +133,8 @@ export class ChartStore extends EventEmitter {
   private activeChartId: string | null = null;
   private lastSavedTree: string | null = null;
   private savedMutationVersion: number | null = null;
+  private lastVersionTree: OrgNode | null = null;
+  private versionCache = new Map<string, VersionRecord[]>();
   private storage: IStorage;
   private workingTreeSavedEmitter = new WorkingTreeSavedEmitter();
 
@@ -157,6 +160,7 @@ export class ChartStore extends EventEmitter {
     this.activeChartId = active.id;
     this.lastSavedTree = JSON.stringify(active.workingTree);
     this.savedMutationVersion = null;
+    await this.loadVersionBaselineWithFallback(active.id, active.workingTree);
     return active;
   }
 
@@ -246,8 +250,10 @@ export class ChartStore extends EventEmitter {
 
     await this.db.putChart(chart);
     this.activeChartId = chart.id;
+    this.versionCache.set(chart.id, []);
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
+    this.lastVersionTree = structuredClone(chart.workingTree);
     this.emit();
     return chart;
   }
@@ -280,8 +286,10 @@ export class ChartStore extends EventEmitter {
 
     await this.db.putChart(chart);
     this.activeChartId = chart.id;
+    this.versionCache.set(chart.id, []);
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
+    this.lastVersionTree = structuredClone(chart.workingTree);
     this.emit();
     return chart;
   }
@@ -332,6 +340,7 @@ export class ChartStore extends EventEmitter {
     if (!chart) throw new Error(`Chart not found: ${id}`);
 
     await this.db.deleteChart(id);
+    this.versionCache.delete(id);
 
     if (this.activeChartId === id) {
       const remaining = await this.db.getAllCharts();
@@ -339,11 +348,14 @@ export class ChartStore extends EventEmitter {
         this.activeChartId = remaining[0].id;
         this.lastSavedTree = JSON.stringify(remaining[0].workingTree);
         this.savedMutationVersion = null;
+        await this.loadVersionBaselineWithFallback(remaining[0].id, remaining[0].workingTree);
       } else {
         const fallback = await this.createFallbackChart();
         this.activeChartId = fallback.id;
+        this.versionCache.set(fallback.id, []);
         this.lastSavedTree = JSON.stringify(fallback.workingTree);
         this.savedMutationVersion = null;
+        this.lastVersionTree = structuredClone(fallback.workingTree);
       }
     }
 
@@ -359,6 +371,7 @@ export class ChartStore extends EventEmitter {
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
+    await this.loadVersionBaselineWithFallback(chart.id, chart.workingTree);
     this.emit();
     return chart;
   }
@@ -408,6 +421,12 @@ export class ChartStore extends EventEmitter {
     return JSON.stringify(currentTree) !== this.lastSavedTree;
   }
 
+  getEditsSinceLastVersion(currentTree: OrgNode): number {
+    if (!this.lastVersionTree) return 0;
+    const stats = getDiffStats(compareTrees(this.lastVersionTree, currentTree));
+    return stats.added + stats.removed + stats.moved + stats.modified;
+  }
+
   // ---------------------------------------------------------------------------
   // Version management
   // ---------------------------------------------------------------------------
@@ -415,7 +434,12 @@ export class ChartStore extends EventEmitter {
   async getVersions(chartId?: string): Promise<VersionRecord[]> {
     const id = chartId ?? this.activeChartId;
     if (!id) throw new Error('No active chart');
-    return this.db.getVersionsByChart(id);
+    const cached = this.versionCache.get(id);
+    if (cached) return [...cached];
+
+    const versions = await this.db.getVersionsByChart(id);
+    this.versionCache.set(id, versions);
+    return [...versions];
   }
 
   async saveVersion(name: string, tree: OrgNode, mutationVersion?: number): Promise<VersionRecord> {
@@ -423,17 +447,22 @@ export class ChartStore extends EventEmitter {
     if (!trimmed) throw new Error('Version name cannot be empty');
     if (!this.activeChartId) throw new Error('No active chart');
 
+    const snapshot = structuredClone(tree);
     const version: VersionRecord = {
       id: generateId(),
       chartId: this.activeChartId,
       name: trimmed,
       createdAt: new Date().toISOString(),
-      tree,
+      tree: snapshot,
     };
 
     await this.db.putVersion(version);
+    const cached = this.versionCache.get(this.activeChartId) ?? [];
+    this.versionCache.set(this.activeChartId, [version, ...cached]);
     this.lastSavedTree = JSON.stringify(tree);
     this.savedMutationVersion = mutationVersion ?? null;
+    // The version and baseline share one immutable snapshot; neither is mutated in place.
+    this.lastVersionTree = snapshot;
     this.emit();
     return version;
   }
@@ -442,18 +471,41 @@ export class ChartStore extends EventEmitter {
     return this.db.getVersion(id);
   }
 
-  async restoreVersion(versionId: string): Promise<OrgNode> {
+  async restoreVersion(versionId: string, currentTree?: OrgNode): Promise<OrgNode> {
     const version = await this.db.getVersion(versionId);
     if (!version) throw new Error(`Version not found: ${versionId}`);
 
+    if (currentTree && this.getEditsSinceLastVersion(currentTree) > 0) {
+      const name = t('chart_store.before_restore_version_name', {
+        name: version.name,
+        timestamp: new Date().toLocaleString(getLocale()),
+      });
+      await this.saveVersion(name, currentTree);
+    }
+
     this.lastSavedTree = JSON.stringify(version.tree);
     this.savedMutationVersion = null;
+    this.lastVersionTree = structuredClone(version.tree);
     this.emit();
     return version.tree;
   }
 
   async deleteVersion(id: string): Promise<void> {
+    const version = await this.db.getVersion(id);
     await this.db.deleteVersion(id);
+    if (version) {
+      const cached = this.versionCache.get(version.chartId);
+      if (cached) {
+        this.versionCache.set(
+          version.chartId,
+          cached.filter((candidate) => candidate.id !== id),
+        );
+      }
+    }
+    if (version?.chartId === this.activeChartId) {
+      const chart = await this.getActiveChart();
+      if (chart) await this.loadVersionBaseline(chart.id, chart.workingTree);
+    }
     this.emit();
   }
 
@@ -508,10 +560,15 @@ export class ChartStore extends EventEmitter {
       tree: v.tree,
     }));
     await this.db.putVersionsBatch(versions);
+    this.versionCache.set(
+      chart.id,
+      versions.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    );
 
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
+    await this.loadVersionBaseline(chart.id, chart.workingTree);
     this.emit();
     return chart;
   }
@@ -560,9 +617,11 @@ export class ChartStore extends EventEmitter {
       tree: v.tree,
     }));
     await this.db.putVersionsBatch(versions);
+    this.versionCache.delete(chart.id);
 
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
+    await this.loadVersionBaselineWithFallback(chart.id, chart.workingTree);
     this.emit();
     return chart;
   }
@@ -607,6 +666,23 @@ export class ChartStore extends EventEmitter {
     };
     await this.db.putChart(chart);
     return chart;
+  }
+
+  private async loadVersionBaseline(chartId: string, fallbackTree: OrgNode): Promise<void> {
+    const versions = await this.getVersions(chartId);
+    this.lastVersionTree = structuredClone(versions[0]?.tree ?? fallbackTree);
+  }
+
+  private async loadVersionBaselineWithFallback(
+    chartId: string,
+    fallbackTree: OrgNode,
+  ): Promise<void> {
+    try {
+      await this.loadVersionBaseline(chartId, fallbackTree);
+    } catch (err) {
+      console.error('Failed to load version baseline:', err);
+      this.lastVersionTree = structuredClone(fallbackTree);
+    }
   }
 
   /** Ensures a chart record loaded from IndexedDB has all required fields with valid defaults. */
