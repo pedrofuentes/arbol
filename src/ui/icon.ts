@@ -98,10 +98,17 @@ function appendPaths(svg: SVGSVGElement, name: IconName): void {
   }
 }
 
-export function createIcon(name: IconName, className?: string): SVGSVGElement {
+export function createIcon(name: IconName, className?: string, size?: number): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg');
+  const resolvedSize = size ?? 16;
   svg.classList.add('ui-icon');
   if (className) svg.classList.add(className);
+  svg.setAttribute('width', String(resolvedSize));
+  svg.setAttribute('height', String(resolvedSize));
+  if (size !== undefined) {
+    svg.style.width = `${size}px`;
+    svg.style.height = `${size}px`;
+  }
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('fill', 'none');
   svg.setAttribute('stroke', 'currentColor');

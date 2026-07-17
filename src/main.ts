@@ -539,7 +539,7 @@ async function main(): Promise<void> {
   const searchWrapper = document.createElement('div');
   searchWrapper.className = 'search-float';
 
-  const searchIcon = createIcon('search', 'search-icon');
+  const searchIcon = createIcon('search', 'search-icon', 16);
   searchWrapper.appendChild(searchIcon);
 
   const searchInput = document.createElement('input');

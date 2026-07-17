@@ -87,7 +87,7 @@ export function showCategoryLegend(options: CategoryLegendOptions): void {
     'line-height:1',
     'transition:transform 150ms ease',
   ].join(';');
-  toggleBtn.appendChild(createIcon('chevron-down'));
+  toggleBtn.appendChild(createIcon('chevron-down', undefined, 16));
 
   headerRow.appendChild(toggleBtn);
   legend.appendChild(headerRow);
