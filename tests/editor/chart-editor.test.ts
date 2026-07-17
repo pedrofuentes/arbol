@@ -491,6 +491,69 @@ describe('ChartEditor – consumer version vocabulary', () => {
   });
 });
 
+describe('ChartEditor – version delta chips', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  const previous = makeVersion({
+    id: 'previous',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    tree: {
+      id: 'root',
+      name: 'Alice',
+      title: 'CEO',
+      children: [{ id: 'removed', name: 'Bob', title: 'VP' }],
+    },
+  });
+  const current = makeVersion({
+    id: 'current',
+    createdAt: '2026-01-02T00:00:00.000Z',
+    tree: {
+      id: 'root',
+      name: 'Alice',
+      title: 'CEO',
+      children: [{ id: 'added', name: 'Carol', title: 'VP' }],
+    },
+  });
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    editor = new ChartEditor({
+      container,
+      chartStore: mockChartStore([makeChart()], [current, previous]),
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-version-id="current"]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    container.remove();
+  });
+
+  it('shows additions and removals against the previous chronological version', () => {
+    const chip = container.querySelector('[data-version-id="current"] .version-delta-chip');
+    expect(chip?.textContent).toBe('+1 −1');
+    expect(chip?.getAttribute('aria-label')).toBe(
+      '1 added, 1 removed since previous version',
+    );
+  });
+
+  it('shows a zero baseline for the oldest version', () => {
+    const chip = container.querySelector('[data-version-id="previous"] .version-delta-chip');
+    expect(chip?.textContent).toBe('+0 −0');
+  });
+});
+
 describe('ChartEditor – active vs inactive chart actions', () => {
   let container: HTMLElement;
   let editor: ChartEditor;

@@ -596,6 +596,18 @@ describe('ChartStore', () => {
       expect(versions.length).toBe(2);
     });
 
+    it('caches version trees after the first IndexedDB read', async () => {
+      const readVersions = vi.spyOn(db, 'getVersionsByChart');
+      readVersions.mockClear();
+      await store.saveVersion('v1', makeTree());
+
+      await store.getVersions();
+      await store.getVersions();
+
+      // Version trees are immutable, so list refreshes reuse the in-memory cache.
+      expect(readVersions).not.toHaveBeenCalled();
+    });
+
     it('getVersions returns versions for a specified chart', async () => {
       const chartA = await store.createChart('Chart A');
       await store.saveVersion('v1', makeTree());

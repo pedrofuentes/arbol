@@ -221,6 +221,12 @@ describe('i18n', () => {
       expect(es['chart_store.before_restore_version_name']).toBe(
         'Antes de restaurar {name} · {timestamp}',
       );
+      expect(en['chart_editor.version_delta_aria']).toBe(
+        '{added} added, {removed} removed since previous version',
+      );
+      expect(es['chart_editor.version_delta_aria']).toBe(
+        '{added} agregadas, {removed} eliminadas desde la versión anterior',
+      );
     });
 
     it('never exposes technical or alarming edit-state vocabulary', () => {
