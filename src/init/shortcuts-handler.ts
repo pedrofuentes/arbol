@@ -16,7 +16,7 @@ import type { FocusModeController } from '../controllers/focus-mode';
 import type { PropertyPanel } from '../ui/property-panel';
 import type { FormEditor } from '../editor/form-editor';
 import type { ChartRenderer } from '../renderer/chart-renderer';
-import type { ChartRecord } from '../types';
+import type { ChartRecord, VersionRecord } from '../types';
 
 export interface ShortcutsDeps {
   store: OrgStore;
@@ -36,6 +36,14 @@ export interface ShortcutsDeps {
   clearMultiSelection: () => void;
   handleBeforeSwitch: () => Promise<boolean>;
   handleChartSwitched: (chart: ChartRecord) => void;
+  renameActiveChart: (chart: ChartRecord) => Promise<void>;
+  duplicateActiveChart: (chart: ChartRecord) => Promise<void>;
+  exportActiveChart: (chart: ChartRecord) => Promise<void>;
+  deleteActiveChart: (chart: ChartRecord) => Promise<void>;
+  viewVersion: (version: VersionRecord) => void;
+  compareVersion: (version: VersionRecord) => void;
+  restoreVersion: (version: VersionRecord) => Promise<void>;
+  deleteVersion: (version: VersionRecord) => Promise<void>;
 }
 
 export interface ShortcutsResult {
@@ -63,6 +71,14 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
     clearMultiSelection,
     handleBeforeSwitch,
     handleChartSwitched,
+    renameActiveChart,
+    duplicateActiveChart,
+    exportActiveChart,
+    deleteActiveChart,
+    viewVersion,
+    compareVersion,
+    restoreVersion,
+    deleteVersion,
   } = deps;
 
   const shortcuts = new ShortcutManager();
@@ -247,6 +263,77 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
     // Dynamic chart entries
     const activeId = chartStore.getActiveChartId();
     const allCharts = await chartStore.getCharts();
+    const activeChart = allCharts.find((chart) => chart.id === activeId);
+    if (activeChart) {
+      items.push(
+        {
+          id: 'rename-chart',
+          label: t('command_palette.item_rename_chart'),
+          icon: '✏️',
+          group: t('command_palette.group_charts'),
+          action: () => renameActiveChart(activeChart),
+        },
+        {
+          id: 'duplicate-chart',
+          label: t('command_palette.item_duplicate_chart'),
+          icon: '📋',
+          group: t('command_palette.group_charts'),
+          action: () => duplicateActiveChart(activeChart),
+        },
+        {
+          id: 'export-chart-data',
+          label: t('command_palette.item_export_chart_data'),
+          icon: '📤',
+          group: t('command_palette.group_charts'),
+          action: () => exportActiveChart(activeChart),
+        },
+        {
+          id: 'delete-chart',
+          label: t('command_palette.item_delete_chart'),
+          icon: '🗑️',
+          group: t('command_palette.group_charts'),
+          action: () => deleteActiveChart(activeChart),
+        },
+      );
+
+      try {
+        const versions = await chartStore.getVersions(activeChart.id);
+        for (const version of versions) {
+          items.push(
+            {
+              id: `view-version-${version.id}`,
+              label: t('command_palette.item_view_version', { name: version.name }),
+              icon: '👁',
+              group: t('command_palette.group_charts'),
+              action: () => viewVersion(version),
+            },
+            {
+              id: `compare-version-${version.id}`,
+              label: t('command_palette.item_compare_version', { name: version.name }),
+              icon: '⚖️',
+              group: t('command_palette.group_charts'),
+              action: () => compareVersion(version),
+            },
+            {
+              id: `restore-version-${version.id}`,
+              label: t('command_palette.item_restore_version', { name: version.name }),
+              icon: '↩️',
+              group: t('command_palette.group_charts'),
+              action: () => restoreVersion(version),
+            },
+            {
+              id: `delete-version-${version.id}`,
+              label: t('command_palette.item_delete_version', { name: version.name }),
+              icon: '🗑️',
+              group: t('command_palette.group_charts'),
+              action: () => deleteVersion(version),
+            },
+          );
+        }
+      } catch (error) {
+        console.error('Failed to load command palette versions:', error);
+      }
+    }
     for (const chart of allCharts) {
       if (chart.id === activeId) continue;
       items.push({

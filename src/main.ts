@@ -1103,6 +1103,14 @@ async function main(): Promise<void> {
     clearMultiSelection,
     handleBeforeSwitch,
     handleChartSwitched,
+    renameActiveChart: chartEditor.renameActiveChart.bind(chartEditor),
+    duplicateActiveChart: chartEditor.duplicateActiveChart.bind(chartEditor),
+    exportActiveChart: chartEditor.exportActiveChart.bind(chartEditor),
+    deleteActiveChart: chartEditor.deleteActiveChart.bind(chartEditor),
+    viewVersion: chartEditor.viewVersion.bind(chartEditor),
+    compareVersion: chartEditor.compareVersion.bind(chartEditor),
+    restoreVersion: chartEditor.restoreVersion.bind(chartEditor),
+    deleteVersion: chartEditor.deleteVersion.bind(chartEditor),
   });
 
   // Wire ⌘K button now that commandPalette exists

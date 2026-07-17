@@ -12,9 +12,10 @@ type MockCommandPalette = {
 };
 
 async function getCommandPaletteMock(): Promise<{ instances: MockCommandPalette[] }> {
-  const module = (await import('../../src/ui/command-palette')) as typeof import('../../src/ui/command-palette') & {
-    __mock: { instances: MockCommandPalette[] };
-  };
+  const module =
+    (await import('../../src/ui/command-palette')) as typeof import('../../src/ui/command-palette') & {
+      __mock: { instances: MockCommandPalette[] };
+    };
 
   return module.__mock;
 }
@@ -69,6 +70,7 @@ function makeDeps(overrides?: Partial<ShortcutsDeps>): ShortcutsDeps {
         .mockResolvedValue({ id: 'v1', chartId: 'c1', name: 'v', createdAt: '', tree: {} }),
       getActiveChartId: vi.fn(() => 'c1'),
       getCharts: vi.fn().mockResolvedValue([]),
+      getVersions: vi.fn().mockResolvedValue([]),
       createChart: vi.fn(),
       switchChart: vi.fn(),
     } as unknown as ShortcutsDeps['chartStore'],
@@ -97,6 +99,14 @@ function makeDeps(overrides?: Partial<ShortcutsDeps>): ShortcutsDeps {
     clearMultiSelection: vi.fn(),
     handleBeforeSwitch: vi.fn().mockResolvedValue(true),
     handleChartSwitched: vi.fn(),
+    renameActiveChart: vi.fn(),
+    duplicateActiveChart: vi.fn(),
+    exportActiveChart: vi.fn(),
+    deleteActiveChart: vi.fn(),
+    viewVersion: vi.fn(),
+    compareVersion: vi.fn(),
+    restoreVersion: vi.fn(),
+    deleteVersion: vi.fn(),
     ...overrides,
   };
 }
@@ -427,68 +437,70 @@ describe('shortcuts-handler — command palette actions', () => {
       Array<{ id: string; label: string; group: string; shortcut?: string }>,
     ];
 
-    expect(items.map(({ id, label, group, shortcut }) => ({ id, label, group, shortcut }))).toEqual([
-      {
-        id: 'export',
-        label: t('command_palette.item_export'),
-        group: t('command_palette.group_actions'),
-        shortcut: 'Ctrl+E',
-      },
-      {
-        id: 'undo',
-        label: t('command_palette.item_undo'),
-        group: t('command_palette.group_actions'),
-        shortcut: 'Ctrl+Z',
-      },
-      {
-        id: 'redo',
-        label: t('command_palette.item_redo'),
-        group: t('command_palette.group_actions'),
-        shortcut: 'Ctrl+Shift+Z',
-      },
-      {
-        id: 'settings',
-        label: t('command_palette.item_settings'),
-        group: t('command_palette.group_actions'),
-        shortcut: 'Ctrl+,',
-      },
-      {
-        id: 'search',
-        label: t('command_palette.item_search'),
-        group: t('command_palette.group_navigation'),
-        shortcut: 'Ctrl+F',
-      },
-      {
-        id: 'help',
-        label: t('command_palette.item_help'),
-        group: t('command_palette.group_navigation'),
-        shortcut: '?',
-      },
-      {
-        id: 'theme',
-        label: t('command_palette.item_theme'),
-        group: t('command_palette.group_actions'),
-        shortcut: undefined,
-      },
-      {
-        id: 'new-chart',
-        label: t('command_palette.item_new_chart'),
-        group: t('command_palette.group_charts'),
-        shortcut: undefined,
-      },
-      {
-        id: 'save-version',
-        label: t('command_palette.item_save_version'),
-        group: t('command_palette.group_charts'),
-        shortcut: undefined,
-      },
-      {
-        id: 'import',
-        label: t('command_palette.item_import'),
-        group: t('command_palette.group_actions'),
-        shortcut: undefined,
-      },
-    ]);
+    expect(items.map(({ id, label, group, shortcut }) => ({ id, label, group, shortcut }))).toEqual(
+      [
+        {
+          id: 'export',
+          label: t('command_palette.item_export'),
+          group: t('command_palette.group_actions'),
+          shortcut: 'Ctrl+E',
+        },
+        {
+          id: 'undo',
+          label: t('command_palette.item_undo'),
+          group: t('command_palette.group_actions'),
+          shortcut: 'Ctrl+Z',
+        },
+        {
+          id: 'redo',
+          label: t('command_palette.item_redo'),
+          group: t('command_palette.group_actions'),
+          shortcut: 'Ctrl+Shift+Z',
+        },
+        {
+          id: 'settings',
+          label: t('command_palette.item_settings'),
+          group: t('command_palette.group_actions'),
+          shortcut: 'Ctrl+,',
+        },
+        {
+          id: 'search',
+          label: t('command_palette.item_search'),
+          group: t('command_palette.group_navigation'),
+          shortcut: 'Ctrl+F',
+        },
+        {
+          id: 'help',
+          label: t('command_palette.item_help'),
+          group: t('command_palette.group_navigation'),
+          shortcut: '?',
+        },
+        {
+          id: 'theme',
+          label: t('command_palette.item_theme'),
+          group: t('command_palette.group_actions'),
+          shortcut: undefined,
+        },
+        {
+          id: 'new-chart',
+          label: t('command_palette.item_new_chart'),
+          group: t('command_palette.group_charts'),
+          shortcut: undefined,
+        },
+        {
+          id: 'save-version',
+          label: t('command_palette.item_save_version'),
+          group: t('command_palette.group_charts'),
+          shortcut: undefined,
+        },
+        {
+          id: 'import',
+          label: t('command_palette.item_import'),
+          group: t('command_palette.group_actions'),
+          shortcut: undefined,
+        },
+      ],
+    );
   });
 
   it('theme action toggles theme', async () => {
@@ -529,6 +541,105 @@ describe('shortcuts-handler — command palette actions', () => {
     const chartItems = items.filter((i) => i.id.startsWith('chart-'));
     expect(chartItems).toHaveLength(1);
     expect(chartItems[0].label).toBe('Other Chart');
+  });
+
+  it('includes actions for the active chart and its saved versions', async () => {
+    const activeChart = { id: 'c1', name: 'Active' };
+    const version = { id: 'v1', chartId: 'c1', name: 'Baseline', createdAt: '', tree: {} };
+    const deps = makeDeps({
+      chartStore: {
+        ...makeDeps().chartStore,
+        getActiveChartId: vi.fn(() => 'c1'),
+        getCharts: vi.fn().mockResolvedValue([activeChart]),
+        getVersions: vi.fn().mockResolvedValue([version]),
+      } as unknown as ShortcutsDeps['chartStore'],
+    });
+    const callbacks = deps as unknown as Record<string, ReturnType<typeof vi.fn>>;
+    callbacks.renameActiveChart = vi.fn();
+    callbacks.duplicateActiveChart = vi.fn();
+    callbacks.exportActiveChart = vi.fn();
+    callbacks.deleteActiveChart = vi.fn();
+    callbacks.viewVersion = vi.fn();
+    callbacks.compareVersion = vi.fn();
+    callbacks.restoreVersion = vi.fn();
+    callbacks.deleteVersion = vi.fn();
+
+    const result = registerShortcuts(deps);
+    cleanup = () => result.shortcuts.destroy();
+    const items = await result.buildCommandItems();
+
+    expect(items.map((item) => item.id)).toEqual(
+      expect.arrayContaining([
+        'rename-chart',
+        'duplicate-chart',
+        'export-chart-data',
+        'delete-chart',
+        'view-version-v1',
+        'compare-version-v1',
+        'restore-version-v1',
+        'delete-version-v1',
+      ]),
+    );
+
+    await items.find((item) => item.id === 'rename-chart')!.action();
+    await items.find((item) => item.id === 'duplicate-chart')!.action();
+    await items.find((item) => item.id === 'export-chart-data')!.action();
+    await items.find((item) => item.id === 'delete-chart')!.action();
+    await items.find((item) => item.id === 'view-version-v1')!.action();
+    await items.find((item) => item.id === 'compare-version-v1')!.action();
+    await items.find((item) => item.id === 'restore-version-v1')!.action();
+    await items.find((item) => item.id === 'delete-version-v1')!.action();
+    expect(callbacks.renameActiveChart).toHaveBeenCalledWith(activeChart);
+    expect(callbacks.duplicateActiveChart).toHaveBeenCalledWith(activeChart);
+    expect(callbacks.exportActiveChart).toHaveBeenCalledWith(activeChart);
+    expect(callbacks.deleteActiveChart).toHaveBeenCalledWith(activeChart);
+    expect(callbacks.viewVersion).toHaveBeenCalledWith(version);
+    expect(callbacks.compareVersion).toHaveBeenCalledWith(version);
+    expect(callbacks.restoreVersion).toHaveBeenCalledWith(version);
+    expect(callbacks.deleteVersion).toHaveBeenCalledWith(version);
+  });
+
+  it('returns static commands when saved versions fail to load', async () => {
+    const loadError = new Error('IndexedDB unavailable');
+    const activeChart = { id: 'c1', name: 'Active' };
+    const deps = makeDeps({
+      chartStore: {
+        ...makeDeps().chartStore,
+        getActiveChartId: vi.fn(() => 'c1'),
+        getCharts: vi.fn().mockResolvedValue([activeChart]),
+        getVersions: vi.fn().mockRejectedValue(loadError),
+      } as unknown as ShortcutsDeps['chartStore'],
+    });
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const result = registerShortcuts(deps);
+    cleanup = () => result.shortcuts.destroy();
+
+    try {
+      const items = await result.buildCommandItems();
+      const ids = items.map((item) => item.id);
+
+      expect(ids).toEqual(
+        expect.arrayContaining([
+          'export',
+          'undo',
+          'redo',
+          'settings',
+          'search',
+          'help',
+          'theme',
+          'new-chart',
+          'save-version',
+          'import',
+        ]),
+      );
+      expect(items.length).toBeGreaterThan(0);
+      expect(consoleError).toHaveBeenCalledWith(
+        'Failed to load command palette versions:',
+        loadError,
+      );
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 
   it('chart switch action calls handleBeforeSwitch and switchChart', async () => {
