@@ -179,12 +179,12 @@ describe('renderMappingStep', () => {
     expect(state.format).toBe('CSV');
   });
 
-  it('shows CSV description for CSV data', () => {
+  it('asks users to verify an automatically mapped CSV', () => {
     const state: WizardState = { rawText: 'name,title,manager_name\nAlice,CEO,\n' };
     renderMappingStep(container, state, vi.fn());
     const desc = container.querySelector('.wizard-info');
     expect(desc).not.toBeNull();
-    expect(desc!.textContent).toContain('Map your CSV columns');
+    expect(desc!.textContent).toContain('Verify the column mapping');
   });
 
   it('extracts headers from CSV and stores in state', () => {
@@ -193,11 +193,77 @@ describe('renderMappingStep', () => {
     expect(state.headers).toEqual(['name', 'title', 'manager_name']);
   });
 
-  it('calls onReady(false) initially for CSV', () => {
+  it('auto-maps the standard CSV headers and calls onReady(true)', () => {
     const state: WizardState = { rawText: 'name,title,manager_name\nAlice,CEO,\n' };
     const onReady = vi.fn();
     renderMappingStep(container, state, onReady);
-    expect(onReady).toHaveBeenCalledWith(false);
+    expect(state.mapping).toMatchObject({
+      name: 'name',
+      title: 'title',
+      parentRef: 'manager_name',
+      parentRefType: 'name',
+    });
+    expect(onReady).toHaveBeenCalledWith(true);
+  });
+
+  it.each([
+    ['Full Name', 'Job Title', 'Reports To'],
+    ['Employee', 'Role', 'Supervisor'],
+    ['Employee Name', 'Position', 'Manager Name'],
+    ['Name', 'Title', 'Manager'],
+  ])('auto-maps representative headers: %s, %s, %s', (name, title, manager) => {
+    const state: WizardState = {
+      rawText: `${name},${title},${manager}\nAlice,CEO,\n`,
+    };
+
+    renderMappingStep(container, state, vi.fn());
+
+    expect(state.mapping).toMatchObject({
+      name,
+      title,
+      parentRef: manager,
+      parentRefType: 'name',
+    });
+  });
+
+  it('matches header synonyms without regard to case or repeated whitespace', () => {
+    const state: WizardState = {
+      rawText: '  FULL   NAME  , job TITLE , MANAGER   NAME \nAlice,CEO,\n',
+    };
+
+    renderMappingStep(container, state, vi.fn());
+
+    expect(state.mapping).toMatchObject({
+      name: 'FULL   NAME',
+      title: 'job TITLE',
+      parentRef: 'MANAGER   NAME',
+    });
+  });
+
+  it('matches a saved mapping preset through semantic header synonyms', () => {
+    const state: WizardState = {
+      rawText: 'Full Name,Job Title,Reports To\nAlice,CEO,\n',
+    };
+    const presets = [
+      {
+        name: 'Standard columns',
+        mapping: {
+          name: 'name',
+          title: 'title',
+          parentRef: 'manager',
+          parentRefType: 'name' as const,
+        },
+      },
+    ];
+
+    renderMappingStep(container, state, vi.fn(), presets);
+
+    expect(state.matchedPresetName).toBe('Standard columns');
+    expect(state.mapping).toMatchObject({
+      name: 'Full Name',
+      title: 'Job Title',
+      parentRef: 'Reports To',
+    });
   });
 
   it('clears container before rendering', () => {

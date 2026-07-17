@@ -870,6 +870,13 @@ const en: Record<string, string> = {
     'This will replace the current chart with a sample organization. You can undo this action.',
   'help.section_toggle_aria': 'Toggle {section} section',
 
+  // ─── First-run welcome ─────────────────────────────────────────────
+  'welcome.title': 'Welcome to Arbol',
+  'welcome.description': 'Build and explore your org chart, entirely in your browser.',
+  'welcome.import_hint': 'Already have org data? Use Import in the toolbar to bring it in.',
+  'welcome.load_sample': 'Load sample org chart',
+  'welcome.start_empty': 'Start empty',
+
   // Help: Getting Started
   'help.getting_started.title': 'Getting Started',
   'help.getting_started.pan_zoom':

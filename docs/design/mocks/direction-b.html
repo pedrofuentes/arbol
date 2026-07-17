@@ -1,0 +1,1181 @@
+<!-- The chart-canvas areas in this mock are illustrative stand-ins. The production chart rendering, style presets, and layout engine are final as-is (owner decision, 2026-07-16). -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- interactive: #theme-toggle, #cmd-btn, #palette, #palette-close, #palette-input, #inspector-close, #node-marcus, #compare-toggle, #compare-exit -->
+<title>Arbol Studio — Org design instrument</title>
+<style>
+  /* ============================================================
+     ARBOL STUDIO — design tokens
+     Dark-default, warm graphite/ink. Teal = working accent.
+     Amber = time / history. Emerald / rose / amber = diff.
+     ============================================================ */
+  #app {
+    /* surfaces — warm graphite (nudged off pure-neutral toward ink) */
+    --bg-base: #141317;
+    --bg-canvas: #0e0d10;
+    --bg-surface: #1b1a1f;
+    --bg-elevated: #232128;
+    --bg-hover: #2a2830;
+    --bg-active: #322f39;
+
+    --card-bg: #1f1d24;
+    --card-bg-hover: #27242d;
+
+    --border-subtle: rgba(190,180,205,0.07);
+    --border-default: rgba(190,180,205,0.13);
+    --border-strong: rgba(190,180,205,0.22);
+    --edge: rgba(190,180,205,0.26);
+    --chip-bg: rgba(255,255,255,0.05);
+
+    --text-primary: #efecf3;
+    --text-secondary: #aba5b5;
+    --text-tertiary: #8b8494;
+
+    --accent: #1ec9b0;
+    --accent-hover: #17b39c;
+    --accent-soft: rgba(30,201,176,0.14);
+    --accent-line: rgba(30,201,176,0.55);
+    --accent-glow: rgba(30,201,176,0.30);
+
+    --amber: #f4b13e;
+    --amber-soft: rgba(244,177,62,0.15);
+    --amber-line: rgba(244,177,62,0.55);
+
+    --diff-add: #35d399;
+    --diff-add-soft: rgba(53,211,153,0.16);
+    --diff-remove: #fb5d74;
+    --diff-remove-soft: rgba(251,93,116,0.15);
+    --diff-move: #f4b13e;
+    --diff-move-soft: rgba(244,177,62,0.16);
+
+    --cat-open: #f4b13e;
+    --cat-offer: #4aa6ff;
+
+    --glass: rgba(27,26,31,0.72);
+
+    /* type */
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+
+    /* spacing (4px) */
+    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s7:32px; --s8:48px;
+
+    /* radii */
+    --r-sm:6px; --r-md:9px; --r-lg:13px; --r-xl:18px; --r-full:999px;
+
+    /* elevation */
+    --sh-sm: 0 1px 2px rgba(0,0,0,.5);
+    --sh-md: 0 6px 22px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.35);
+    --sh-lg: 0 24px 60px rgba(0,0,0,.55), 0 8px 20px rgba(0,0,0,.4);
+
+    --ease: cubic-bezier(.22,1,.36,1);
+    --grid: rgba(190,180,205,0.05);
+    --grid-strong: rgba(190,180,205,0.08);
+
+    color-scheme: dark;
+  }
+
+  #app[data-theme="light"] {
+    --bg-base: #efece7;
+    --bg-canvas: #e9e5df;
+    --bg-surface: #ffffff;
+    --bg-elevated: #ffffff;
+    --bg-hover: #f2efea;
+    --bg-active: #e6e1da;
+
+    --card-bg: #ffffff;
+    --card-bg-hover: #faf8f5;
+
+    --border-subtle: rgba(46,36,54,0.07);
+    --border-default: rgba(46,36,54,0.13);
+    --border-strong: rgba(46,36,54,0.22);
+    --edge: rgba(46,36,54,0.24);
+    --chip-bg: rgba(46,36,54,0.05);
+
+    --text-primary: #1c1922;
+    --text-secondary: #575060;
+    --text-tertiary: #6d6678;
+
+    --accent: #0d9488;
+    --accent-hover: #0b7d73;
+    --accent-soft: rgba(13,148,136,0.11);
+    --accent-line: rgba(13,148,136,0.6);
+    --accent-glow: rgba(13,148,136,0.20);
+
+    --amber: #c47a11;
+    --amber-soft: rgba(196,122,17,0.13);
+    --amber-line: rgba(196,122,17,0.55);
+
+    --diff-add: #0f9d63;
+    --diff-add-soft: rgba(15,157,99,0.13);
+    --diff-remove: #dc3a53;
+    --diff-remove-soft: rgba(220,58,83,0.12);
+    --diff-move: #c47a11;
+    --diff-move-soft: rgba(196,122,17,0.14);
+
+    --cat-open: #c47a11;
+    --cat-offer: #2b7fd6;
+
+    --glass: rgba(255,255,255,0.78);
+
+    --sh-sm: 0 1px 2px rgba(30,20,40,.08);
+    --sh-md: 0 6px 22px rgba(30,20,40,.10), 0 2px 6px rgba(30,20,40,.06);
+    --sh-lg: 0 24px 60px rgba(30,20,40,.16), 0 8px 20px rgba(30,20,40,.08);
+
+    --grid: rgba(46,36,54,0.055);
+    --grid-strong: rgba(46,36,54,0.09);
+
+    color-scheme: light;
+  }
+
+  /* ---------- reset-ish ---------- */
+  #app, #app * { box-sizing: border-box; }
+  #app {
+    font-family: var(--sans);
+    color: var(--text-primary);
+    background: var(--bg-base);
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 56px 272px 1fr;
+    grid-template-rows: 54px 1fr auto auto;
+    grid-template-areas:
+      "rail header header"
+      "rail panel  canvas"
+      "rail timeline timeline"
+      "rail footnote footnote";
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  #app button { font-family: inherit; cursor: pointer; color: inherit; background: none; border: none; }
+  #app :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-sm); }
+  #app .icon { width: 18px; height: 18px; flex: none; stroke-width: 1.85; }
+  .eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* ================= ICON RAIL ================= */
+  .rail {
+    grid-area: rail;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 0; gap: 4px;
+  }
+  .rail-logo {
+    width: 34px; height: 34px; border-radius: var(--r-md);
+    display: grid; place-items: center; margin-bottom: 10px;
+    background: linear-gradient(150deg, var(--accent), var(--accent-hover));
+    color: #05201c; box-shadow: 0 0 0 1px var(--border-default), var(--sh-sm);
+  }
+  .rail-logo .icon { width: 20px; height: 20px; stroke-width: 2.1; }
+  .rail-btn {
+    width: 40px; height: 40px; border-radius: var(--r-md);
+    display: grid; place-items: center; color: var(--text-tertiary);
+    position: relative; transition: color .15s var(--ease), background .15s var(--ease);
+  }
+  .rail-btn:hover { color: var(--text-secondary); background: var(--bg-hover); }
+  .rail-btn.active { color: var(--accent); background: var(--accent-soft); }
+  .rail-btn.active::before {
+    content: ""; position: absolute; left: -10px; top: 9px; bottom: 9px; width: 3px;
+    border-radius: 0 3px 3px 0; background: var(--accent);
+  }
+  .rail-spacer { flex: 1; }
+
+  /* ================= HEADER ================= */
+  .header {
+    grid-area: header;
+    display: flex; align-items: center; gap: var(--s4);
+    padding: 0 var(--s5) 0 var(--s5);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-base);
+  }
+  .crumb { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .crumb-name { font-weight: 700; font-size: 14px; letter-spacing: -.01em; white-space: nowrap; }
+  .crumb-sep { color: var(--text-tertiary); }
+  .save-state {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text-secondary);
+    padding: 4px 9px; border-radius: var(--r-full); background: var(--chip-bg);
+  }
+  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .hdr-tools { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: var(--r-md);
+    display: grid; place-items: center; color: var(--text-secondary);
+    transition: background .15s var(--ease), color .15s var(--ease);
+  }
+  .icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .divider-v { width: 1px; height: 22px; background: var(--border-default); margin: 0 8px; }
+
+  /* Command button — command-first pillar */
+  .cmd-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    height: 34px; padding: 0 10px 0 12px; border-radius: var(--r-md);
+    background: var(--bg-elevated); border: 1px solid var(--border-default);
+    color: var(--text-secondary); font-size: 13px; font-weight: 500;
+    transition: border-color .15s var(--ease), background .15s var(--ease), box-shadow .15s var(--ease);
+  }
+  .cmd-btn:hover { border-color: var(--accent-line); color: var(--text-primary); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .cmd-btn .icon { width: 15px; height: 15px; color: var(--accent); }
+  .kbd {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    padding: 2px 6px; border-radius: 5px; color: var(--text-secondary);
+    background: var(--chip-bg); border: 1px solid var(--border-subtle);
+    line-height: 1;
+  }
+
+  /* ================= CHARTS PANEL ================= */
+  .panel {
+    grid-area: panel;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 16px 10px;
+  }
+  .panel-add {
+    width: 26px; height: 26px; border-radius: var(--r-sm); display: grid; place-items: center;
+    color: var(--text-secondary); background: var(--chip-bg);
+    transition: background .15s var(--ease), color .15s var(--ease);
+  }
+  .panel-add:hover { background: var(--accent-soft); color: var(--accent); }
+  .panel-search {
+    margin: 0 12px 8px; height: 32px; border-radius: var(--r-md);
+    display: flex; align-items: center; gap: 8px; padding: 0 10px;
+    background: var(--bg-base); border: 1px solid var(--border-default);
+    color: var(--text-tertiary); font-size: 12.5px;
+  }
+  .panel-search .icon { width: 14px; height: 14px; }
+  .chart-list { padding: 4px 8px; display: flex; flex-direction: column; gap: 2px; }
+  .chart-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 10px;
+    border-radius: var(--r-md); border: 1px solid transparent; position: relative;
+    transition: background .15s var(--ease);
+  }
+  .chart-row:hover { background: var(--bg-hover); }
+  .chart-row.active { background: var(--accent-soft); border-color: var(--accent-line); }
+  .chart-ico {
+    width: 30px; height: 30px; border-radius: var(--r-sm); flex: none;
+    display: grid; place-items: center; color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .chart-row.active .chart-ico { background: var(--bg-surface); }
+  .chart-meta { min-width: 0; flex: 1; }
+  .chart-nm { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chart-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
+  .row-actions { display: flex; gap: 1px; }
+  .row-actions .mini {
+    width: 24px; height: 24px; border-radius: var(--r-sm); display: grid; place-items: center;
+    color: var(--text-tertiary); transition: background .12s var(--ease), color .12s var(--ease);
+  }
+  .row-actions .mini:hover { background: var(--bg-active); color: var(--text-primary); }
+  .row-actions .icon { width: 15px; height: 15px; }
+
+  .panel-section { margin-top: auto; padding: 14px 16px; border-top: 1px solid var(--border-subtle); }
+  .legend-row { display: flex; align-items: center; gap: 9px; font-size: 12px; color: var(--text-secondary); padding: 5px 0; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .legend-count { margin-left: auto; font-size: 11px; color: var(--text-tertiary); }
+
+  /* ================= CANVAS ================= */
+  .canvas {
+    grid-area: canvas; position: relative; min-width: 0; overflow: hidden;
+    background:
+      radial-gradient(120% 90% at 60% 0%, rgba(30,201,176,0.05), transparent 60%),
+      var(--bg-canvas);
+  }
+  .canvas-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      linear-gradient(var(--grid-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px);
+    background-size: 28px 28px, 28px 28px, 140px 140px, 140px 140px;
+    mask-image: radial-gradient(120% 120% at 50% 40%, #000 55%, transparent 100%);
+    -webkit-mask-image: radial-gradient(120% 120% at 50% 40%, #000 55%, transparent 100%);
+  }
+  .stage {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    padding: 40px 32px 24px;
+  }
+  .org-svg { width: 100%; max-width: 1440px; height: auto; overflow: visible; }
+
+  /* org svg */
+  .edge { fill: none; stroke: var(--edge); stroke-width: 1.5; }
+  .node { cursor: default; }
+  #node-marcus { cursor: pointer; }
+  .card { fill: var(--card-bg); stroke: var(--border-default); stroke-width: 1; transition: fill .15s var(--ease), stroke .15s var(--ease); }
+  .node:hover .card { fill: var(--card-bg-hover); stroke: var(--border-strong); }
+  .node.selected .card { stroke: var(--accent); stroke-width: 1.5; }
+  .sel-ring { fill: none; stroke: var(--accent); stroke-width: 1.5; opacity: .4; }
+  .mono-bg { fill: var(--accent-soft); }
+  .mono-t { fill: var(--accent); font: 700 10px var(--mono); text-anchor: middle; letter-spacing: .3px; }
+  .nm { fill: var(--text-primary); font: 700 13.5px var(--sans); letter-spacing: -.01em; }
+  .ti { fill: var(--text-secondary); font: 400 10px var(--sans); }
+  .lvl { fill: var(--chip-bg); stroke: var(--border-subtle); stroke-width: 1; }
+  .lvl-t { fill: var(--text-secondary); font: 600 9px var(--mono); text-anchor: middle; letter-spacing: .4px; }
+  .cat { stroke: var(--card-bg); stroke-width: 1.5; }
+  .cat-open { fill: var(--cat-open); }
+  .cat-offer { fill: var(--cat-offer); }
+
+  /* diff overlay (compare mode) */
+  .diff-only { display: none; }
+  #app.comparing .diff-only { display: block; }
+  #app.comparing #base-edges .edge { opacity: .35; }
+  #app.comparing .node:not(.chg) .card { opacity: .82; }
+  .edge-add { fill: none; stroke: var(--diff-add); stroke-width: 2.2; }
+  .edge-move { fill: none; stroke: var(--diff-move); stroke-width: 2.2; }
+  .edge-remove { fill: none; stroke: var(--diff-remove); stroke-width: 2; stroke-dasharray: 6 5; }
+  .ring-add { fill: none; stroke: var(--diff-add); stroke-width: 2; }
+  .ring-move { fill: none; stroke: var(--diff-move); stroke-width: 2; }
+  .dbadge-c { stroke: var(--bg-canvas); stroke-width: 2; }
+  .dbadge-add { fill: var(--diff-add); }
+  .dbadge-move { fill: var(--diff-move); }
+  .dbadge-rem { fill: var(--diff-remove); }
+  .dbadge-g { stroke: #05130d; stroke-width: 1.6; stroke-linecap: round; fill: none; }
+  .ghost .g-card { fill: var(--diff-remove-soft); stroke: var(--diff-remove); stroke-width: 1.4; stroke-dasharray: 6 5; }
+  .ghost .g-nm { fill: var(--diff-remove); font: 700 12px var(--sans); }
+  .ghost .g-ti { fill: var(--diff-remove); opacity: .8; font: 400 9.5px var(--sans); }
+
+  /* floating canvas toolbar */
+  .canvas-tools {
+    position: absolute; left: 20px; bottom: 20px; z-index: 5;
+    display: flex; align-items: center; gap: 2px; padding: 4px;
+    background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border-default); border-radius: var(--r-lg); box-shadow: var(--sh-md);
+  }
+  .ctool {
+    width: 32px; height: 32px; border-radius: var(--r-md); display: grid; place-items: center;
+    color: var(--text-secondary); transition: background .12s var(--ease), color .12s var(--ease);
+  }
+  .ctool:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .ctool.on { color: var(--accent); background: var(--accent-soft); }
+  .ctool .icon { width: 17px; height: 17px; }
+  .ctool-sep { width: 1px; height: 18px; background: var(--border-default); margin: 0 3px; }
+  .zoom-val { padding: 0 8px; font-size: 12px; color: var(--text-secondary); font-family: var(--mono); }
+
+  /* compare banner on canvas */
+  .compare-flag {
+    position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 6;
+    display: none; align-items: center; gap: 12px; padding: 8px 10px 8px 14px;
+    background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--amber-line); border-radius: var(--r-full); box-shadow: var(--sh-md);
+    font-size: 12.5px; color: var(--text-secondary);
+  }
+  #app.comparing .compare-flag { display: flex; }
+  .compare-flag b { color: var(--text-primary); font-weight: 600; }
+  .cf-swatch { display: inline-flex; align-items: center; gap: 6px; }
+  .cf-a, .cf-b { width: 9px; height: 9px; border-radius: 50%; }
+  .cf-a { background: var(--amber); }
+  .cf-b { background: var(--accent); }
+  .cf-arrow { color: var(--text-tertiary); }
+
+  /* ================= INSPECTOR ================= */
+  .inspector {
+    position: absolute; top: 16px; right: 16px; bottom: 16px; width: 340px; z-index: 8;
+    background: var(--glass); backdrop-filter: blur(20px) saturate(1.3); -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    border: 1px solid var(--border-default); border-radius: var(--r-xl);
+    box-shadow: var(--sh-lg); display: flex; flex-direction: column; overflow: hidden;
+    transition: transform .28s var(--ease), opacity .28s var(--ease);
+  }
+  .inspector.hidden { transform: translateX(24px) scale(.99); opacity: 0; pointer-events: none; }
+  .insp-top { display: flex; align-items: flex-start; gap: 12px; padding: 18px 16px 14px; }
+  .insp-mono {
+    width: 44px; height: 44px; border-radius: var(--r-md); flex: none;
+    display: grid; place-items: center; font: 700 15px var(--mono); letter-spacing: .5px;
+    background: linear-gradient(150deg, var(--accent-soft), transparent); color: var(--accent);
+    border: 1px solid var(--accent-line);
+  }
+  .insp-id { flex: 1; min-width: 0; }
+  .insp-name { font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
+  .insp-title { font-size: 13px; color: var(--text-secondary); margin-top: 1px; }
+  .insp-close {
+    width: 30px; height: 30px; border-radius: var(--r-md); display: grid; place-items: center;
+    color: var(--text-tertiary); transition: background .12s var(--ease), color .12s var(--ease);
+  }
+  .insp-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .insp-body { flex: 1; overflow-y: auto; padding: 0 16px 16px; }
+
+  .mapped {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin: 2px 0 16px;
+    background: var(--bg-base); border: 1px solid var(--border-default); border-radius: var(--r-md);
+  }
+  .mapped .icon { width: 15px; height: 15px; color: var(--accent); }
+  .mapped-txt { flex: 1; min-width: 0; }
+  .mapped-lbl { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-tertiary); }
+  .mapped-val { font-size: 13px; font-weight: 600; }
+  .pin {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
+    color: var(--accent); background: var(--accent-soft); padding: 4px 8px; border-radius: var(--r-full);
+  }
+  .pin .icon { width: 12px; height: 12px; color: inherit; }
+
+  .insp-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .stat {
+    padding: 11px 10px; border-radius: var(--r-md);
+    background: var(--bg-base); border: 1px solid var(--border-subtle);
+  }
+  .stat-v { font-size: 20px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .stat-l { font-size: 9.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--text-tertiary); margin-top: 3px; }
+
+  .field { margin-bottom: 16px; }
+  .field > .eyebrow { display: block; margin-bottom: 8px; }
+  .level-line { display: flex; align-items: center; gap: 8px; }
+  .level-pill {
+    font-family: var(--mono); font-weight: 700; font-size: 13px; letter-spacing: .5px;
+    padding: 3px 10px; border-radius: var(--r-sm); background: var(--accent-soft); color: var(--accent);
+  }
+  .level-band { flex: 1; height: 5px; border-radius: var(--r-full); background: var(--chip-bg); overflow: hidden; }
+  .level-fill { height: 100%; width: 83%; border-radius: var(--r-full); background: linear-gradient(90deg, var(--accent), var(--accent-hover)); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500;
+    padding: 5px 10px; border-radius: var(--r-full); border: 1px solid var(--border-default);
+    color: var(--text-secondary); transition: border-color .12s var(--ease), color .12s var(--ease);
+  }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .chip.sel { border-color: var(--accent-line); color: var(--text-primary); background: var(--accent-soft); }
+  .chip.sel::after { content: ""; }
+
+  .insp-actions { padding: 12px 16px; border-top: 1px solid var(--border-subtle); background: var(--bg-surface); }
+  .btn-primary {
+    width: 100%; height: 38px; border-radius: var(--r-md); font-size: 13px; font-weight: 600;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: linear-gradient(150deg, var(--accent), var(--accent-hover)); color: #04211d;
+    box-shadow: var(--sh-sm); transition: filter .15s var(--ease), transform .1s var(--ease);
+  }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-primary .icon { width: 16px; height: 16px; }
+  .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .btn-ghost {
+    height: 34px; border-radius: var(--r-md); font-size: 12.5px; font-weight: 500;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border: 1px solid var(--border-default); color: var(--text-secondary);
+    transition: background .12s var(--ease), color .12s var(--ease), border-color .12s var(--ease);
+  }
+  .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .btn-ghost.danger:hover { color: var(--diff-remove); border-color: var(--diff-remove); background: var(--diff-remove-soft); }
+  .btn-ghost .icon { width: 15px; height: 15px; }
+
+  /* ================= TIMELINE (signature) ================= */
+  .timeline {
+    grid-area: timeline; position: relative;
+    background: var(--bg-surface); border-top: 1px solid var(--border-default);
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center;
+    gap: 22px; padding: 14px 22px 16px; min-height: 104px;
+  }
+  #app.comparing .timeline { border-top-color: var(--amber-line); }
+  .tl-head { display: flex; flex-direction: column; gap: 3px; min-width: 128px; }
+  .tl-head .eyebrow { display: inline-flex; align-items: center; gap: 6px; }
+  .tl-head .icon { width: 13px; height: 13px; color: var(--amber); }
+  .tl-sub { font-size: 12px; color: var(--text-secondary); }
+  .tl-sub b { color: var(--text-primary); font-weight: 700; }
+
+  .tl-track { position: relative; height: 66px; }
+  .tl-axis {
+    position: absolute; left: 0; right: 0; top: 33px; height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--border-strong) 6%, var(--border-strong) 94%, transparent);
+  }
+  .tl-months {
+    position: absolute; left: 0; right: 0; bottom: -2px; display: flex; justify-content: space-between;
+    font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-tertiary);
+    font-family: var(--mono);
+  }
+  .tl-range {
+    display: none; position: absolute; top: 24px; height: 20px; border-radius: var(--r-full);
+    left: 30%; right: 6%;
+    background: linear-gradient(90deg, var(--amber-soft), var(--accent-soft));
+    border: 1px solid var(--amber-line);
+  }
+  #app.comparing .tl-range { display: block; }
+
+  .snap {
+    position: absolute; top: 0; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+  }
+  .snap, .work { position: absolute; }
+  .snap-lbl {
+    font-size: 10.5px; font-weight: 600; color: var(--text-secondary); white-space: nowrap;
+    margin-bottom: 4px; transition: color .15s var(--ease);
+  }
+  .snap-dot {
+    width: 13px; height: 13px; border-radius: 50%; margin-top: 27px;
+    background: var(--amber); border: 2px solid var(--bg-surface);
+    box-shadow: 0 0 0 1px var(--amber-line); transition: transform .15s var(--ease), box-shadow .15s var(--ease);
+  }
+  .snap:hover .snap-dot { transform: scale(1.18); }
+  .snap:hover .snap-lbl { color: var(--text-primary); }
+  .snap-ab {
+    position: absolute; top: 39px; left: 50%; transform: translateX(-50%);
+    font: 700 9px var(--mono); color: #241a05;
+    background: var(--amber); width: 16px; height: 16px; border-radius: 50%;
+    display: none; place-items: center; box-shadow: 0 0 0 2px var(--bg-surface); z-index: 2;
+  }
+  #app.comparing .snap.pick-a .snap-dot,
+  #app.comparing .snap.pick-b .snap-dot { transform: scale(1.15); }
+  #app.comparing .snap.pick-a .snap-ab { display: grid; }
+  #app.comparing .snap.pick-a .snap-lbl,
+  #app.comparing .snap.pick-b .snap-lbl { color: var(--text-primary); }
+
+  /* working state — pulsing open dot */
+  .work { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+  .work-lbl { font-size: 10.5px; font-weight: 700; color: var(--accent); white-space: nowrap; margin-bottom: 4px; }
+  .work-dot {
+    position: relative; width: 14px; height: 14px; border-radius: 50%; margin-top: 26px;
+    background: var(--bg-surface); border: 2.5px solid var(--accent);
+  }
+  .work-dot::after {
+    content: ""; position: absolute; inset: -5px; border-radius: 50%;
+    border: 2px solid var(--accent); opacity: 0; animation: pulse 2.4s var(--ease) infinite;
+  }
+  #app.comparing .work .snap-ab { display: grid; background: var(--accent); color: #04211d; box-shadow: 0 0 0 2px var(--bg-surface); }
+  #app.comparing .work-lbl { color: var(--accent); }
+  @keyframes pulse { 0% { opacity: .8; transform: scale(.7); } 70% { opacity: 0; transform: scale(1.5); } 100% { opacity: 0; } }
+
+  .tl-actions { display: flex; align-items: center; gap: 10px; min-width: 128px; justify-content: flex-end; }
+  .btn-compare {
+    display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px;
+    border-radius: var(--r-md); font-size: 13px; font-weight: 600; color: var(--text-primary);
+    background: var(--bg-elevated); border: 1px solid var(--border-default);
+    transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
+  }
+  .btn-compare:hover { border-color: var(--amber-line); box-shadow: 0 0 0 3px var(--amber-soft); }
+  .btn-compare .icon { width: 15px; height: 15px; color: var(--amber); }
+  #app.comparing .btn-compare { display: none; }
+
+  .diff-chips { display: none; align-items: center; gap: 8px; }
+  #app.comparing .diff-chips { display: flex; }
+  .dchip {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+    padding: 5px 10px; border-radius: var(--r-full); font-variant-numeric: tabular-nums;
+  }
+  .dchip .d { width: 8px; height: 8px; border-radius: 2px; }
+  .dchip.add { color: var(--diff-add); background: var(--diff-add-soft); }
+  .dchip.add .d { background: var(--diff-add); }
+  .dchip.move { color: var(--diff-move); background: var(--diff-move-soft); }
+  .dchip.move .d { background: var(--diff-move); border-radius: 50%; }
+  .dchip.rem { color: var(--diff-remove); background: var(--diff-remove-soft); }
+  .dchip.rem .d { background: var(--diff-remove); border-radius: 50%; }
+  .exit-btn {
+    display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px;
+    border-radius: var(--r-md); font-size: 12.5px; font-weight: 600; color: var(--text-secondary);
+    border: 1px solid var(--border-default); margin-left: 2px;
+    transition: background .12s var(--ease), color .12s var(--ease);
+  }
+  .exit-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .exit-btn .icon { width: 14px; height: 14px; }
+
+  /* ================= FOOTNOTE ================= */
+  .footnote {
+    grid-area: footnote; display: flex; align-items: center; gap: 10px;
+    padding: 7px 22px; font-size: 11.5px; color: var(--text-tertiary);
+    background: var(--bg-base); border-top: 1px solid var(--border-subtle);
+  }
+  .footnote .icon { width: 13px; height: 13px; color: var(--accent); }
+  .footnote b { color: var(--text-secondary); font-weight: 600; }
+  .foot-ver { margin-left: auto; font-family: var(--mono); font-size: 11px; }
+
+  /* ================= COMMAND PALETTE ================= */
+  .palette-scrim {
+    position: fixed; inset: 0; z-index: 40; display: none;
+    background: rgba(6,5,9,.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    align-items: flex-start; justify-content: center; padding-top: 12vh;
+  }
+  .palette-scrim.open { display: flex; }
+  .palette {
+    width: min(600px, 92vw); max-height: 66vh; display: flex; flex-direction: column;
+    background: var(--bg-elevated); border: 1px solid var(--border-strong);
+    border-radius: var(--r-xl); box-shadow: var(--sh-lg); overflow: hidden;
+    animation: pop .22s var(--ease);
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: none; } }
+  .pal-input-wrap { display: flex; align-items: center; gap: 12px; padding: 15px 18px; border-bottom: 1px solid var(--border-subtle); }
+  .pal-input-wrap .icon { width: 19px; height: 19px; color: var(--text-tertiary); }
+  #palette-input {
+    flex: 1; background: none; border: none; outline: none; color: var(--text-primary);
+    font-family: var(--sans); font-size: 15px;
+  }
+  #palette-input::placeholder { color: var(--text-tertiary); }
+  .pal-esc { font-size: 11px; color: var(--text-tertiary); border: 1px solid var(--border-default); padding: 3px 7px; border-radius: 5px; font-family: var(--mono); }
+  .pal-body { overflow-y: auto; padding: 8px; }
+  .pal-group-lbl { padding: 10px 12px 6px; }
+  .pal-item {
+    display: flex; align-items: center; gap: 13px; width: 100%; text-align: left;
+    padding: 9px 12px; border-radius: var(--r-md); color: var(--text-secondary);
+    transition: background .1s var(--ease), color .1s var(--ease);
+  }
+  .pal-item:hover, .pal-item.cur { background: var(--accent-soft); color: var(--text-primary); }
+  .pal-ico { width: 30px; height: 30px; border-radius: var(--r-sm); flex: none; display: grid; place-items: center; background: var(--chip-bg); color: var(--text-secondary); }
+  .pal-item:hover .pal-ico, .pal-item.cur .pal-ico { background: var(--bg-surface); color: var(--accent); }
+  .pal-ico .icon { width: 16px; height: 16px; }
+  .pal-label { flex: 1; font-size: 13.5px; font-weight: 500; color: var(--text-primary); }
+  .pal-hint { display: flex; gap: 4px; }
+  .pal-empty { padding: 26px; text-align: center; color: var(--text-tertiary); font-size: 13px; display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    #app *, .palette, .palette-scrim { animation: none !important; transition: none !important; }
+  }
+
+  /* keep the frame from ever pushing the page horizontally */
+  @media (max-width: 1180px) {
+    #app { grid-template-columns: 56px 232px 1fr; }
+    .inspector { width: 312px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========================= ICON SPRITE ========================= -->
+<svg style="display:none" aria-hidden="true"><defs>
+  <symbol id="icon-tree" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><circle cx="6" cy="19" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M12 7.4v3.1M6 16.6v-1.4a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v1.4"/></symbol>
+  <symbol id="icon-charts" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="5" rx="1.2"/><rect x="3" y="16" width="6" height="5" rx="1.2"/><rect x="15" y="16" width="6" height="5" rx="1.2"/><path d="M12 8v4M6 16v-2a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v2"/></symbol>
+  <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="icon-analytics" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 16v-4M13 16V8M18 16v-7"/></symbol>
+  <symbol id="icon-transfer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3v12M17 15l-3.5-3.5M17 15l3.5-3.5M7 21V9M7 9L3.5 12.5M7 9l3.5 3.5"/></symbol>
+  <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h9M17 6h3"/><circle cx="15" cy="6" r="2"/><path d="M4 12h3M11 12h9"/><circle cx="9" cy="12" r="2"/><path d="M4 18h9M17 18h3"/><circle cx="15" cy="18" r="2"/></symbol>
+  <symbol id="icon-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><path d="M12 17h.01"/></symbol>
+  <symbol id="icon-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="icon-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></symbol>
+  <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="icon-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 1 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></symbol>
+  <symbol id="icon-command" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z"/></symbol>
+  <symbol id="icon-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7.5 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3.2"/></symbol>
+  <symbol id="icon-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8A9 9 0 1 1 3 12"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/></symbol>
+  <symbol id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5.6 5.6 4.2 4.2M19.8 19.8l-1.4-1.4M18.4 5.6l1.4-1.4M4.2 19.8l1.4-1.4"/></symbol>
+  <symbol id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="icon-more" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></symbol>
+  <symbol id="icon-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></symbol>
+  <symbol id="icon-add-report" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v7a4 4 0 0 0 4 4h6"/><path d="M11 12l3 3-3 3"/><path d="M18 4v6M15 7h6"/></symbol>
+  <symbol id="icon-move" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></symbol>
+  <symbol id="icon-focus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.4"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></symbol>
+  <symbol id="icon-fit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
+  <symbol id="icon-compare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="2.6"/><circle cx="19" cy="18" r="2.6"/><path d="M12 6h4a2 2 0 0 1 2 2v7"/><path d="M12 18H8a2 2 0 0 1-2-2V9"/></symbol>
+  <symbol id="icon-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="8" cy="8" r="1.4"/></symbol>
+  <symbol id="icon-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></symbol>
+  <symbol id="icon-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h1"/></symbol>
+  <symbol id="icon-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+</defs></svg>
+
+<!-- ========================= APP ========================= -->
+<div id="app">
+
+  <!-- ICON RAIL -->
+  <nav class="rail" aria-label="Primary">
+    <div class="rail-logo" title="Arbol Studio"><svg class="icon"><use href="#icon-tree"/></svg></div>
+    <button class="rail-btn active" aria-label="Charts" aria-current="page" title="Charts"><svg class="icon"><use href="#icon-charts"/></svg></button>
+    <button class="rail-btn" aria-label="People and search" title="People"><svg class="icon"><use href="#icon-search"/></svg></button>
+    <button class="rail-btn" aria-label="Analytics" title="Analytics"><svg class="icon"><use href="#icon-analytics"/></svg></button>
+    <button class="rail-btn" aria-label="Import and export" title="Import / Export"><svg class="icon"><use href="#icon-transfer"/></svg></button>
+    <button class="rail-btn" aria-label="Settings" title="Settings"><svg class="icon"><use href="#icon-settings"/></svg></button>
+    <div class="rail-spacer"></div>
+    <button class="rail-btn" aria-label="Help" title="Help"><svg class="icon"><use href="#icon-help"/></svg></button>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="crumb">
+      <span class="crumb-name">Acme Corp</span>
+      <svg class="icon crumb-sep" style="width:14px;height:14px"><use href="#icon-chevron"/></svg>
+      <span class="crumb-name" style="font-weight:600;color:var(--text-secondary)">Org · main</span>
+    </div>
+    <span class="save-state"><span class="save-dot"></span>All changes saved</span>
+
+    <div class="hdr-tools">
+      <button class="icon-btn" aria-label="Undo"><svg class="icon"><use href="#icon-undo"/></svg></button>
+      <button class="icon-btn" aria-label="Redo"><svg class="icon"><use href="#icon-redo"/></svg></button>
+      <span class="divider-v"></span>
+      <button class="cmd-btn" id="cmd-btn" aria-haspopup="dialog">
+        <svg class="icon"><use href="#icon-command"/></svg>
+        <span>Run a command</span>
+        <span class="kbd">⌘K</span>
+      </button>
+      <span class="divider-v"></span>
+      <button class="icon-btn" id="theme-toggle" aria-label="Switch to light theme" aria-pressed="false"><svg class="icon"><use href="#icon-sun"/></svg></button>
+      <button class="icon-btn" aria-label="Help and shortcuts"><svg class="icon"><use href="#icon-help"/></svg></button>
+    </div>
+  </header>
+
+  <!-- CHARTS PANEL -->
+  <aside class="panel" aria-label="Charts">
+    <div class="panel-head">
+      <span class="eyebrow">Charts</span>
+      <button class="panel-add" aria-label="New chart"><svg class="icon" style="width:15px;height:15px"><use href="#icon-plus"/></svg></button>
+    </div>
+    <div class="panel-search"><svg class="icon"><use href="#icon-search"/></svg><span>Search charts…</span></div>
+
+    <div class="chart-list">
+      <div class="chart-row active">
+        <span class="chart-ico"><svg class="icon" style="width:17px;height:17px"><use href="#icon-tree"/></svg></span>
+        <div class="chart-meta">
+          <div class="chart-nm">Acme Corp · Org</div>
+          <div class="chart-sub">13 people · 4 versions</div>
+        </div>
+        <div class="row-actions">
+          <button class="mini" aria-label="Rename chart"><svg class="icon"><use href="#icon-edit"/></svg></button>
+          <button class="mini" aria-label="Duplicate chart"><svg class="icon"><use href="#icon-copy"/></svg></button>
+          <button class="mini" aria-label="More options"><svg class="icon"><use href="#icon-more"/></svg></button>
+        </div>
+      </div>
+      <div class="chart-row">
+        <span class="chart-ico"><svg class="icon" style="width:17px;height:17px"><use href="#icon-tree"/></svg></span>
+        <div class="chart-meta">
+          <div class="chart-nm">2026 Reorg Plan</div>
+          <div class="chart-sub">15 people · 2 versions</div>
+        </div>
+        <div class="row-actions">
+          <button class="mini" aria-label="Rename chart"><svg class="icon"><use href="#icon-edit"/></svg></button>
+          <button class="mini" aria-label="Duplicate chart"><svg class="icon"><use href="#icon-copy"/></svg></button>
+          <button class="mini" aria-label="More options"><svg class="icon"><use href="#icon-more"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <span class="eyebrow" style="display:block;margin-bottom:10px">Categories</span>
+      <div class="legend-row"><span class="legend-dot" style="background:var(--cat-open)"></span>Open position<span class="legend-count num">1</span></div>
+      <div class="legend-row"><span class="legend-dot" style="background:var(--cat-offer)"></span>Offer pending<span class="legend-count num">1</span></div>
+      <div class="legend-row"><span class="legend-dot" style="background:var(--text-tertiary)"></span>Filled<span class="legend-count num">11</span></div>
+    </div>
+  </aside>
+
+  <!-- CANVAS -->
+  <section class="canvas" aria-label="Org chart canvas">
+    <div class="canvas-grid"></div>
+
+    <!-- compare banner -->
+    <div class="compare-flag" role="status">
+      <svg class="icon" style="width:15px;height:15px;color:var(--amber)"><use href="#icon-compare"/></svg>
+      <span class="cf-swatch"><span class="cf-a"></span><b>Pre-reorg Q2</b></span>
+      <svg class="icon cf-arrow" style="width:14px;height:14px"><use href="#icon-chevron"/></svg>
+      <span class="cf-swatch"><span class="cf-b"></span><b>Current</b></span>
+    </div>
+
+    <div class="stage">
+      <svg class="org-svg" viewBox="0 0 1954 430" role="img" aria-label="Organization chart, 13 people, Marcus Johnson selected">
+
+        <!-- base edges -->
+        <g id="base-edges">
+          <path class="edge" d="M1059,80 L1059,106 L493,106 L493,132"/>
+          <path class="edge" d="M1059,80 L1059,106 L1624,106 L1624,132"/>
+          <path class="edge" d="M493,188 L493,214 L222,214 L222,240"/>
+          <path class="edge" d="M493,188 L493,214 L764,214 L764,240"/>
+          <path class="edge" d="M222,296 L222,322 L120,322 L120,348"/>
+          <path class="edge" d="M222,296 L222,322 L324,322 L324,348"/>
+          <path class="edge" d="M764,296 L764,322 L560,322 L560,348"/>
+          <path class="edge" d="M764,296 L764,348"/>
+          <path class="edge" d="M764,296 L764,322 L968,322 L968,348"/>
+          <path class="edge" d="M1624,188 L1624,214 L1420,214 L1420,240"/>
+          <path class="edge" d="M1624,188 L1624,240"/>
+          <path class="edge" d="M1624,188 L1624,214 L1828,214 L1828,240"/>
+        </g>
+
+        <!-- nodes -->
+        <g id="base-nodes">
+          <!-- Sarah -->
+          <g class="node" transform="translate(965,24)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">SC</text>
+            <text class="nm" x="47" y="24">Sarah Chen</text><text class="ti" x="47" y="41">Chief Executive Officer</text>
+            <rect class="lvl" x="150" y="9" width="34" height="16" rx="8"/><text class="lvl-t" x="167" y="20">E12</text>
+          </g>
+          <!-- Marcus (selected) -->
+          <g class="node selected" id="node-marcus" transform="translate(399,132)" tabindex="0" role="button" aria-label="Marcus Johnson, VP Engineering, selected. Open inspector.">
+            <rect class="sel-ring" x="-4" y="-4" width="196" height="64" rx="14"/>
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">MJ</text>
+            <text class="nm" x="47" y="24">Marcus Johnson</text><text class="ti" x="47" y="41">VP Engineering</text>
+            <rect class="lvl" x="150" y="9" width="34" height="16" rx="8"/><text class="lvl-t" x="167" y="20">E10</text>
+          </g>
+          <!-- Priya -->
+          <g class="node" transform="translate(1530,132)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">PP</text>
+            <text class="nm" x="47" y="24">Priya Patel</text><text class="ti" x="47" y="41">VP Product</text>
+            <rect class="lvl" x="150" y="9" width="34" height="16" rx="8"/><text class="lvl-t" x="167" y="20">E10</text>
+          </g>
+          <!-- David -->
+          <g class="node" transform="translate(128,240)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">DK</text>
+            <text class="nm" x="47" y="24">David Kim</text><text class="ti" x="47" y="41">Sr. Engineering Manager</text>
+            <rect class="lvl" x="152" y="9" width="32" height="16" rx="8"/><text class="lvl-t" x="168" y="20">E8</text>
+          </g>
+          <!-- Lisa -->
+          <g class="node" transform="translate(670,240)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">LW</text>
+            <text class="nm" x="47" y="24">Lisa Wang</text><text class="ti" x="47" y="41">Engineering Manager</text>
+            <rect class="lvl" x="152" y="9" width="32" height="16" rx="8"/><text class="lvl-t" x="168" y="20">E8</text>
+          </g>
+          <!-- Nina -->
+          <g class="node" transform="translate(1326,240)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">NP</text>
+            <text class="nm" x="47" y="24">Nina Petrov</text><text class="ti" x="47" y="41">Sr. Product Manager</text>
+            <rect class="lvl" x="152" y="9" width="32" height="16" rx="8"/><text class="lvl-t" x="168" y="20">E8</text>
+          </g>
+          <!-- Carlos -->
+          <g class="node" transform="translate(1530,240)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">CR</text>
+            <text class="nm" x="47" y="24">Carlos Ruiz</text><text class="ti" x="47" y="41">Product Manager</text>
+            <rect class="lvl" x="152" y="9" width="32" height="16" rx="8"/><text class="lvl-t" x="168" y="20">L6</text>
+          </g>
+          <!-- Yuki (offer pending) -->
+          <g class="node" transform="translate(1734,240)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">YT</text>
+            <text class="nm" x="47" y="24">Yuki Tanaka</text><text class="ti" x="47" y="41">Product Designer</text>
+            <rect class="lvl" x="152" y="9" width="32" height="16" rx="8"/><text class="lvl-t" x="168" y="20">L6</text>
+            <circle class="cat cat-offer" cx="174" cy="44" r="4.5"/>
+          </g>
+          <!-- Tom -->
+          <g class="node" transform="translate(26,348)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">TR</text>
+            <text class="nm" x="47" y="24">Tom Rodriguez</text><text class="ti" x="47" y="41">Staff Engineer</text>
+            <rect class="lvl" x="152" y="9" width="32" height="16" rx="8"/><text class="lvl-t" x="168" y="20">L7</text>
+          </g>
+          <!-- Ana -->
+          <g class="node" transform="translate(230,348)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">AC</text>
+            <text class="nm" x="47" y="24">Ana Costa</text><text class="ti" x="47" y="41">Senior Engineer</text>
+            <rect class="lvl" x="152" y="9" width="32" height="16" rx="8"/><text class="lvl-t" x="168" y="20">L6</text>
+          </g>
+          <!-- James -->
+          <g class="node chg" transform="translate(466,348)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">JM</text>
+            <text class="nm" x="47" y="24">James Miller</text><text class="ti" x="47" y="41">Senior Engineer</text>
+            <rect class="lvl" x="152" y="9" width="32" height="16" rx="8"/><text class="lvl-t" x="168" y="20">L6</text>
+          </g>
+          <!-- Emma -->
+          <g class="node chg" transform="translate(670,348)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">EW</text>
+            <text class="nm" x="47" y="24">Emma Wilson</text><text class="ti" x="47" y="41">Engineer</text>
+            <rect class="lvl" x="152" y="9" width="32" height="16" rx="8"/><text class="lvl-t" x="168" y="20">L5</text>
+          </g>
+          <!-- Raj (open position) -->
+          <g class="node chg" transform="translate(874,348)">
+            <rect class="card" width="188" height="56" rx="11"/>
+            <circle class="mono-bg" cx="25" cy="28" r="13.5"/><text class="mono-t" x="25" y="31.5">RS</text>
+            <text class="nm" x="47" y="24">Raj Sharma</text><text class="ti" x="47" y="41">Engineer</text>
+            <rect class="lvl" x="152" y="9" width="32" height="16" rx="8"/><text class="lvl-t" x="168" y="20">L5</text>
+            <circle class="cat cat-open" cx="174" cy="44" r="4.5"/>
+          </g>
+        </g>
+
+        <!-- ===== DIFF OVERLAY (compare mode) ===== -->
+        <g class="diff-only" aria-hidden="true">
+          <!-- recolored / new edges -->
+          <path class="edge-move"   d="M764,296 L764,322 L560,322 L560,348"/>
+          <path class="edge-add"    d="M764,296 L764,348"/>
+          <path class="edge-add"    d="M764,296 L764,322 L968,322 L968,348"/>
+          <path class="edge-remove" d="M764,296 L764,322 L1200,322 L1200,348"/>
+
+          <!-- removed ghost: Kevin Brooks -->
+          <g class="ghost" transform="translate(1106,348)">
+            <rect class="g-card" width="188" height="56" rx="11"/>
+            <text class="g-nm" x="18" y="27">Kevin Brooks</text>
+            <text class="g-ti" x="18" y="43">Engineer · removed</text>
+            <circle class="dbadge-rem" cx="170" cy="15" r="9"/>
+            <path class="dbadge-g" d="M165.5,15 h9"/>
+          </g>
+
+          <!-- moved marker on James -->
+          <rect class="ring-move" x="462" y="344" width="196" height="64" rx="14"/>
+          <circle class="dbadge-move" cx="634" cy="356" r="9"/>
+          <path class="dbadge-g" d="M630.5,356 h7 M635,353.5 l2.5,2.5 -2.5,2.5"/>
+
+          <!-- added markers: Emma + Raj -->
+          <rect class="ring-add" x="666" y="344" width="196" height="64" rx="14"/>
+          <circle class="dbadge-add" cx="838" cy="356" r="9"/>
+          <path class="dbadge-g" d="M838,352.5 v7 M834.5,356 h7"/>
+
+          <rect class="ring-add" x="870" y="344" width="196" height="64" rx="14"/>
+          <circle class="dbadge-add" cx="1042" cy="356" r="9"/>
+          <path class="dbadge-g" d="M1042,352.5 v7 M1038.5,356 h7"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- floating toolbar -->
+    <div class="canvas-tools" role="toolbar" aria-label="Canvas controls">
+      <button class="ctool" aria-label="Zoom out"><svg class="icon"><use href="#icon-minus"/></svg></button>
+      <span class="zoom-val num">100%</span>
+      <button class="ctool" aria-label="Zoom in"><svg class="icon"><use href="#icon-plus"/></svg></button>
+      <span class="ctool-sep"></span>
+      <button class="ctool" aria-label="Fit to screen"><svg class="icon"><use href="#icon-fit"/></svg></button>
+      <button class="ctool" aria-label="Focus mode"><svg class="icon"><use href="#icon-focus"/></svg></button>
+    </div>
+
+    <!-- INSPECTOR -->
+    <aside class="inspector" id="inspector" aria-label="Person details">
+      <div class="insp-top">
+        <div class="insp-mono">MJ</div>
+        <div class="insp-id">
+          <div class="insp-name">Marcus Johnson</div>
+          <div class="insp-title">VP Engineering</div>
+        </div>
+        <button class="insp-close" id="inspector-close" aria-label="Close inspector"><svg class="icon"><use href="#icon-x"/></svg></button>
+      </div>
+
+      <div class="insp-body">
+        <div class="mapped">
+          <svg class="icon"><use href="#icon-tag"/></svg>
+          <div class="mapped-txt">
+            <div class="mapped-lbl">Mapped title</div>
+            <div class="mapped-val">VP, Engineering</div>
+          </div>
+          <span class="pin"><svg class="icon"><use href="#icon-pin"/></svg>Pinned</span>
+        </div>
+
+        <div class="insp-grid">
+          <div class="stat"><div class="stat-v">2</div><div class="stat-l">Direct reports</div></div>
+          <div class="stat"><div class="stat-v">7</div><div class="stat-l">Total org</div></div>
+          <div class="stat"><div class="stat-v">2.3</div><div class="stat-l">Avg span</div></div>
+        </div>
+
+        <div class="field">
+          <span class="eyebrow">Level</span>
+          <div class="level-line">
+            <span class="level-pill">E10</span>
+            <span class="level-band"><span class="level-fill"></span></span>
+            <span class="num" style="font-size:11px;color:var(--text-tertiary)">10 / 12</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="eyebrow">Category</span>
+          <div class="chips">
+            <span class="chip sel">None</span>
+            <span class="chip"><span class="dot" style="background:var(--cat-open)"></span>Open position</span>
+            <span class="chip"><span class="dot" style="background:var(--cat-offer)"></span>Offer pending</span>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:4px">
+          <span class="eyebrow">Reports to</span>
+          <div class="level-line" style="margin-top:6px">
+            <span class="insp-mono" style="width:26px;height:26px;font-size:10px;border-radius:7px">SC</span>
+            <span style="font-size:13px;font-weight:600">Sarah Chen</span>
+            <span style="font-size:11px;color:var(--text-tertiary);margin-left:auto">CEO · E12</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="insp-actions">
+        <button class="btn-primary"><svg class="icon"><use href="#icon-add-report"/></svg>Add report</button>
+        <div class="action-row">
+          <button class="btn-ghost"><svg class="icon"><use href="#icon-move"/></svg>Move</button>
+          <button class="btn-ghost"><svg class="icon"><use href="#icon-focus"/></svg>Focus</button>
+          <button class="btn-ghost"><svg class="icon"><use href="#icon-lock"/></svg>Dotted line</button>
+          <button class="btn-ghost danger"><svg class="icon"><use href="#icon-trash"/></svg>Remove</button>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- TIMELINE (SIGNATURE) -->
+  <section class="timeline" aria-label="Version timeline">
+    <div class="tl-head">
+      <span class="eyebrow"><svg class="icon"><use href="#icon-history"/></svg>Version history</span>
+      <span class="tl-sub"><b>4</b> versions · current is live</span>
+    </div>
+
+    <div class="tl-track">
+      <div class="tl-axis"></div>
+      <div class="tl-range"></div>
+
+      <button class="snap" style="left:5%">
+        <span class="snap-lbl">Founding</span><span class="snap-dot"></span>
+      </button>
+      <button class="snap pick-a" style="left:31%">
+        <span class="snap-lbl">Pre-reorg Q2</span><span class="snap-dot"></span><span class="snap-ab">A</span>
+      </button>
+      <button class="snap" style="left:50%">
+        <span class="snap-lbl">Post-reorg</span><span class="snap-dot"></span>
+      </button>
+      <button class="snap" style="left:69%">
+        <span class="snap-lbl">Headcount plan</span><span class="snap-dot"></span>
+      </button>
+      <div class="work pick-b" style="left:94%">
+        <span class="work-lbl">Current</span><span class="work-dot"></span><span class="snap-ab">B</span>
+      </div>
+
+      <div class="tl-months">
+        <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span>
+      </div>
+    </div>
+
+    <div class="tl-actions">
+      <button class="btn-compare" id="compare-toggle"><svg class="icon"><use href="#icon-compare"/></svg>Compare</button>
+      <div class="diff-chips" role="group" aria-label="Diff summary">
+        <span class="dchip add"><span class="d"></span>+2 added</span>
+        <span class="dchip move"><span class="d"></span>1 moved</span>
+        <span class="dchip rem"><span class="d"></span>1 removed</span>
+        <button class="exit-btn" id="compare-exit"><svg class="icon"><use href="#icon-x"/></svg>Exit</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTNOTE -->
+  <footer class="footnote">
+    <svg class="icon"><use href="#icon-lock"/></svg>
+    <span>Local-first — your org never leaves this device.</span>
+    <span style="color:var(--border-strong)">•</span>
+    <span>Static mock. <b>Live:</b> theme toggle, command palette (⌘K), inspector, and compare mode. Editing, import/export and settings are presentational.</span>
+    <span class="foot-ver">Arbol Studio 4.0</span>
+  </footer>
+</div>
+
+<!-- ========================= COMMAND PALETTE ========================= -->
+<div class="palette-scrim" id="palette" role="dialog" aria-modal="true" aria-label="Command palette">
+  <div class="palette" role="document">
+    <div class="pal-input-wrap">
+      <svg class="icon"><use href="#icon-search"/></svg>
+      <input id="palette-input" type="text" placeholder="Type a command or search people…" autocomplete="off" spellcheck="false" aria-label="Command search">
+      <button class="pal-esc" id="palette-close">Esc</button>
+    </div>
+    <div class="pal-body" id="pal-body">
+      <div class="pal-group" data-group>
+        <div class="pal-group-lbl eyebrow">Recently used</div>
+        <button class="pal-item" data-text="save a version"><span class="pal-ico"><svg class="icon"><use href="#icon-camera"/></svg></span><span class="pal-label">Save a version</span><span class="pal-hint"><span class="kbd">⌘S</span></span></button>
+        <button class="pal-item" data-text="compare pre-reorg q2 current"><span class="pal-ico"><svg class="icon"><use href="#icon-compare"/></svg></span><span class="pal-label">Compare with “Pre-reorg Q2”</span><span class="pal-hint"><span class="kbd">⌘⇧C</span></span></button>
+        <button class="pal-item" data-text="add report marcus johnson"><span class="pal-ico"><svg class="icon"><use href="#icon-add-report"/></svg></span><span class="pal-label">Add report to Marcus Johnson</span><span class="pal-hint"><span class="kbd">⌘↵</span></span></button>
+      </div>
+      <div class="pal-group" data-group>
+        <div class="pal-group-lbl eyebrow">Actions</div>
+        <button class="pal-item" data-text="find person title search"><span class="pal-ico"><svg class="icon"><use href="#icon-search"/></svg></span><span class="pal-label">Find person or title</span><span class="pal-hint"><span class="kbd">⌘P</span></span></button>
+        <button class="pal-item" data-text="recolor by category"><span class="pal-ico"><svg class="icon"><use href="#icon-tag"/></svg></span><span class="pal-label">Recolor by category</span><span class="pal-hint"><span class="kbd">⌘⇧K</span></span></button>
+        <button class="pal-item" data-text="import from csv"><span class="pal-ico"><svg class="icon"><use href="#icon-transfer"/></svg></span><span class="pal-label">Import from CSV</span><span class="pal-hint"><span class="kbd">⌘I</span></span></button>
+        <button class="pal-item" data-text="export as png image"><span class="pal-ico"><svg class="icon"><use href="#icon-transfer"/></svg></span><span class="pal-label">Export as PNG</span><span class="pal-hint"><span class="kbd">⌘E</span></span></button>
+        <button class="pal-item" data-text="toggle focus mode"><span class="pal-ico"><svg class="icon"><use href="#icon-focus"/></svg></span><span class="pal-label">Toggle focus mode</span><span class="pal-hint"><span class="kbd">F</span></span></button>
+        <button class="pal-item" data-text="open settings preferences"><span class="pal-ico"><svg class="icon"><use href="#icon-settings"/></svg></span><span class="pal-label">Open settings</span><span class="pal-hint"><span class="kbd">⌘,</span></span></button>
+        <button class="pal-item" data-text="switch light dark theme appearance"><span class="pal-ico"><svg class="icon"><use href="#icon-moon"/></svg></span><span class="pal-label">Switch theme</span><span class="pal-hint"><span class="kbd">⌘⇧L</span></span></button>
+      </div>
+      <div class="pal-empty" id="pal-empty">No commands match your search.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var app = document.getElementById('app');
+
+  /* ---- theme toggle ---- */
+  var themeBtn = document.getElementById('theme-toggle');
+  themeBtn.addEventListener('click', function () {
+    var light = app.getAttribute('data-theme') === 'light';
+    if (light) { app.removeAttribute('data-theme'); }
+    else { app.setAttribute('data-theme', 'light'); }
+    var nowLight = !light;
+    themeBtn.setAttribute('aria-pressed', String(nowLight));
+    themeBtn.setAttribute('aria-label', nowLight ? 'Switch to dark theme' : 'Switch to light theme');
+    themeBtn.querySelector('use').setAttribute('href', nowLight ? '#icon-moon' : '#icon-sun');
+  });
+
+  /* ---- inspector open / close ---- */
+  var inspector = document.getElementById('inspector');
+  var node = document.getElementById('node-marcus');
+  document.getElementById('inspector-close').addEventListener('click', function () {
+    inspector.classList.add('hidden');
+    node.focus();
+  });
+  function openInspector() { inspector.classList.remove('hidden'); }
+  node.addEventListener('click', openInspector);
+  node.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInspector(); }
+  });
+
+  /* ---- compare mode ---- */
+  document.getElementById('compare-toggle').addEventListener('click', function () {
+    app.classList.add('comparing');
+    document.getElementById('compare-exit').focus();
+  });
+  document.getElementById('compare-exit').addEventListener('click', function () {
+    app.classList.remove('comparing');
+    document.getElementById('compare-toggle').focus();
+  });
+
+  /* ---- command palette ---- */
+  var palette = document.getElementById('palette');
+  var input = document.getElementById('palette-input');
+  var items = Array.prototype.slice.call(palette.querySelectorAll('.pal-item'));
+  var groups = Array.prototype.slice.call(palette.querySelectorAll('[data-group]'));
+  var empty = document.getElementById('pal-empty');
+
+  function openPalette() {
+    palette.classList.add('open');
+    input.value = '';
+    filter('');
+    setTimeout(function () { input.focus(); }, 20);
+  }
+  function closePalette() { palette.classList.remove('open'); }
+
+  function filter(q) {
+    q = q.trim().toLowerCase();
+    var anyVisible = false;
+    items.forEach(function (it) {
+      var match = !q || it.getAttribute('data-text').indexOf(q) !== -1 ||
+                  it.querySelector('.pal-label').textContent.toLowerCase().indexOf(q) !== -1;
+      it.style.display = match ? '' : 'none';
+      it.classList.remove('cur');
+      if (match) anyVisible = true;
+    });
+    groups.forEach(function (g) {
+      var vis = g.querySelectorAll('.pal-item:not([style*="none"])').length;
+      g.style.display = vis ? '' : 'none';
+    });
+    empty.style.display = anyVisible ? 'none' : 'block';
+    var first = items.filter(function (i) { return i.style.display !== 'none'; })[0];
+    if (first) first.classList.add('cur');
+  }
+
+  document.getElementById('cmd-btn').addEventListener('click', openPalette);
+  document.getElementById('palette-close').addEventListener('click', closePalette);
+  palette.addEventListener('click', function (e) { if (e.target === palette) closePalette(); });
+  input.addEventListener('input', function () { filter(input.value); });
+
+  document.addEventListener('keydown', function (e) {
+    var mod = e.metaKey || e.ctrlKey;
+    if (mod && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      palette.classList.contains('open') ? closePalette() : openPalette();
+    } else if (e.key === 'Escape' && palette.classList.contains('open')) {
+      closePalette();
+    }
+  });
+
+  /* keyboard nav within palette */
+  input.addEventListener('keydown', function (e) {
+    var vis = items.filter(function (i) { return i.style.display !== 'none'; });
+    var idx = vis.findIndex(function (i) { return i.classList.contains('cur'); });
+    if (e.key === 'ArrowDown') { e.preventDefault(); move(vis, idx, 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); move(vis, idx, -1); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (vis[idx]) closePalette(); }
+  });
+  function move(vis, idx, dir) {
+    if (!vis.length) return;
+    if (idx >= 0) vis[idx].classList.remove('cur');
+    var next = (idx + dir + vis.length) % vis.length;
+    vis[next].classList.add('cur');
+    vis[next].scrollIntoView({ block: 'nearest' });
+  }
+})();
+</script>
+</body>
+</html>

@@ -21,23 +21,53 @@ function makeStorage(): IStorage & {
   };
 }
 
+function accessibleName(element: HTMLElement): string {
+  return (element.getAttribute('aria-label') ?? element.textContent ?? '').trim();
+}
+
 describe('showFirstVisitHelp', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
   });
 
   afterEach(() => {
+    let dialog = document.querySelector('[role="dialog"], [role="alertdialog"]');
+    while (dialog) {
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
+      dialog = document.querySelector('[role="dialog"], [role="alertdialog"]');
+    }
     document.body.innerHTML = '';
   });
 
-  it('shows help dialog on first visit and returns true', () => {
+  it('shows one welcome dialog with sample, empty, and Import choices on first visit', () => {
     const storage = makeStorage();
     const onLoadSample = vi.fn();
     const result = showFirstVisitHelp(onLoadSample, storage);
 
     expect(result).toBe(true);
-    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    const dialogs = document.querySelectorAll('[role="dialog"], [role="alertdialog"]');
+    expect(dialogs).toHaveLength(1);
+    expect(dialogs[0].textContent).toContain('Welcome to Arbol');
+    expect(dialogs[0].textContent).toContain('Load sample org chart');
+    expect(dialogs[0].textContent).toContain('Start empty');
+    expect(dialogs[0].textContent).toContain('Import');
   });
+
+  it.each(['Load sample org chart', 'Start empty'])(
+    'uses the visible label "%s" as the button accessible name',
+    (visibleLabel) => {
+      const storage = makeStorage();
+      showFirstVisitHelp(vi.fn(), storage);
+
+      const button = Array.from(document.querySelectorAll('button')).find(
+        (candidate) => candidate.textContent?.trim() === visibleLabel,
+      );
+      expect(button).toBeDefined();
+      expect(accessibleName(button!)).toBe(visibleLabel);
+    },
+  );
 
   it('sets storage flag after showing help', () => {
     const storage = makeStorage();
@@ -56,22 +86,33 @@ describe('showFirstVisitHelp', () => {
     expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 
-  it('opens the Getting Started section on first visit', () => {
-    const storage = makeStorage();
-    showFirstVisitHelp(vi.fn(), storage);
-
-    const openSectionHeader = document.querySelector('.help-section.open .help-section-header');
-    expect(openSectionHeader?.textContent).toContain('Getting Started');
-  });
-
-  it('passes onLoadSample to help dialog', () => {
+  it('loads the sample immediately and closes the welcome dialog without stacking a prompt', () => {
     const storage = makeStorage();
     const onLoadSample = vi.fn();
     showFirstVisitHelp(onLoadSample, storage);
 
-    const sampleBtn = Array.from(document.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('Load Sample Org Chart'),
+    const sampleButton = Array.from(document.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Load sample org chart'),
     );
-    expect(sampleBtn).toBeDefined();
+    expect(sampleButton).toBeDefined();
+    sampleButton!.click();
+
+    expect(onLoadSample).toHaveBeenCalledTimes(1);
+    expect(document.querySelectorAll('[role="dialog"], [role="alertdialog"]')).toHaveLength(0);
+  });
+
+  it('starts empty without loading a sample and closes the welcome dialog', () => {
+    const storage = makeStorage();
+    const onLoadSample = vi.fn();
+    showFirstVisitHelp(onLoadSample, storage);
+
+    const emptyButton = Array.from(document.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Start empty'),
+    );
+    expect(emptyButton).toBeDefined();
+    emptyButton!.click();
+
+    expect(onLoadSample).not.toHaveBeenCalled();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 });

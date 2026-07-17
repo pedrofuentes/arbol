@@ -7,23 +7,23 @@ An interactive org chart editor for the browser — manage multiple org charts w
 ## Features
 
 - **Multiple org charts** — create, rename, switch between, and delete independent org charts
-- **Version snapshots** — save named point-in-time snapshots; view read-only, restore, or delete
-- **Version comparison** — side-by-side or merged diff view with diff badges (added/removed/moved/modified), click-to-select cross-highlighting, and hover cross-pane tracking
+- **Version history** — save named versions, preview any version read-only, restore safely, or delete versions you no longer need
+- **Version comparison** — compare the Current chart with a saved version in side-by-side or merged views, with delta chips for added, removed, moved, and modified people
 - **Per-chart color categories** — each chart has its own set of color categories
 - **Dual-track level mappings** — same level maps to different titles for Managers vs ICs, with auto-detection from tree structure
 - **Pinned titles** — manually override any node's title to prevent level mapping from changing it
 - **Category & level mapping presets** — save reusable presets, copy from other charts, pick presets when creating new charts
-- **Chart name in header** — editable name with dirty-state indicator (●) and quick save button (💾)
+- **Always-visible version actions** — the Current chart, Save a version, and Version history controls stay within reach in the app chrome
 - **IndexedDB storage** — org data stored in IndexedDB for capacity across multiple charts and versions
 - **Import creates or replaces** — importing CSV/JSON or re-importing `.arbol.json` ChartBundle exports asks whether to create a new chart or replace the current one
-- **Autosave and restore safety** — changes save automatically, and restoring a version first creates an automatic safety version when needed
+- **Autosave and restore safety** — the Current chart saves automatically, and restoring a version first creates a safety-net version when needed
 - **Accessible org chart** — full keyboard navigation (arrow keys, Enter, Space), ARIA tree semantics, screen reader announcements
 - **Mobile responsive** — collapsible sidebar on tablet/phone, touch-friendly 44px targets, works at 200% zoom
 - **i18n ready** — translation infrastructure with 1,180+ keys, Spanish locale, RTL-ready CSS logical properties
-- **First-time guidance** — help dialog with Getting Started guide for new users, contextual "no results" hints
+- **First-time guidance** — one welcome dialog lets new users load the sample org chart or start empty, with a direct pointer to Import
 - **Loading indicators** — visual feedback for exports, imports, chart switching
 - Interactive hierarchical org chart visualization
-- Four sidebar tabs: People (add/edit), Import (files, paste, JSON editor, `.arbol.json` ChartBundle re-import, text normalization), Settings (presets, categories, fine-tuning), Charts (chart & version management)
+- Focused editing surfaces — select a card to inspect its properties, use the Import wizard for CSV/Excel/JSON and `.arbol.json` bundles, and manage charts and versions from the app chrome
 - Text normalization — normalize name/title casing (Title Case, UPPERCASE, lowercase) on import or for the existing org chart
 - Per-node color categories (Open Position, Offer Pending, Future Start + custom)
 - Color category legend on the chart (SVG overlay, included in PPTX export)
@@ -35,7 +35,7 @@ An interactive org chart editor for the browser — manage multiple org charts w
 - PowerPoint export (.pptx) with editable shapes, connectors, per-node category colors, and legend
 - Advisor role support with special 2-column layout
 - Smart M1 detection (compact layout for manager groups)
-- 20+ customizable renderer settings (dimensions, spacing, typography, colors, rounded corners, font family, text alignment)
+- Six searchable settings groups covering presets, layout, appearance, cards & badges, levels & categories, and data & backup
 - Dark/light theme with 10 presets (including Ocean Teal and Stone)
 - Full undo/redo (50-entry stack)
 - Search & highlight by name/title
@@ -93,6 +93,20 @@ Output goes to `dist/`.
 ## Tech Stack
 
 TypeScript, Vite, D3.js, pptxgenjs — no UI framework, no backend.
+
+## Architecture
+
+Arbol is a vanilla TypeScript application with deliberately small, composable UI surfaces:
+
+- **D3-owned SVG canvas** — D3 computes the tree layout and owns chart rendering, zoom, keyboard navigation, comparison views, and export-ready SVG output.
+- **SVG icon system** — app chrome and actions use the shared `createIcon` system instead of text glyphs or emoji controls.
+- **Design-token CSS** — colors, spacing, typography, surfaces, and a semantic z-scale are defined as tokens so dialogs, panels, banners, and floating controls layer consistently.
+- **Consolidated dialog utilities** — modal surfaces share overlay creation, panel chrome, focus trapping, Escape handling, focus restoration, and stacking behavior.
+- **Inspector-first editing** — **Edit** opens the property panel for complete changes; **Quick edit** keeps the lightweight name-and-title editor inline on the chart.
+- **Searchable settings** — one modal organizes settings into six groups and filters sections without replacing the underlying renderer controls.
+- **Consumer-friendly versions** — the UI consistently uses **Version history**, **Current chart**, **Save a version**, and **Preview**, with restore safety-net language and delta chips in comparisons.
+
+State is split by responsibility: stores own chart data and browser persistence, controllers coordinate interaction modes, editors assemble workflows, and UI modules provide focused panels and dialogs. Org charts and saved versions remain local in IndexedDB; preferences and lightweight configuration use localStorage.
 
 ## Enterprise Configuration
 
@@ -156,13 +170,13 @@ src/
 ├── constants/   # Renderer default values
 ├── controllers/ # Focus mode, search, selection state
 ├── data/        # Built-in sample org chart
-├── editor/      # Sidebar tab editors (People, Import, Settings, Charts, Analytics)
+├── editor/      # Editing workflows and settings panels
 ├── export/      # PowerPoint, SVG, and PNG export
 ├── i18n/        # Internationalization (translations, locale management)
-├── init/        # App initialization helpers
+├── init/        # App wiring, toolbar, shortcuts, and interaction handlers
 ├── renderer/    # D3-based chart rendering, layout, and keyboard navigation
 ├── store/       # State management, IndexedDB, undo/redo
-├── ui/          # Panels, dialogs, controls, and accessibility utilities
+├── ui/          # Icon-based chrome, panels, dialogs, controls, and accessibility utilities
 └── utils/       # Shared helpers and types
 ```
 

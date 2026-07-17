@@ -686,6 +686,52 @@ g.pal-node:focus-visible > rect {
   animation: slideUp 200ms ease;
 }
 
+.welcome-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.welcome-dialog-mark {
+  display: flex;
+  justify-content: center;
+  color: var(--accent);
+  font-size: var(--text-2xl);
+}
+
+.welcome-dialog-title {
+  color: var(--text-primary);
+  font-size: var(--text-xl);
+}
+
+.welcome-dialog-description,
+.welcome-dialog-import-hint {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.welcome-dialog-import-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.welcome-dialog-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.welcome-dialog-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
 .help-dialog {
   background: var(--bg-surface);
   padding: 0;
