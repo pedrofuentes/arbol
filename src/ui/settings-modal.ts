@@ -148,7 +148,10 @@ export class SettingsModal {
       btn.appendChild(iconSpan);
       btn.appendChild(document.createTextNode(tab.label));
 
-      btn.addEventListener('click', () => this.setActiveTab(tab.id));
+      btn.addEventListener('click', () => {
+        this.searchInput.value = '';
+        this.setActiveTab(tab.id);
+      });
       nav.appendChild(btn);
       this.tabButtons.push(btn);
     }
@@ -335,6 +338,8 @@ export class SettingsModal {
       document.body.appendChild(this.overlay);
       this.mounted = true;
     }
+    this.searchInput.value = '';
+    this.refreshSectionVisibility();
     this.previousFocus = document.activeElement as HTMLElement | null;
     this.overlay.classList.add('open');
     document.addEventListener('keydown', this.keyHandler, true);

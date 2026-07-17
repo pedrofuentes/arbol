@@ -2157,6 +2157,9 @@ textarea:focus-visible {
   font-family: var(--font-sans);
   font-size: var(--text-sm);
 }
+.settings-search-input:focus-visible {
+  outline: none;
+}
 .settings-search-input::placeholder {
   color: var(--text-tertiary);
 }
