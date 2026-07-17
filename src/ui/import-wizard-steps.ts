@@ -190,18 +190,22 @@ export function renderMappingStep(
 
     // Auto-match saved presets against CSV headers
     const matchedPreset = findMatchingPreset(state.headers, presets ?? []);
+    const initialMapping = matchedPreset?.mapping ?? findCommonHeaderMapping(state.headers);
     if (matchedPreset) {
       state.mapping = matchedPreset.mapping;
-      state.matchedPresetName = matchedPreset.name;
+      state.matchedPresetName = matchedPreset.preset.name;
       const msg = document.createElement('p');
       msg.className = 'wizard-success';
-      msg.textContent = t('import_wizard.preset_matched', { name: matchedPreset.name });
+      msg.textContent = t('import_wizard.preset_matched', { name: matchedPreset.preset.name });
       container.appendChild(msg);
+    } else if (initialMapping) {
+      state.mapping = initialMapping;
+      state.matchedPresetName = undefined;
     }
 
     const desc = document.createElement('p');
     desc.className = 'wizard-info';
-    desc.textContent = matchedPreset
+    desc.textContent = initialMapping
       ? t('import_wizard.mapping_verify')
       : t('import_wizard.mapping_csv');
     container.appendChild(desc);
@@ -224,9 +228,9 @@ export function renderMappingStep(
       () => {},
     );
 
-    // Pre-fill dropdowns if preset matched
-    if (matchedPreset) {
-      mapper.prefill(matchedPreset.mapping);
+    // Pre-fill dropdowns when headers match a preset or common field names
+    if (initialMapping) {
+      mapper.prefill(initialMapping);
       mapper.handleApply();
     }
 
@@ -241,22 +245,71 @@ export function renderMappingStep(
       radio.addEventListener('change', () => mapper.handleApply());
     });
 
-    onReady(!!matchedPreset);
+    onReady(!!initialMapping);
   }
+}
+
+const NAME_HEADER_ALIASES = new Set(['name', 'full name', 'employee', 'employee name']);
+const TITLE_HEADER_ALIASES = new Set(['title', 'role', 'position', 'job title']);
+const MANAGER_HEADER_ALIASES = new Set(['manager', 'manager name', 'reports to', 'supervisor']);
+const NO_HEADER_ALIASES = new Set<string>();
+
+function normalizeHeaderName(value: string): string {
+  return value.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+}
+
+function findHeader(
+  headers: string[],
+  configuredName: string,
+  aliases: ReadonlySet<string>,
+): string | undefined {
+  const normalizedConfiguredName = normalizeHeaderName(configuredName);
+  const exactMatch = headers.find(
+    (header) => normalizeHeaderName(header) === normalizedConfiguredName,
+  );
+  if (exactMatch) return exactMatch;
+  if (!aliases.has(normalizedConfiguredName)) return undefined;
+  return headers.find((header) => aliases.has(normalizeHeaderName(header)));
+}
+
+function findCommonHeaderMapping(headers: string[]): ColumnMapping | undefined {
+  const name = headers.find((header) => NAME_HEADER_ALIASES.has(normalizeHeaderName(header)));
+  const title = headers.find((header) => TITLE_HEADER_ALIASES.has(normalizeHeaderName(header)));
+  const parentRef = headers.find((header) =>
+    MANAGER_HEADER_ALIASES.has(normalizeHeaderName(header)),
+  );
+  if (!name || !title || !parentRef) return undefined;
+
+  return {
+    name,
+    title,
+    parentRef,
+    parentRefType: 'name',
+    caseInsensitive: true,
+  };
+}
+
+interface MatchedPreset {
+  preset: MappingPreset;
+  mapping: ColumnMapping;
 }
 
 function findMatchingPreset(
   headers: string[],
   presets: MappingPreset[],
-): MappingPreset | undefined {
-  const headerSet = new Set(headers.map((h) => h.toLowerCase()));
+): MatchedPreset | undefined {
   for (const preset of presets) {
     const m = preset.mapping;
-    const cols = [m.name, m.title, m.parentRef];
-    if (m.id) cols.push(m.id);
-    if (cols.every((col) => headerSet.has(col.toLowerCase()))) {
-      return preset;
-    }
+    const name = findHeader(headers, m.name, NAME_HEADER_ALIASES);
+    const title = findHeader(headers, m.title, TITLE_HEADER_ALIASES);
+    const parentRef = findHeader(headers, m.parentRef, MANAGER_HEADER_ALIASES);
+    const id = m.id ? findHeader(headers, m.id, NO_HEADER_ALIASES) : undefined;
+    if (!name || !title || !parentRef || (m.id && !id)) continue;
+
+    return {
+      preset,
+      mapping: { ...m, name, title, parentRef, id },
+    };
   }
   return undefined;
 }
