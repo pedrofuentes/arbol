@@ -398,7 +398,7 @@ export class SettingsModal {
     const query = this.searchInput.value.trim().toLocaleLowerCase();
     const isSearching = query.length > 0;
     const sections = Array.from(
-      this.contentArea.querySelectorAll<HTMLElement>('[data-section-id]'),
+      this.contentArea.querySelectorAll<HTMLElement>(':scope > [data-section-id]'),
     );
 
     this.dialog.classList.toggle('settings-searching', isSearching);

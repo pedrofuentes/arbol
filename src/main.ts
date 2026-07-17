@@ -47,6 +47,7 @@ import { showFirstVisitHelp } from './init/first-visit-helper';
 import { SAMPLE_ORG } from './data/sample-org';
 import { PropertyPanel } from './ui/property-panel';
 import { SettingsModal } from './ui/settings-modal';
+import { annotateTopLevelSettingsSections } from './ui/settings-section-groups';
 import { SettingsEditor } from './editor/settings-editor';
 import { ImportWizard } from './ui/import-wizard';
 import {
@@ -283,12 +284,7 @@ async function main(): Promise<void> {
 
   function filterSettingsSections(): void {
     const contentArea = settingsModal.getContentArea();
-    const sections = contentArea.querySelectorAll('[data-section-id]');
-    sections.forEach((section) => {
-      const sectionId = section.getAttribute('data-section-id')!;
-      const sectionTab = SECTION_TAB_MAP[sectionId];
-      section.setAttribute('data-settings-group', sectionTab);
-    });
+    annotateTopLevelSettingsSections(contentArea, SECTION_TAB_MAP);
     settingsModal.refreshSectionVisibility();
   }
 
