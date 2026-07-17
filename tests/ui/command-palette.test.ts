@@ -9,9 +9,9 @@ beforeAll(() => {
 
 function makeItems(): CommandItem[] {
   return [
-    { id: 'export', label: 'Export', description: 'Export to PPTX', icon: '📊', shortcut: 'Ctrl+E', group: 'Actions', action: vi.fn() },
-    { id: 'undo', label: 'Undo', icon: '↩', shortcut: 'Ctrl+Z', group: 'Actions', action: vi.fn() },
-    { id: 'search', label: 'Search People', icon: '🔍', group: 'Navigation', action: vi.fn() },
+    { id: 'export', label: 'Export', description: 'Export to PPTX', icon: 'export', shortcut: 'Ctrl+E', group: 'Actions', action: vi.fn() },
+    { id: 'undo', label: 'Undo', icon: 'undo', shortcut: 'Ctrl+Z', group: 'Actions', action: vi.fn() },
+    { id: 'search', label: 'Search People', icon: 'search', group: 'Navigation', action: vi.fn() },
     { id: 'help', label: 'Help', description: 'Keyboard shortcuts', group: 'Navigation', action: vi.fn() },
   ];
 }
@@ -144,7 +144,7 @@ describe('CommandPalette', () => {
       palette.setItems(makeItems());
       palette.open();
       const icons = document.querySelectorAll('.cp-item-icon');
-      expect(icons[0].textContent).toBe('📊');
+      expect(icons[0].querySelector('svg')?.getAttribute('data-icon')).toBe('export');
       palette.destroy();
     });
 

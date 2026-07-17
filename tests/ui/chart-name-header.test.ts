@@ -80,7 +80,8 @@ describe('ChartNameHeader', () => {
       new ChartNameHeader(defaultOptions({ container }));
       const btn = getSaveBtn(container);
       expect(btn).toBeTruthy();
-      expect(btn.textContent).toBe('💾');
+      expect(btn.querySelector('svg')?.dataset.icon).toBe('save');
+      expect(btn.textContent).toBe('');
       expect(btn.title).toBe('Save version');
     });
 

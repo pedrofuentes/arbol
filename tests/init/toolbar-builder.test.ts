@@ -107,10 +107,25 @@ describe('buildToolbar', () => {
   it('theme button icon updates after toggle', () => {
     const deps = makeDeps();
     const { themeBtn } = buildToolbar(deps);
-    const icon = themeBtn.querySelector('span')!;
-    const initialIcon = icon.textContent;
+    const icon = themeBtn.querySelector('svg')!;
+    const initialIcon = icon.dataset.icon;
     deps.themeManager.toggle();
-    expect(icon.textContent).not.toBe(initialIcon);
+    expect(icon.dataset.icon).not.toBe(initialIcon);
+  });
+
+  it('renders every toolbar pictograph as a semantic SVG', () => {
+    const deps = makeDeps();
+    const { undoBtn, redoBtn, settingsBtn, importBtn, exportBtn, themeBtn } = buildToolbar(deps);
+
+    expect(undoBtn.querySelector('svg')?.dataset.icon).toBe('undo');
+    expect(redoBtn.querySelector('svg')?.dataset.icon).toBe('redo');
+    expect(settingsBtn.querySelector('svg')?.dataset.icon).toBe('settings');
+    expect(importBtn.querySelector('svg')?.dataset.icon).toBe('import');
+    expect(exportBtn.querySelector('svg')?.dataset.icon).toBe('export');
+    expect(themeBtn.querySelector('svg')?.dataset.icon).toMatch(/sun|moon/);
+    expect(deps.headerLeft.querySelector('.menu-toggle svg')?.getAttribute('data-icon')).toBe(
+      'menu',
+    );
   });
 
   it('settings button calls onSettingsClick', () => {

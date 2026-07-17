@@ -223,7 +223,7 @@ describe('SettingsEditor', () => {
           `button[aria-label="Remove ${cat.label}"]`,
         );
         expect(btn).not.toBeNull();
-        expect(btn!.textContent).toBe('×');
+        expect(btn!.querySelector('svg')?.dataset.icon).toBe('remove');
       }
     });
 
@@ -429,8 +429,9 @@ describe('SettingsEditor', () => {
       // After save, preset grid should include the custom preset
       const cards = container.querySelectorAll('.preset-card');
       expect(cards.length).toBe(COMBINED_PRESETS.length + 1);
-      const customCard = Array.from(cards).find((c) => c.textContent?.includes('⭐ My Custom'));
+      const customCard = Array.from(cards).find((c) => c.textContent?.includes('My Custom'));
       expect(customCard).toBeDefined();
+      expect(customCard!.querySelector('svg')?.dataset.icon).toBe('star');
       // Verify localStorage was written
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         'arbol-custom-presets',
@@ -462,7 +463,7 @@ describe('SettingsEditor', () => {
       const customCard = container.querySelector('[data-preset-id="custom-test"]')!;
       const deleteBtn = customCard.querySelector('.preset-delete') as HTMLElement;
       expect(deleteBtn).not.toBeNull();
-      expect(deleteBtn.textContent).toBe('×');
+      expect(deleteBtn.querySelector('svg')?.getAttribute('data-icon')).toBe('close');
     });
 
     it('deleting a custom preset removes it from grid and localStorage', () => {
@@ -974,7 +975,7 @@ describe('SettingsEditor', () => {
       const deleteBtn = container.querySelector<HTMLButtonElement>(
         `button[aria-label="Remove ${categories[0].label}"]`,
       )!;
-      expect(deleteBtn.textContent).toBe('×');
+      expect(deleteBtn.querySelector('svg')?.dataset.icon).toBe('remove');
       deleteBtn.click();
       expect(deleteBtn.textContent).toBe('?');
       expect(deleteBtn.classList.contains('category-delete-confirm')).toBe(true);

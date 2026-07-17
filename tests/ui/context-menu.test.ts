@@ -51,13 +51,13 @@ describe('ContextMenu', () => {
     });
 
     it('renders icon prefix when icon is provided', () => {
-      const items: ContextMenuItem[] = [{ label: 'Edit', icon: '✏️', action: vi.fn() }];
+      const items: ContextMenuItem[] = [{ label: 'Edit', icon: 'edit', action: vi.fn() }];
       showContextMenu({ x: 100, y: 100, items });
       const btn = getMenuItems()[0];
       const spans = btn.querySelectorAll('span');
-      expect(spans).toHaveLength(2);
-      expect(spans[0].textContent).toBe('✏️');
-      expect(spans[1].textContent).toBe('Edit');
+      expect(btn.querySelector('svg')?.getAttribute('data-icon')).toBe('edit');
+      expect(spans).toHaveLength(1);
+      expect(spans[0].textContent).toBe('Edit');
     });
 
     it('renders swatch circle when swatch color is provided', () => {
@@ -335,7 +335,7 @@ describe('ContextMenu', () => {
 
     it('renders submenu items with icons', () => {
       const items: ContextMenuItem[] = [
-        { label: 'Category', submenu: [{ label: 'Engineering', icon: '🔧', action: vi.fn() }] },
+        { label: 'Category', submenu: [{ label: 'Engineering', icon: 'settings', action: vi.fn() }] },
       ];
       showContextMenu({ x: 100, y: 100, items });
       const btn = getMenuItems()[0];
@@ -344,9 +344,9 @@ describe('ContextMenu', () => {
       const menus = document.querySelectorAll('[role="menu"]');
       const submenuBtn = menus[1].querySelector('[role="menuitem"]')!;
       const spans = submenuBtn.querySelectorAll('span');
-      expect(spans).toHaveLength(2);
-      expect(spans[0].textContent).toBe('🔧');
-      expect(spans[1].textContent).toBe('Engineering');
+      expect(submenuBtn.querySelector('svg')?.getAttribute('data-icon')).toBe('settings');
+      expect(spans).toHaveLength(1);
+      expect(spans[0].textContent).toBe('Engineering');
     });
 
     it('hides submenu when mouse leaves', () => {
