@@ -1,4 +1,4 @@
-import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
+import { activateDialog, createOverlay, createDialogPanel } from './dialog-utils';
 import { t } from '../i18n';
 
 export interface ConfirmDialogOptions {
@@ -53,17 +53,12 @@ export function showConfirmDialog(options: ConfirmDialogOptions): Promise<boolea
     dialog.appendChild(btnGroup);
     overlay.appendChild(dialog);
 
-    const removeTrap = trapFocus(dialog);
-
+    let deactivate = () => {};
     const cleanup = () => {
-      removeTrap();
-      document.removeEventListener('keydown', escHandler);
       if (document.body.contains(overlay)) {
         document.body.removeChild(overlay);
       }
-      if (previouslyFocused && previouslyFocused instanceof HTMLElement) {
-        previouslyFocused.focus();
-      }
+      deactivate();
     };
 
     cancelBtn.addEventListener('click', () => {
@@ -84,14 +79,13 @@ export function showConfirmDialog(options: ConfirmDialogOptions): Promise<boolea
       }
     });
 
-    // Close on Escape
-    const escHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+    deactivate = activateDialog(dialog, {
+      onEscape: () => {
         cleanup();
         resolve(false);
-      }
-    };
-    document.addEventListener('keydown', escHandler);
+      },
+      restoreFocusTo: previouslyFocused,
+    });
 
     document.body.appendChild(overlay);
     if (options.danger) {

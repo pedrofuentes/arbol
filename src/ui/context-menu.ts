@@ -1,4 +1,5 @@
 import { createIcon, isIconName, type IconName } from './icon';
+import { activateDialog } from './dialog-utils';
 
 export interface ContextMenuItem {
   label: string;
@@ -32,9 +33,6 @@ export function dismissContextMenu(): void {
   activeMenu = null;
   for (const fn of cleanupFns) fn();
   cleanupFns = [];
-  if (previouslyFocused && previouslyFocused instanceof HTMLElement) {
-    previouslyFocused.focus();
-  }
   previouslyFocused = null;
 }
 
@@ -44,29 +42,8 @@ export function showContextMenu(options: ContextMenuOptions): void {
   previouslyFocused = document.activeElement;
 
   const menu = document.createElement('div');
+  menu.className = 'panel-chrome dialog-panel context-menu';
   menu.setAttribute('role', 'menu');
-
-  const baseStyles = [
-    'position:fixed',
-    'z-index:var(--z-menu)',
-    'min-width:160px',
-    'background:var(--bg-elevated)',
-    'border:1px solid var(--border-default)',
-    'border-radius:var(--radius-md)',
-    'box-shadow:var(--shadow-lg)',
-    'padding:var(--space-1) 0',
-    'animation:contextMenuIn 120ms ease',
-  ].join(';');
-  menu.setAttribute('style', baseStyles);
-
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes contextMenuIn {
-      from { opacity:0; transform:translateY(-4px); }
-      to   { opacity:1; transform:translateY(0); }
-    }
-  `;
-  menu.appendChild(style);
 
   interface SubmenuInfo {
     show: () => void;
@@ -79,41 +56,26 @@ export function showContextMenu(options: ContextMenuOptions): void {
 
   for (const item of options.items) {
     const btn = document.createElement('button');
+    btn.className = 'context-menu-item';
     btn.setAttribute('role', 'menuitem');
-    btn.style.cssText = `
-      display:flex;
-      align-items:center;
-      gap:var(--space-2);
-      width:100%;
-      padding:var(--space-2) var(--space-3);
-      border:none;
-      background:transparent;
-      color:var(--text-primary);
-      font-size:13px;
-      font-family:inherit;
-      text-align:start;
-      cursor:pointer;
-      white-space:nowrap;
-      max-width:300px;overflow:hidden;text-overflow:ellipsis;
-      transition:background var(--transition-fast, 100ms ease);
-    `;
 
     if (item.icon) {
       if (isIconName(item.icon)) {
         btn.appendChild(createIcon(item.icon));
       } else {
         const iconSpan = document.createElement('span');
+        iconSpan.className = 'context-menu-icon';
         iconSpan.setAttribute('aria-hidden', 'true');
         iconSpan.textContent = item.icon;
-        iconSpan.style.cssText = 'flex-shrink:0;width:16px;text-align:center;';
         btn.appendChild(iconSpan);
       }
     }
 
     if (item.swatch) {
       const swatchSpan = document.createElement('span');
+      swatchSpan.className = 'context-menu-swatch';
       swatchSpan.setAttribute('aria-hidden', 'true');
-      swatchSpan.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${item.swatch};border:1px solid var(--border-default);`;
+      swatchSpan.style.setProperty('--context-menu-swatch', item.swatch);
       btn.appendChild(swatchSpan);
     }
 
@@ -122,31 +84,21 @@ export function showContextMenu(options: ContextMenuOptions): void {
     btn.appendChild(labelSpan);
 
     if (item.danger) {
-      btn.style.color = 'var(--danger)';
+      btn.classList.add('context-menu-item--danger');
     }
 
     if (item.disabled) {
       btn.disabled = true;
       btn.setAttribute('aria-disabled', 'true');
-      btn.style.opacity = '0.4';
-      btn.style.cursor = 'default';
     }
-
-    btn.addEventListener('mouseenter', () => {
-      if (!btn.disabled) btn.style.background = 'var(--bg-hover)';
-    });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.background = 'transparent';
-    });
 
     if (item.submenu) {
       btn.setAttribute('aria-haspopup', 'menu');
       btn.setAttribute('aria-expanded', 'false');
 
       const arrowSpan = document.createElement('span');
+      arrowSpan.className = 'context-menu-arrow';
       arrowSpan.textContent = '▸';
-      arrowSpan.style.cssText =
-        'margin-left:auto;padding-left:12px;font-size:10px;color:var(--text-tertiary);';
       btn.appendChild(arrowSpan);
 
       let submenuEl: HTMLDivElement | null = null;
@@ -165,55 +117,37 @@ export function showContextMenu(options: ContextMenuOptions): void {
       const showSubmenu = () => {
         if (submenuEl) return;
         submenuEl = document.createElement('div');
+        submenuEl.className = 'panel-chrome dialog-panel context-submenu';
         submenuEl.setAttribute('role', 'menu');
-        submenuEl.style.cssText = `
-          position:fixed;z-index:var(--z-menu-submenu);min-width:140px;
-          background:var(--bg-elevated);border:1px solid var(--border-default);
-          border-radius:var(--radius-md);box-shadow:var(--shadow-lg);
-          padding:var(--space-1) 0;
-        `;
 
         for (const subItem of item.submenu!) {
           const subBtn = document.createElement('button');
+          subBtn.className = 'context-menu-item';
           subBtn.setAttribute('role', 'menuitem');
-          subBtn.style.cssText = `
-            display:flex;align-items:center;gap:var(--space-2);width:100%;
-            padding:var(--space-2) var(--space-3);border:none;background:transparent;
-            color:var(--text-primary);font-size:13px;font-family:inherit;
-            text-align:start;cursor:pointer;white-space:nowrap;
-            max-width:300px;overflow:hidden;text-overflow:ellipsis;
-            transition:background var(--transition-fast, 100ms ease);
-          `;
 
           if (subItem.icon) {
             if (isIconName(subItem.icon)) {
               subBtn.appendChild(createIcon(subItem.icon));
             } else {
               const iconSpan = document.createElement('span');
+              iconSpan.className = 'context-menu-icon';
               iconSpan.setAttribute('aria-hidden', 'true');
               iconSpan.textContent = subItem.icon;
-              iconSpan.style.cssText = 'flex-shrink:0;width:16px;text-align:center;';
               subBtn.appendChild(iconSpan);
             }
           }
 
           if (subItem.swatch) {
             const swatchSpan = document.createElement('span');
+            swatchSpan.className = 'context-menu-swatch';
             swatchSpan.setAttribute('aria-hidden', 'true');
-            swatchSpan.style.cssText = `display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${subItem.swatch};border:1px solid var(--border-default);`;
+            swatchSpan.style.setProperty('--context-menu-swatch', subItem.swatch);
             subBtn.appendChild(swatchSpan);
           }
 
           const labelSpan = document.createElement('span');
           labelSpan.textContent = subItem.label;
           subBtn.appendChild(labelSpan);
-
-          subBtn.addEventListener('mouseenter', () => {
-            subBtn.style.background = 'var(--bg-hover)';
-          });
-          subBtn.addEventListener('mouseleave', () => {
-            subBtn.style.background = 'transparent';
-          });
 
           subBtn.addEventListener('click', () => {
             dismissContextMenu();
@@ -295,8 +229,8 @@ export function showContextMenu(options: ContextMenuOptions): void {
   const rect = menu.getBoundingClientRect();
   const x = options.x + rect.width > window.innerWidth ? options.x - rect.width : options.x;
   const y = options.y + rect.height > window.innerHeight ? options.y - rect.height : options.y;
-  const current = menu.getAttribute('style') ?? '';
-  menu.setAttribute('style', `${current};left:${x}px;top:${y}px`);
+  menu.style.left = `${x}px`;
+  menu.style.top = `${y}px`;
 
   // Focus first enabled item
   const firstEnabled = buttons.find((b) => !b.disabled);
@@ -325,7 +259,7 @@ export function showContextMenu(options: ContextMenuOptions): void {
         subBtns[(subIdx - 1 + subBtns.length) % subBtns.length].focus();
         return;
       }
-      if (e.key === 'ArrowLeft' || e.key === 'Escape') {
+      if (e.key === 'ArrowLeft') {
         e.preventDefault();
         info.hide();
         parentBtn.focus();
@@ -336,12 +270,6 @@ export function showContextMenu(options: ContextMenuOptions): void {
         focused.click();
         return;
       }
-      return;
-    }
-
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      dismissContextMenu();
       return;
     }
 
@@ -382,6 +310,26 @@ export function showContextMenu(options: ContextMenuOptions): void {
   };
   document.addEventListener('keydown', keyHandler);
   cleanupFns.push(() => document.removeEventListener('keydown', keyHandler));
+
+  const handleEscape = () => {
+    const focused = document.activeElement as HTMLElement;
+    for (const [parentBtn, info] of submenuMap) {
+      const subEl = info.getSubmenuEl();
+      if (subEl?.contains(focused)) {
+        info.hide();
+        parentBtn.focus();
+        return;
+      }
+    }
+    dismissContextMenu();
+  };
+  cleanupFns.push(
+    activateDialog(menu, {
+      onEscape: handleEscape,
+      restoreFocusTo: previouslyFocused,
+      trapFocus: false,
+    }),
+  );
 
   // Dismiss on click outside
   const outsideHandler = (e: MouseEvent) => {

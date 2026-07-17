@@ -1,4 +1,4 @@
-import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
+import { activateDialog, createOverlay, createDialogPanel } from './dialog-utils';
 import { t } from '../i18n';
 
 export interface InputDialogOptions {
@@ -84,17 +84,12 @@ export function showInputDialog(options: InputDialogOptions): Promise<string | n
     dialog.appendChild(btnGroup);
     overlay.appendChild(dialog);
 
-    const removeTrap = trapFocus(dialog);
-
+    let deactivate = () => {};
     const cleanup = () => {
-      removeTrap();
-      document.removeEventListener('keydown', escHandler);
       if (document.body.contains(overlay)) {
         document.body.removeChild(overlay);
       }
-      if (previouslyFocused && previouslyFocused instanceof HTMLElement) {
-        previouslyFocused.focus();
-      }
+      deactivate();
     };
 
     cancelBtn.addEventListener('click', () => {
@@ -122,13 +117,13 @@ export function showInputDialog(options: InputDialogOptions): Promise<string | n
       }
     });
 
-    const escHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+    deactivate = activateDialog(dialog, {
+      onEscape: () => {
         cleanup();
         resolve(null);
-      }
-    };
-    document.addEventListener('keydown', escHandler);
+      },
+      restoreFocusTo: previouslyFocused,
+    });
 
     document.body.appendChild(overlay);
     input.focus();

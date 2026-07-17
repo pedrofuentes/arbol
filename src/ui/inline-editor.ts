@@ -1,4 +1,4 @@
-import { trapFocus } from './dialog-utils';
+import { activateDialog } from './dialog-utils';
 import { t } from '../i18n';
 
 export interface InlineEditorOptions {
@@ -23,9 +23,6 @@ export function dismissInlineEditor(): void {
     activeCleanup = null;
   }
   activeEditor = null;
-  if (previouslyFocused && previouslyFocused instanceof HTMLElement) {
-    previouslyFocused.focus();
-  }
   previouslyFocused = null;
 }
 
@@ -38,83 +35,44 @@ export function showInlineEditor(options: InlineEditorOptions): void {
   const { rect, name, title, level, onSave, onCancel } = options;
 
   const container = document.createElement('div');
+  container.className = 'panel-chrome dialog-panel inline-editor';
   container.setAttribute('role', 'dialog');
   container.setAttribute('aria-label', t('inline_editor.aria'));
-  container.style.position = 'fixed';
   container.style.left = `${rect.left}px`;
   container.style.top = `${rect.top}px`;
   container.style.width = `${rect.width}px`;
   container.style.zIndex = 'var(--z-menu)';
-  container.style.border = '1px solid var(--border-strong)';
-  container.style.boxShadow = 'var(--shadow-md)';
-  container.style.borderRadius = 'var(--radius-md)';
-  container.style.background = 'var(--bg-elevated)';
-  container.style.display = 'flex';
-  container.style.flexDirection = 'column';
-  container.style.justifyContent = 'center';
-  container.style.padding = 'var(--space-2) var(--space-3)';
-  container.style.boxSizing = 'border-box';
 
   const nameInput = document.createElement('input');
+  nameInput.className = 'inline-editor-input inline-editor-name';
   nameInput.type = 'text';
   nameInput.value = name;
   nameInput.setAttribute('aria-label', t('inline_editor.name_aria'));
-  nameInput.style.border = 'none';
-  nameInput.style.background = 'transparent';
-  nameInput.style.outline = 'none';
-  nameInput.style.fontFamily = 'Calibri, sans-serif';
-  nameInput.style.fontWeight = 'bold';
-  nameInput.style.fontSize = '14px';
-  nameInput.style.color = 'var(--text-primary)';
-  nameInput.style.width = '100%';
-  nameInput.style.padding = 'var(--space-1) 0';
 
   const titleInput = document.createElement('input');
+  titleInput.className = 'inline-editor-input inline-editor-title';
   titleInput.type = 'text';
   titleInput.value = title;
   titleInput.setAttribute('aria-label', t('inline_editor.title_aria'));
-  titleInput.style.border = 'none';
-  titleInput.style.background = 'transparent';
-  titleInput.style.outline = 'none';
-  titleInput.style.fontFamily = 'Calibri, sans-serif';
-  titleInput.style.fontSize = '12px';
-  titleInput.style.color = 'var(--text-secondary)';
-  titleInput.style.width = '100%';
-  titleInput.style.padding = 'var(--space-1) 0';
 
   const levelInput = document.createElement('input');
+  levelInput.className = 'inline-editor-input inline-editor-level';
   levelInput.type = 'text';
   levelInput.value = level ?? '';
   levelInput.setAttribute('aria-label', t('inline_editor.level_aria'));
   levelInput.setAttribute('placeholder', t('inline_editor.level_placeholder'));
   levelInput.maxLength = 50;
-  levelInput.style.border = 'none';
-  levelInput.style.background = 'transparent';
-  levelInput.style.outline = 'none';
-  levelInput.style.fontFamily = 'Calibri, sans-serif';
-  levelInput.style.fontSize = '11px';
-  levelInput.style.color = 'var(--text-tertiary)';
-  levelInput.style.width = '100%';
-  levelInput.style.padding = 'var(--space-1) 0';
-  levelInput.style.fontStyle = 'italic';
 
   const buttonRow = document.createElement('div');
-  buttonRow.style.display = 'flex';
-  buttonRow.style.gap = 'var(--space-2)';
-  buttonRow.style.justifyContent = 'flex-end';
-  buttonRow.style.marginTop = 'var(--space-2)';
+  buttonRow.className = 'inline-editor-actions';
 
   const saveBtn = document.createElement('button');
-  saveBtn.className = 'btn btn-primary';
+  saveBtn.className = 'btn btn-primary inline-editor-action';
   saveBtn.textContent = t('inline_editor.save');
-  saveBtn.style.padding = 'var(--space-1) var(--space-2)';
-  saveBtn.style.fontSize = '11px';
 
   const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'btn btn-secondary';
+  cancelBtn.className = 'btn btn-secondary inline-editor-action';
   cancelBtn.textContent = t('inline_editor.cancel');
-  cancelBtn.style.padding = 'var(--space-1) var(--space-2)';
-  cancelBtn.style.fontSize = '11px';
 
   buttonRow.appendChild(saveBtn);
   buttonRow.appendChild(cancelBtn);
@@ -167,9 +125,6 @@ export function showInlineEditor(options: InlineEditorOptions): void {
     if (e.key === 'Enter') {
       e.preventDefault();
       save();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      cancel();
     }
   };
 
@@ -189,10 +144,13 @@ export function showInlineEditor(options: InlineEditorOptions): void {
     document.addEventListener('mousedown', onClickOutside);
   });
 
-  const removeTrap = trapFocus(container);
+  const deactivate = activateDialog(container, {
+    onEscape: cancel,
+    restoreFocusTo: previouslyFocused,
+  });
 
   const cleanup = () => {
-    removeTrap();
+    deactivate();
     nameInput.removeEventListener('keydown', onKeyDown);
     titleInput.removeEventListener('keydown', onKeyDown);
     levelInput.removeEventListener('keydown', onKeyDown);
