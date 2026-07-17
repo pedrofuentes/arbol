@@ -12,6 +12,24 @@ function relativeLuminance(hex: string): number {
 }
 
 const css = readFileSync(fileURLToPath(new URL('../src/style.css', import.meta.url)), 'utf-8');
+
+function getMobileCss(): string {
+  const re = /@media\s*\(max-width:\s*768px\)\s*\{/g;
+  let match;
+  const blocks: string[] = [];
+  while ((match = re.exec(css)) !== null) {
+    let depth = 1;
+    let position = match.index + match[0].length;
+    while (position < css.length && depth > 0) {
+      if (css[position] === '{') depth++;
+      if (css[position] === '}') depth--;
+      position++;
+    }
+    blocks.push(css.slice(match.index, position));
+  }
+  return blocks.join('\n');
+}
+
 describe('CSS logical properties (RTL)', () => {
   it('no margin-left', () => {
     expect(css.match(/[^-]margin-left\s*:/g)).toBeNull();
@@ -74,6 +92,19 @@ describe('Touch targets (44px min on mobile)', () => {
     }
     expect(all).toContain('min-width: 44px');
     expect(all).toContain('min-height: 44px');
+    expect(all).toMatch(/\.settings-nav-item\s*\{[^}]*min-height:\s*44px/s);
+    expect(all).toMatch(/\.settings-search-input\s*\{[^}]*min-height:\s*44px/s);
+    expect(all).toMatch(
+      /\.settings-cancel-btn,\s*\.settings-apply-btn\s*\{[^}]*min-height:\s*44px/s,
+    );
+  });
+
+  it('uses a single-column modal with horizontally scrollable group navigation', () => {
+    const mobileBlocks = getMobileCss();
+
+    expect(mobileBlocks).toMatch(/\.settings-modal-body\s*\{[^}]*flex-direction:\s*column/s);
+    expect(mobileBlocks).toMatch(/\.settings-nav\s*\{[^}]*overflow-x:\s*auto/s);
+    expect(mobileBlocks).toMatch(/\.settings-nav\s*\{[^}]*border-inline-end:\s*none/s);
   });
 });
 describe('Sidebar row action accessibility', () => {
