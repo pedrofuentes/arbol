@@ -146,6 +146,26 @@ describe('Integration Workflows', () => {
         expect.arrayContaining(['v1', 'v2', 'v3']),
       );
     });
+
+    it('keeps a safety version of live edits when restoring an earlier version', async () => {
+      const chartStore = new ChartStore(db, storage);
+      await chartStore.initialize();
+      const originalTree = makeTree({ name: 'Original' });
+      await chartStore.createChartFromTree('Safety Net', originalTree);
+      const original = await chartStore.saveVersion('Original plan', originalTree);
+      const orgStore = new OrgStore(originalTree);
+      const added = orgStore.addChild('root', { name: 'New leader', title: 'VP' });
+
+      const restored = await chartStore.restoreVersion(original.id, orgStore.getTree());
+      orgStore.replaceTree(restored);
+
+      expect(findNodeById(orgStore.getTree(), added.id)).toBeNull();
+      const versions = await chartStore.getVersions();
+      const safetyVersion = versions.find((version) => version.id !== original.id);
+      expect(safetyVersion?.name).toMatch(/^Before restoring Original plan · /);
+      expect(findNodeById(safetyVersion!.tree, added.id)).toBeDefined();
+      expect(await chartStore.getVersion(original.id)).toBeDefined();
+    });
   });
 
   // =========================================================================

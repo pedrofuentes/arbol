@@ -205,6 +205,22 @@ describe('i18n', () => {
       );
       expect(en['toast.version_saved']).toBe('Version saved · {name}');
       expect(es['toast.version_saved']).toBe('Versión guardada · {name}');
+      expect(en['dialog.restore_version.title']).toBe('Restore “{name}”?');
+      expect(en['dialog.restore_version.message']).toBe(
+        'Your current chart will be saved first. Then “{name}” will become the current chart.',
+      );
+      expect(en['dialog.restore_version.confirm']).toBe('Restore version');
+      expect(en['chart_store.before_restore_version_name']).toBe(
+        'Before restoring {name} · {timestamp}',
+      );
+      expect(es['dialog.restore_version.title']).toBe('¿Restaurar “{name}”?');
+      expect(es['dialog.restore_version.message']).toBe(
+        'El organigrama actual se guardará primero. Después, “{name}” será el organigrama actual.',
+      );
+      expect(es['dialog.restore_version.confirm']).toBe('Restaurar versión');
+      expect(es['chart_store.before_restore_version_name']).toBe(
+        'Antes de restaurar {name} · {timestamp}',
+      );
     });
 
     it('never exposes technical or alarming edit-state vocabulary', () => {

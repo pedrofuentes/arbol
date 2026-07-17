@@ -25,6 +25,7 @@ import { showChartExportDialog } from '../../src/ui/chart-export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../../src/export/chart-exporter';
 import { showInputDialog } from '../../src/ui/input-dialog';
 import { showCreateChartDialog } from '../../src/ui/create-chart-dialog';
+import { showConfirmDialog } from '../../src/ui/confirm-dialog';
 
 const appStyles = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf-8');
 
@@ -543,7 +544,7 @@ describe('ChartEditor – public chart and version action wrappers', () => {
     handleDuplicateChart: (chart: ChartRecord) => Promise<void>;
     handleExportChart: (chart: ChartRecord) => Promise<void>;
     handleDeleteChart: (chart: ChartRecord) => Promise<void>;
-    handleRestoreVersion: (versionId: string) => Promise<void>;
+    handleRestoreVersion: (version: VersionRecord) => Promise<void>;
     handleDeleteVersion: (version: VersionRecord) => Promise<void>;
   };
 
@@ -639,13 +640,13 @@ describe('ChartEditor – public chart and version action wrappers', () => {
     expect(onVersionCompare).toHaveBeenCalledWith(version);
   });
 
-  it('restoreVersion delegates the version id to the restore handler', async () => {
+  it('restoreVersion delegates the whole version to the restore handler', async () => {
     const handler = vi.spyOn(handlers, 'handleRestoreVersion').mockResolvedValue(undefined);
 
     await editor.restoreVersion(version);
 
     expect(handler).toHaveBeenCalledOnce();
-    expect(handler).toHaveBeenCalledWith(version.id);
+    expect(handler).toHaveBeenCalledWith(version);
   });
 
   it('deleteVersion delegates the whole version to the delete handler', async () => {
@@ -655,6 +656,66 @@ describe('ChartEditor – public chart and version action wrappers', () => {
 
     expect(handler).toHaveBeenCalledOnce();
     expect(handler).toHaveBeenCalledWith(version);
+  });
+});
+
+describe('ChartEditor – safe version restore', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let store: ReturnType<typeof mockChartStore>;
+  let onVersionRestore: ReturnType<typeof vi.fn<(tree: OrgNode) => void>>;
+  const chart = makeChart();
+  const version = makeVersion({ name: 'Approved plan' });
+  const currentTree = makeTree();
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = mockChartStore([chart], [version]);
+    onVersionRestore = vi.fn();
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore,
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => currentTree,
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+    await vi.waitFor(() => {
+      expect(container.querySelector(`[data-version-id="${version.id}"]`)).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    container.remove();
+    (showConfirmDialog as ReturnType<typeof vi.fn>).mockReset().mockResolvedValue(true);
+  });
+
+  it('explains the safety snapshot before restoring', async () => {
+    await editor.restoreVersion(version);
+
+    expect(showConfirmDialog).toHaveBeenCalledWith({
+      title: 'Restore “Approved plan”?',
+      message:
+        'Your current chart will be saved first. Then “Approved plan” will become the current chart.',
+      confirmLabel: 'Restore version',
+    });
+    expect(store.restoreVersion).toHaveBeenCalledWith(version.id, currentTree);
+    expect(onVersionRestore).toHaveBeenCalledWith(makeTree());
+  });
+
+  it('does not restore when the safety confirmation is canceled', async () => {
+    (showConfirmDialog as ReturnType<typeof vi.fn>).mockResolvedValueOnce(false);
+
+    await editor.restoreVersion(version);
+
+    expect(store.restoreVersion).not.toHaveBeenCalled();
+    expect(onVersionRestore).not.toHaveBeenCalled();
   });
 });
 

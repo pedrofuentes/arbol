@@ -23,4 +23,8 @@ describe('main version-history header wiring', () => {
       "showToast(t('toast.version_saved', { name: name.trim() }), 'success')",
     );
   });
+
+  it('routes version-viewer restore through the safe editor workflow', () => {
+    expect(mainSource).toContain('await chartEditor.restoreVersion(version)');
+  });
 });

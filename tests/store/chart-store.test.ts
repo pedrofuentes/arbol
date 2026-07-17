@@ -637,6 +637,43 @@ describe('ChartStore', () => {
       expect(store.isDirty(restored)).toBe(false);
     });
 
+    it('restoreVersion saves changed current chart state before restoring', async () => {
+      const targetTree = makeTree({ name: 'Q1 Plan' });
+      const target = await store.saveVersion('Q1', targetTree);
+      const currentTree = makeTree({ name: 'Q2 Draft' });
+
+      const restored = await store.restoreVersion(target.id, currentTree);
+
+      expect(restored).toEqual(targetTree);
+      const versions = await store.getVersions();
+      const safetyVersion = versions.find((version) => version.id !== target.id);
+      expect(safetyVersion).toBeDefined();
+      expect(safetyVersion!.name).toMatch(/^Before restoring Q1 · /);
+      expect(safetyVersion!.tree).toEqual(currentTree);
+      expect(store.getEditsSinceLastVersion(restored)).toBe(0);
+    });
+
+    it('restoreVersion does not create a safety version when the current chart is unchanged', async () => {
+      const targetTree = makeTree({ name: 'Q1 Plan' });
+      const target = await store.saveVersion('Q1', targetTree);
+
+      await store.restoreVersion(target.id, structuredClone(targetTree));
+
+      expect(await store.getVersions()).toHaveLength(1);
+    });
+
+    it('restoreVersion aborts when the safety version cannot be saved', async () => {
+      const targetTree = makeTree({ name: 'Q1 Plan' });
+      const target = await store.saveVersion('Q1', targetTree);
+      const currentTree = makeTree({ name: 'Q2 Draft' });
+      vi.spyOn(db, 'putVersion').mockRejectedValueOnce(new Error('storage full'));
+
+      await expect(store.restoreVersion(target.id, currentTree)).rejects.toThrow('storage full');
+
+      expect(store.getEditsSinceLastVersion(currentTree)).toBe(1);
+      expect(await store.getVersions()).toHaveLength(1);
+    });
+
     it('deleteVersion removes the version', async () => {
       const version = await store.saveVersion('temp', makeTree());
       await store.deleteVersion(version.id);
