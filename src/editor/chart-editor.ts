@@ -73,6 +73,7 @@ export class ChartEditor {
   private latestPeopleCounts = new Map<string, number>();
   private pendingPeopleCounts = new Map<string, number>();
   private versionCounts = new Map<string, number>();
+  private chartNames = new Map<string, string>();
 
   constructor(options: ChartEditorOptions) {
     this.container = options.container;
@@ -232,6 +233,7 @@ export class ChartEditor {
 
     const charts = await this.chartStore.getCharts();
     const activeId = this.chartStore.getActiveChartId();
+    this.chartNames = new Map(charts.map((chart) => [chart.id, chart.name]));
 
     const filtered = this.chartSearchTerm
       ? charts.filter((c) => c.name.toLowerCase().includes(this.chartSearchTerm))
@@ -385,6 +387,7 @@ export class ChartEditor {
     ).find((item) => item.dataset.chartId === chartId);
     const metaEl = chartItem?.querySelector<HTMLElement>('.chart-item-meta');
     if (!metaEl) {
+      if (this.isChartFilteredOut(chartId)) return;
       console.warn(`Chart row not found for working-tree save: ${chartId}`);
       return;
     }
@@ -395,6 +398,13 @@ export class ChartEditor {
       return;
     }
     metaEl.textContent = this.formatChartMeta(peopleCount, versionCount);
+  }
+
+  private isChartFilteredOut(chartId: string): boolean {
+    const chartName = this.chartNames.get(chartId);
+    return Boolean(
+      this.chartSearchTerm && chartName && !chartName.toLowerCase().includes(this.chartSearchTerm),
+    );
   }
 
   // ── Render version list ────────────────────────────────
