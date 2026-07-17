@@ -141,7 +141,7 @@ function getHelpSections(): HelpSection[] {
           { tag: 'strong', text: t('help.charts_versions.view_label') },
           t('help.charts_versions.view_desc'),
         ],
-        [t('help.charts_versions.unsaved')],
+        [t('help.charts_versions.autosave')],
       ],
     },
     {

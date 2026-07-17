@@ -187,7 +187,7 @@ const en: Record<string, string> = {
   'command_palette.item_help': 'Help & Shortcuts',
   'command_palette.item_theme': 'Toggle Theme',
   'command_palette.item_new_chart': 'New Chart',
-  'command_palette.item_save_version': 'Save Version',
+  'command_palette.item_save_version': 'Save a version',
   'command_palette.item_import': 'Import Data',
   'command_palette.item_rename_chart': 'Rename chart',
   'command_palette.item_duplicate_chart': 'Duplicate chart',
@@ -296,13 +296,13 @@ const en: Record<string, string> = {
   'dialog.confirm': 'Confirm',
   'dialog.ok': 'OK',
   'dialog.create': 'Create',
-  'dialog.save_version.title': 'Save Version',
+  'dialog.save_version.title': 'Save a version',
   'dialog.save_version.label': 'Version name',
   'dialog.save_version.placeholder': 'e.g. Q1 2024 Plan',
-  'dialog.unsaved.title': 'Unsaved Changes',
-  'dialog.unsaved.message':
-    'You have unsaved changes. Would you like to save a version before switching?',
-  'dialog.unsaved.confirm': 'Switch without saving',
+  'dialog.switch_changes.title': 'Changes since last version',
+  'dialog.switch_changes.message':
+    'Your current chart is saved automatically. Switch to another chart?',
+  'dialog.switch_changes.confirm': 'Switch chart',
   'dialog.remove_person.title': 'Remove Person',
   'dialog.remove_person.message': 'Remove "{name}"? You can undo this with Ctrl+Z.',
   'dialog.remove_person.confirm': 'Remove',
@@ -407,10 +407,13 @@ const en: Record<string, string> = {
   'form.title_aria': 'Title',
 
   // ─── Chart Name Header────────────────────────────────────────────
-  'chart_header.save_version_tooltip': 'Save version',
-  'chart_header.save_version_aria': 'Save version',
+  'chart_header.save_version_tooltip': 'Save a version',
+  'chart_header.save_version_aria': 'Save a version',
   'chart_header.name_aria': 'Chart name',
   'chart_header.name_empty_error': 'Chart name cannot be empty',
+  'chart_header.status_saved': 'All changes saved',
+  'chart_header.edits_since_version.one': '1 edit since last version',
+  'chart_header.edits_since_version.other': '{count} edits since last version',
 
   // ─── Version Viewer ────────────────────────────────────────────────
   'version_viewer.viewing': 'Viewing version \u201c{name}\u201d',
@@ -422,7 +425,7 @@ const en: Record<string, string> = {
   'chart_editor.new_chart_placeholder': 'New chart name',
   'chart_editor.add_chart': '+',
   'chart_editor.version_placeholder': 'Version name',
-  'chart_editor.save_version': '+ Save',
+  'chart_editor.save_version': 'Save a version',
   'chart_editor.no_charts': 'No charts yet',
   'chart_editor.active_badge': '(active)',
   'chart_editor.active_dot': '●',
@@ -433,7 +436,7 @@ const en: Record<string, string> = {
   'chart_editor.duplicate': 'Duplicate',
   'chart_editor.export': 'Export',
   'chart_editor.delete': 'Delete',
-  'chart_editor.view': 'View',
+  'chart_editor.preview': 'Preview',
   'chart_editor.compare': 'Compare',
   'chart_editor.restore': 'Restore',
   'chart_editor.name_required': 'Please enter a chart name',
@@ -443,15 +446,16 @@ const en: Record<string, string> = {
   'chart_editor.versions_suffix': 'versions',
   'chart_editor.version_suffix': 'version',
   'chart_editor.charts_heading': 'Charts',
-  'chart_editor.versions_heading': 'Versions',
+  'chart_editor.versions_heading': 'Version history',
   'chart_editor.new_chart_tooltip': 'New chart',
   'chart_editor.new_chart_dialog_title': 'New Chart',
   'chart_editor.new_chart_dialog_label': 'Chart name',
   'chart_editor.rename_chart_dialog_title': 'Rename Chart',
-  'chart_editor.save_version_tooltip': 'Save new version',
-  'chart_editor.working_tree': 'Working tree',
-  'chart_editor.working_tree_dirty': 'Current · unsaved changes',
-  'chart_editor.working_tree_saved': 'Current · saved',
+  'chart_editor.save_version_tooltip': 'Save a version',
+  'chart_editor.current_chart': 'Current chart',
+  'chart_editor.current_chart_saved': 'All changes saved',
+  'chart_editor.edits_since_version.one': '1 edit since last version',
+  'chart_editor.edits_since_version.other': '{count} edits since last version',
   'chart_editor.search_aria': 'Search charts',
 
   // ─── JSON Editor ───────────────────────────────────────────────────
@@ -517,9 +521,9 @@ const en: Record<string, string> = {
   'import.bundle_with_versions': 'Chart bundle "{name}" with {count} version(s)',
   'import.bundle_no_versions': 'Chart bundle "{name}" with no versions',
   'import.invalid_bundle_version': 'Unsupported chart bundle version: {version}',
-  'import.invalid_bundle_missing': 'Invalid chart bundle: missing chart name or working tree',
+  'import.invalid_bundle_missing': 'Invalid chart bundle: missing chart name or current chart data',
   'import.invalid_bundle_root':
-    'Invalid chart bundle: working tree root must have id, name, and title',
+    'Invalid chart bundle: current chart root must have id, name, and title',
   'import.invalid_bundle_versions': 'Invalid chart bundle: versions must be an array',
   'import.invalid_bundle_version_entry':
     'Invalid chart bundle: each version must have name and tree',
@@ -906,12 +910,12 @@ const en: Record<string, string> = {
     'Hover over the active chart in the sidebar to access Rename, Duplicate, Export, and Delete actions.',
   'help.charts_versions.save_label': 'Save a version',
   'help.charts_versions.save_desc':
-    ' — Take a named snapshot of the current chart using the Save button in the Versions section of the sidebar.',
-  'help.charts_versions.view_label': 'View a version',
+    ' — Take a named snapshot of the current chart using Save a version in the Version history section of the sidebar.',
+  'help.charts_versions.view_label': 'Preview a version',
   'help.charts_versions.view_desc':
-    ' — Opens a read-only preview. Click Restore to make it the working chart, or Close to return.',
-  'help.charts_versions.unsaved':
-    "If you have unsaved changes when switching charts or restoring a version, you'll be warned first.",
+    ' — Opens a read-only preview. Click Restore to make it the current chart, or Close to return.',
+  'help.charts_versions.autosave':
+    'Current chart changes are saved automatically. Restoring a version creates a safety version first.',
 
   // Help: Importing Data
   'help.importing.title': 'Importing Data',
@@ -1073,7 +1077,7 @@ const en: Record<string, string> = {
     'Report bugs & request features — https://github.com/pedrofuentes/arbol/issues',
 
   // ─── Comparison Banner ─────────────────────────────────────────────
-  'comparison.working_tree': 'Working tree',
+  'comparison.current_chart': 'Current chart',
   'comparison.dim_aria': 'Toggle dim unchanged nodes',
   'comparison.toggle_view_aria': 'Toggle comparison view mode',
   'comparison.exit_aria': 'Exit comparison mode',
@@ -1264,8 +1268,8 @@ const en: Record<string, string> = {
   'version_picker.title': 'Compare against\u2026',
   'version_picker.search_placeholder': 'Search versions\u2026',
   'version_picker.no_matches': 'No matching versions',
-  'version_picker.working_tree': 'Current working tree',
-  'version_picker.working_tree_desc': 'Compare against live changes',
+  'version_picker.current_chart': 'Current chart',
+  'version_picker.current_chart_desc': 'Compare against live changes',
   'version_picker.cancel': 'Cancel',
   'version_viewer.compare': 'Compare',
   'category_legend.title': 'Categories',
@@ -1273,9 +1277,10 @@ const en: Record<string, string> = {
   'import_wizard.file_selected': '\u2713 {name}',
   'import_wizard.json_root_error': 'Root node must have id, name, and title fields',
   'import_wizard.bundle_unsupported_version': 'Unsupported chart bundle version: {version}',
-  'import_wizard.bundle_missing_chart': 'Invalid chart bundle: missing chart name or working tree',
+  'import_wizard.bundle_missing_chart':
+    'Invalid chart bundle: missing chart name or current chart data',
   'import_wizard.bundle_invalid_root':
-    'Invalid chart bundle: working tree root must have id, name, and title',
+    'Invalid chart bundle: current chart root must have id, name, and title',
   'import_wizard.bundle_info': 'Chart "{name}" with {count} saved version(s)',
   'import_wizard.bundle_versions_skipped':
     'Skipped {count} malformed saved version(s). Only valid versions will be imported.',

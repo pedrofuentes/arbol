@@ -14,7 +14,7 @@ import { showInputDialog } from '../ui/input-dialog';
 import { showChartExportDialog } from '../ui/chart-export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../export/chart-exporter';
 import { flattenTree } from '../utils/tree';
-import { t, getLocale } from '../i18n';
+import { t, tp, getLocale } from '../i18n';
 import { showCreateChartDialog } from '../ui/create-chart-dialog';
 import { createButton } from '../utils/dom-builder';
 import { createIcon, type IconName } from '../ui/icon';
@@ -429,15 +429,16 @@ export class ChartEditor {
 
     const workingName = document.createElement('div');
     workingName.className = 'version-item-name';
-    workingName.textContent = t('chart_editor.working_tree');
+    workingName.textContent = t('chart_editor.current_chart');
     workingInfo.appendChild(workingName);
 
     const workingDate = document.createElement('div');
     workingDate.className = 'version-item-date';
-    const isDirty = this.chartStore.isDirty(this.getCurrentTree());
-    workingDate.textContent = isDirty
-      ? t('chart_editor.working_tree_dirty')
-      : t('chart_editor.working_tree_saved');
+    const editCount = this.chartStore.getEditsSinceLastVersion(this.getCurrentTree());
+    workingDate.textContent =
+      editCount === 0
+        ? t('chart_editor.current_chart_saved')
+        : tp('chart_editor.edits_since_version', editCount);
     workingInfo.appendChild(workingDate);
 
     workingItem.appendChild(workingInfo);
@@ -486,7 +487,7 @@ export class ChartEditor {
     const actions = document.createElement('div');
     actions.className = 'version-item-actions';
 
-    const viewBtn = this.createActionButton('eye', t('chart_editor.view'));
+    const viewBtn = this.createActionButton('eye', t('chart_editor.preview'));
     viewBtn.addEventListener('click', () => this.onVersionView(version));
     actions.appendChild(viewBtn);
 

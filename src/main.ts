@@ -262,6 +262,7 @@ async function main(): Promise<void> {
 
   // Theme manager + header references
   const themeManager = new ThemeManager();
+  const headerCenter = document.getElementById('header-center')!;
   const headerRight = document.getElementById('header-right')!;
 
   // Settings modal (opens via header button)
@@ -431,7 +432,7 @@ async function main(): Promise<void> {
             categoryStore.replaceAll(chart.categories);
           }
           chartNameHeader.setName(chart.name);
-          chartNameHeader.setDirty(false);
+          chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
           rerender();
           renderer.getZoomManager()?.fitToContent();
           announce(t('announce.chart_switched', { name: wizardState.chartName }));
@@ -498,10 +499,10 @@ async function main(): Promise<void> {
   });
   const { settingsBtn, importBtn } = toolbar;
 
-  // Chart name header (moved offscreen — name shown in sidebar)
+  // Chart name and version status in the visible header
   const chartNameContainer = document.createElement('div');
   chartNameContainer.style.cssText = 'display:flex;align-items:center;margin-left:12px;';
-  offscreenHost.appendChild(chartNameContainer);
+  headerCenter.appendChild(chartNameContainer);
 
   const chartNameHeader = new ChartNameHeader({
     container: chartNameContainer,
@@ -520,6 +521,7 @@ async function main(): Promise<void> {
       if (name?.trim()) {
         try {
           await chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
+          chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
           announce(t('announce.chart_saved'));
         } catch {
           showToast(t('error.version_save_failed'), 'error');
@@ -530,7 +532,7 @@ async function main(): Promise<void> {
 
   // Update dirty indicator on every store change
   store.onChange(() => {
-    chartNameHeader.setDirty(chartStore.isDirty(store.getTree(), store.mutationVersion));
+    chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
   });
 
   // Search UI — floating over the chart canvas
@@ -633,10 +635,9 @@ async function main(): Promise<void> {
   const handleBeforeSwitch = async (): Promise<boolean> => {
     if (!chartStore.isDirty(store.getTree(), store.mutationVersion)) return true;
     const confirmed = await showConfirmDialog({
-      title: t('dialog.unsaved.title'),
-      message: t('dialog.unsaved.message'),
-      confirmLabel: t('dialog.unsaved.confirm'),
-      danger: true,
+      title: t('dialog.switch_changes.title'),
+      message: t('dialog.switch_changes.message'),
+      confirmLabel: t('dialog.switch_changes.confirm'),
     });
     return confirmed;
   };
@@ -655,7 +656,7 @@ async function main(): Promise<void> {
       }
       levelStore.loadFromChart(chart);
       chartNameHeader.setName(chart.name);
-      chartNameHeader.setDirty(false);
+      chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
       rerender();
       renderer.getZoomManager()?.fitToContent();
       formEditor.refresh();
@@ -678,7 +679,7 @@ async function main(): Promise<void> {
     onVersionRestore: (tree) => {
       dismissVersionViewer();
       store.replaceTree(tree);
-      chartNameHeader.setDirty(false);
+      chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
       rerender();
       renderer.getZoomManager()?.fitToContent();
       formEditor.refresh();
@@ -707,7 +708,7 @@ async function main(): Promise<void> {
           await chartStore.restoreVersion(version.id);
           dismissVersionViewer();
           chartEditor.setViewingVersion(null);
-          chartNameHeader.setDirty(false);
+          chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
           rerender();
         },
         onClose: () => {

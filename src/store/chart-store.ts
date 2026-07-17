@@ -14,6 +14,7 @@ import { EventEmitter } from '../utils/event-emitter';
 import { type IStorage, browserStorage } from '../utils/storage';
 import { flattenTree } from '../utils/tree';
 import { t } from '../i18n';
+import { compareTrees, getDiffStats } from '../utils/tree-diff';
 
 const DEFAULT_ROOT: OrgNode = {
   id: 'root',
@@ -132,6 +133,7 @@ export class ChartStore extends EventEmitter {
   private activeChartId: string | null = null;
   private lastSavedTree: string | null = null;
   private savedMutationVersion: number | null = null;
+  private lastVersionTree: OrgNode | null = null;
   private storage: IStorage;
   private workingTreeSavedEmitter = new WorkingTreeSavedEmitter();
 
@@ -157,6 +159,7 @@ export class ChartStore extends EventEmitter {
     this.activeChartId = active.id;
     this.lastSavedTree = JSON.stringify(active.workingTree);
     this.savedMutationVersion = null;
+    await this.loadVersionBaseline(active.id, active.workingTree);
     return active;
   }
 
@@ -248,6 +251,7 @@ export class ChartStore extends EventEmitter {
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
+    this.lastVersionTree = structuredClone(chart.workingTree);
     this.emit();
     return chart;
   }
@@ -282,6 +286,7 @@ export class ChartStore extends EventEmitter {
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
+    this.lastVersionTree = structuredClone(chart.workingTree);
     this.emit();
     return chart;
   }
@@ -339,11 +344,13 @@ export class ChartStore extends EventEmitter {
         this.activeChartId = remaining[0].id;
         this.lastSavedTree = JSON.stringify(remaining[0].workingTree);
         this.savedMutationVersion = null;
+        await this.loadVersionBaseline(remaining[0].id, remaining[0].workingTree);
       } else {
         const fallback = await this.createFallbackChart();
         this.activeChartId = fallback.id;
         this.lastSavedTree = JSON.stringify(fallback.workingTree);
         this.savedMutationVersion = null;
+        this.lastVersionTree = structuredClone(fallback.workingTree);
       }
     }
 
@@ -359,6 +366,7 @@ export class ChartStore extends EventEmitter {
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
+    await this.loadVersionBaseline(chart.id, chart.workingTree);
     this.emit();
     return chart;
   }
@@ -408,6 +416,12 @@ export class ChartStore extends EventEmitter {
     return JSON.stringify(currentTree) !== this.lastSavedTree;
   }
 
+  getEditsSinceLastVersion(currentTree: OrgNode): number {
+    if (!this.lastVersionTree) return 0;
+    const stats = getDiffStats(compareTrees(this.lastVersionTree, currentTree));
+    return stats.added + stats.removed + stats.moved + stats.modified;
+  }
+
   // ---------------------------------------------------------------------------
   // Version management
   // ---------------------------------------------------------------------------
@@ -434,6 +448,7 @@ export class ChartStore extends EventEmitter {
     await this.db.putVersion(version);
     this.lastSavedTree = JSON.stringify(tree);
     this.savedMutationVersion = mutationVersion ?? null;
+    this.lastVersionTree = structuredClone(tree);
     this.emit();
     return version;
   }
@@ -448,12 +463,18 @@ export class ChartStore extends EventEmitter {
 
     this.lastSavedTree = JSON.stringify(version.tree);
     this.savedMutationVersion = null;
+    this.lastVersionTree = structuredClone(version.tree);
     this.emit();
     return version.tree;
   }
 
   async deleteVersion(id: string): Promise<void> {
+    const version = await this.db.getVersion(id);
     await this.db.deleteVersion(id);
+    if (version?.chartId === this.activeChartId) {
+      const chart = await this.getActiveChart();
+      if (chart) await this.loadVersionBaseline(chart.id, chart.workingTree);
+    }
     this.emit();
   }
 
@@ -512,6 +533,7 @@ export class ChartStore extends EventEmitter {
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
+    await this.loadVersionBaseline(chart.id, chart.workingTree);
     this.emit();
     return chart;
   }
@@ -563,6 +585,7 @@ export class ChartStore extends EventEmitter {
 
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
+    await this.loadVersionBaseline(chart.id, chart.workingTree);
     this.emit();
     return chart;
   }
@@ -607,6 +630,11 @@ export class ChartStore extends EventEmitter {
     };
     await this.db.putChart(chart);
     return chart;
+  }
+
+  private async loadVersionBaseline(chartId: string, fallbackTree: OrgNode): Promise<void> {
+    const versions = await this.db.getVersionsByChart(chartId);
+    this.lastVersionTree = structuredClone(versions[0]?.tree ?? fallbackTree);
   }
 
   /** Ensures a chart record loaded from IndexedDB has all required fields with valid defaults. */

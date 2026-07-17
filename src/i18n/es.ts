@@ -133,7 +133,7 @@ const es: Record<string, string> = {
   'command_palette.item_help': 'Ayuda y atajos',
   'command_palette.item_theme': 'Cambiar tema',
   'command_palette.item_new_chart': 'Nuevo organigrama',
-  'command_palette.item_save_version': 'Guardar versión',
+  'command_palette.item_save_version': 'Guardar una versión',
   'command_palette.item_import': 'Importar datos',
   'command_palette.item_rename_chart': 'Renombrar organigrama',
   'command_palette.item_duplicate_chart': 'Duplicar organigrama',
@@ -243,13 +243,13 @@ const es: Record<string, string> = {
   'dialog.cancel': 'Cancelar',
   'dialog.confirm': 'Confirmar',
   'dialog.ok': 'OK',
-  'dialog.save_version.title': 'Guardar versión',
+  'dialog.save_version.title': 'Guardar una versión',
   'dialog.save_version.label': 'Nombre de la versión',
   'dialog.save_version.placeholder': 'ej. Plan Q1 2024',
-  'dialog.unsaved.title': 'Cambios sin guardar',
-  'dialog.unsaved.message':
-    '¿Tiene cambios sin guardar. Desea guardar una versión antes de cambiar?',
-  'dialog.unsaved.confirm': 'Cambiar sin guardar',
+  'dialog.switch_changes.title': 'Cambios desde la última versión',
+  'dialog.switch_changes.message':
+    'El organigrama actual se guarda automáticamente. ¿Cambiar a otro organigrama?',
+  'dialog.switch_changes.confirm': 'Cambiar de organigrama',
   'dialog.remove_person.title': 'Eliminar persona',
   'dialog.remove_person.message': '¿Eliminar "{name}"? Puede deshacer esto con Ctrl+Z.',
   'dialog.remove_person.confirm': 'Eliminar',
@@ -349,10 +349,13 @@ const es: Record<string, string> = {
   'form.title_aria': 'Cargo',
 
   // ─── Chart Name Header────────────────────────────────────────────
-  'chart_header.save_version_tooltip': 'Guardar versión',
-  'chart_header.save_version_aria': 'Guardar versión',
+  'chart_header.save_version_tooltip': 'Guardar una versión',
+  'chart_header.save_version_aria': 'Guardar una versión',
   'chart_header.name_aria': 'Nombre del organigrama',
   'chart_header.name_empty_error': 'El nombre del organigrama no puede estar vacío',
+  'chart_header.status_saved': 'Todos los cambios guardados',
+  'chart_header.edits_since_version.one': '1 edición desde la última versión',
+  'chart_header.edits_since_version.other': '{count} ediciones desde la última versión',
 
   // ─── Version Viewer ────────────────────────────────────────────────
   'version_viewer.viewing': 'Viewing version \u201c{name}\u201d',
@@ -364,7 +367,7 @@ const es: Record<string, string> = {
   'chart_editor.new_chart_placeholder': 'Nombre del nuevo organigrama',
   'chart_editor.add_chart': '+',
   'chart_editor.version_placeholder': 'Nombre de la versión',
-  'chart_editor.save_version': 'Guardar versión',
+  'chart_editor.save_version': 'Guardar una versión',
   'chart_editor.no_charts': 'No hay organigramas',
   'chart_editor.active_badge': '(activo)',
   'chart_editor.active_dot': '●',
@@ -375,7 +378,7 @@ const es: Record<string, string> = {
   'chart_editor.duplicate': 'Duplicar',
   'chart_editor.export': 'Exportar',
   'chart_editor.delete': 'Eliminar',
-  'chart_editor.view': 'Ver',
+  'chart_editor.preview': 'Vista previa',
   'chart_editor.compare': 'Comparar',
   'chart_editor.restore': 'Restaurar',
   'chart_editor.name_required': 'Ingrese un nombre para el organigrama',
@@ -385,15 +388,16 @@ const es: Record<string, string> = {
   'chart_editor.versions_suffix': 'versiones',
   'chart_editor.version_suffix': 'versión',
   'chart_editor.charts_heading': 'Organigramas',
-  'chart_editor.versions_heading': 'Versiones',
+  'chart_editor.versions_heading': 'Historial de versiones',
   'chart_editor.new_chart_tooltip': 'Nuevo organigrama',
   'chart_editor.new_chart_dialog_title': 'Nuevo organigrama',
   'chart_editor.new_chart_dialog_label': 'Nombre del organigrama',
   'chart_editor.rename_chart_dialog_title': 'Renombrar organigrama',
-  'chart_editor.save_version_tooltip': 'Guardar nueva versión',
-  'chart_editor.working_tree': 'Árbol de trabajo',
-  'chart_editor.working_tree_dirty': 'Actual · cambios sin guardar',
-  'chart_editor.working_tree_saved': 'Actual · guardado',
+  'chart_editor.save_version_tooltip': 'Guardar una versión',
+  'chart_editor.current_chart': 'Organigrama actual',
+  'chart_editor.current_chart_saved': 'Todos los cambios guardados',
+  'chart_editor.edits_since_version.one': '1 edición desde la última versión',
+  'chart_editor.edits_since_version.other': '{count} ediciones desde la última versión',
   'chart_editor.search_aria': 'Buscar organigramas',
 
   // ─── JSON Editor ───────────────────────────────────────────────────
@@ -460,9 +464,9 @@ const es: Record<string, string> = {
   'import.bundle_no_versions': 'Paquete de organigrama "{name}" sin versiones',
   'import.invalid_bundle_version': 'Versión de paquete no soportada: {version}',
   'import.invalid_bundle_missing':
-    'Paquete no válido: falta el nombre del organigrama o el árbol de trabajo',
+    'Paquete no válido: falta el nombre o los datos del organigrama actual',
   'import.invalid_bundle_root':
-    'Paquete no válido: la raíz del árbol de trabajo debe tener id, nombre y cargo',
+    'Paquete no válido: la raíz del organigrama actual debe tener id, nombre y cargo',
   'import.invalid_bundle_versions': 'Paquete no válido: las versiones deben ser un arreglo',
   'import.invalid_bundle_version_entry':
     'Paquete no válido: cada versión debe tener nombre y árbol',
@@ -866,12 +870,12 @@ const es: Record<string, string> = {
     'Pase el cursor sobre el organigrama activo en la barra lateral para acceder a las acciones de Renombrar, Duplicar, Exportar y Eliminar.',
   'help.charts_versions.save_label': 'Guardar una versión',
   'help.charts_versions.save_desc':
-    ' — Tome una instantánea con nombre del organigrama actual usando el botón Guardar en la sección Versiones de la barra lateral.',
-  'help.charts_versions.view_label': 'Ver una versión',
+    ' — Tome una instantánea con nombre usando Guardar una versión en la sección Historial de versiones de la barra lateral.',
+  'help.charts_versions.view_label': 'Vista previa de una versión',
   'help.charts_versions.view_desc':
-    ' — Abre una vista previa de solo lectura. Haga clic en Restaurar para convertirla en el organigrama de trabajo, o en Cerrar para volver.',
-  'help.charts_versions.unsaved':
-    'Si tiene cambios sin guardar al cambiar de organigrama o restaurar una versión, se le advertirá primero.',
+    ' — Abre una vista previa de solo lectura. Haga clic en Restaurar para convertirla en el organigrama actual, o en Cerrar para volver.',
+  'help.charts_versions.autosave':
+    'Los cambios del organigrama actual se guardan automáticamente. Al restaurar se crea primero una versión de seguridad.',
 
   // Help: Importing Data
   'help.importing.title': 'Importar datos',
@@ -1019,7 +1023,7 @@ const es: Record<string, string> = {
     'Reportar errores y solicitar funciones — https://github.com/pedrofuentes/arbol/issues',
 
   // ─── Comparison Banner ─────────────────────────────────────────────
-  'comparison.working_tree': 'Árbol de trabajo',
+  'comparison.current_chart': 'Organigrama actual',
   'comparison.dim_aria': 'Alternar atenuación de nodos sin cambios',
   'comparison.toggle_view_aria': 'Alternar modo de vista de comparación',
   'comparison.exit_aria': 'Salir del modo comparación',
@@ -1224,8 +1228,8 @@ const es: Record<string, string> = {
   'version_picker.title': 'Comparar con',
   'version_picker.search_placeholder': 'Buscar versión…',
   'version_picker.no_matches': 'No hay versiones coincidentes',
-  'version_picker.working_tree': 'Árbol de trabajo actual',
-  'version_picker.working_tree_desc': 'Comparar con los cambios actuales',
+  'version_picker.current_chart': 'Organigrama actual',
+  'version_picker.current_chart_desc': 'Comparar con los cambios actuales',
   'version_picker.cancel': 'Cancelar',
   'version_viewer.compare': 'Comparar',
   'category_legend.title': 'Categorías',
@@ -1235,7 +1239,7 @@ const es: Record<string, string> = {
   'import_wizard.bundle_unsupported_version':
     'Versión de paquete de organigrama no soportada: {version}',
   'import_wizard.bundle_missing_chart':
-    'Paquete de organigrama inválido: falta el nombre o el árbol de trabajo',
+    'Paquete de organigrama inválido: falta el nombre o los datos del organigrama actual',
   'import_wizard.bundle_invalid_root':
     'Paquete de organigrama inválido: el nodo raíz debe tener id, nombre y cargo',
   'import_wizard.bundle_info': 'Organigrama "{name}" con {count} versión(es) guardada(s)',

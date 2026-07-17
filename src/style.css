@@ -15,6 +15,7 @@
   --bg-base: #0c1222;
   --bg-surface: #111827;
   --bg-elevated: #1a2332;
+  --bg-subtle: var(--bg-surface);
   --bg-hover: #1f2b3d;
   --bg-active: #263348;
 

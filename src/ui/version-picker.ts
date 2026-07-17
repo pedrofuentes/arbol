@@ -106,7 +106,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
       });
 
       const nameEl = document.createElement('span');
-      nameEl.textContent = t('version_picker.working_tree');
+      nameEl.textContent = t('version_picker.current_chart');
       nameEl.style.cssText = `
         font-size:14px;font-weight:600;
         color:var(--text-primary);
@@ -114,7 +114,7 @@ export function showVersionPicker(options: VersionPickerOptions): Promise<Versio
       item.appendChild(nameEl);
 
       const descEl = document.createElement('span');
-      descEl.textContent = t('version_picker.working_tree_desc');
+      descEl.textContent = t('version_picker.current_chart_desc');
       descEl.style.cssText = `
         font-size:12px;
         color:var(--text-tertiary);
