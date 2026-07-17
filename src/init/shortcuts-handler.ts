@@ -32,6 +32,7 @@ export interface ShortcutsDeps {
   settingsBtn: HTMLButtonElement;
   importBtn: HTMLButtonElement;
   exportCurrentChart: () => void;
+  toggleAnalyticsDrawer: () => void;
   exitComparisonMode: () => void;
   clearMultiSelection: () => void;
   handleBeforeSwitch: () => Promise<boolean>;
@@ -67,6 +68,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
     settingsBtn,
     importBtn,
     exportCurrentChart,
+    toggleAnalyticsDrawer,
     exitComparisonMode,
     clearMultiSelection,
     handleBeforeSwitch,
@@ -125,6 +127,14 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       search.focus();
     },
     description: t('shortcut.search'),
+  });
+
+  shortcuts.register({
+    key: 'a',
+    ctrl: true,
+    shift: true,
+    handler: toggleAnalyticsDrawer,
+    description: t('shortcut.analytics'),
   });
 
   // Command Palette (Ctrl+K)

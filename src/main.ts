@@ -749,14 +749,15 @@ async function main(): Promise<void> {
   });
 
   // Analytics toggle button in toolbar (icon-only, between settings and theme)
+  const toggleAnalyticsDrawer = () => {
+    analyticsDrawer.toggle();
+  };
   const analyticsToggleBtn = createIconButton({
     icon: 'analytics',
     tooltip: t('analytics.drawer_toggle_tooltip'),
     ariaLabel: t('analytics.drawer_toggle_tooltip'),
     ariaKeyshortcuts: 'Control+Shift+a',
-    onClick: () => {
-      analyticsDrawer.toggle();
-    },
+    onClick: toggleAnalyticsDrawer,
   });
   headerRight.insertBefore(analyticsToggleBtn, toolbar.themeBtn);
 
@@ -1111,6 +1112,7 @@ async function main(): Promise<void> {
     settingsBtn,
     importBtn,
     exportCurrentChart,
+    toggleAnalyticsDrawer,
     exitComparisonMode: comparison.exitComparisonMode,
     clearMultiSelection,
     handleBeforeSwitch,
@@ -1129,14 +1131,6 @@ async function main(): Promise<void> {
   cmdKBtn.addEventListener('click', async () => {
     commandPalette.setItems(await buildCommandItems());
     commandPalette.open();
-  });
-
-  // Analytics drawer keyboard shortcut
-  document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-      e.preventDefault();
-      analyticsDrawer.toggle();
-    }
   });
 
   window.addEventListener('beforeunload', (e) => {
