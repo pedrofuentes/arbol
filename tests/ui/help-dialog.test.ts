@@ -82,6 +82,12 @@ describe('showHelpDialog', () => {
     expect(document.body.textContent).toContain('Chart Interactions');
   });
 
+  it('documents title pinning in chart interactions', () => {
+    showHelpDialog();
+    expect(document.body.textContent).toContain('Pin title');
+    expect(document.body.textContent).toContain('level mapping');
+  });
+
   it('closes on close button click', () => {
     showHelpDialog();
     const closeBtn = document.querySelector(

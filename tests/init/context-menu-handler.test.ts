@@ -63,6 +63,8 @@ function makeDeps(treeOverride?: OrgNode): ContextMenuDeps {
       bulkMoveNodes: vi.fn(),
       bulkRemoveNodes: vi.fn(),
       updateNode: vi.fn(),
+      pinTitle: vi.fn(),
+      unpinTitle: vi.fn(),
       setNodeCategory: vi.fn(),
       bulkSetCategory: vi.fn(),
       setDottedLine: vi.fn(),
@@ -79,6 +81,7 @@ function makeDeps(treeOverride?: OrgNode): ContextMenuDeps {
       focusedId: null,
       enter: vi.fn(),
     } as unknown as ContextMenuDeps['focusMode'],
+    selectNodeForInspection: vi.fn(),
     selection: {
       count: 2,
       toArray: vi.fn(() => ['mgr1', 'mgr2']),
@@ -217,7 +220,7 @@ describe('createShowSingleCardMenu', () => {
     expect(subtreeCalls.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('edit onSave omits title from updateNode when title is unchanged', () => {
+  it('shows Edit first and Quick edit second', () => {
     const deps = makeDeps();
     const showMenu = createShowSingleCardMenu(deps);
     const menuMock = captureMenuItems();
@@ -225,7 +228,70 @@ describe('createShowSingleCardMenu', () => {
     showMenu('ic1', new MouseEvent('contextmenu'));
     const items = menuMock.mock.calls[0][0].items;
 
-    const editItem = getItemByLabel(items, en['menu.edit']);
+    expect(items[0].label).toBe('Edit');
+    expect(items[1].label).toBe('Quick edit');
+    expect(items[0].icon).toBe('edit');
+    expect(items[1].icon).toBe('type');
+  });
+
+  it('Edit selects the node for inspection without opening the inline editor', () => {
+    const deps = makeDeps();
+    const showMenu = createShowSingleCardMenu(deps);
+    const menuMock = captureMenuItems();
+
+    showMenu('ic1', new MouseEvent('contextmenu'));
+    const items = menuMock.mock.calls[0][0].items;
+
+    const editItem = getItemByLabel(items, 'Edit');
+    editItem!.action!();
+
+    expect(deps.selectNodeForInspection).toHaveBeenCalledWith('ic1');
+    expect(showInlineEditor).not.toHaveBeenCalled();
+  });
+
+  it('shows Pin title for an unpinned node and pins it through the shared mutation', () => {
+    const deps = makeDeps();
+    const showMenu = createShowSingleCardMenu(deps);
+    const menuMock = captureMenuItems();
+
+    showMenu('ic1', new MouseEvent('contextmenu'));
+    const items = menuMock.mock.calls[0][0].items;
+
+    const pinItem = getItemByLabel(items, 'Pin title');
+    expect(pinItem).toBeDefined();
+    pinItem!.action!();
+
+    expect(deps.store.pinTitle).toHaveBeenCalledWith('ic1');
+    expect(deps.store.unpinTitle).not.toHaveBeenCalled();
+  });
+
+  it('shows Unpin title for a pinned node and unpins it through the shared mutation', () => {
+    const tree = makeTree();
+    tree.children![0].children![0].pinnedTitle = true;
+    const deps = makeDeps(tree);
+    const showMenu = createShowSingleCardMenu(deps);
+    const menuMock = captureMenuItems();
+
+    showMenu('ic1', new MouseEvent('contextmenu'));
+    const items = menuMock.mock.calls[0][0].items;
+
+    const unpinItem = getItemByLabel(items, 'Unpin title');
+    expect(unpinItem).toBeDefined();
+    unpinItem!.action!();
+
+    expect(deps.store.unpinTitle).toHaveBeenCalledWith('ic1');
+    expect(deps.store.pinTitle).not.toHaveBeenCalled();
+  });
+
+  it('quick edit onSave omits title from updateNode when title is unchanged', () => {
+    const deps = makeDeps();
+    const showMenu = createShowSingleCardMenu(deps);
+    const menuMock = captureMenuItems();
+
+    showMenu('ic1', new MouseEvent('contextmenu'));
+    const items = menuMock.mock.calls[0][0].items;
+
+    const editItem = getItemByLabel(items, 'Quick edit');
     expect(editItem).toBeDefined();
     editItem!.action!();
 
@@ -243,7 +309,7 @@ describe('createShowSingleCardMenu', () => {
     expect(fields).not.toHaveProperty('title');
   });
 
-  it('edit onSave includes title in updateNode when title changed', () => {
+  it('quick edit onSave includes title in updateNode when title changed', () => {
     const deps = makeDeps();
     const showMenu = createShowSingleCardMenu(deps);
     const menuMock = captureMenuItems();
@@ -251,7 +317,7 @@ describe('createShowSingleCardMenu', () => {
     showMenu('ic1', new MouseEvent('contextmenu'));
     const items = menuMock.mock.calls[0][0].items;
 
-    const editItem = getItemByLabel(items, en['menu.edit']);
+    const editItem = getItemByLabel(items, 'Quick edit');
     editItem!.action!();
 
     const editorMock = vi.mocked(showInlineEditor);
@@ -266,7 +332,7 @@ describe('createShowSingleCardMenu', () => {
     expect(fields.title).toBe('Senior Engineer');
   });
 
-  it('edit onSave omits level from updateNode when level is unchanged', () => {
+  it('quick edit onSave omits level from updateNode when level is unchanged', () => {
     const tree: OrgNode = {
       id: 'root', name: 'CEO', title: 'Chief Executive',
       children: [{ id: 'n1', name: 'Dev', title: 'Engineer', level: 'L5' }],
@@ -278,7 +344,7 @@ describe('createShowSingleCardMenu', () => {
     showMenu('n1', new MouseEvent('contextmenu'));
     const items = menuMock.mock.calls[0][0].items;
 
-    const editItem = getItemByLabel(items, en['menu.edit']);
+    const editItem = getItemByLabel(items, 'Quick edit');
     editItem!.action!();
 
     const editorMock = vi.mocked(showInlineEditor);
@@ -292,7 +358,7 @@ describe('createShowSingleCardMenu', () => {
     expect(updateMock).not.toHaveBeenCalled();
   });
 
-  it('edit onSave includes level when level changed', () => {
+  it('quick edit onSave includes level when level changed', () => {
     const tree: OrgNode = {
       id: 'root', name: 'CEO', title: 'Chief Executive',
       children: [{ id: 'n1', name: 'Dev', title: 'Engineer', level: 'L5' }],
@@ -304,7 +370,7 @@ describe('createShowSingleCardMenu', () => {
     showMenu('n1', new MouseEvent('contextmenu'));
     const items = menuMock.mock.calls[0][0].items;
 
-    const editItem = getItemByLabel(items, en['menu.edit']);
+    const editItem = getItemByLabel(items, 'Quick edit');
     editItem!.action!();
 
     const editorMock = vi.mocked(showInlineEditor);
@@ -386,4 +452,3 @@ describe('createShowMultiSelectMenu', () => {
     expect(pickerIds).toContain('root');
   });
 });
-
