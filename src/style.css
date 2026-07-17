@@ -433,6 +433,14 @@ body {
   height: 100%;
 }
 
+.ui-icon {
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+  pointer-events: none;
+  vertical-align: -0.125em;
+}
+
 /* SVG card focus indicator — keyboard navigation */
 g.node:focus,
 g.ic-node:focus,

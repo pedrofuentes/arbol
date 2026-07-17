@@ -3,8 +3,11 @@
  * All text is set via textContent (never innerHTML).
  */
 
+import { appendIconLabel, createIcon, isIconName, type IconName } from '../ui/icon';
+
 export interface ButtonOptions {
   label?: string;
+  icon?: IconName;
   className?: string;
   onClick?: () => void;
   disabled?: boolean;
@@ -14,7 +17,7 @@ export interface ButtonOptions {
 }
 
 export interface IconButtonOptions {
-  icon: string;
+  icon: IconName | string;
   tooltip?: string;
   ariaLabel?: string;
   onClick?: () => void;
@@ -25,7 +28,9 @@ export interface IconButtonOptions {
 export function createButton(options: ButtonOptions): HTMLButtonElement {
   const btn = document.createElement('button');
   if (options.className) btn.className = options.className;
-  if (options.label) btn.textContent = options.label;
+  if (options.icon && options.label) appendIconLabel(btn, options.icon, options.label);
+  else if (options.icon) btn.appendChild(createIcon(options.icon));
+  else if (options.label) btn.textContent = options.label;
   if (options.onClick) btn.addEventListener('click', options.onClick);
   if (options.disabled) {
     btn.disabled = true;
@@ -43,10 +48,14 @@ export function createIconButton(options: IconButtonOptions): HTMLButtonElement 
   if (options.tooltip) btn.setAttribute('data-tooltip', options.tooltip);
   if (options.ariaLabel) btn.setAttribute('aria-label', options.ariaLabel);
   if (options.ariaKeyshortcuts) btn.setAttribute('aria-keyshortcuts', options.ariaKeyshortcuts);
-  const iconSpan = document.createElement('span');
-  iconSpan.setAttribute('aria-hidden', 'true');
-  iconSpan.textContent = options.icon;
-  btn.appendChild(iconSpan);
+  if (isIconName(options.icon)) {
+    btn.appendChild(createIcon(options.icon));
+  } else {
+    const fallback = document.createElement('span');
+    fallback.setAttribute('aria-hidden', 'true');
+    fallback.textContent = options.icon;
+    btn.appendChild(fallback);
+  }
   if (options.onClick) btn.addEventListener('click', options.onClick);
   return btn;
 }
