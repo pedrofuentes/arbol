@@ -476,6 +476,127 @@ describe('ChartEditor – active vs inactive chart actions', () => {
   });
 });
 
+describe('ChartEditor – public chart and version action wrappers', () => {
+  type InternalActionHandlers = {
+    handleRenameChart: (chart: ChartRecord) => Promise<void>;
+    handleDuplicateChart: (chart: ChartRecord) => Promise<void>;
+    handleExportChart: (chart: ChartRecord) => Promise<void>;
+    handleDeleteChart: (chart: ChartRecord) => Promise<void>;
+    handleRestoreVersion: (versionId: string) => Promise<void>;
+    handleDeleteVersion: (version: VersionRecord) => Promise<void>;
+  };
+
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let handlers: InternalActionHandlers;
+  let onVersionView: ReturnType<typeof vi.fn>;
+  let onVersionCompare: ReturnType<typeof vi.fn>;
+  const chart = makeChart({ id: 'chart-wrapper', name: 'Wrapper Chart' });
+  const version = makeVersion({
+    id: 'version-wrapper',
+    chartId: chart.id,
+    name: 'Wrapper Version',
+  });
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    onVersionView = vi.fn();
+    onVersionCompare = vi.fn();
+
+    editor = new ChartEditor({
+      container,
+      chartStore: mockChartStore([chart], [version]),
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView,
+      onVersionCompare,
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+    handlers = editor as unknown as InternalActionHandlers;
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-chart-id]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    container.remove();
+  });
+
+  it('renameActiveChart delegates the chart to the rename handler', async () => {
+    const handler = vi.spyOn(handlers, 'handleRenameChart').mockResolvedValue(undefined);
+
+    await editor.renameActiveChart(chart);
+
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledWith(chart);
+  });
+
+  it('duplicateActiveChart delegates the chart to the duplicate handler', async () => {
+    const handler = vi.spyOn(handlers, 'handleDuplicateChart').mockResolvedValue(undefined);
+
+    await editor.duplicateActiveChart(chart);
+
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledWith(chart);
+  });
+
+  it('exportActiveChart delegates the chart to the export handler', async () => {
+    const handler = vi.spyOn(handlers, 'handleExportChart').mockResolvedValue(undefined);
+
+    await editor.exportActiveChart(chart);
+
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledWith(chart);
+  });
+
+  it('deleteActiveChart delegates the chart to the delete handler', async () => {
+    const handler = vi.spyOn(handlers, 'handleDeleteChart').mockResolvedValue(undefined);
+
+    await editor.deleteActiveChart(chart);
+
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledWith(chart);
+  });
+
+  it('viewVersion forwards the whole version to the view callback', () => {
+    editor.viewVersion(version);
+
+    expect(onVersionView).toHaveBeenCalledOnce();
+    expect(onVersionView).toHaveBeenCalledWith(version);
+  });
+
+  it('compareVersion forwards the whole version to the compare callback', () => {
+    editor.compareVersion(version);
+
+    expect(onVersionCompare).toHaveBeenCalledOnce();
+    expect(onVersionCompare).toHaveBeenCalledWith(version);
+  });
+
+  it('restoreVersion delegates the version id to the restore handler', async () => {
+    const handler = vi.spyOn(handlers, 'handleRestoreVersion').mockResolvedValue(undefined);
+
+    await editor.restoreVersion(version);
+
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledWith(version.id);
+  });
+
+  it('deleteVersion delegates the whole version to the delete handler', async () => {
+    const handler = vi.spyOn(handlers, 'handleDeleteVersion').mockResolvedValue(undefined);
+
+    await editor.deleteVersion(version);
+
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler).toHaveBeenCalledWith(version);
+  });
+});
+
 describe('ChartEditor – keyboard access to row actions', () => {
   let container: HTMLElement;
   let editor: ChartEditor;
