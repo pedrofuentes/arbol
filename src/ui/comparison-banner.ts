@@ -39,7 +39,7 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
     'top:var(--space-3)',
     'left:50%',
     'transform:translateX(-50%)',
-    'z-index:100',
+    'z-index:var(--z-canvas-overlay)',
     'display:flex',
     'align-items:center',
     'gap:var(--space-3)',
@@ -144,7 +144,8 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   toggleBtn.className = 'btn btn-secondary';
   toggleBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
   toggleBtn.setAttribute('aria-label', t('comparison.toggle_view_aria'));
-  toggleBtn.textContent = options.viewMode === 'merged' ? t('comparison.side_by_side') : t('comparison.merged');
+  toggleBtn.textContent =
+    options.viewMode === 'merged' ? t('comparison.side_by_side') : t('comparison.merged');
   toggleBtn.addEventListener('click', () => {
     options.onToggleView();
   });

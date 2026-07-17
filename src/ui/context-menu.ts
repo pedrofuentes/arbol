@@ -48,7 +48,7 @@ export function showContextMenu(options: ContextMenuOptions): void {
 
   const baseStyles = [
     'position:fixed',
-    'z-index:2000',
+    'z-index:var(--z-menu)',
     'min-width:160px',
     'background:var(--bg-elevated)',
     'border:1px solid var(--border-default)',
@@ -167,7 +167,7 @@ export function showContextMenu(options: ContextMenuOptions): void {
         submenuEl = document.createElement('div');
         submenuEl.setAttribute('role', 'menu');
         submenuEl.style.cssText = `
-          position:fixed;z-index:2001;min-width:140px;
+          position:fixed;z-index:var(--z-menu-submenu);min-width:140px;
           background:var(--bg-elevated);border:1px solid var(--border-default);
           border-radius:var(--radius-md);box-shadow:var(--shadow-lg);
           padding:var(--space-1) 0;

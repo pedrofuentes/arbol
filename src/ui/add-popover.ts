@@ -35,7 +35,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
   container.setAttribute('aria-label', t('add_popover.aria'));
   container.style.cssText = `
     position:fixed;
-    z-index:1001;
+    z-index:var(--z-menu);
     min-width:240px;
     background:var(--bg-elevated);
     border:1px solid var(--border-default);
@@ -53,7 +53,9 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   // Title
   const heading = document.createElement('div');
-  heading.textContent = parentName ? t('add_popover.heading', { name: parentName }) : t('add_popover.heading_default');
+  heading.textContent = parentName
+    ? t('add_popover.heading', { name: parentName })
+    : t('add_popover.heading_default');
   heading.style.cssText = `
     font-size:14px;font-weight:600;
     color:var(--text-primary);

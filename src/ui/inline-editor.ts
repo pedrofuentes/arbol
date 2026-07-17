@@ -44,7 +44,7 @@ export function showInlineEditor(options: InlineEditorOptions): void {
   container.style.left = `${rect.left}px`;
   container.style.top = `${rect.top}px`;
   container.style.width = `${rect.width}px`;
-  container.style.zIndex = '1001';
+  container.style.zIndex = 'var(--z-menu)';
   container.style.border = '1px solid var(--border-strong)';
   container.style.boxShadow = 'var(--shadow-md)';
   container.style.borderRadius = 'var(--radius-md)';
