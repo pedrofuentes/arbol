@@ -587,6 +587,49 @@ describe('shortcuts-handler — command palette actions', () => {
     expect(callbacks.viewVersion).toHaveBeenCalledWith(version);
   });
 
+  it('returns static commands when saved versions fail to load', async () => {
+    const loadError = new Error('IndexedDB unavailable');
+    const activeChart = { id: 'c1', name: 'Active' };
+    const deps = makeDeps({
+      chartStore: {
+        ...makeDeps().chartStore,
+        getActiveChartId: vi.fn(() => 'c1'),
+        getCharts: vi.fn().mockResolvedValue([activeChart]),
+        getVersions: vi.fn().mockRejectedValue(loadError),
+      } as unknown as ShortcutsDeps['chartStore'],
+    });
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const result = registerShortcuts(deps);
+    cleanup = () => result.shortcuts.destroy();
+
+    try {
+      const items = await result.buildCommandItems();
+      const ids = items.map((item) => item.id);
+
+      expect(ids).toEqual(
+        expect.arrayContaining([
+          'export',
+          'undo',
+          'redo',
+          'settings',
+          'search',
+          'help',
+          'theme',
+          'new-chart',
+          'save-version',
+          'import',
+        ]),
+      );
+      expect(items.length).toBeGreaterThan(0);
+      expect(consoleError).toHaveBeenCalledWith(
+        'Failed to load command palette versions:',
+        loadError,
+      );
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
   it('chart switch action calls handleBeforeSwitch and switchChart', async () => {
     const deps = makeDeps({
       chartStore: {
