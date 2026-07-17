@@ -156,7 +156,8 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   exitBtn.className = 'btn btn-secondary';
   exitBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
   exitBtn.setAttribute('aria-label', t('comparison.exit_aria'));
-  exitBtn.textContent = t('comparison.exit');
+  exitBtn.appendChild(createIcon('close'));
+  exitBtn.appendChild(document.createTextNode(t('comparison.exit')));
   exitBtn.addEventListener('click', () => {
     options.onExit();
   });

@@ -13,6 +13,7 @@ import { showToast } from '../../ui/toast';
 import { type IStorage } from '../../utils/storage';
 import { detectArbolFileType } from '../../utils/file-type';
 import { t, getLocale } from '../../i18n';
+import { appendIconLabel } from '../../ui/icon';
 
 const ARBOL_STORAGE_KEYS = [
   'arbol-org-data',
@@ -43,7 +44,7 @@ export class BackupPanel {
 
     const backupBtn = document.createElement('button');
     backupBtn.className = 'btn btn-secondary';
-    backupBtn.textContent = t('backup.create_btn');
+    appendIconLabel(backupBtn, 'backup', t('backup.create_btn'));
     backupBtn.addEventListener('click', async () => {
       try {
         const backup = await createBackup(this.chartDB);
@@ -59,7 +60,7 @@ export class BackupPanel {
 
     const restoreBtn = document.createElement('button');
     restoreBtn.className = 'btn btn-secondary';
-    restoreBtn.textContent = t('backup.restore_btn');
+    appendIconLabel(restoreBtn, 'restore', t('backup.restore_btn'));
     restoreBtn.addEventListener('click', () => {
       const input = document.createElement('input');
       input.type = 'file';
@@ -171,7 +172,7 @@ export class BackupPanel {
     // Clear All Data button — danger styling matching the mock
     const clearDataBtn = document.createElement('button');
     clearDataBtn.className = 'btn';
-    clearDataBtn.textContent = t('backup.clear_btn');
+    appendIconLabel(clearDataBtn, 'remove', t('backup.clear_btn'));
     clearDataBtn.setAttribute('aria-label', t('backup.clear_aria'));
     clearDataBtn.style.cssText =
       'background:rgba(244,63,94,0.1);color:var(--danger);border:1px solid rgba(244,63,94,0.2);';

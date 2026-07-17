@@ -4,6 +4,7 @@ import { SettingsStore, type PersistableSettings } from '../../store/settings-st
 import { showToast } from '../../ui/toast';
 import { detectArbolFileType } from '../../utils/file-type';
 import { t } from '../../i18n';
+import { appendIconLabel } from '../../ui/icon';
 
 export interface SettingsIOPanelDeps {
   settingsStore: SettingsStore | null;
@@ -32,7 +33,7 @@ export class SettingsIOPanel {
     const exportSettingsBtn = document.createElement('button');
     exportSettingsBtn.className = 'btn btn-secondary';
     exportSettingsBtn.style.cssText = 'flex:1;';
-    exportSettingsBtn.textContent = t('settings.export');
+    appendIconLabel(exportSettingsBtn, 'export', t('settings.export'));
     exportSettingsBtn.addEventListener('click', () => {
       if (this.settingsStore) {
         const currentOpts = this.renderer.getOptions();
@@ -45,7 +46,7 @@ export class SettingsIOPanel {
     const importSettingsBtn = document.createElement('button');
     importSettingsBtn.className = 'btn btn-secondary';
     importSettingsBtn.style.cssText = 'flex:1;';
-    importSettingsBtn.textContent = t('settings.import');
+    appendIconLabel(importSettingsBtn, 'import', t('settings.import'));
     importSettingsBtn.addEventListener('click', () => {
       const input = document.createElement('input');
       input.type = 'file';

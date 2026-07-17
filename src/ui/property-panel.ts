@@ -220,12 +220,12 @@ export class PropertyPanel {
     const row1 = document.createElement('div');
     row1.className = 'pp-actions';
 
-    const addBtn = this.createActionBtn(t('property_panel.add_child'), false, false);
+    const addBtn = this.createActionBtn(t('property_panel.add_child'), false, false, 'add');
     addBtn.addEventListener('click', () => {
       if (this.nodeId) options.onAddChild(this.nodeId);
     });
 
-    this.moveBtn = this.createActionBtn(t('property_panel.move'), false, false);
+    this.moveBtn = this.createActionBtn(t('property_panel.move'), false, false, 'move');
     this.moveBtn.addEventListener('click', () => {
       if (this.nodeId && this.moveBtn.getAttribute('aria-disabled') !== 'true') {
         options.onMove(this.nodeId);
@@ -238,7 +238,7 @@ export class PropertyPanel {
     const row2 = document.createElement('div');
     row2.className = 'pp-actions';
 
-    this.focusBtn = this.createActionBtn(t('property_panel.focus'), false, false);
+    this.focusBtn = this.createActionBtn(t('property_panel.focus'), false, false, 'focus');
     this.focusBtn.addEventListener('click', () => {
       if (this.nodeId && this.focusBtn.getAttribute('aria-disabled') !== 'true') {
         options.onFocus(this.nodeId);
@@ -252,7 +252,7 @@ export class PropertyPanel {
       }
     });
 
-    this.removeBtn = this.createActionBtn(t('property_panel.remove'), true, false);
+    this.removeBtn = this.createActionBtn(t('property_panel.remove'), true, false, 'remove');
     this.removeBtn.addEventListener('click', () => {
       if (this.nodeId && this.removeBtn.getAttribute('aria-disabled') !== 'true') {
         options.onRemove(this.nodeId);
@@ -424,10 +424,16 @@ export class PropertyPanel {
     return { group, input };
   }
 
-  private createActionBtn(text: string, danger: boolean, disabled: boolean): HTMLButtonElement {
+  private createActionBtn(
+    text: string,
+    danger: boolean,
+    disabled: boolean,
+    icon?: IconName,
+  ): HTMLButtonElement {
     const btn = createButton({
       className: `pp-action-btn${danger ? ' btn-danger' : ''}`,
       label: text,
+      icon,
     });
     if (disabled) this.setDisabled(btn, true);
     return btn;

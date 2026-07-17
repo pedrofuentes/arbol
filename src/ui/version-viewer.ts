@@ -118,7 +118,8 @@ export function showVersionViewer(options: VersionViewerOptions): void {
   const closeBtn = document.createElement('button');
   closeBtn.setAttribute('data-testid', 'version-viewer-close');
   closeBtn.className = 'btn btn-secondary';
-  closeBtn.textContent = t('version_viewer.close');
+  closeBtn.appendChild(createIcon('close'));
+  closeBtn.appendChild(document.createTextNode(t('version_viewer.close')));
   closeBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
   closeBtn.addEventListener('click', () => {
     options.onClose();

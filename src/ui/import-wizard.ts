@@ -54,7 +54,8 @@ export class ImportWizard {
     const title = document.createElement('span');
     title.className = 'import-wizard-title';
     title.id = 'import-wizard-title';
-    title.textContent = t('import_wizard.title');
+    title.appendChild(createIcon('folder-open'));
+    title.appendChild(document.createTextNode(t('import_wizard.title')));
     wizard.setAttribute('aria-labelledby', 'import-wizard-title');
 
     const closeBtn = document.createElement('button');

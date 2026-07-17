@@ -93,7 +93,8 @@ export class SettingsModal {
     const title = document.createElement('span');
     title.className = 'settings-modal-title';
     title.id = 'settings-modal-title';
-    title.textContent = t('settings_modal.title');
+    title.appendChild(createIcon('settings'));
+    title.appendChild(document.createTextNode(t('settings_modal.title')));
     modal.setAttribute('aria-labelledby', 'settings-modal-title');
 
     const closeBtn = document.createElement('button');
