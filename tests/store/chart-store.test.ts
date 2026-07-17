@@ -100,6 +100,22 @@ describe('ChartStore', () => {
       const chart = await store.initialize();
       expect(store.getActiveChartId()).toBe(chart.id);
     });
+
+    it('uses the working tree baseline when saved versions cannot be read', async () => {
+      const error = new Error('corrupt versions store');
+      vi.spyOn(db, 'getVersionsByChart').mockRejectedValueOnce(error);
+      const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      try {
+        const chart = await store.initialize();
+
+        expect(chart.workingTree.name).toBe('Organization');
+        expect(store.getEditsSinceLastVersion(chart.workingTree)).toBe(0);
+        expect(logError).toHaveBeenCalledWith('Failed to load version baseline:', error);
+      } finally {
+        logError.mockRestore();
+      }
+    });
   });
 
   // ---------------------------------------------------------------------------

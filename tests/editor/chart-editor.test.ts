@@ -20,12 +20,16 @@ vi.mock('../../src/ui/input-dialog', () => ({
 vi.mock('../../src/ui/create-chart-dialog', () => ({
   showCreateChartDialog: vi.fn().mockResolvedValue(null),
 }));
+vi.mock('../../src/ui/toast', () => ({
+  showToast: vi.fn(),
+}));
 
 import { showChartExportDialog } from '../../src/ui/chart-export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../../src/export/chart-exporter';
 import { showInputDialog } from '../../src/ui/input-dialog';
 import { showCreateChartDialog } from '../../src/ui/create-chart-dialog';
 import { showConfirmDialog } from '../../src/ui/confirm-dialog';
+import { showToast } from '../../src/ui/toast';
 
 const appStyles = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf-8');
 
@@ -779,6 +783,22 @@ describe('ChartEditor – safe version restore', () => {
 
     expect(store.restoreVersion).not.toHaveBeenCalled();
     expect(onVersionRestore).not.toHaveBeenCalled();
+  });
+
+  it('shows a toast and logs the error when restore fails', async () => {
+    const error = new Error('storage full');
+    vi.mocked(store.restoreVersion).mockRejectedValueOnce(error);
+    const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      await editor.restoreVersion(version);
+
+      expect(showToast).toHaveBeenCalledWith('storage full', 'error');
+      expect(logError).toHaveBeenCalledWith(error);
+      expect(container.textContent).toContain('storage full');
+    } finally {
+      logError.mockRestore();
+    }
   });
 });
 
