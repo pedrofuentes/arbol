@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type { ChartRecord, VersionRecord, OrgNode } from '../../src/types';
 import { ChartEditor, ChartEditorOptions } from '../../src/editor/chart-editor';
 
@@ -23,6 +25,8 @@ import { showChartExportDialog } from '../../src/ui/chart-export-dialog';
 import { buildChartBundle, downloadChartBundle } from '../../src/export/chart-exporter';
 import { showInputDialog } from '../../src/ui/input-dialog';
 import { showCreateChartDialog } from '../../src/ui/create-chart-dialog';
+
+const appStyles = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf-8');
 
 function makeTree(): OrgNode {
   return { id: 'root', name: 'Alice', title: 'CEO', children: [] };
@@ -469,6 +473,79 @@ describe('ChartEditor – active vs inactive chart actions', () => {
     const inactiveItem = container.querySelector('[data-chart-id="chart-2"]')!;
     const actions = inactiveItem.querySelector('.chart-item-actions');
     expect(actions).toBeNull();
+  });
+});
+
+describe('ChartEditor – keyboard access to row actions', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let stylesheet: HTMLStyleElement;
+  const chart = makeChart({ id: 'chart-1', name: 'Active Chart' });
+  const version = makeVersion({ id: 'ver-1', name: 'Saved version' });
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    stylesheet = document.createElement('style');
+    stylesheet.textContent = appStyles;
+    document.head.appendChild(stylesheet);
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    editor = new ChartEditor({
+      container,
+      chartStore: mockChartStore([chart], [version]),
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-version-id="ver-1"]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    container.remove();
+    stylesheet.remove();
+  });
+
+  function expectRowActionsReachableByTab(row: HTMLElement, actions: HTMLElement): void {
+    expect(row.tabIndex).toBe(0);
+
+    row.focus();
+
+    expect(document.activeElement).toBe(row);
+    expect(row.matches(':focus-within')).toBe(true);
+    expect(getComputedStyle(actions).display).toBe('flex');
+
+    const tabStops = Array.from(
+      container.querySelectorAll<HTMLElement>('[tabindex], button:not([disabled])'),
+    ).filter((element) => element.tabIndex >= 0);
+    const rowIndex = tabStops.indexOf(row);
+    const buttons = Array.from(
+      actions.querySelectorAll<HTMLButtonElement>('button:not([disabled])'),
+    );
+
+    expect(tabStops.slice(rowIndex + 1, rowIndex + 1 + buttons.length)).toEqual(buttons);
+  }
+
+  it('reveals active chart actions when the chart row receives keyboard focus', () => {
+    const row = container.querySelector<HTMLElement>('[data-chart-id="chart-1"]')!;
+    const actions = row.querySelector<HTMLElement>('.chart-item-actions')!;
+
+    expectRowActionsReachableByTab(row, actions);
+  });
+
+  it('reveals saved version actions when the version row receives keyboard focus', () => {
+    const row = container.querySelector<HTMLElement>('[data-version-id="ver-1"]')!;
+    const actions = row.querySelector<HTMLElement>('.version-item-actions')!;
+
+    expectRowActionsReachableByTab(row, actions);
   });
 });
 
