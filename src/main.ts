@@ -61,7 +61,7 @@ import {
 import { completeBundleImportActivation } from './ui/bundle-import-activation';
 import { importBundle } from './ui/bundle-import-handler';
 import { registerShortcuts } from './init/shortcuts-handler';
-import type { ChartRecord } from './types';
+import type { ChartRecord, OrgNode } from './types';
 import { AnalyticsDrawer } from './ui/analytics-drawer';
 import { AnalyticsEditor } from './editor/analytics-editor';
 import { loadAppConfig } from './config/app-config';
@@ -643,10 +643,14 @@ async function main(): Promise<void> {
     return confirmed;
   };
 
+  let prePreviewTree: OrgNode | null = null;
+
   const handleChartSwitched = (chart: ChartRecord) => {
     showLoading(t('loading.switching_chart'));
     try {
       focusMode.clear();
+      prePreviewTree = null;
+      chartEditor?.setViewingVersion(null);
       dismissVersionViewer();
       clearMultiSelection();
       store.replaceTree(chart.workingTree);
@@ -678,6 +682,7 @@ async function main(): Promise<void> {
     categoryPresetStore,
     levelPresetStore,
     onVersionRestore: (tree) => {
+      prePreviewTree = null;
       dismissVersionViewer();
       store.replaceTree(tree);
       chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
@@ -687,18 +692,20 @@ async function main(): Promise<void> {
       jsonEditor.refresh();
     },
     onVersionView: (version) => {
-      const savedTree = store.getTree();
+      const savedTree = prePreviewTree ?? store.getTree();
+      prePreviewTree = savedTree;
+      chartEditor.setViewingVersion(version.id, savedTree);
       store.replaceTree(version.tree);
       rerender();
       renderer.getZoomManager()?.fitToContent();
-      chartEditor.setViewingVersion(version.id);
       showVersionViewer({
         versionName: version.name,
         container: chartArea,
         onCompare: () => {
-          store.replaceTree(savedTree);
+          const treeToRestore = chartEditor.setViewingVersion(null) ?? savedTree;
+          prePreviewTree = null;
+          store.replaceTree(treeToRestore);
           dismissVersionViewer();
-          chartEditor.setViewingVersion(null);
           rerender();
           renderer.getZoomManager()?.fitToContent();
           comparison.enterComparisonMode(version);
@@ -707,9 +714,10 @@ async function main(): Promise<void> {
           await chartEditor.restoreVersion(version, savedTree);
         },
         onClose: () => {
-          store.replaceTree(savedTree);
+          const treeToRestore = chartEditor.setViewingVersion(null) ?? savedTree;
+          prePreviewTree = null;
+          store.replaceTree(treeToRestore);
           dismissVersionViewer();
-          chartEditor.setViewingVersion(null);
           rerender();
           renderer.getZoomManager()?.fitToContent();
         },

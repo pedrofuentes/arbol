@@ -67,6 +67,7 @@ export class ChartEditor {
   private versionErrorEl!: HTMLDivElement;
   private chartSearchTerm = '';
   private viewingVersionId: string | null = null;
+  private prePreviewTree: OrgNode | null = null;
 
   private unsubscribe: (() => void) | null = null;
   private unsubscribeWorkingTreeSaved: (() => void) | null = null;
@@ -131,9 +132,16 @@ export class ChartEditor {
     this.container.innerHTML = '';
   }
 
-  setViewingVersion(versionId: string | null): void {
+  setViewingVersion(versionId: string | null, prePreviewTree?: OrgNode): OrgNode | null {
+    const treeToRestore = this.prePreviewTree;
+    if (versionId === null) {
+      this.prePreviewTree = null;
+    } else if (this.prePreviewTree === null && prePreviewTree) {
+      this.prePreviewTree = structuredClone(prePreviewTree);
+    }
     this.viewingVersionId = versionId;
     this.renderVersionList();
+    return versionId === null ? treeToRestore : this.prePreviewTree;
   }
 
   // ── Build ──────────────────────────────────────────────
@@ -755,7 +763,7 @@ export class ChartEditor {
 
   private async handleRestoreVersion(
     version: VersionRecord,
-    currentTree = this.getCurrentTree(),
+    currentTree = this.prePreviewTree ?? this.getCurrentTree(),
   ): Promise<void> {
     const proceed = await showConfirmDialog({
       title: t('dialog.restore_version.title', { name: version.name }),
@@ -766,6 +774,7 @@ export class ChartEditor {
 
     try {
       const tree = await this.chartStore.restoreVersion(version.id, currentTree);
+      this.setViewingVersion(null);
       this.onVersionRestore(tree);
       await this.refresh();
     } catch (err) {

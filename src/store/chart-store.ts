@@ -160,12 +160,7 @@ export class ChartStore extends EventEmitter {
     this.activeChartId = active.id;
     this.lastSavedTree = JSON.stringify(active.workingTree);
     this.savedMutationVersion = null;
-    try {
-      await this.loadVersionBaseline(active.id, active.workingTree);
-    } catch (err) {
-      console.error('Failed to load version baseline:', err);
-      this.lastVersionTree = structuredClone(active.workingTree);
-    }
+    await this.loadVersionBaselineWithFallback(active.id, active.workingTree);
     return active;
   }
 
@@ -353,7 +348,7 @@ export class ChartStore extends EventEmitter {
         this.activeChartId = remaining[0].id;
         this.lastSavedTree = JSON.stringify(remaining[0].workingTree);
         this.savedMutationVersion = null;
-        await this.loadVersionBaseline(remaining[0].id, remaining[0].workingTree);
+        await this.loadVersionBaselineWithFallback(remaining[0].id, remaining[0].workingTree);
       } else {
         const fallback = await this.createFallbackChart();
         this.activeChartId = fallback.id;
@@ -376,7 +371,7 @@ export class ChartStore extends EventEmitter {
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
-    await this.loadVersionBaseline(chart.id, chart.workingTree);
+    await this.loadVersionBaselineWithFallback(chart.id, chart.workingTree);
     this.emit();
     return chart;
   }
@@ -452,12 +447,13 @@ export class ChartStore extends EventEmitter {
     if (!trimmed) throw new Error('Version name cannot be empty');
     if (!this.activeChartId) throw new Error('No active chart');
 
+    const snapshot = structuredClone(tree);
     const version: VersionRecord = {
       id: generateId(),
       chartId: this.activeChartId,
       name: trimmed,
       createdAt: new Date().toISOString(),
-      tree: structuredClone(tree),
+      tree: snapshot,
     };
 
     await this.db.putVersion(version);
@@ -465,7 +461,8 @@ export class ChartStore extends EventEmitter {
     this.versionCache.set(this.activeChartId, [version, ...cached]);
     this.lastSavedTree = JSON.stringify(tree);
     this.savedMutationVersion = mutationVersion ?? null;
-    this.lastVersionTree = structuredClone(tree);
+    // The version and baseline share one immutable snapshot; neither is mutated in place.
+    this.lastVersionTree = snapshot;
     this.emit();
     return version;
   }
@@ -624,7 +621,7 @@ export class ChartStore extends EventEmitter {
 
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
-    await this.loadVersionBaseline(chart.id, chart.workingTree);
+    await this.loadVersionBaselineWithFallback(chart.id, chart.workingTree);
     this.emit();
     return chart;
   }
@@ -674,6 +671,18 @@ export class ChartStore extends EventEmitter {
   private async loadVersionBaseline(chartId: string, fallbackTree: OrgNode): Promise<void> {
     const versions = await this.getVersions(chartId);
     this.lastVersionTree = structuredClone(versions[0]?.tree ?? fallbackTree);
+  }
+
+  private async loadVersionBaselineWithFallback(
+    chartId: string,
+    fallbackTree: OrgNode,
+  ): Promise<void> {
+    try {
+      await this.loadVersionBaseline(chartId, fallbackTree);
+    } catch (err) {
+      console.error('Failed to load version baseline:', err);
+      this.lastVersionTree = structuredClone(fallbackTree);
+    }
   }
 
   /** Ensures a chart record loaded from IndexedDB has all required fields with valid defaults. */
