@@ -160,7 +160,12 @@ export class ChartStore extends EventEmitter {
     this.activeChartId = active.id;
     this.lastSavedTree = JSON.stringify(active.workingTree);
     this.savedMutationVersion = null;
-    await this.loadVersionBaseline(active.id, active.workingTree);
+    try {
+      await this.loadVersionBaseline(active.id, active.workingTree);
+    } catch (err) {
+      console.error('Failed to load version baseline:', err);
+      this.lastVersionTree = structuredClone(active.workingTree);
+    }
     return active;
   }
 

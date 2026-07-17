@@ -19,6 +19,7 @@ import { showCreateChartDialog } from '../ui/create-chart-dialog';
 import { createButton } from '../utils/dom-builder';
 import { createIcon, type IconName } from '../ui/icon';
 import { VersionDeltaCache, type VersionDelta } from '../utils/version-delta';
+import { showToast } from '../ui/toast';
 
 export interface ChartEditorOptions {
   container: HTMLElement;
@@ -768,7 +769,10 @@ export class ChartEditor {
       this.onVersionRestore(tree);
       await this.refresh();
     } catch (err) {
-      this.showError(this.versionErrorEl, (err as Error).message);
+      const message = (err as Error).message || t('footer.operation_failed');
+      this.showError(this.versionErrorEl, message);
+      showToast(message, 'error');
+      console.error(err);
     }
   }
 
