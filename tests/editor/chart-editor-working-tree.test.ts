@@ -159,6 +159,32 @@ describe('ChartEditor working-tree people counts', () => {
     expect(chartStore.getVersions).not.toHaveBeenCalled();
   });
 
+  it('keeps a saved people count when a stale refresh snapshot resolves afterward', async () => {
+    const chart = makeChart('active', 1);
+    const { chartStore, orgStore } = await render([chart]);
+    let resolveCharts!: (charts: ChartRecord[]) => void;
+    const staleSnapshot = makeChart('active', 1);
+    chartStore.getCharts.mockImplementationOnce(
+      () =>
+        new Promise<ChartRecord[]>((resolve) => {
+          resolveCharts = resolve;
+        }),
+    );
+
+    const refresh = editor!.refresh();
+    await vi.waitFor(() => {
+      expect(container!.querySelector('[data-chart-id]')).toBeNull();
+    });
+
+    const replacementTree = makeTree('saved-during-refresh', 3);
+    orgStore.fromJSON(JSON.stringify(replacementTree));
+    await chartStore.saveWorkingTree(orgStore.getTree());
+    resolveCharts([staleSnapshot]);
+    await refresh;
+
+    expect(getMeta(chart.id).textContent).toBe(expectedMeta(3, 0));
+  });
+
   it('shows the target chart people count immediately after switching charts', async () => {
     const initial = makeChart('initial', 1);
     const target = makeChart('larger', 4);
