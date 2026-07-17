@@ -21,6 +21,10 @@ function makeStorage(): IStorage & {
   };
 }
 
+function accessibleName(element: HTMLElement): string {
+  return (element.getAttribute('aria-label') ?? element.textContent ?? '').trim();
+}
+
 describe('showFirstVisitHelp', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
@@ -50,6 +54,20 @@ describe('showFirstVisitHelp', () => {
     expect(dialogs[0].textContent).toContain('Start empty');
     expect(dialogs[0].textContent).toContain('Import');
   });
+
+  it.each(['Load sample org chart', 'Start empty'])(
+    'uses the visible label "%s" as the button accessible name',
+    (visibleLabel) => {
+      const storage = makeStorage();
+      showFirstVisitHelp(vi.fn(), storage);
+
+      const button = Array.from(document.querySelectorAll('button')).find(
+        (candidate) => candidate.textContent?.trim() === visibleLabel,
+      );
+      expect(button).toBeDefined();
+      expect(accessibleName(button!)).toBe(visibleLabel);
+    },
+  );
 
   it('sets storage flag after showing help', () => {
     const storage = makeStorage();
