@@ -817,7 +817,7 @@ const es: Record<string, string> = {
   'help.getting_started.right_click':
     'Haga clic derecho en cualquier tarjeta para opciones de editar, agregar, mover o eliminar.',
   'help.getting_started.sidebar':
-    'La barra lateral gestiona organigramas y versiones. Use los botones de la barra de herramientas para Configuración (⚙️), Importar (📂) y Exportar (📤).',
+    'La barra lateral gestiona organigramas y versiones. Use el botón de engranaje de Ajustes, el botón de carpeta de Importar y el botón de flecha de Exportar de la barra de herramientas.',
 
   // Help: How the Chart Works
   'help.chart_works.title': 'Cómo funciona el organigrama',
@@ -838,13 +838,13 @@ const es: Record<string, string> = {
   'help.sidebar_tabs.sidebar_label': 'Barra lateral',
   'help.sidebar_tabs.sidebar_desc':
     ' — Explorar, crear, renombrar y cambiar entre organigramas. Guardar, ver, comparar y restaurar versiones con nombre.',
-  'help.sidebar_tabs.settings_label': 'Configuración (⚙️)',
+  'help.sidebar_tabs.settings_label': 'Botón de engranaje de Ajustes',
   'help.sidebar_tabs.settings_desc':
     ' — Abre un diálogo para ajustar tamaños de tarjeta, espaciado, colores, tipografía y categorías. Incluye preajustes de tema y vista previa en vivo.',
-  'help.sidebar_tabs.import_label': 'Importar (📂)',
+  'help.sidebar_tabs.import_label': 'Botón de carpeta de Importar',
   'help.sidebar_tabs.import_desc':
     ' — Abre un asistente paso a paso para importar datos desde archivos JSON o CSV, con mapeo de columnas y normalización de texto.',
-  'help.sidebar_tabs.export_label': 'Exportar (📤)',
+  'help.sidebar_tabs.export_label': 'Botón de flecha de Exportar',
   'help.sidebar_tabs.export_desc':
     ' — Descarga el organigrama como un archivo PowerPoint editable. Elija qué versiones guardadas incluir.',
 
@@ -961,7 +961,7 @@ const es: Record<string, string> = {
   'help.settings.auto_save':
     'Toda la configuración visual se guarda automáticamente en su navegador y se restaura en la siguiente visita.',
   'help.settings.modal':
-    'Abra Configuración (botón ⚙️ o Ctrl+,) para acceder a 10 pestañas: Preajustes, Disposición, Tipografía, Tarjetas, Conectores, Opciones CI, Asesores, Insignias, Categorías y Respaldo.',
+    'Abra Ajustes (con el botón de engranaje de la barra de herramientas o Ctrl+,) para acceder a 10 pestañas: Preajustes, Disposición, Tipografía, Tarjetas, Conectores, Opciones CI, Asesores, Insignias, Categorías y Respaldo.',
   'help.settings.presets':
     'Los preajustes de tema aplican un conjunto completo de colores y espaciado con un solo clic. También puede guardar sus propios preajustes personalizados.',
   'help.settings.preview':

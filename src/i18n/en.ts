@@ -860,7 +860,7 @@ const en: Record<string, string> = {
   'help.getting_started.right_click':
     'Right-click any card for edit, add, move, or remove options.',
   'help.getting_started.sidebar':
-    'The sidebar manages charts and versions. Use the toolbar buttons for Settings (⚙️), Import (📂), and Export (📤).',
+    'The sidebar manages charts and versions. Use the Settings gear button, Import folder button, and Export arrow button in the toolbar.',
 
   // Help: How the Chart Works
   'help.chart_works.title': 'How the Chart Works',
@@ -880,13 +880,13 @@ const en: Record<string, string> = {
   'help.sidebar_tabs.sidebar_label': 'Sidebar',
   'help.sidebar_tabs.sidebar_desc':
     ' — Browse, create, rename, and switch between org charts. Save, view, compare, and restore named version snapshots.',
-  'help.sidebar_tabs.settings_label': 'Settings (⚙️)',
+  'help.sidebar_tabs.settings_label': 'Settings gear button',
   'help.sidebar_tabs.settings_desc':
     ' — Opens a modal to adjust card sizes, spacing, colors, typography, and categories. Includes theme presets and a live preview.',
-  'help.sidebar_tabs.import_label': 'Import (📂)',
+  'help.sidebar_tabs.import_label': 'Import folder button',
   'help.sidebar_tabs.import_desc':
     ' — Opens a step-by-step wizard to import org data from JSON or CSV files, with column mapping and text normalization.',
-  'help.sidebar_tabs.export_label': 'Export (📤)',
+  'help.sidebar_tabs.export_label': 'Export arrow button',
   'help.sidebar_tabs.export_desc':
     ' — Downloads the chart as an editable PowerPoint file. Choose which saved versions to include.',
 
@@ -1019,7 +1019,7 @@ const en: Record<string, string> = {
   'help.settings.auto_save':
     'All visual settings auto-save to your browser and restore on next visit.',
   'help.settings.modal':
-    'Open Settings (⚙️ button or Ctrl+,) to access 10 tabs: Presets, Layout, Typography, Cards, Connectors, IC Options, Advisors, Badges, Categories, and Backup.',
+    'Open Settings (the Settings gear button in the toolbar or Ctrl+,) to access 10 tabs: Presets, Layout, Typography, Cards, Connectors, IC Options, Advisors, Badges, Categories, and Backup.',
   'help.settings.presets':
     'Theme presets apply a full set of colors and spacing in one click. You can also save your own custom presets.',
   'help.settings.preview': 'A live preview on the right shows changes as you adjust settings.',
