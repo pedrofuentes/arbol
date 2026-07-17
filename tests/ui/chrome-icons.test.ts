@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CommandPalette } from '../../src/ui/command-palette';
 import { dismissContextMenu, showContextMenu } from '../../src/ui/context-menu';
+import { DISALLOWED_CONTROL_GLYPH_CHARACTERS } from '../helpers/control-glyphs';
 
 const CHROME_SOURCE_FILES = [
   'src/main.ts',
@@ -32,7 +33,7 @@ const CHROME_SOURCE_FILES = [
 ] as const;
 
 const EXTENDED_PICTOGRAPHIC = /\p{Extended_Pictographic}/gu;
-const DISALLOWED_CONTROL_GLYPHS = /[↩↪↺⊞✕×▶▾▪▫▢▣]/g;
+const DISALLOWED_CONTROL_GLYPHS = new RegExp(`[${DISALLOWED_CONTROL_GLYPH_CHARACTERS}]`, 'g');
 
 afterEach(() => {
   dismissContextMenu();

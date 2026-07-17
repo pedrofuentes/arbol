@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import en from '../../src/i18n/en';
 import es from '../../src/i18n/es';
+import { DISALLOWED_CONTROL_GLYPH_CHARACTERS } from '../helpers/control-glyphs';
 
-const CHROME_PICTOGRAPH = /[\p{Extended_Pictographic}↩↪↺⊞✕×▶▾▪▫▢▣☰]/gu;
+const CHROME_PICTOGRAPH = new RegExp(
+  `[\\p{Extended_Pictographic}${DISALLOWED_CONTROL_GLYPH_CHARACTERS}]`,
+  'gu',
+);
 
 const DOCUMENTATION_EXAMPLES = new Set(['help.importing.how_strong']);
 
