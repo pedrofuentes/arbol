@@ -3,18 +3,20 @@ import { trapFocus } from './dialog-utils';
 import { createIcon, type IconName } from './icon';
 
 const PREVIEW_HINT_KEYS: Record<string, string> = {
+  appearance: 'settings_modal.preview_hint.appearance',
   presets: 'settings_modal.preview_hint.presets',
   layout: 'settings_modal.preview_hint.layout',
-  typography: 'settings_modal.preview_hint.typography',
-  cards: 'settings_modal.preview_hint.cards',
-  connectors: 'settings_modal.preview_hint.connectors',
-  ic: 'settings_modal.preview_hint.ic',
-  advisors: 'settings_modal.preview_hint.advisors',
-  badges: 'settings_modal.preview_hint.badges',
-  categories: 'settings_modal.preview_hint.categories',
+  cards_badges: 'settings_modal.preview_hint.cards_badges',
+  levels_categories: 'settings_modal.preview_hint.levels_categories',
 };
 
-const TABS_WITHOUT_PREVIEW = new Set(['backup', 'level_mapping']);
+const TABS_WITH_PREVIEW = new Set([
+  'appearance',
+  'layout',
+  'cards_badges',
+  'levels_categories',
+  'presets',
+]);
 
 export interface SettingsTab {
   id: string;
@@ -32,17 +34,16 @@ export interface SettingsModalOptions {
 
 function getDefaultTabs(): SettingsTab[] {
   return [
-    { id: 'presets', label: t('settings_modal.tab.presets'), icon: 'palette' },
+    { id: 'appearance', label: t('settings_modal.tab.appearance'), icon: 'palette' },
     { id: 'layout', label: t('settings_modal.tab.layout'), icon: 'layout' },
-    { id: 'typography', label: t('settings_modal.tab.typography'), icon: 'type' },
-    { id: 'cards', label: t('settings_modal.tab.cards'), icon: 'cards' },
-    { id: 'connectors', label: t('settings_modal.tab.connectors'), icon: 'link' },
-    { id: 'ic', label: t('settings_modal.tab.ic'), icon: 'person' },
-    { id: 'advisors', label: t('settings_modal.tab.advisors'), icon: 'paperclip' },
-    { id: 'badges', label: t('settings_modal.tab.badges'), icon: 'badge' },
-    { id: 'categories', label: t('settings_modal.tab.categories'), icon: 'tag' },
-    { id: 'level_mapping', label: t('settings_modal.tab.level_mapping'), icon: 'hierarchy' },
-    { id: 'backup', label: t('settings_modal.tab.backup'), icon: 'backup' },
+    { id: 'cards_badges', label: t('settings_modal.tab.cards_badges'), icon: 'cards' },
+    {
+      id: 'levels_categories',
+      label: t('settings_modal.tab.levels_categories'),
+      icon: 'hierarchy',
+    },
+    { id: 'presets', label: t('settings_modal.tab.presets'), icon: 'star' },
+    { id: 'data_backup', label: t('settings_modal.tab.data_backup'), icon: 'backup' },
   ];
 }
 
@@ -66,6 +67,8 @@ export class SettingsModal {
   private previewZoomPct: HTMLSpanElement = null!;
   private previewFitBtn: HTMLButtonElement = null!;
   private previewResetBtn: HTMLButtonElement = null!;
+  private searchInput: HTMLInputElement;
+  private searchNoResults: HTMLDivElement;
 
   constructor(options: SettingsModalOptions, tabs?: SettingsTab[]) {
     this.options = options;
@@ -97,6 +100,19 @@ export class SettingsModal {
     title.appendChild(document.createTextNode(t('settings_modal.title')));
     modal.setAttribute('aria-labelledby', 'settings-modal-title');
 
+    const search = document.createElement('label');
+    search.className = 'settings-modal-search';
+    search.appendChild(createIcon('search'));
+
+    this.searchInput = document.createElement('input');
+    this.searchInput.className = 'settings-search-input';
+    this.searchInput.type = 'search';
+    this.searchInput.placeholder = t('settings_modal.search_placeholder');
+    this.searchInput.setAttribute('aria-label', t('settings_modal.search_aria'));
+    this.searchInput.setAttribute('autocomplete', 'off');
+    this.searchInput.addEventListener('input', () => this.refreshSectionVisibility());
+    search.appendChild(this.searchInput);
+
     const closeBtn = document.createElement('button');
     closeBtn.className = 'settings-modal-close';
     closeBtn.setAttribute('aria-label', t('settings_modal.close_aria'));
@@ -104,6 +120,7 @@ export class SettingsModal {
     closeBtn.addEventListener('click', () => this.cancel());
 
     header.appendChild(title);
+    header.appendChild(search);
     header.appendChild(closeBtn);
 
     // Body (nav + content)
@@ -129,9 +146,12 @@ export class SettingsModal {
       const iconSpan = createIcon(tab.icon, 'nav-icon');
 
       btn.appendChild(iconSpan);
-      btn.appendChild(document.createTextNode(` ${tab.label}`));
+      btn.appendChild(document.createTextNode(tab.label));
 
-      btn.addEventListener('click', () => this.setActiveTab(tab.id));
+      btn.addEventListener('click', () => {
+        this.searchInput.value = '';
+        this.setActiveTab(tab.id);
+      });
       nav.appendChild(btn);
       this.tabButtons.push(btn);
     }
@@ -201,7 +221,7 @@ export class SettingsModal {
     this.previewStrip.appendChild(this.previewArea);
 
     // Hide preview on tabs that don't need it
-    if (TABS_WITHOUT_PREVIEW.has(this.activeTab)) {
+    if (!TABS_WITH_PREVIEW.has(this.activeTab)) {
       this.previewStrip.classList.add('hidden');
     }
 
@@ -216,6 +236,14 @@ export class SettingsModal {
     this.contentArea.setAttribute('data-active-tab', this.activeTab);
 
     contentColumn.appendChild(this.contentArea);
+
+    this.searchNoResults = document.createElement('div');
+    this.searchNoResults.className = 'settings-search-no-results';
+    this.searchNoResults.textContent = t('settings_modal.search_no_results');
+    this.searchNoResults.setAttribute('role', 'status');
+    this.searchNoResults.setAttribute('aria-live', 'polite');
+    this.searchNoResults.hidden = true;
+    contentColumn.appendChild(this.searchNoResults);
 
     body.appendChild(nav);
     body.appendChild(contentColumn);
@@ -310,6 +338,8 @@ export class SettingsModal {
       document.body.appendChild(this.overlay);
       this.mounted = true;
     }
+    this.searchInput.value = '';
+    this.refreshSectionVisibility();
     this.previousFocus = document.activeElement as HTMLElement | null;
     this.overlay.classList.add('open');
     document.addEventListener('keydown', this.keyHandler, true);
@@ -355,7 +385,7 @@ export class SettingsModal {
     }
 
     // Update preview strip visibility and hint
-    if (TABS_WITHOUT_PREVIEW.has(tabId)) {
+    if (!TABS_WITH_PREVIEW.has(tabId)) {
       this.previewStrip.classList.add('hidden');
     } else {
       this.previewStrip.classList.remove('hidden');
@@ -366,6 +396,45 @@ export class SettingsModal {
     }
 
     this.options.onTabChange?.(tabId);
+    this.refreshSectionVisibility();
+  }
+
+  refreshSectionVisibility(): void {
+    const query = this.searchInput.value.trim().toLocaleLowerCase();
+    const isSearching = query.length > 0;
+    const sections = Array.from(
+      this.contentArea.querySelectorAll<HTMLElement>(':scope > [data-section-id]'),
+    );
+
+    this.dialog.classList.toggle('settings-searching', isSearching);
+
+    let matchCount = 0;
+    for (const section of sections) {
+      section.querySelector('.settings-search-group-label')?.remove();
+
+      const groupId = section.dataset.settingsGroup;
+      const matches = isSearching
+        ? (section.textContent ?? '').toLocaleLowerCase().includes(query)
+        : groupId === this.activeTab;
+      section.hidden = !matches;
+
+      if (isSearching && matches) {
+        const group = this.tabs.find((tab) => tab.id === groupId);
+        if (group) {
+          const groupLabel = document.createElement('span');
+          groupLabel.className = 'settings-search-group-label';
+          groupLabel.textContent = group.label;
+          section.prepend(groupLabel);
+        }
+        matchCount += 1;
+      }
+    }
+
+    this.searchNoResults.hidden = !isSearching || matchCount > 0;
+    this.previewStrip.classList.toggle(
+      'hidden',
+      isSearching || !TABS_WITH_PREVIEW.has(this.activeTab),
+    );
   }
 
   cancel(): void {

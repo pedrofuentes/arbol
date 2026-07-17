@@ -3,7 +3,9 @@ import { setLocale } from '../../src/i18n';
 import en from '../../src/i18n/en';
 import { SettingsModal } from '../../src/ui/settings-modal';
 
-beforeAll(() => { setLocale('en', en); });
+beforeAll(() => {
+  setLocale('en', en);
+});
 
 function createModal() {
   const onClose = vi.fn();
@@ -13,7 +15,9 @@ function createModal() {
 }
 
 describe('SettingsModal', () => {
-  afterEach(() => { document.body.innerHTML = ''; });
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
 
   it('is hidden by default', () => {
     const { modal } = createModal();
@@ -85,18 +89,32 @@ describe('SettingsModal', () => {
     modal.destroy();
   });
 
-  it('renders 11 tabs', () => {
+  it('renders six audience-friendly settings groups with M2 icons', () => {
     const { modal } = createModal();
     modal.open();
-    const tabs = document.querySelectorAll('.settings-nav-item');
-    expect(tabs.length).toBe(11);
+    const tabs = Array.from(document.querySelectorAll<HTMLElement>('.settings-nav-item'));
+    expect(tabs).toHaveLength(6);
+    expect(
+      tabs.map((tab) => ({
+        id: tab.dataset.tab,
+        label: tab.textContent?.trim(),
+        icon: tab.querySelector('svg')?.dataset.icon,
+      })),
+    ).toEqual([
+      { id: 'appearance', label: 'Appearance', icon: 'palette' },
+      { id: 'layout', label: 'Layout', icon: 'layout' },
+      { id: 'cards_badges', label: 'Cards & Badges', icon: 'cards' },
+      { id: 'levels_categories', label: 'Levels & Categories', icon: 'hierarchy' },
+      { id: 'presets', label: 'Presets', icon: 'star' },
+      { id: 'data_backup', label: 'Data & Backup', icon: 'backup' },
+    ]);
     modal.destroy();
   });
 
   it('first tab is active by default', () => {
     const { modal } = createModal();
     modal.open();
-    expect(modal.getActiveTab()).toBe('presets');
+    expect(modal.getActiveTab()).toBe('appearance');
     const tabs = document.querySelectorAll('.settings-nav-item');
     expect(tabs[0].classList.contains('active')).toBe(true);
     expect(tabs[0].getAttribute('aria-selected')).toBe('true');
@@ -108,7 +126,7 @@ describe('SettingsModal', () => {
     modal.open();
     const tabs = document.querySelectorAll('.settings-nav-item');
     (tabs[2] as HTMLElement).click();
-    expect(modal.getActiveTab()).toBe('typography');
+    expect(modal.getActiveTab()).toBe('cards_badges');
     expect(tabs[2].classList.contains('active')).toBe(true);
     expect(tabs[0].classList.contains('active')).toBe(false);
     modal.destroy();
@@ -117,8 +135,8 @@ describe('SettingsModal', () => {
   it('setActiveTab updates tab state', () => {
     const { modal } = createModal();
     modal.open();
-    modal.setActiveTab('cards');
-    expect(modal.getActiveTab()).toBe('cards');
+    modal.setActiveTab('cards_badges');
+    expect(modal.getActiveTab()).toBe('cards_badges');
     modal.destroy();
   });
 
@@ -126,7 +144,7 @@ describe('SettingsModal', () => {
     const { modal } = createModal();
     modal.open();
     const content = document.querySelector('.settings-content') as HTMLElement;
-    expect(content.getAttribute('data-active-tab')).toBe('presets');
+    expect(content.getAttribute('data-active-tab')).toBe('appearance');
     modal.setActiveTab('layout');
     expect(content.getAttribute('data-active-tab')).toBe('layout');
     modal.destroy();
@@ -161,7 +179,7 @@ describe('SettingsModal', () => {
     const { modal } = createModal();
     modal.open();
     const tabs = document.querySelectorAll('.settings-nav-item');
-    tabs.forEach(tab => {
+    tabs.forEach((tab) => {
       expect(tab.getAttribute('role')).toBe('tab');
     });
     modal.destroy();
@@ -251,8 +269,8 @@ describe('SettingsModal', () => {
     it('badge shows correct count text', () => {
       const { modal } = createModal();
       modal.open();
-      modal.updateTabBadge('cards', 42);
-      const badge = document.querySelector('[data-tab="cards"] .settings-tab-badge');
+      modal.updateTabBadge('cards_badges', 42);
+      const badge = document.querySelector('[data-tab="cards_badges"] .settings-tab-badge');
       expect(badge).not.toBeNull();
       expect(badge!.textContent).toBe('42');
       modal.destroy();
@@ -280,6 +298,157 @@ describe('SettingsModal', () => {
     });
   });
 
+  describe('settings search', () => {
+    function appendSection(
+      modal: SettingsModal,
+      group: string,
+      title: string,
+      keywords: string,
+    ): HTMLElement {
+      const section = document.createElement('section');
+      section.dataset.sectionId = title.toLowerCase().replaceAll(' ', '-');
+      section.dataset.settingsGroup = group;
+
+      const heading = document.createElement('h3');
+      heading.className = 'setting-section-title';
+      heading.textContent = title;
+      section.appendChild(heading);
+
+      const description = document.createElement('p');
+      description.textContent = keywords;
+      section.appendChild(description);
+      modal.getContentArea().appendChild(section);
+      return section;
+    }
+
+    it('renders a localized search control in the modal header', () => {
+      const { modal } = createModal();
+      modal.open();
+
+      const header = document.querySelector('.settings-modal-header')!;
+      const input = header.querySelector<HTMLInputElement>('.settings-search-input');
+      expect(input).not.toBeNull();
+      expect(input!.placeholder).toBe('Search settings…');
+      expect(input!.getAttribute('aria-label')).toBe('Search settings');
+      expect(header.querySelector('svg[data-icon="search"]')).not.toBeNull();
+      modal.destroy();
+    });
+
+    it('filters matching sections across every group and shows their group', () => {
+      const { modal } = createModal();
+      const appearance = appendSection(modal, 'appearance', 'Typography', 'Fonts and colors');
+      const badges = appendSection(
+        modal,
+        'cards_badges',
+        'Headcount Badge',
+        'Show team size on manager cards',
+      );
+      modal.open();
+
+      const input = document.querySelector<HTMLInputElement>('.settings-search-input')!;
+      input.value = 'team size';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      expect(appearance.hidden).toBe(true);
+      expect(badges.hidden).toBe(false);
+      expect(badges.querySelector('.settings-search-group-label')?.textContent).toBe(
+        'Cards & Badges',
+      );
+      modal.destroy();
+    });
+
+    it('shows no-results feedback when no section title or keyword matches', () => {
+      const { modal } = createModal();
+      appendSection(modal, 'appearance', 'Typography', 'Fonts and colors');
+      modal.open();
+
+      const input = document.querySelector<HTMLInputElement>('.settings-search-input')!;
+      input.value = 'payroll';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      const noResults = document.querySelector<HTMLElement>('.settings-search-no-results')!;
+      expect(noResults.hidden).toBe(false);
+      expect(noResults.textContent).toBe('No settings found. Try different keywords.');
+      modal.destroy();
+    });
+
+    it('clearing search restores the active group view', () => {
+      const { modal } = createModal();
+      const appearance = appendSection(modal, 'appearance', 'Typography', 'Fonts and colors');
+      const layout = appendSection(modal, 'layout', 'Tree Spacing', 'Branch gaps');
+      modal.open();
+
+      const input = document.querySelector<HTMLInputElement>('.settings-search-input')!;
+      input.value = 'branch';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      expect(appearance.hidden).toBe(true);
+      expect(layout.hidden).toBe(false);
+
+      input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      expect(appearance.hidden).toBe(false);
+      expect(layout.hidden).toBe(true);
+      expect(document.querySelector('.settings-search-group-label')).toBeNull();
+      modal.destroy();
+    });
+
+    it('reopening clears search and restores the active group view', () => {
+      const { modal } = createModal();
+      const appearance = appendSection(modal, 'appearance', 'Typography', 'Fonts and colors');
+      const badges = appendSection(
+        modal,
+        'cards_badges',
+        'Headcount Badge',
+        'Show team size on manager cards',
+      );
+      modal.open();
+
+      const input = document.querySelector<HTMLInputElement>('.settings-search-input')!;
+      input.value = 'badge';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      expect(appearance.hidden).toBe(true);
+      expect(badges.hidden).toBe(false);
+
+      modal.close();
+      modal.open();
+
+      expect(input.value).toBe('');
+      expect(appearance.hidden).toBe(false);
+      expect(badges.hidden).toBe(true);
+      expect(document.querySelector<HTMLElement>('.settings-search-no-results')!.hidden).toBe(true);
+      modal.destroy();
+    });
+
+    it('clicking a tab clears search and shows the selected group', () => {
+      const { modal } = createModal();
+      const appearance = appendSection(modal, 'appearance', 'Typography', 'Fonts and colors');
+      const layout = appendSection(modal, 'layout', 'Tree Spacing', 'Branch gaps');
+      const badges = appendSection(
+        modal,
+        'cards_badges',
+        'Headcount Badge',
+        'Show team size on manager cards',
+      );
+      modal.open();
+
+      const input = document.querySelector<HTMLInputElement>('.settings-search-input')!;
+      input.value = 'badge';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      document.querySelector<HTMLElement>('[data-tab="layout"]')!.click();
+
+      expect(input.value).toBe('');
+      expect(modal.getActiveTab()).toBe('layout');
+      expect(document.querySelector('[data-tab="layout"]')!.classList).toContain('active');
+      expect(appearance.hidden).toBe(true);
+      expect(layout.hidden).toBe(false);
+      expect(badges.hidden).toBe(true);
+      expect(document.querySelector<HTMLElement>('.settings-search-no-results')!.hidden).toBe(true);
+      modal.destroy();
+    });
+  });
+
   describe('live preview strip', () => {
     it('renders preview strip with header, title, hint, and area', () => {
       const { modal } = createModal();
@@ -301,15 +470,15 @@ describe('SettingsModal', () => {
       modal.destroy();
     });
 
-    it('preview hint shows default presets hint', () => {
+    it('preview hint describes the default appearance group', () => {
       const { modal } = createModal();
       modal.open();
       const hint = document.querySelector('.preview-hint')!;
-      expect(hint.textContent).toBe('Updates as you change settings');
+      expect(hint.textContent).toBe('Theme and color changes highlighted');
       modal.destroy();
     });
 
-    it('preview strip is visible by default (presets tab)', () => {
+    it('preview strip is visible by default for appearance', () => {
       const { modal } = createModal();
       modal.open();
       const strip = document.querySelector('.preview-strip') as HTMLElement;
@@ -317,19 +486,19 @@ describe('SettingsModal', () => {
       modal.destroy();
     });
 
-    it('preview strip is hidden when switching to backup tab', () => {
+    it('preview strip is hidden for data and backup', () => {
       const { modal } = createModal();
       modal.open();
-      modal.setActiveTab('backup');
+      modal.setActiveTab('data_backup');
       const strip = document.querySelector('.preview-strip') as HTMLElement;
       expect(strip.classList.contains('hidden')).toBe(true);
       modal.destroy();
     });
 
-    it('preview strip reappears when switching away from backup', () => {
+    it('preview strip reappears when switching to a visual group', () => {
       const { modal } = createModal();
       modal.open();
-      modal.setActiveTab('backup');
+      modal.setActiveTab('data_backup');
       modal.setActiveTab('layout');
       const strip = document.querySelector('.preview-strip') as HTMLElement;
       expect(strip.classList.contains('hidden')).toBe(false);
@@ -344,26 +513,14 @@ describe('SettingsModal', () => {
       modal.setActiveTab('layout');
       expect(hint.textContent).toBe('Spacing regions highlighted');
 
-      modal.setActiveTab('typography');
-      expect(hint.textContent).toBe('Text styling highlighted');
+      modal.setActiveTab('cards_badges');
+      expect(hint.textContent).toBe('Card and badge styling highlighted');
 
-      modal.setActiveTab('cards');
-      expect(hint.textContent).toBe('Card appearance highlighted');
+      modal.setActiveTab('levels_categories');
+      expect(hint.textContent).toBe('Level and category styling highlighted');
 
-      modal.setActiveTab('connectors');
-      expect(hint.textContent).toBe('Line styles highlighted');
-
-      modal.setActiveTab('ic');
-      expect(hint.textContent).toBe('Individual contributor layout');
-
-      modal.setActiveTab('advisors');
-      expect(hint.textContent).toBe('Advisor spacing highlighted');
-
-      modal.setActiveTab('badges');
-      expect(hint.textContent).toBe('Badge styling shown on cards');
-
-      modal.setActiveTab('categories');
-      expect(hint.textContent).toBe('How categories appear on cards');
+      modal.setActiveTab('presets');
+      expect(hint.textContent).toBe('Updates as you change settings');
 
       modal.destroy();
     });
@@ -443,7 +600,8 @@ describe('SettingsModal', () => {
   });
 
   describe('focus trapping', () => {
-    const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const FOCUSABLE =
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
     it('traps Tab on last focusable element to first', () => {
       const { modal } = createModal();
@@ -464,7 +622,12 @@ describe('SettingsModal', () => {
       const dialog = document.querySelector('.settings-modal') as HTMLElement;
       const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
       focusable[0].focus();
-      const e = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
+      const e = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+      });
       focusable[0].dispatchEvent(e);
       expect(document.activeElement).toBe(focusable[focusable.length - 1]);
       modal.destroy();

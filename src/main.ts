@@ -47,6 +47,7 @@ import { showFirstVisitHelp } from './init/first-visit-helper';
 import { SAMPLE_ORG } from './data/sample-org';
 import { PropertyPanel } from './ui/property-panel';
 import { SettingsModal } from './ui/settings-modal';
+import { annotateTopLevelSettingsSections } from './ui/settings-section-groups';
 import { SettingsEditor } from './editor/settings-editor';
 import { ImportWizard } from './ui/import-wizard';
 import {
@@ -265,30 +266,26 @@ async function main(): Promise<void> {
   // Settings modal (opens via header button)
   const SECTION_TAB_MAP: Record<string, string> = {
     presets: 'presets',
-    categories: 'categories',
+    categories: 'levels_categories',
     'card-dimensions': 'layout',
     'tree-spacing': 'layout',
-    'ic-options': 'ic',
-    'advisor-options': 'advisors',
-    typography: 'typography',
-    'link-style': 'connectors',
-    'card-style': 'cards',
-    'headcount-badge': 'badges',
-    'level-badge': 'badges',
-    'categories-legend': 'categories',
-    'level-mapping': 'level_mapping',
-    'settings-io': 'backup',
-    'backup-restore': 'backup',
+    'ic-options': 'layout',
+    'advisor-options': 'layout',
+    typography: 'appearance',
+    'link-style': 'appearance',
+    'card-style': 'appearance',
+    'headcount-badge': 'cards_badges',
+    'level-badge': 'cards_badges',
+    'categories-legend': 'levels_categories',
+    'level-mapping': 'levels_categories',
+    'settings-io': 'data_backup',
+    'backup-restore': 'data_backup',
   };
 
-  function filterSettingsSections(tabId: string): void {
+  function filterSettingsSections(): void {
     const contentArea = settingsModal.getContentArea();
-    const sections = contentArea.querySelectorAll('[data-section-id]');
-    sections.forEach((section) => {
-      const sectionId = section.getAttribute('data-section-id')!;
-      const sectionTab = SECTION_TAB_MAP[sectionId];
-      (section as HTMLElement).style.display = sectionTab === tabId ? '' : 'none';
-    });
+    annotateTopLevelSettingsSections(contentArea, SECTION_TAB_MAP);
+    settingsModal.refreshSectionVisibility();
   }
 
   let settingsEditorInstance: SettingsEditor | null = null;
@@ -328,8 +325,8 @@ async function main(): Promise<void> {
         settingsSnapshot = null;
       }
     },
-    onTabChange: (tabId) => {
-      filterSettingsSections(tabId);
+    onTabChange: () => {
+      filterSettingsSections();
     },
   });
 
@@ -483,10 +480,10 @@ async function main(): Promise<void> {
           settingsModal.getPreviewZoomPct(),
         );
         settingsEditorInstance.onBuild(() => {
-          filterSettingsSections(settingsModal.getActiveTab());
+          filterSettingsSections();
         });
       }
-      filterSettingsSections(settingsModal.getActiveTab());
+      filterSettingsSections();
     },
     onImportClick: () => {
       wizardState = {};
