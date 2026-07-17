@@ -257,6 +257,7 @@ export class ChartEditor {
     const item = document.createElement('div');
     item.className = 'chart-item' + (isActive ? ' active' : '');
     item.setAttribute('role', 'listitem');
+    item.setAttribute('tabindex', '0');
     item.dataset.chartId = chart.id;
     item.addEventListener('click', (e) => {
       if (!isActive && !(e.target as HTMLElement).closest('button')) {
@@ -265,7 +266,6 @@ export class ChartEditor {
     });
 
     if (!isActive) {
-      item.setAttribute('tabindex', '0');
       item.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -354,6 +354,7 @@ export class ChartEditor {
     const workingItem = document.createElement('div');
     workingItem.className = 'version-item';
     workingItem.setAttribute('role', 'listitem');
+    workingItem.setAttribute('tabindex', '0');
 
     const workingIcon = document.createElement('span');
     workingIcon.className = 'version-item-icon';
@@ -392,6 +393,7 @@ export class ChartEditor {
     const isViewing = this.viewingVersionId === version.id;
     item.className = 'version-item' + (isViewing ? ' viewing' : '');
     item.setAttribute('role', 'listitem');
+    item.setAttribute('tabindex', '0');
     item.dataset.versionId = version.id;
 
     // Icon
