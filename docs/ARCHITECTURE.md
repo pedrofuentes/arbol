@@ -178,6 +178,7 @@ All mutating methods call `snapshot()` (saves undo state) then `emit()` (notifie
 | `deleteVersion()`   | `(versionId): Promise<void>`                                                   |
 | `restoreVersion()`  | `(versionId): Promise<void>` — replaces working tree                           |
 | `onChange()`        | `(listener): () => void`                                                       |
+| `onWorkingTreeSaved()` | `(listener): () => void` — lightweight post-persist people-count updates    |
 
 ### LevelStore (`src/store/level-store.ts`)
 

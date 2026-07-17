@@ -28,6 +28,11 @@ const VALID_LEVEL_DISPLAY_MODES: ReadonlySet<string> = new Set(['original', 'map
 
 const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
+/**
+ * Lightweight metadata emitted after a working-tree patch is persisted.
+ * This is separate from `onChange` so the 500ms-debounced autosave can update
+ * people counts without triggering a full chart-list refresh.
+ */
 export interface WorkingTreeSavedEvent {
   chartId: string;
   peopleCount: number;
@@ -362,6 +367,11 @@ export class ChartStore extends EventEmitter {
   // Working tree persistence
   // ---------------------------------------------------------------------------
 
+  /**
+   * Subscribes to the lightweight event emitted after `saveWorkingTree` finishes
+   * persisting. Unlike `onChange`, it lets debounced autosaves patch sidebar
+   * metadata without rebuilding the complete chart and version lists.
+   */
   onWorkingTreeSaved(listener: (event: WorkingTreeSavedEvent) => void): () => void {
     return this.workingTreeSavedEmitter.onChange(listener);
   }
