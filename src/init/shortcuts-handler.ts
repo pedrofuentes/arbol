@@ -296,38 +296,42 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
         },
       );
 
-      const versions = await chartStore.getVersions(activeChart.id);
-      for (const version of versions) {
-        items.push(
-          {
-            id: `view-version-${version.id}`,
-            label: t('command_palette.item_view_version', { name: version.name }),
-            icon: '👁',
-            group: t('command_palette.group_charts'),
-            action: () => viewVersion(version),
-          },
-          {
-            id: `compare-version-${version.id}`,
-            label: t('command_palette.item_compare_version', { name: version.name }),
-            icon: '⚖️',
-            group: t('command_palette.group_charts'),
-            action: () => compareVersion(version),
-          },
-          {
-            id: `restore-version-${version.id}`,
-            label: t('command_palette.item_restore_version', { name: version.name }),
-            icon: '↩️',
-            group: t('command_palette.group_charts'),
-            action: () => restoreVersion(version),
-          },
-          {
-            id: `delete-version-${version.id}`,
-            label: t('command_palette.item_delete_version', { name: version.name }),
-            icon: '🗑️',
-            group: t('command_palette.group_charts'),
-            action: () => deleteVersion(version),
-          },
-        );
+      try {
+        const versions = await chartStore.getVersions(activeChart.id);
+        for (const version of versions) {
+          items.push(
+            {
+              id: `view-version-${version.id}`,
+              label: t('command_palette.item_view_version', { name: version.name }),
+              icon: '👁',
+              group: t('command_palette.group_charts'),
+              action: () => viewVersion(version),
+            },
+            {
+              id: `compare-version-${version.id}`,
+              label: t('command_palette.item_compare_version', { name: version.name }),
+              icon: '⚖️',
+              group: t('command_palette.group_charts'),
+              action: () => compareVersion(version),
+            },
+            {
+              id: `restore-version-${version.id}`,
+              label: t('command_palette.item_restore_version', { name: version.name }),
+              icon: '↩️',
+              group: t('command_palette.group_charts'),
+              action: () => restoreVersion(version),
+            },
+            {
+              id: `delete-version-${version.id}`,
+              label: t('command_palette.item_delete_version', { name: version.name }),
+              icon: '🗑️',
+              group: t('command_palette.group_charts'),
+              action: () => deleteVersion(version),
+            },
+          );
+        }
+      } catch (error) {
+        console.error('Failed to load command palette versions:', error);
       }
     }
     for (const chart of allCharts) {
