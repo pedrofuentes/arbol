@@ -145,6 +145,7 @@ describe('SettingsEditor', () => {
     const chartStore = {
       getCharts: vi.fn(async () => []),
       getAllVersions: vi.fn(async () => []),
+      getActiveChartId: vi.fn(() => null),
     } as unknown as ChartStore;
     new SettingsEditor(
       container,
