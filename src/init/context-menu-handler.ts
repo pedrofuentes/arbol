@@ -170,12 +170,7 @@ export function createShowSingleCardMenu(
               if (result) {
                 const targetNode = findNodeById(tree, result.managerId);
                 store.moveNode(nodeId, result.managerId, result.dottedLine);
-                announce(
-                  t('announce.moved', {
-                    name: node.name,
-                    target: targetNode?.name ?? t('announce.move_fallback_target'),
-                  }),
-                );
+                announce(t('announce.moved', { name: node.name, target: targetNode?.name ?? t('announce.move_fallback_target') }));
               }
             } catch (e) {
               showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
@@ -206,14 +201,9 @@ export function createShowSingleCardMenu(
 
                 const reassign = await showConfirmDialog({
                   title: t('dialog.remove_manager.title'),
-                  message: t('dialog.remove_manager.message', {
-                    name: node.name,
-                    count: String(descendantCount),
-                  }),
+                  message: t('dialog.remove_manager.message', { name: node.name, count: String(descendantCount) }),
                   confirmLabel: t('dialog.remove_manager.reassign'),
-                  cancelLabel: t('dialog.remove_manager.remove_all', {
-                    count: String(descendantCount),
-                  }),
+                  cancelLabel: t('dialog.remove_manager.remove_all', { count: String(descendantCount) }),
                   danger: false,
                 });
 
@@ -235,21 +225,13 @@ export function createShowSingleCardMenu(
                 } else {
                   const confirmed = await showConfirmDialog({
                     title: t('dialog.remove_manager.remove_all_confirm_title'),
-                    message: t('dialog.remove_manager.remove_all_confirm_message', {
-                      name: node.name,
-                      count: String(descendantCount),
-                    }),
+                    message: t('dialog.remove_manager.remove_all_confirm_message', { name: node.name, count: String(descendantCount) }),
                     confirmLabel: t('dialog.remove_manager.remove_all_confirm'),
                     danger: true,
                   });
                   if (confirmed) {
                     store.removeNode(nodeId);
-                    announce(
-                      t('announce.removed_with_org', {
-                        name: node.name,
-                        count: String(descendantCount),
-                      }),
-                    );
+                    announce(t('announce.removed_with_org', { name: node.name, count: String(descendantCount) }));
                   }
                 }
               }
@@ -324,12 +306,7 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
               if (result) {
                 store.bulkMoveNodes(selectedArray, result.managerId);
                 const targetNode = findNodeById(store.getTree(), result.managerId);
-                announce(
-                  t('announce.multi_moved', {
-                    count,
-                    target: targetNode?.name ?? t('announce.move_fallback_target'),
-                  }),
-                );
+                announce(t('announce.multi_moved', { count, target: targetNode?.name ?? t('announce.move_fallback_target') }));
               }
             } catch (e) {
               showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');

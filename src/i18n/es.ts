@@ -190,7 +190,8 @@ const es: Record<string, string> = {
   'settings_modal.preview_hint.presets': 'Se actualiza al cambiar la configuración',
   'settings_modal.preview_hint.layout': 'Regiones de espaciado resaltadas',
   'settings_modal.preview_hint.cards_badges': 'Estilo de tarjetas e insignias resaltado',
-  'settings_modal.preview_hint.levels_categories': 'Estilo de niveles y categorías resaltado',
+  'settings_modal.preview_hint.levels_categories':
+    'Estilo de niveles y categorías resaltado',
   'settings_modal.preview_fit': 'Ajustar vista previa',
   'settings_modal.preview_reset': 'Restablecer vista previa',
 
