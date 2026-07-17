@@ -27,8 +27,8 @@ An interactive org chart editor for the browser — manage multiple org charts w
 - Text normalization — normalize name/title casing (Title Case, UPPERCASE, lowercase) on import or for the existing org chart
 - Per-node color categories (Open Position, Offer Pending, Future Start + custom)
 - Color category legend on the chart (SVG overlay, included in PPTX export)
-- Right-click context menu on cards (Edit, Add Child, Set Category, Focus on sub-org, Move, Remove)
-- Inline card editing — right-click a card and choose Edit to modify name/title directly on the chart
+- Right-click context menu on cards (Edit, Quick edit, Pin title, Add Child, Set Category, Focus on sub-org, Move, Remove)
+- Card editing — choose Edit to open the inspector (property panel), or Quick edit to modify name/title directly on the chart
 - Inline validation and toast notifications for user actions
 - Shift+click multi-select with bulk Move and Remove operations
 - Focus mode — view any subtree as its own org chart (exports only the focused sub-org)
