@@ -81,6 +81,13 @@ describe('dom-builder', () => {
       expect(btn.querySelector('svg')).toBeNull();
     });
 
+    it('treats prototype-chain icon names as literal fallback text', () => {
+      const btn = createIconButton({ icon: 'constructor' });
+
+      expect(btn.textContent).toBe('constructor');
+      expect(btn.querySelector('svg')).toBeNull();
+    });
+
     it('sets tooltip via data-tooltip', () => {
       const btn = createIconButton({ icon: 'settings', tooltip: 'Settings' });
       expect(btn.getAttribute('data-tooltip')).toBe('Settings');

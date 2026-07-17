@@ -1,7 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { appendIconLabel, createIcon, setIcon } from '../../src/ui/icon';
+import {
+  appendIconLabel,
+  createIcon,
+  isIconName,
+  setIcon,
+  type IconName,
+} from '../../src/ui/icon';
 
 const styles = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8');
 
@@ -109,6 +115,17 @@ describe('semantic SVG icons', () => {
     expect(icon).toBe(original);
     expect(icon.dataset.icon).toBe('moon');
     expect(icon.querySelectorAll('path').length).toBeGreaterThan(0);
+  });
+
+  it('does not register prototype-chain property names as icons', () => {
+    expect(isIconName('constructor')).toBe(false);
+  });
+
+  it('leaves an empty SVG when an invalid icon name reaches path rendering', () => {
+    const icon = createIcon('constructor' as IconName);
+
+    expect(icon.dataset.icon).toBe('constructor');
+    expect(icon.querySelectorAll('path')).toHaveLength(0);
   });
 
   it('appends an SVG beside a clean text label', () => {
