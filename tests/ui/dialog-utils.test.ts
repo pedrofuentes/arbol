@@ -1,14 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  __getActiveSurfaceCountForTests,
   activateDialog,
   createBanner,
   createDialogPanel,
   createOverlay,
+  pushSurface,
   trapFocus,
 } from '../../src/ui/dialog-utils';
 
 describe('dialog-utils', () => {
   afterEach(() => {
+    expect(__getActiveSurfaceCountForTests()).toBe(0);
     document.body.innerHTML = '';
   });
 
@@ -93,6 +96,29 @@ describe('dialog-utils', () => {
   });
 
   describe('activateDialog', () => {
+    it('lets an anonymous surface participate in Escape stack ordering', () => {
+      const onEscape = vi.fn();
+      const cleanupDialog = activateDialog(document.createElement('div'), {
+        onEscape,
+        trapFocus: false,
+      });
+      const releaseSurface = pushSurface();
+
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
+      expect(onEscape).not.toHaveBeenCalled();
+
+      releaseSurface();
+      releaseSurface();
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
+      expect(onEscape).toHaveBeenCalledOnce();
+
+      cleanupDialog();
+    });
+
     it('closes only the topmost active surface on Escape', () => {
       const first = document.createElement('div');
       const second = document.createElement('div');

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { HELP_SECTION_IDS, showHelpDialog } from '../../src/ui/help-dialog';
+import { __getActiveSurfaceCountForTests } from '../../src/ui/dialog-utils';
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
@@ -26,6 +27,14 @@ describe('showHelpDialog', () => {
   });
 
   afterEach(() => {
+    let dialog = document.querySelector<HTMLElement>('[role="dialog"], [role="alertdialog"]');
+    while (dialog) {
+      document.body.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
+      dialog = document.querySelector<HTMLElement>('[role="dialog"], [role="alertdialog"]');
+    }
+    expect(__getActiveSurfaceCountForTests()).toBe(0);
     document.body.innerHTML = '';
   });
 
@@ -87,6 +96,25 @@ describe('showHelpDialog', () => {
     showHelpDialog();
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('yields Escape to a focused non-migrated surface above the help dialog', () => {
+    showHelpDialog();
+    const competingOverlay = document.createElement('div');
+    const competingButton = document.createElement('button');
+    competingOverlay.appendChild(competingButton);
+    document.body.appendChild(competingOverlay);
+    competingButton.focus();
+
+    const event = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
+    });
+    competingButton.dispatchEvent(event);
+
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(event.defaultPrevented).toBe(false);
   });
 
   it('closes on overlay click', () => {
