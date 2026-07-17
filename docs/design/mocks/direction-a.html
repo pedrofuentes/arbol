@@ -1,0 +1,1587 @@
+<!-- The chart-canvas areas in this mock are illustrative stand-ins. The production chart rendering, style presets, and layout engine are final as-is (owner decision, 2026-07-16). -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- interactive: #theme-toggle, #palette-btn, #settings-btn, .settings-nav button, #settings-close, #settings-cancel, #settings-done, #inspector-close, #node-marcus, #palette-close -->
+<title>Arbol — Refined (Direction A)</title>
+<style>
+  /* ============================================================
+     Arbol — "Refined Arbol" (Direction A)
+     Token system: one 6-step type scale, 4px spacing, component
+     radii, subtle/default/strong borders. Dark is default.
+     ============================================================ */
+
+  #app {
+    /* ---- Palette : DARK (default) ---- */
+    --bg-base:      #0b1120;
+    --bg-canvas:    #0a0f1d;
+    --bg-surface:   #101a2c;
+    --bg-elevated:  #16223a;
+    --bg-hover:     #1c2a45;
+    --bg-active:    #243452;
+    --bg-well:      rgba(20,184,166,0.045);
+
+    --border-subtle: rgba(148,163,184,0.10);
+    --border-default:rgba(148,163,184,0.17);
+    --border-strong: rgba(148,163,184,0.30);
+
+    --text-primary:  #e8eefb;
+    --text-secondary:#9db0cc;
+    --text-tertiary: #67789a;
+
+    --accent:        #14b8a6;
+    --accent-hover:  #2dd4bf;
+    --accent-text:   #5eead4;
+    --accent-strong: #0d9488;
+    --accent-muted:  rgba(20,184,166,0.14);
+    --accent-glow:   rgba(20,184,166,0.30);
+    --on-accent:     #04231f;
+
+    --cat-amber:  #f5b31b;
+    --cat-blue:   #4cb8f5;
+    --cat-violet: #a78bfa;
+    --amber-muted: rgba(245,179,27,0.16);
+    --blue-muted:  rgba(76,184,245,0.16);
+
+    --danger:      #f4677f;
+    --danger-muted:rgba(244,103,127,0.14);
+    --success:     #34d399;
+
+    --grid-line:  rgba(148,163,184,0.055);
+    --grid-major: rgba(148,163,184,0.09);
+    --card-fill:  #17243d;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+    --shadow-md: 0 6px 20px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.3);
+    --shadow-lg: 0 22px 60px rgba(0,0,0,.6), 0 8px 20px rgba(0,0,0,.4);
+
+    /* ---- Type scale (6 steps) ---- */
+    --fs-xs: 11px;
+    --fs-sm: 12.5px;
+    --fs-md: 13.5px;
+    --fs-lg: 15px;
+    --fs-xl: 19px;
+    --fs-2xl: 25px;
+
+    --fw-normal: 400;
+    --fw-medium: 500;
+    --fw-semi:   600;
+    --fw-bold:   700;
+
+    /* ---- Spacing (4px scale) ---- */
+    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px;
+    --s6:24px; --s7:32px; --s8:40px; --s9:48px;
+
+    /* ---- Radii ---- */
+    --r-xs:5px; --r-sm:7px; --r-md:9px; --r-lg:12px; --r-xl:16px; --r-full:999px;
+
+    /* ---- Layout ---- */
+    --sidebar-w: 264px;
+    --inspector-w: 344px;
+    --header-h: 54px;
+
+    --ease: cubic-bezier(.22,1,.36,1);
+    --t-fast: 110ms var(--ease);
+    --t: 200ms var(--ease);
+
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    color: var(--text-primary);
+    color-scheme: dark;
+  }
+
+  #app[data-theme="light"] {
+    --bg-base:      #eef2f8;
+    --bg-canvas:    #f6f9fc;
+    --bg-surface:   #ffffff;
+    --bg-elevated:  #ffffff;
+    --bg-hover:     #f1f5f9;
+    --bg-active:    #e5ebf3;
+    --bg-well:      rgba(13,148,136,0.05);
+
+    --border-subtle: rgba(15,23,42,0.07);
+    --border-default:rgba(15,23,42,0.13);
+    --border-strong: rgba(15,23,42,0.24);
+
+    --text-primary:  #0f1c31;
+    --text-secondary:#4c5c72;
+    --text-tertiary: #7688a0;
+
+    --accent:        #0d9488;
+    --accent-hover:  #0f766e;
+    --accent-text:   #0b7a70;
+    --accent-strong: #0d9488;
+    --accent-muted:  rgba(13,148,136,0.10);
+    --accent-glow:   rgba(13,148,136,0.20);
+    --on-accent:     #ffffff;
+
+    --cat-amber:  #d98a09;
+    --cat-blue:   #2a7fc4;
+    --cat-violet: #7c5cf0;
+    --amber-muted: rgba(217,138,9,0.14);
+    --blue-muted:  rgba(42,127,196,0.14);
+
+    --danger:      #dc2f4b;
+    --danger-muted:rgba(220,47,75,0.10);
+    --success:     #0f9d6b;
+
+    --grid-line:  rgba(15,23,42,0.045);
+    --grid-major: rgba(15,23,42,0.075);
+    --card-fill:  #ffffff;
+
+    --shadow-sm: 0 1px 2px rgba(15,23,42,.06);
+    --shadow-md: 0 8px 24px rgba(15,23,42,.10), 0 2px 6px rgba(15,23,42,.06);
+    --shadow-lg: 0 24px 60px rgba(15,23,42,.16), 0 8px 20px rgba(15,23,42,.08);
+
+    color-scheme: light;
+  }
+
+  /* ---------- base ---------- */
+  /* Low-specificity resets so component classes always win. */
+  *, *::before, *::after { box-sizing: border-box; }
+  button, input, select, h1, h2, p { margin: 0; }
+  button { padding: 0; background: none; border: none; font: inherit; color: inherit; cursor: pointer; }
+  input, select { font: inherit; color: inherit; }
+  #app {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: var(--header-h) 1fr auto;
+    background: var(--bg-base);
+    overflow: hidden;
+    font-size: var(--fs-md);
+    line-height: 1.45;
+  }
+  #app .icon { width: 17px; height: 17px; flex: none; stroke: currentColor; fill: none;
+    stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  #app .icon-sm { width: 14px; height: 14px; }
+
+  #app :focus-visible {
+    outline: 2px solid var(--accent-hover);
+    outline-offset: 2px;
+    border-radius: var(--r-xs);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #app *, #app *::before, #app *::after { transition: none !important; animation: none !important; }
+  }
+
+  /* ============================================================ HEADER */
+  .header {
+    display: flex; align-items: center; gap: var(--s5);
+    padding: 0 var(--s5);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: var(--s3); }
+  .wordmark { font-size: var(--fs-xl); font-weight: var(--fw-bold); letter-spacing: -0.02em; }
+  .wordmark b { color: var(--text-primary); font-weight: var(--fw-bold); }
+  .wordmark span { color: var(--accent); }
+  .brand-leaf { width: 26px; height: 26px; border-radius: var(--r-sm);
+    display: grid; place-items: center;
+    background: var(--accent-muted); color: var(--accent-text); }
+  .brand-leaf .icon { width: 16px; height: 16px; }
+
+  .header-center { flex: 1; display: flex; align-items: center; justify-content: center; gap: var(--s4); min-width: 0; }
+  .chart-name { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
+  .chart-name .title {
+    display: inline-flex; align-items: center; gap: var(--s2);
+    padding: 5px var(--s3); border-radius: var(--r-md);
+    font-size: var(--fs-md); font-weight: var(--fw-semi);
+    border: 1px solid transparent; transition: border-color var(--t-fast), background var(--t-fast);
+  }
+  .chart-name .title:hover { border-color: var(--border-default); background: var(--bg-hover); }
+  .chart-name .title .icon { color: var(--text-tertiary); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px var(--s3); border-radius: var(--r-full);
+    font-size: var(--fs-xs); font-weight: var(--fw-semi); letter-spacing: .01em;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .pill.unsaved { color: var(--accent-text); background: var(--accent-muted); border-color: rgba(20,184,166,.28); }
+  .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .cmdk {
+    display: inline-flex; align-items: center; gap: var(--s3);
+    padding: 6px var(--s3) 6px var(--s4);
+    border-radius: var(--r-full);
+    border: 1px solid var(--border-default);
+    background: var(--bg-base);
+    color: var(--text-secondary);
+    font-size: var(--fs-sm);
+    transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+  }
+  .cmdk:hover { border-color: var(--border-strong); color: var(--text-primary); }
+  .cmdk .icon { width: 15px; height: 15px; }
+  .kbd {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    font-size: 11px; font-weight: var(--fw-semi);
+    padding: 2px 6px; border-radius: var(--r-xs);
+    background: var(--bg-elevated); border: 1px solid var(--border-default);
+    color: var(--text-secondary); line-height: 1;
+  }
+
+  .header-actions { display: flex; align-items: center; gap: 2px; }
+  .hbtn {
+    position: relative;
+    display: grid; place-items: center;
+    width: 34px; height: 34px; border-radius: var(--r-sm);
+    color: var(--text-secondary);
+    transition: background var(--t-fast), color var(--t-fast);
+  }
+  .hbtn:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .hbtn.icon-btn-label::after {
+    content: attr(data-label);
+    position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    padding: 4px 8px; border-radius: var(--r-xs);
+    background: var(--bg-active); color: var(--text-primary);
+    font-size: var(--fs-xs); white-space: nowrap; box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-default);
+    opacity: 0; pointer-events: none; transition: opacity var(--t-fast); z-index: 40;
+  }
+  .hbtn.icon-btn-label:hover::after { opacity: 1; }
+  .hdiv { width: 1px; height: 22px; background: var(--border-default); margin: 0 var(--s2); }
+  .theme-icon-moon { display: none; }
+  #app[data-theme="light"] .theme-icon-moon { display: block; }
+  #app[data-theme="light"] .theme-icon-sun  { display: none; }
+
+  /* ============================================================ MAIN */
+  .main {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) minmax(0,1fr) var(--inspector-w);
+    min-height: 0;
+    transition: grid-template-columns var(--t);
+  }
+  #app.inspector-collapsed { --inspector-w: 0px; }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar {
+    display: flex; flex-direction: column; min-height: 0;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-subtle);
+  }
+  .side-scroll { overflow-y: auto; flex: 1; min-height: 0; }
+  .side-section { padding: var(--s5) var(--s5) var(--s3); }
+  .side-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: var(--s3);
+  }
+  .eyebrow {
+    font-size: var(--fs-xs); font-weight: var(--fw-bold);
+    letter-spacing: .08em; text-transform: uppercase; color: var(--text-tertiary);
+  }
+  .icon-mini {
+    display: grid; place-items: center; width: 24px; height: 24px; border-radius: var(--r-xs);
+    color: var(--text-secondary); transition: background var(--t-fast), color var(--t-fast);
+  }
+  .icon-mini:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+  .search-field {
+    display: flex; align-items: center; gap: var(--s2);
+    padding: 7px var(--s3); border-radius: var(--r-md);
+    background: var(--bg-base); border: 1px solid var(--border-default);
+    color: var(--text-tertiary); margin-bottom: var(--s3);
+  }
+  .search-field .icon { width: 15px; height: 15px; }
+  .search-field input { flex: 1; background: none; border: none; outline: none; font-size: var(--fs-sm);
+    color: var(--text-primary); }
+  .search-field input::placeholder { color: var(--text-tertiary); }
+
+  .chart-row {
+    display: flex; align-items: center; gap: var(--s3);
+    padding: var(--s3); border-radius: var(--r-md);
+    border: 1px solid transparent; margin-bottom: 6px;
+    transition: background var(--t-fast), border-color var(--t-fast);
+    text-align: left; width: 100%;
+  }
+  .chart-row:hover { background: var(--bg-hover); }
+  .chart-row.active {
+    background: var(--accent-muted);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  .chart-ic {
+    width: 32px; height: 32px; border-radius: var(--r-sm); flex: none;
+    display: grid; place-items: center;
+    background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+    color: var(--accent-text);
+  }
+  .chart-row.active .chart-ic { background: color-mix(in srgb, var(--accent) 22%, var(--bg-elevated)); }
+  .chart-meta { min-width: 0; }
+  .chart-title { display: block; font-size: var(--fs-md); font-weight: var(--fw-semi); color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chart-sub { display: block; font-size: var(--fs-xs); color: var(--text-tertiary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .divider { height: 1px; background: var(--border-subtle); margin: var(--s2) var(--s5); }
+
+  /* snapshots */
+  .snap-section { padding: var(--s4) var(--s5) var(--s5); }
+  .current-row {
+    display: flex; flex-direction: column; align-items: stretch; gap: var(--s3);
+    padding: var(--s3); border-radius: var(--r-md);
+    background: var(--amber-muted);
+    border: 1px solid rgba(245,179,27,.28);
+    margin-bottom: var(--s3);
+  }
+  .cr-head { display: flex; align-items: flex-start; gap: var(--s3); }
+  .current-row .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--cat-amber); flex: none;
+    margin-top: 5px; box-shadow: 0 0 0 4px var(--amber-muted); }
+  .current-row .txt { flex: 1; min-width: 0; }
+  .current-row .txt b { font-size: var(--fs-sm); font-weight: var(--fw-semi); color: var(--text-primary); display: block; }
+  .current-row .txt small { font-size: var(--fs-xs); color: var(--text-tertiary); }
+  .save-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 7px var(--s3); border-radius: var(--r-sm);
+    background: var(--accent); color: var(--on-accent);
+    font-size: var(--fs-sm); font-weight: var(--fw-semi);
+    transition: background var(--t-fast);
+  }
+  .save-btn:hover { background: var(--accent-hover); }
+  .save-btn .icon { width: 14px; height: 14px; }
+
+  .snap-row {
+    display: flex; align-items: center; gap: var(--s3);
+    padding: var(--s3); border-radius: var(--r-md);
+    border: 1px solid transparent;
+    transition: background var(--t-fast), border-color var(--t-fast);
+  }
+  .snap-row:hover { background: var(--bg-hover); border-color: var(--border-subtle); }
+  .snap-dot {
+    width: 26px; height: 26px; border-radius: var(--r-sm); flex: none;
+    display: grid; place-items: center; color: var(--text-tertiary);
+    background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+  }
+  .snap-info { flex: 1; min-width: 0; }
+  .snap-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--text-primary);
+    display: flex; align-items: center; gap: var(--s2); }
+  .snap-time { font-size: var(--fs-xs); color: var(--text-tertiary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .snap-actions { flex: none; }
+  .delta { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px;
+    font-weight: var(--fw-semi); font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+  .delta .up { color: var(--success); } .delta .dn { color: var(--danger); }
+  .snap-actions { display: flex; gap: 2px; }
+  .snap-act {
+    display: grid; place-items: center; width: 26px; height: 26px; border-radius: var(--r-xs);
+    color: var(--text-tertiary);
+    transition: background var(--t-fast), color var(--t-fast);
+  }
+  .snap-act:hover { background: var(--bg-active); color: var(--text-primary); }
+  .snap-act.danger:hover { color: var(--danger); background: var(--danger-muted); }
+
+  /* ============================================================ CANVAS */
+  .canvas {
+    position: relative; min-width: 0; overflow: hidden;
+    background-color: var(--bg-canvas);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(var(--grid-major) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-major) 1px, transparent 1px);
+    background-size: 26px 26px, 26px 26px, 130px 130px, 130px 130px;
+  }
+  .canvas::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 90% at 32% 46%, transparent 55%, rgba(0,0,0,.28) 100%);
+  }
+  #app[data-theme="light"] .canvas::after {
+    background: radial-gradient(120% 90% at 32% 46%, transparent 60%, rgba(15,23,42,.05) 100%);
+  }
+
+  .canvas-search {
+    position: absolute; top: var(--s5); left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: var(--s3);
+    padding: 9px var(--s5); border-radius: var(--r-full);
+    background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-md);
+    color: var(--text-tertiary); z-index: 6; min-width: 340px;
+  }
+  .canvas-search .icon { width: 16px; height: 16px; }
+  .canvas-search span { font-size: var(--fs-sm); }
+
+  .chart-wrap { position: absolute; inset: 0; display: grid; place-items: center; padding: 88px var(--s7) var(--s8); }
+  .org-svg { width: 100%; height: 100%; }
+
+  /* svg text classes */
+  .svg-name { fill: var(--text-primary); font-size: 13.5px; font-weight: 600; }
+  .svg-title{ fill: var(--text-secondary); font-size: 11px; font-weight: 400; }
+  .svg-lvl  { fill: var(--accent-text); font-size: 9px; font-weight: 600;
+    font-family: ui-monospace, "SF Mono", Consolas, monospace; letter-spacing: .04em; }
+  .card-rect { fill: var(--card-fill); stroke: var(--border-default); stroke-width: 1; }
+  .card-rect.mgr { fill: var(--bg-elevated); }
+  .lvl-badge { fill: var(--accent-muted); }
+  .conn { stroke: var(--border-strong); stroke-width: 1.4; fill: none; }
+  .conn.sel { stroke: var(--accent); stroke-width: 1.8; }
+  .well { fill: var(--bg-well); stroke: var(--border-subtle); stroke-width: 1; }
+  .node { cursor: pointer; }
+  .node .card-rect { transition: stroke .12s, filter .12s; }
+  .node:hover .card-rect { stroke: var(--accent-hover); }
+
+  /* zoom + legend */
+  .canvas-legend, .canvas-zoom {
+    position: absolute; z-index: 6;
+    background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-default); border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm);
+  }
+  .canvas-legend { right: var(--s5); bottom: var(--s6); padding: var(--s3) var(--s4); }
+  .legend-head { font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .07em;
+    text-transform: uppercase; color: var(--text-tertiary); margin-bottom: var(--s2); }
+  .legend-item { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm);
+    color: var(--text-secondary); padding: 2px 0; }
+  .legend-item .sw { width: 9px; height: 9px; border-radius: 50%; }
+  .canvas-zoom { left: var(--s5); bottom: var(--s6); display: flex; align-items: center; padding: 3px; gap: 2px; }
+  .zbtn { display: inline-flex; align-items: center; gap: 5px; padding: 5px var(--s3);
+    border-radius: var(--r-xs); font-size: var(--fs-sm); color: var(--text-secondary);
+    transition: background var(--t-fast), color var(--t-fast); }
+  .zbtn:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .zbtn.val { color: var(--text-tertiary); font-family: ui-monospace, Consolas, monospace; font-size: var(--fs-xs); }
+
+  /* ============================================================ INSPECTOR */
+  .inspector {
+    background: var(--bg-surface);
+    border-left: 1px solid var(--border-subtle);
+    overflow: hidden; min-width: 0;
+    display: flex; flex-direction: column;
+  }
+  .insp-inner { width: var(--inspector-w); display: flex; flex-direction: column; min-height: 0; height: 100%; }
+  .insp-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--s4) var(--s5); border-bottom: 1px solid var(--border-subtle);
+  }
+  .insp-head .eyebrow { display: flex; align-items: center; gap: var(--s2); }
+  .insp-head .eyebrow .icon { width: 15px; height: 15px; color: var(--accent-text); }
+  .insp-body { overflow-y: auto; flex: 1; min-height: 0; padding: var(--s5); }
+
+  .identity { display: flex; align-items: flex-start; gap: var(--s3); margin-bottom: var(--s5); }
+  .avatar {
+    width: 44px; height: 44px; border-radius: var(--r-md); flex: none;
+    display: grid; place-items: center; font-weight: var(--fw-bold); font-size: var(--fs-lg);
+    color: var(--accent-text); background: var(--accent-muted);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .identity h2 { font-size: var(--fs-xl); font-weight: var(--fw-bold); letter-spacing: -.01em; line-height: 1.15; }
+  .identity .sub { font-size: var(--fs-sm); color: var(--text-secondary); }
+
+  .field { margin-bottom: var(--s4); }
+  .field > label { display: block; font-size: var(--fs-xs); font-weight: var(--fw-semi);
+    letter-spacing: .05em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 6px; }
+  .input {
+    display: flex; align-items: center; gap: var(--s2);
+    width: 100%; padding: 9px var(--s3); border-radius: var(--r-md);
+    background: var(--bg-base); border: 1px solid var(--border-default);
+    font-size: var(--fs-md); transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  }
+  .input:focus-within, .input.focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-muted); }
+  .input input { flex: 1; background: none; border: none; outline: none; color: var(--text-primary); }
+  .input .ghost { color: var(--text-tertiary); font-size: var(--fs-sm); font-style: italic; white-space: nowrap; }
+  .pin {
+    display: grid; place-items: center; width: 26px; height: 26px; border-radius: var(--r-xs);
+    color: var(--text-tertiary); transition: color var(--t-fast), background var(--t-fast); flex: none;
+  }
+  .pin.active { color: var(--accent-text); background: var(--accent-muted); }
+  .pin:hover { color: var(--accent-text); }
+  .hint { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 5px; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+  .select {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: 9px var(--s3); border-radius: var(--r-md);
+    background: var(--bg-base); border: 1px solid var(--border-default);
+    font-size: var(--fs-md); color: var(--text-primary);
+  }
+  .select .icon { color: var(--text-tertiary); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px var(--s3); border-radius: var(--r-full);
+    font-size: var(--fs-sm); font-weight: var(--fw-medium);
+    border: 1px solid var(--border-default); color: var(--text-secondary);
+    background: var(--bg-base); transition: border-color var(--t-fast), color var(--t-fast);
+  }
+  .chip:hover { border-color: var(--border-strong); color: var(--text-primary); }
+  .chip .sw { width: 8px; height: 8px; border-radius: 50%; }
+  .chip.on { color: var(--text-primary); border-color: var(--accent); background: var(--accent-muted); }
+  .chip.none.on { border-color: var(--border-strong); background: var(--bg-active); }
+
+  .stats {
+    margin: var(--s5) 0;
+    border: 1px solid var(--border-subtle); border-radius: var(--r-lg);
+    background: var(--bg-base); overflow: hidden;
+  }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .stat {
+    padding: var(--s3) var(--s4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .stat:nth-child(odd) { border-right: 1px solid var(--border-subtle); }
+  .stat .k { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-tertiary); }
+  .stat .k .icon { width: 13px; height: 13px; }
+  .stat .v { font-size: var(--fs-xl); font-weight: var(--fw-bold); letter-spacing: -.01em; margin-top: 3px; }
+  .stat .v small { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--text-tertiary); }
+  .reports-to {
+    display: flex; align-items: center; gap: var(--s2);
+    padding: var(--s3) var(--s4); font-size: var(--fs-sm); color: var(--text-secondary);
+  }
+  .reports-to .icon { width: 14px; height: 14px; color: var(--text-tertiary); }
+  .reports-to b { color: var(--text-primary); font-weight: var(--fw-semi); }
+
+  .actions-label { font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .07em;
+    text-transform: uppercase; color: var(--text-tertiary); margin-bottom: var(--s3); }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
+  .act {
+    display: flex; align-items: center; gap: var(--s2);
+    padding: 9px var(--s3); border-radius: var(--r-md);
+    border: 1px solid var(--border-default); background: var(--bg-base);
+    font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--text-secondary);
+    transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast);
+  }
+  .act:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-strong); }
+  .act .icon { width: 15px; height: 15px; color: var(--text-tertiary); }
+  .act.primary { grid-column: 1 / -1; justify-content: center;
+    background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: var(--fw-semi); }
+  .act.primary .icon { color: var(--on-accent); }
+  .act.primary:hover { background: var(--accent-hover); }
+  .act.danger { color: var(--danger); }
+  .act.danger .icon { color: var(--danger); }
+  .act.danger:hover { background: var(--danger-muted); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
+
+  .insp-caption {
+    display: flex; gap: var(--s2); align-items: flex-start;
+    padding: var(--s3) var(--s4); margin-top: var(--s4);
+    border-radius: var(--r-md); background: var(--bg-base);
+    border: 1px dashed var(--border-default);
+    font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.5;
+  }
+  .insp-caption .icon { width: 14px; height: 14px; flex: none; margin-top: 1px; color: var(--text-tertiary); }
+
+  /* ============================================================ FOOTER */
+  .footer {
+    display: flex; align-items: center; gap: var(--s4);
+    padding: 6px var(--s5); border-top: 1px solid var(--border-subtle);
+    background: var(--bg-surface); font-size: var(--fs-xs); color: var(--text-tertiary);
+  }
+  .footer .fdot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+  .footer .live { color: var(--text-secondary); }
+  .footer .spacer { flex: 1; }
+  .footer .muted-strong { color: var(--text-secondary); font-weight: var(--fw-medium); }
+
+  /* ============================================================ OVERLAYS */
+  .overlay {
+    position: fixed; inset: 0; z-index: 100;
+    display: none; align-items: flex-start; justify-content: center;
+    background: color-mix(in srgb, var(--bg-base) 55%, rgba(0,0,0,.55));
+    backdrop-filter: blur(4px);
+  }
+  .overlay.open { display: flex; animation: fade var(--t); }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+
+  /* ---- Settings sheet ---- */
+  .settings {
+    margin-top: 5vh; width: min(1000px, 94vw); max-height: 88vh;
+    display: flex; flex-direction: column;
+    background: var(--bg-surface); border: 1px solid var(--border-default);
+    border-radius: var(--r-xl); box-shadow: var(--shadow-lg); overflow: hidden;
+    animation: rise var(--t);
+  }
+  .settings-top {
+    display: flex; align-items: center; gap: var(--s4);
+    padding: var(--s4) var(--s5); border-bottom: 1px solid var(--border-subtle);
+  }
+  .settings-top h1 { font-size: var(--fs-lg); font-weight: var(--fw-bold); display: flex; align-items: center; gap: var(--s3); }
+  .settings-top h1 .icon { color: var(--accent-text); }
+  .settings-search {
+    flex: 1; max-width: 340px; display: flex; align-items: center; gap: var(--s2);
+    padding: 7px var(--s3); border-radius: var(--r-md);
+    background: var(--bg-base); border: 1px solid var(--border-default); color: var(--text-tertiary);
+  }
+  .settings-search .icon { width: 15px; height: 15px; }
+  .settings-search input { flex: 1; background: none; border: none; outline: none; font-size: var(--fs-sm); color: var(--text-primary); }
+  .settings-search .kbd { margin-left: auto; }
+  .settings-close { display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--r-sm);
+    color: var(--text-secondary); transition: background var(--t-fast), color var(--t-fast); }
+  .settings-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+  .preset-strip {
+    display: flex; align-items: center; gap: var(--s3);
+    padding: var(--s3) var(--s5); border-bottom: 1px solid var(--border-subtle);
+    overflow-x: auto;
+  }
+  .preset-strip .plabel { font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .06em;
+    text-transform: uppercase; color: var(--text-tertiary); flex: none; }
+  .preset {
+    display: inline-flex; align-items: center; gap: var(--s2); flex: none;
+    padding: 6px var(--s3); border-radius: var(--r-full);
+    border: 1px solid var(--border-default); background: var(--bg-base);
+    font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--text-secondary);
+    transition: border-color var(--t-fast), color var(--t-fast);
+  }
+  .preset:hover { border-color: var(--border-strong); color: var(--text-primary); }
+  .preset .sw { width: 13px; height: 13px; border-radius: 4px; border: 1px solid rgba(255,255,255,.15); }
+  .preset.active { border-color: var(--accent); color: var(--text-primary); background: var(--accent-muted); }
+  .preset .tag { font-size: 9px; font-weight: var(--fw-bold); letter-spacing: .05em;
+    color: var(--accent-text); }
+
+  .settings-main { display: grid; grid-template-columns: 196px minmax(0,1fr) 250px; min-height: 0; flex: 1; }
+  .settings-nav { padding: var(--s4) var(--s3); border-right: 1px solid var(--border-subtle); overflow-y: auto; }
+  .settings-nav button {
+    display: flex; align-items: center; gap: var(--s3); width: 100%; text-align: left;
+    padding: 9px var(--s3); border-radius: var(--r-md); margin-bottom: 2px;
+    font-size: var(--fs-md); font-weight: var(--fw-medium); color: var(--text-secondary);
+    transition: background var(--t-fast), color var(--t-fast);
+  }
+  .settings-nav button .icon { width: 16px; height: 16px; color: var(--text-tertiary); }
+  .settings-nav button:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .settings-nav button.active { background: var(--accent-muted); color: var(--text-primary);
+    box-shadow: inset 2px 0 0 var(--accent); }
+  .settings-nav button.active .icon { color: var(--accent-text); }
+
+  .settings-content { padding: var(--s5) var(--s6); overflow-y: auto; }
+  .settings-panel { display: none; }
+  .settings-panel.active { display: block; animation: fade var(--t); }
+  .panel-title { font-size: var(--fs-lg); font-weight: var(--fw-bold); margin-bottom: 3px; }
+  .panel-desc { font-size: var(--fs-sm); color: var(--text-tertiary); margin-bottom: var(--s5); }
+
+  .setting {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s4);
+    padding: var(--s4) 0; border-bottom: 1px solid var(--border-subtle);
+  }
+  .setting:last-child { border-bottom: none; }
+  .setting .s-label { min-width: 0; }
+  .setting .s-label .name { font-size: var(--fs-md); font-weight: var(--fw-medium); color: var(--text-primary); }
+  .setting .s-label .desc { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; }
+  .setting .s-ctrl { flex: none; }
+
+  .seg { display: inline-flex; padding: 3px; border-radius: var(--r-md);
+    background: var(--bg-base); border: 1px solid var(--border-default); }
+  .seg button { padding: 5px var(--s3); border-radius: var(--r-sm); font-size: var(--fs-sm);
+    font-weight: var(--fw-medium); color: var(--text-secondary); }
+  .seg button.on { background: var(--accent); color: var(--on-accent); font-weight: var(--fw-semi); }
+
+  .slider { display: flex; align-items: center; gap: var(--s3); width: 220px; }
+  .track { flex: 1; height: 5px; border-radius: var(--r-full); background: var(--bg-active); position: relative; }
+  .track .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: var(--r-full); background: var(--accent); }
+  .track .knob { position: absolute; top: 50%; width: 15px; height: 15px; border-radius: 50%;
+    background: var(--bg-surface); border: 2px solid var(--accent); transform: translate(-50%,-50%); box-shadow: var(--shadow-sm); }
+  .sval { font-family: ui-monospace, Consolas, monospace; font-size: var(--fs-sm); color: var(--text-secondary);
+    min-width: 44px; text-align: right; }
+
+  .toggle { width: 40px; height: 23px; border-radius: var(--r-full); background: var(--bg-active);
+    border: 1px solid var(--border-default); position: relative; transition: background var(--t-fast); }
+  .toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 17px; height: 17px;
+    border-radius: 50%; background: var(--text-tertiary); transition: transform var(--t-fast), background var(--t-fast); }
+  .toggle.on { background: var(--accent); border-color: transparent; }
+  .toggle.on::after { transform: translateX(17px); background: #fff; }
+
+  .selbox { padding: 7px var(--s3); border-radius: var(--r-md); background: var(--bg-base);
+    border: 1px solid var(--border-default); font-size: var(--fs-sm); color: var(--text-primary);
+    display: inline-flex; align-items: center; gap: var(--s3); }
+  .selbox .icon { color: var(--text-tertiary); width: 15px; height: 15px; }
+
+  /* levels table */
+  .lvl-table { border: 1px solid var(--border-subtle); border-radius: var(--r-md); overflow: hidden; }
+  .lvl-line { display: grid; grid-template-columns: 70px 1fr auto; align-items: center; gap: var(--s3);
+    padding: 9px var(--s4); border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-sm); }
+  .lvl-line:last-child { border-bottom: none; }
+  .lvl-line .code { font-family: ui-monospace, Consolas, monospace; font-weight: var(--fw-semi); color: var(--accent-text); }
+  .lvl-line .map { color: var(--text-primary); }
+  .lvl-line .badge-prev { font-size: 10px; font-family: ui-monospace, Consolas, monospace;
+    padding: 2px 7px; border-radius: var(--r-xs); background: var(--accent-muted); color: var(--accent-text); }
+  .cat-line { display: flex; align-items: center; gap: var(--s3); padding: 9px 0; }
+  .cat-line .sw { width: 14px; height: 14px; border-radius: 4px; }
+  .cat-line .cn { font-size: var(--fs-md); font-weight: var(--fw-medium); flex: 1; }
+  .cat-line .hex { font-family: ui-monospace, Consolas, monospace; font-size: var(--fs-xs); color: var(--text-tertiary); }
+
+  /* live preview pane */
+  .settings-preview {
+    border-left: 1px solid var(--border-subtle); background: var(--bg-canvas);
+    padding: var(--s5) var(--s4); overflow-y: auto;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  .preview-head { font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .07em;
+    text-transform: uppercase; color: var(--text-tertiary); margin-bottom: var(--s4);
+    display: flex; align-items: center; justify-content: space-between; }
+  .preview-head .live-dot { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-text);
+    font-size: 10px; letter-spacing: .02em; }
+  .preview-head .live-dot .d { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .mini-cards { display: flex; flex-direction: column; align-items: center; gap: var(--s2); }
+  .mini-card {
+    width: 168px; padding: var(--s3); border-radius: var(--r-md);
+    background: var(--card-fill); border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-sm); position: relative;
+  }
+  .mini-card.sel { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-muted); }
+  .mini-card .mn { font-size: var(--fs-sm); font-weight: var(--fw-semi); }
+  .mini-card .mt { font-size: var(--fs-xs); color: var(--text-secondary); }
+  .mini-card .mb { position: absolute; top: 10px; right: 10px; font-size: 8.5px; font-family: ui-monospace, Consolas, monospace;
+    color: var(--accent-text); background: var(--accent-muted); padding: 1px 5px; border-radius: 4px; }
+  .mini-conn { width: 1.4px; height: 16px; background: var(--border-strong); }
+
+  .settings-foot {
+    display: flex; align-items: center; gap: var(--s4);
+    padding: var(--s4) var(--s5); border-top: 1px solid var(--border-subtle);
+  }
+  .settings-foot .foot-note { font-size: var(--fs-xs); color: var(--text-tertiary); flex: 1; }
+  .btn { padding: 9px var(--s5); border-radius: var(--r-md); font-size: var(--fs-md);
+    font-weight: var(--fw-semi); transition: background var(--t-fast), border-color var(--t-fast); }
+  .btn.ghost { border: 1px solid var(--border-default); color: var(--text-secondary); }
+  .btn.ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .btn.primary { background: var(--accent); color: var(--on-accent); }
+  .btn.primary:hover { background: var(--accent-hover); }
+
+  /* ---- Command palette ---- */
+  .palette {
+    margin-top: 12vh; width: min(620px, 92vw);
+    background: var(--bg-surface); border: 1px solid var(--border-default);
+    border-radius: var(--r-lg); box-shadow: var(--shadow-lg); overflow: hidden;
+    animation: rise var(--t);
+  }
+  .palette-input {
+    display: flex; align-items: center; gap: var(--s3);
+    padding: var(--s4) var(--s5); border-bottom: 1px solid var(--border-subtle);
+  }
+  .palette-input .icon { width: 19px; height: 19px; color: var(--text-tertiary); }
+  .palette-input input { flex: 1; background: none; border: none; outline: none;
+    font-size: var(--fs-lg); color: var(--text-primary); }
+  .palette-input input::placeholder { color: var(--text-tertiary); }
+  .palette-input .esc { font-size: var(--fs-xs); color: var(--text-tertiary); }
+  .palette-body { max-height: 400px; overflow-y: auto; padding: var(--s2); }
+  .pal-group { font-size: var(--fs-xs); font-weight: var(--fw-bold); letter-spacing: .07em;
+    text-transform: uppercase; color: var(--text-tertiary); padding: var(--s3) var(--s3) var(--s2); }
+  .pal-item {
+    display: flex; align-items: center; gap: var(--s3);
+    padding: 9px var(--s3); border-radius: var(--r-md); width: 100%; text-align: left;
+    color: var(--text-secondary); transition: background var(--t-fast), color var(--t-fast);
+  }
+  .pal-item:hover, .pal-item.active { background: var(--bg-hover); color: var(--text-primary); }
+  .pal-item .pic { display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--r-sm);
+    background: var(--bg-elevated); border: 1px solid var(--border-subtle); color: var(--accent-text); flex: none; }
+  .pal-item .pic .icon { width: 15px; height: 15px; }
+  .pal-item .plabel { flex: 1; font-size: var(--fs-md); font-weight: var(--fw-medium); color: inherit; }
+  .pal-item .psub { font-size: var(--fs-xs); color: var(--text-tertiary); }
+  .pal-item .keys { display: flex; gap: 3px; }
+  .palette.active .pal-item.active { background: var(--accent-muted); box-shadow: inset 2px 0 0 var(--accent); }
+
+  /* ============================================================ RESPONSIVE */
+  @media (max-width: 1300px) {
+    #app { --sidebar-w: 236px; --inspector-w: 312px; }
+  }
+  @media (max-width: 1080px) {
+    #app { --sidebar-w: 216px; --inspector-w: 296px; }
+    .canvas-search { min-width: 260px; }
+    .footer .hide-sm { display: none; }
+    .settings-main { grid-template-columns: 176px minmax(0,1fr); }
+    .settings-preview { display: none; }
+  }
+  @media (max-width: 900px) {
+    .header-center { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== ICON SPRITE ===================== -->
+<svg style="display:none" aria-hidden="true"><defs>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.5 2 8.5A7.5 7.5 0 0 1 11 20z"/><path d="M2 21c0-3 1.85-6.5 5-8"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h13M20 18h0M17 18h.01"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="18" r="2"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-bar" viewBox="0 0 24 24"><path d="M3 3v18h18M7 15v3M12 9v9M17 5v13"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5M9 10.8V6a1 1 0 0 1 1-1 2 2 0 0 0 0-4H14a2 2 0 0 0 0 4 1 1 0 0 1 1 1v4.8a2 2 0 0 0 1.1 1.8l1 .5A2 2 0 0 1 18 14.6V16H6v-1.4a2 2 0 0 1 1-1.7l1-.5a2 2 0 0 0 1-1.6z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+  <symbol id="i-network" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="6" rx="1"/><rect x="3" y="15" width="6" height="6" rx="1"/><rect x="15" y="15" width="6" height="6" rx="1"/><path d="M12 9v3M12 12H6v3M12 12h6v3"/></symbol>
+  <symbol id="i-span" viewBox="0 0 24 24"><path d="M6 8l-4 4 4 4M18 8l4 4-4 4M2 12h20"/></symbol>
+  <symbol id="i-chev-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chev-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-compare" viewBox="0 0 24 24"><circle cx="5" cy="6" r="3"/><circle cx="19" cy="18" r="3"/><path d="M12 6h4a2 2 0 0 1 2 2v7M12 18H8a2 2 0 0 1-2-2V9"/></symbol>
+  <symbol id="i-restore" viewBox="0 0 24 24"><path d="M3 3v6h6"/><path d="M3.5 9a9 9 0 1 0 2.2-3.4L3 8"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+  <symbol id="i-command" viewBox="0 0 24 24"><path d="M15 6a3 3 0 1 1 3 3h-3zM15 9v6M9 6a3 3 0 1 0-3 3h3zM9 9v6M9 15a3 3 0 1 0 3 3v-3zM15 15h-3M15 15a3 3 0 1 1 3 3v-3zM9 9h6"/></symbol>
+  <symbol id="i-enter" viewBox="0 0 24 24"><path d="M9 10 4 15l5 5"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></symbol>
+  <symbol id="i-move" viewBox="0 0 24 24"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></symbol>
+  <symbol id="i-focus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1.1.9-2 2-2H17a5 5 0 0 0 5-5c0-5-4.5-8.5-10-8.5z"/><circle cx="7.5" cy="10.5" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="16.5" cy="10.5" r="1.2"/></symbol>
+  <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h5"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5M2 17l10 5 10-5"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5M3 12a9 3 0 0 0 18 0"/></symbol>
+  <symbol id="i-type" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></symbol>
+  <symbol id="i-tree" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-2h12v2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M3 8V5a2 2 0 0 1 2-2h3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M21 16v3a2 2 0 0 1-2 2h-3"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 1 2 6"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M20.5 13a9 9 0 1 0-2 6"/></symbol>
+</defs></svg>
+
+<!-- ===================== APP ===================== -->
+<div id="app" data-theme="dark">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="brand">
+      <span class="brand-leaf"><svg class="icon"><use href="#i-leaf"/></svg></span>
+      <span class="wordmark"><b>Ar</b><span>bol</span></span>
+    </div>
+
+    <div class="header-center">
+      <div class="chart-name">
+        <span class="title">Acme Corp <svg class="icon icon-sm"><use href="#i-pencil"/></svg></span>
+        <span class="pill unsaved"><span class="dot"></span>Saved · 3 edits since last version</span>
+      </div>
+      <button class="cmdk" id="palette-btn" aria-label="Open command palette">
+        <svg class="icon"><use href="#i-command"/></svg>
+        Search &amp; commands
+        <span class="kbd">⌘K</span>
+      </button>
+    </div>
+
+    <div class="header-actions">
+      <button class="hbtn icon-btn-label" data-label="Undo" aria-label="Undo"><svg class="icon"><use href="#i-undo"/></svg></button>
+      <button class="hbtn icon-btn-label" data-label="Redo" aria-label="Redo"><svg class="icon"><use href="#i-redo"/></svg></button>
+      <span class="hdiv"></span>
+      <button class="hbtn icon-btn-label" data-label="Import" aria-label="Import"><svg class="icon"><use href="#i-download"/></svg></button>
+      <button class="hbtn icon-btn-label" data-label="Export" aria-label="Export"><svg class="icon"><use href="#i-upload"/></svg></button>
+      <button class="hbtn icon-btn-label" data-label="Analytics" aria-label="Analytics"><svg class="icon"><use href="#i-bar"/></svg></button>
+      <span class="hdiv"></span>
+      <button class="hbtn icon-btn-label" data-label="Settings" id="settings-btn" aria-label="Settings"><svg class="icon"><use href="#i-sliders"/></svg></button>
+      <button class="hbtn icon-btn-label" data-label="Help" aria-label="Help"><svg class="icon"><use href="#i-help"/></svg></button>
+      <button class="hbtn icon-btn-label" data-label="Theme" id="theme-toggle" aria-label="Toggle theme">
+        <svg class="icon theme-icon-sun"><use href="#i-sun"/></svg>
+        <svg class="icon theme-icon-moon"><use href="#i-moon"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="side-scroll">
+        <div class="side-section">
+          <div class="side-head">
+            <span class="eyebrow">Charts</span>
+            <button class="icon-mini" aria-label="New chart"><svg class="icon icon-sm"><use href="#i-plus"/></svg></button>
+          </div>
+          <div class="search-field">
+            <svg class="icon"><use href="#i-search"/></svg>
+            <input placeholder="Search charts…" aria-label="Search charts">
+          </div>
+          <button class="chart-row active">
+            <span class="chart-ic"><svg class="icon"><use href="#i-tree"/></svg></span>
+            <span class="chart-meta">
+              <span class="chart-title">Acme Corp</span>
+              <span class="chart-sub">13 people · 2 versions</span>
+            </span>
+          </button>
+          <button class="chart-row">
+            <span class="chart-ic"><svg class="icon"><use href="#i-tree"/></svg></span>
+            <span class="chart-meta">
+              <span class="chart-title">Product Reorg (draft)</span>
+              <span class="chart-sub">9 people · 0 versions</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="snap-section">
+          <div class="side-head">
+            <span class="eyebrow">Version history</span>
+            <span class="eyebrow" style="text-transform:none;letter-spacing:0;font-weight:500;color:var(--text-tertiary)">Acme Corp</span>
+          </div>
+
+          <div class="current-row">
+            <div class="cr-head">
+              <span class="pulse"></span>
+              <span class="txt">
+                <b>Current — all changes saved</b>
+                <small>3 edits since last version</small>
+              </span>
+            </div>
+            <button class="save-btn"><svg class="icon"><use href="#i-save"/></svg>Save a version</button>
+          </div>
+
+          <div class="snap-row">
+            <span class="snap-dot"><svg class="icon icon-sm"><use href="#i-clock"/></svg></span>
+            <span class="snap-info">
+              <span class="snap-name">Q3 Baseline
+                <span class="delta"><span class="up">▲3</span><span class="dn">▼1</span></span>
+              </span>
+              <span class="snap-time">3 days ago · 11 people</span>
+            </span>
+            <span class="snap-actions">
+              <button class="snap-act" aria-label="Preview version"><svg class="icon icon-sm"><use href="#i-eye"/></svg></button>
+              <button class="snap-act" aria-label="Compare version"><svg class="icon icon-sm"><use href="#i-compare"/></svg></button>
+              <button class="snap-act" aria-label="Restore version"><svg class="icon icon-sm"><use href="#i-restore"/></svg></button>
+            </span>
+          </div>
+
+          <div class="snap-row">
+            <span class="snap-dot"><svg class="icon icon-sm"><use href="#i-clock"/></svg></span>
+            <span class="snap-info">
+              <span class="snap-name">Initial import
+                <span class="delta"><span class="up">▲8</span></span>
+              </span>
+              <span class="snap-time">Jul 2 · 8 people</span>
+            </span>
+            <span class="snap-actions">
+              <button class="snap-act" aria-label="Preview version"><svg class="icon icon-sm"><use href="#i-eye"/></svg></button>
+              <button class="snap-act" aria-label="Compare version"><svg class="icon icon-sm"><use href="#i-compare"/></svg></button>
+              <button class="snap-act" aria-label="Restore version"><svg class="icon icon-sm"><use href="#i-restore"/></svg></button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CANVAS -->
+    <section class="canvas">
+      <div class="canvas-search">
+        <svg class="icon"><use href="#i-search"/></svg>
+        <span>Search by name or title…</span>
+        <span class="kbd" style="margin-left:auto">Ctrl F</span>
+      </div>
+
+      <div class="chart-wrap">
+        <svg class="org-svg" viewBox="0 0 1800 630" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Acme Corp org chart, 13 people. Marcus Johnson selected.">
+          <defs>
+            <radialGradient id="subtreeGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%"  stop-color="var(--accent)" stop-opacity="0.22"/>
+              <stop offset="45%" stop-color="var(--accent)" stop-opacity="0.09"/>
+              <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="nodeGlow" x="-40%" y="-60%" width="180%" height="220%">
+              <feDropShadow dx="0" dy="0" stdDeviation="9" flood-color="var(--accent)" flood-opacity="0.55"/>
+            </filter>
+          </defs>
+
+          <!-- selection lens glow under Marcus subtree -->
+          <ellipse cx="534" cy="405" rx="565" ry="270" fill="url(#subtreeGlow)"/>
+
+          <!-- subtle IC wells (not gray slabs) -->
+          <rect class="well" x="20"   y="516" width="410" height="98" rx="14"/>
+          <rect class="well" x="440"  y="516" width="608" height="98" rx="14"/>
+          <rect class="well" x="1160" y="346" width="608" height="98" rx="14"/>
+
+          <!-- connectors -->
+          <g>
+            <!-- Sarah -> VPs -->
+            <path class="conn" d="M974 86 V143"/>
+            <path class="conn" d="M484 143 H1464"/>
+            <path class="conn sel" d="M484 143 V200"/>
+            <path class="conn" d="M1464 143 V200"/>
+            <!-- Marcus -> David / Lisa (selected subtree) -->
+            <path class="conn sel" d="M484 256 V313"/>
+            <path class="conn sel" d="M224 313 H744"/>
+            <path class="conn sel" d="M224 313 V370"/>
+            <path class="conn sel" d="M744 313 V370"/>
+            <!-- Priya -> ICs -->
+            <path class="conn" d="M1464 256 V313"/>
+            <path class="conn" d="M1264 313 H1664"/>
+            <path class="conn" d="M1264 313 V370"/>
+            <path class="conn" d="M1464 313 V370"/>
+            <path class="conn" d="M1664 313 V370"/>
+            <!-- David -> Tom / Ana -->
+            <path class="conn sel" d="M224 426 V483"/>
+            <path class="conn sel" d="M124 483 H324"/>
+            <path class="conn sel" d="M124 483 V540"/>
+            <path class="conn sel" d="M324 483 V540"/>
+            <!-- Lisa -> James / Emma / Raj -->
+            <path class="conn sel" d="M744 426 V483"/>
+            <path class="conn sel" d="M544 483 H944"/>
+            <path class="conn sel" d="M544 483 V540"/>
+            <path class="conn sel" d="M744 483 V540"/>
+            <path class="conn sel" d="M944 483 V540"/>
+          </g>
+
+          <!-- ===== NODES ===== -->
+          <!-- Sarah Chen (CEO) -->
+          <g class="node" transform="translate(886,30)">
+            <rect class="card-rect mgr" width="176" height="56" rx="12"/>
+            <text class="svg-name" x="16" y="26">Sarah Chen</text>
+            <text class="svg-title" x="16" y="42">Chief Executive Officer</text>
+            <rect class="lvl-badge" x="128" y="9" width="34" height="15" rx="4"/>
+            <text class="svg-lvl" x="145" y="19.5" text-anchor="middle">E12</text>
+          </g>
+
+          <!-- Marcus Johnson (VP Eng) — SELECTED -->
+          <g class="node" id="node-marcus" transform="translate(396,200)" tabindex="0" role="button" aria-label="Marcus Johnson, VP Engineering, selected">
+            <rect class="card-rect mgr" width="176" height="56" rx="12" filter="url(#nodeGlow)" stroke="var(--accent)" stroke-width="2"/>
+            <text class="svg-name" x="16" y="26">Marcus Johnson</text>
+            <text class="svg-title" x="16" y="42">VP Engineering</text>
+            <rect class="lvl-badge" x="128" y="9" width="34" height="15" rx="4"/>
+            <text class="svg-lvl" x="145" y="19.5" text-anchor="middle">E10</text>
+          </g>
+
+          <!-- Priya Patel (VP Product) -->
+          <g class="node" transform="translate(1376,200)">
+            <rect class="card-rect mgr" width="176" height="56" rx="12"/>
+            <text class="svg-name" x="16" y="26">Priya Patel</text>
+            <text class="svg-title" x="16" y="42">VP Product</text>
+            <rect class="lvl-badge" x="128" y="9" width="34" height="15" rx="4"/>
+            <text class="svg-lvl" x="145" y="19.5" text-anchor="middle">E10</text>
+          </g>
+
+          <!-- David Kim -->
+          <g class="node" transform="translate(136,370)">
+            <rect class="card-rect mgr" width="176" height="56" rx="12"/>
+            <text class="svg-name" x="16" y="26">David Kim</text>
+            <text class="svg-title" x="16" y="42">Senior Engineering Manager</text>
+            <rect class="lvl-badge" x="140" y="9" width="26" height="15" rx="4"/>
+            <text class="svg-lvl" x="153" y="19.5" text-anchor="middle">E8</text>
+          </g>
+
+          <!-- Lisa Wang -->
+          <g class="node" transform="translate(656,370)">
+            <rect class="card-rect mgr" width="176" height="56" rx="12"/>
+            <text class="svg-name" x="16" y="26">Lisa Wang</text>
+            <text class="svg-title" x="16" y="42">Engineering Manager</text>
+            <rect class="lvl-badge" x="140" y="9" width="26" height="15" rx="4"/>
+            <text class="svg-lvl" x="153" y="19.5" text-anchor="middle">E8</text>
+          </g>
+
+          <!-- Nina Petrov -->
+          <g class="node" transform="translate(1176,370)">
+            <rect class="card-rect mgr" width="176" height="56" rx="12"/>
+            <text class="svg-name" x="16" y="26">Nina Petrov</text>
+            <text class="svg-title" x="16" y="42">Senior Product Manager</text>
+            <rect class="lvl-badge" x="140" y="9" width="26" height="15" rx="4"/>
+            <text class="svg-lvl" x="153" y="19.5" text-anchor="middle">E8</text>
+          </g>
+
+          <!-- Carlos Ruiz -->
+          <g class="node" transform="translate(1376,370)">
+            <rect class="card-rect" width="176" height="56" rx="12"/>
+            <text class="svg-name" x="16" y="26">Carlos Ruiz</text>
+            <text class="svg-title" x="16" y="42">Product Manager</text>
+            <rect class="lvl-badge" x="140" y="9" width="26" height="15" rx="4"/>
+            <text class="svg-lvl" x="153" y="19.5" text-anchor="middle">L6</text>
+          </g>
+
+          <!-- Yuki Tanaka — Offer Pending (blue) -->
+          <g class="node" transform="translate(1576,370)">
+            <rect class="card-rect" width="176" height="56" rx="12" stroke="var(--cat-blue)"/>
+            <rect x="6" y="12" width="4" height="32" rx="2" fill="var(--cat-blue)"/>
+            <text class="svg-name" x="18" y="26">Yuki Tanaka</text>
+            <text class="svg-title" x="18" y="42">Product Designer</text>
+            <circle cx="120" cy="16.5" r="4" fill="var(--cat-blue)"/>
+            <rect class="lvl-badge" x="140" y="9" width="26" height="15" rx="4"/>
+            <text class="svg-lvl" x="153" y="19.5" text-anchor="middle">L6</text>
+          </g>
+
+          <!-- Tom Rodriguez -->
+          <g class="node" transform="translate(36,540)">
+            <rect class="card-rect" width="176" height="56" rx="12"/>
+            <text class="svg-name" x="16" y="26">Tom Rodriguez</text>
+            <text class="svg-title" x="16" y="42">Staff Engineer</text>
+            <rect class="lvl-badge" x="140" y="9" width="26" height="15" rx="4"/>
+            <text class="svg-lvl" x="153" y="19.5" text-anchor="middle">L7</text>
+          </g>
+
+          <!-- Ana Costa -->
+          <g class="node" transform="translate(236,540)">
+            <rect class="card-rect" width="176" height="56" rx="12"/>
+            <text class="svg-name" x="16" y="26">Ana Costa</text>
+            <text class="svg-title" x="16" y="42">Senior Engineer</text>
+            <rect class="lvl-badge" x="140" y="9" width="26" height="15" rx="4"/>
+            <text class="svg-lvl" x="153" y="19.5" text-anchor="middle">L6</text>
+          </g>
+
+          <!-- James Miller -->
+          <g class="node" transform="translate(456,540)">
+            <rect class="card-rect" width="176" height="56" rx="12"/>
+            <text class="svg-name" x="16" y="26">James Miller</text>
+            <text class="svg-title" x="16" y="42">Senior Engineer</text>
+            <rect class="lvl-badge" x="140" y="9" width="26" height="15" rx="4"/>
+            <text class="svg-lvl" x="153" y="19.5" text-anchor="middle">L6</text>
+          </g>
+
+          <!-- Emma Wilson -->
+          <g class="node" transform="translate(656,540)">
+            <rect class="card-rect" width="176" height="56" rx="12"/>
+            <text class="svg-name" x="16" y="26">Emma Wilson</text>
+            <text class="svg-title" x="16" y="42">Engineer</text>
+            <rect class="lvl-badge" x="140" y="9" width="26" height="15" rx="4"/>
+            <text class="svg-lvl" x="153" y="19.5" text-anchor="middle">L5</text>
+          </g>
+
+          <!-- Raj Sharma — Open Position (amber) -->
+          <g class="node" transform="translate(856,540)">
+            <rect class="card-rect" width="176" height="56" rx="12" stroke="var(--cat-amber)"/>
+            <rect x="6" y="12" width="4" height="32" rx="2" fill="var(--cat-amber)"/>
+            <text class="svg-name" x="18" y="26">Raj Sharma</text>
+            <text class="svg-title" x="18" y="42">Engineer</text>
+            <circle cx="120" cy="16.5" r="4" fill="var(--cat-amber)"/>
+            <rect class="lvl-badge" x="140" y="9" width="26" height="15" rx="4"/>
+            <text class="svg-lvl" x="153" y="19.5" text-anchor="middle">L5</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="canvas-legend">
+        <div class="legend-head">Categories</div>
+        <div class="legend-item"><span class="sw" style="background:var(--cat-amber)"></span>Open Position</div>
+        <div class="legend-item"><span class="sw" style="background:var(--cat-blue)"></span>Offer Pending</div>
+        <div class="legend-item"><span class="sw" style="background:var(--cat-violet)"></span>Future Start</div>
+      </div>
+
+      <div class="canvas-zoom">
+        <button class="zbtn"><svg class="icon icon-sm"><use href="#i-fit"/></svg>Fit</button>
+        <button class="zbtn"><svg class="icon icon-sm"><use href="#i-restore"/></svg>Reset</button>
+        <span class="zbtn val">100%</span>
+      </div>
+    </section>
+
+    <!-- INSPECTOR -->
+    <aside class="inspector">
+      <div class="insp-inner">
+        <div class="insp-head">
+          <span class="eyebrow"><svg class="icon"><use href="#i-sliders"/></svg> Inspector</span>
+          <button class="icon-mini" id="inspector-close" aria-label="Close inspector"><svg class="icon icon-sm"><use href="#i-x"/></svg></button>
+        </div>
+
+        <div class="insp-body">
+          <div class="identity">
+            <span class="avatar">MJ</span>
+            <div>
+              <h2>Marcus Johnson</h2>
+              <div class="sub">VP Engineering · reports to Sarah Chen</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Name</label>
+            <div class="input focus"><input value="Marcus Johnson" aria-label="Name"></div>
+          </div>
+
+          <div class="field">
+            <label>Title</label>
+            <div class="input">
+              <input value="VP Engineering" aria-label="Title">
+              <span class="ghost">Vice President</span>
+              <button class="pin active" aria-label="Pin mapped title" title="Title pinned to level mapping"><svg class="icon icon-sm"><use href="#i-pin"/></svg></button>
+            </div>
+            <div class="hint">Ghost text is the mapped title for level E10. Unpin to override.</div>
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label>Level</label>
+              <div class="select"><span>E10</span><svg class="icon icon-sm"><use href="#i-chev-down"/></svg></div>
+            </div>
+            <div class="field">
+              <label>Reports to</label>
+              <div class="select"><span>Sarah Chen</span><svg class="icon icon-sm"><use href="#i-chev-down"/></svg></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Category</label>
+            <div class="chips">
+              <button class="chip none on">None</button>
+              <button class="chip"><span class="sw" style="background:var(--cat-amber)"></span>Open Position</button>
+              <button class="chip"><span class="sw" style="background:var(--cat-blue)"></span>Offer Pending</button>
+              <button class="chip"><span class="sw" style="background:var(--cat-violet)"></span>Future Start</button>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat-grid">
+              <div class="stat">
+                <div class="k"><svg class="icon"><use href="#i-users"/></svg>Direct reports</div>
+                <div class="v">2</div>
+              </div>
+              <div class="stat">
+                <div class="k"><svg class="icon"><use href="#i-network"/></svg>Total org</div>
+                <div class="v">7</div>
+              </div>
+              <div class="stat">
+                <div class="k"><svg class="icon"><use href="#i-span"/></svg>Avg span</div>
+                <div class="v">2.3</div>
+              </div>
+              <div class="stat">
+                <div class="k"><svg class="icon"><use href="#i-layers"/></svg>Depth below</div>
+                <div class="v">2 <small>levels</small></div>
+              </div>
+            </div>
+            <div class="reports-to">
+              <svg class="icon"><use href="#i-pin"/></svg> Reports to <b>Sarah Chen</b> · E12
+            </div>
+          </div>
+
+          <div class="actions-label">Actions</div>
+          <div class="actions">
+            <button class="act primary"><svg class="icon"><use href="#i-plus"/></svg>Add report</button>
+            <button class="act"><svg class="icon"><use href="#i-move"/></svg>Move</button>
+            <button class="act"><svg class="icon"><use href="#i-focus"/></svg>Focus</button>
+            <button class="act"><svg class="icon"><use href="#i-link"/></svg>Dotted line</button>
+            <button class="act danger"><svg class="icon"><use href="#i-trash"/></svg>Remove</button>
+          </div>
+
+          <div class="insp-caption">
+            <svg class="icon"><use href="#i-info"/></svg>
+            <span>Right-clicking a node opens the same actions as shortcuts into this panel — one edit surface, no separate dialogs.</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <span class="fdot"></span>
+    <span class="live">Static mock — theme, command palette, inspector &amp; settings sheet are live.</span>
+    <span class="hide-sm">Chart editing, drag &amp; export are illustrative.</span>
+    <span class="spacer"></span>
+    <span class="hide-sm muted-strong">Arbol v4.0</span>
+    <span class="hide-sm">·</span>
+    <span class="hide-sm">Acme Corp · 13 people · 4 managers · 9 ICs</span>
+  </footer>
+
+  <!-- ===================== SETTINGS SHEET ===================== -->
+  <div class="overlay" id="settings-overlay" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="settings">
+      <div class="settings-top">
+        <h1><svg class="icon"><use href="#i-sliders"/></svg> Settings</h1>
+        <div class="settings-search">
+          <svg class="icon"><use href="#i-search"/></svg>
+          <input placeholder="Search all settings…" aria-label="Search settings">
+          <span class="kbd">/</span>
+        </div>
+        <button class="settings-close" id="settings-close" aria-label="Close settings"><svg class="icon"><use href="#i-x"/></svg></button>
+      </div>
+
+      <div class="preset-strip">
+        <span class="plabel">Preset</span>
+        <button class="preset active"><span class="sw" style="background:#14b8a6"></span>Emerald <span class="tag">ACTIVE</span></button>
+        <button class="preset"><span class="sw" style="background:#3b82f6"></span>Corporate Blue</button>
+        <button class="preset"><span class="sw" style="background:#f59e0b"></span>Sunset Warm</button>
+        <button class="preset"><span class="sw" style="background:#1e293b"></span>Midnight</button>
+        <button class="preset"><span class="sw" style="background:#64748b"></span>Monochrome</button>
+        <button class="preset"><span class="sw" style="background:#0ea5e9"></span>Ocean Teal</button>
+        <button class="preset"><span class="sw" style="background:#111827"></span>High Contrast</button>
+      </div>
+
+      <div class="settings-main">
+        <!-- group nav -->
+        <nav class="settings-nav" role="tablist">
+          <button data-group="appearance"><svg class="icon"><use href="#i-palette"/></svg>Appearance</button>
+          <button data-group="layout"><svg class="icon"><use href="#i-layout"/></svg>Layout</button>
+          <button class="active" data-group="cards"><svg class="icon"><use href="#i-card"/></svg>Cards &amp; Badges</button>
+          <button data-group="levels"><svg class="icon"><use href="#i-layers"/></svg>Levels &amp; Categories</button>
+          <button data-group="presets"><svg class="icon"><use href="#i-palette"/></svg>Presets</button>
+          <button data-group="data"><svg class="icon"><use href="#i-database"/></svg>Data &amp; Backup</button>
+        </nav>
+
+        <!-- content -->
+        <div class="settings-content">
+          <!-- APPEARANCE -->
+          <div class="settings-panel" data-panel="appearance">
+            <div class="panel-title">Appearance</div>
+            <div class="panel-desc">Theme, accent color and canvas texture for the editor.</div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Theme</div><div class="desc">Editor color scheme. Exports always render light.</div></div>
+              <div class="s-ctrl"><div class="seg"><button>Light</button><button class="on">Dark</button><button>System</button></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Font family</div><div class="desc">Applied to node cards and chrome.</div></div>
+              <div class="s-ctrl"><div class="selbox"><svg class="icon"><use href="#i-type"/></svg>System UI<svg class="icon"><use href="#i-chev-down"/></svg></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Canvas grid</div><div class="desc">Blueprint coordinate grid behind the chart.</div></div>
+              <div class="s-ctrl"><div class="toggle on" role="switch" aria-checked="true"></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Selection glow</div><div class="desc">Soft accent lens under the selected subtree.</div></div>
+              <div class="s-ctrl"><div class="toggle on" role="switch" aria-checked="true"></div></div>
+            </div>
+          </div>
+
+          <!-- LAYOUT -->
+          <div class="settings-panel" data-panel="layout">
+            <div class="panel-title">Layout</div>
+            <div class="panel-desc">How nodes are arranged and connected.</div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Direction</div><div class="desc">Growth axis of the tree.</div></div>
+              <div class="s-ctrl"><div class="seg"><button class="on">Top-down</button><button>Left-right</button></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Level spacing</div><div class="desc">Vertical gap between tiers.</div></div>
+              <div class="s-ctrl"><div class="slider"><div class="track"><div class="fill" style="width:56%"></div><div class="knob" style="left:56%"></div></div><span class="sval">72 px</span></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Sibling spacing</div><div class="desc">Horizontal gap between peers.</div></div>
+              <div class="s-ctrl"><div class="slider"><div class="track"><div class="fill" style="width:40%"></div><div class="knob" style="left:40%"></div></div><span class="sval">24 px</span></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Connector width</div><div class="desc">Stroke weight of reporting lines.</div></div>
+              <div class="s-ctrl"><div class="slider"><div class="track"><div class="fill" style="width:28%"></div><div class="knob" style="left:28%"></div></div><span class="sval">1.4 px</span></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Group IC stacks</div><div class="desc">Wrap leaf reports in a subtle well.</div></div>
+              <div class="s-ctrl"><div class="toggle on" role="switch" aria-checked="true"></div></div>
+            </div>
+          </div>
+
+          <!-- CARDS & BADGES (default) -->
+          <div class="settings-panel active" data-panel="cards">
+            <div class="panel-title">Cards &amp; Badges</div>
+            <div class="panel-desc">Node card sizing and the level badge style.</div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Card width</div><div class="desc">Fixed width of every node card.</div></div>
+              <div class="s-ctrl"><div class="slider"><div class="track"><div class="fill" style="width:62%"></div><div class="knob" style="left:62%"></div></div><span class="sval">176 px</span></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Card padding</div><div class="desc">Inner spacing around card text.</div></div>
+              <div class="s-ctrl"><div class="slider"><div class="track"><div class="fill" style="width:45%"></div><div class="knob" style="left:45%"></div></div><span class="sval">16 px</span></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Show job titles</div><div class="desc">Second line under each name.</div></div>
+              <div class="s-ctrl"><div class="toggle on" role="switch" aria-checked="true"></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Level badge style</div><div class="desc">How the level chip renders on the card.</div></div>
+              <div class="s-ctrl"><div class="seg"><button class="on">Pill</button><button>Tag</button><button>Hidden</button></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Badge position</div><div class="desc">Corner the level badge sits in.</div></div>
+              <div class="s-ctrl"><div class="selbox">Top-right<svg class="icon"><use href="#i-chev-down"/></svg></div></div>
+            </div>
+          </div>
+
+          <!-- LEVELS & CATEGORIES -->
+          <div class="settings-panel" data-panel="levels">
+            <div class="panel-title">Levels &amp; Categories</div>
+            <div class="panel-desc">Map level codes to titles and manage category colors.</div>
+            <div class="setting" style="display:block;border-bottom:none;padding-bottom:var(--s3)">
+              <div class="s-label"><div class="name" style="margin-bottom:var(--s3)">Level mapping</div></div>
+              <div class="lvl-table">
+                <div class="lvl-line"><span class="code">E12</span><span class="map">Chief / C-Suite</span><span class="badge-prev">E12</span></div>
+                <div class="lvl-line"><span class="code">E10</span><span class="map">Vice President</span><span class="badge-prev">E10</span></div>
+                <div class="lvl-line"><span class="code">E8</span><span class="map">Director / Manager</span><span class="badge-prev">E8</span></div>
+                <div class="lvl-line"><span class="code">L7</span><span class="map">Staff</span><span class="badge-prev">L7</span></div>
+                <div class="lvl-line"><span class="code">L6</span><span class="map">Senior</span><span class="badge-prev">L6</span></div>
+                <div class="lvl-line"><span class="code">L5</span><span class="map">Mid</span><span class="badge-prev">L5</span></div>
+              </div>
+            </div>
+            <div class="setting" style="display:block">
+              <div class="s-label"><div class="name" style="margin-bottom:var(--s2)">Categories</div></div>
+              <div class="cat-line"><span class="sw" style="background:var(--cat-amber)"></span><span class="cn">Open Position</span><span class="hex">#F5B31B</span></div>
+              <div class="cat-line"><span class="sw" style="background:var(--cat-blue)"></span><span class="cn">Offer Pending</span><span class="hex">#4CB8F5</span></div>
+              <div class="cat-line"><span class="sw" style="background:var(--cat-violet)"></span><span class="cn">Future Start</span><span class="hex">#A78BFA</span></div>
+            </div>
+          </div>
+
+          <!-- PRESETS -->
+          <div class="settings-panel" data-panel="presets">
+            <div class="panel-title">Presets</div>
+            <div class="panel-desc">Full palette library. The active preset drives every accent.</div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Active preset</div><div class="desc">Emerald — teal accent on deep surfaces.</div></div>
+              <div class="s-ctrl"><button class="btn ghost"><svg class="icon icon-sm" style="vertical-align:-2px"><use href="#i-save"/></svg> Save current…</button></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Sync theme with preset</div><div class="desc">Switch dark/light when preset changes.</div></div>
+              <div class="s-ctrl"><div class="toggle on" role="switch" aria-checked="true"></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Apply to exports</div><div class="desc">Use preset colors in PNG / PDF output.</div></div>
+              <div class="s-ctrl"><div class="toggle" role="switch" aria-checked="false"></div></div>
+            </div>
+          </div>
+
+          <!-- DATA & BACKUP -->
+          <div class="settings-panel" data-panel="data">
+            <div class="panel-title">Data &amp; Backup</div>
+            <div class="panel-desc">Everything is stored locally in your browser.</div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Auto-save</div><div class="desc">Write working changes as you edit.</div></div>
+              <div class="s-ctrl"><div class="toggle on" role="switch" aria-checked="true"></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Default export format</div><div class="desc">Used by the Export button.</div></div>
+              <div class="s-ctrl"><div class="selbox">PNG (2×)<svg class="icon"><use href="#i-chev-down"/></svg></div></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name">Download backup</div><div class="desc">Export all charts &amp; version history as JSON.</div></div>
+              <div class="s-ctrl"><button class="btn ghost"><svg class="icon icon-sm" style="vertical-align:-2px"><use href="#i-download"/></svg> Download .json</button></div>
+            </div>
+            <div class="setting">
+              <div class="s-label"><div class="name" style="color:var(--danger)">Clear local data</div><div class="desc">Remove all charts from this browser.</div></div>
+              <div class="s-ctrl"><button class="btn ghost" style="color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,transparent)">Clear…</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- live preview -->
+        <aside class="settings-preview">
+          <div class="preview-head">Live preview <span class="live-dot"><span class="d"></span>updates live</span></div>
+          <div class="mini-cards">
+            <div class="mini-card"><span class="mb">E12</span><div class="mn">Sarah Chen</div><div class="mt">Chief Executive Officer</div></div>
+            <div class="mini-conn"></div>
+            <div class="mini-card sel"><span class="mb">E10</span><div class="mn">Marcus Johnson</div><div class="mt">VP Engineering</div></div>
+            <div class="mini-conn"></div>
+            <div class="mini-card"><span class="mb">E8</span><div class="mn">David Kim</div><div class="mt">Senior Engineering Manager</div></div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="settings-foot">
+        <span class="foot-note">6 groups · 34 settings · changes apply instantly</span>
+        <button class="btn ghost" id="settings-cancel">Cancel</button>
+        <button class="btn primary" id="settings-done">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== COMMAND PALETTE ===================== -->
+  <div class="overlay" id="palette-overlay" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="palette active">
+      <div class="palette-input">
+        <svg class="icon"><use href="#i-search"/></svg>
+        <input placeholder="Type a command or search people…" aria-label="Command palette" id="palette-search">
+        <button class="esc kbd" id="palette-close" aria-label="Close command palette">Esc</button>
+      </div>
+      <div class="palette-body">
+        <div class="pal-group">Actions</div>
+        <button class="pal-item active">
+          <span class="pic"><svg class="icon"><use href="#i-plus"/></svg></span>
+          <span class="plabel">Add report to Marcus Johnson</span>
+          <span class="keys"><span class="kbd">⏎</span></span>
+        </button>
+        <button class="pal-item">
+          <span class="pic"><svg class="icon"><use href="#i-save"/></svg></span>
+          <span class="plabel">Save a version</span>
+          <span class="psub">3 edits since last version</span>
+          <span class="keys"><span class="kbd">⌘S</span></span>
+        </button>
+        <button class="pal-item">
+          <span class="pic"><svg class="icon"><use href="#i-focus"/></svg></span>
+          <span class="plabel">Focus on selection</span>
+          <span class="keys"><span class="kbd">F</span></span>
+        </button>
+        <button class="pal-item">
+          <span class="pic"><svg class="icon"><use href="#i-moon"/></svg></span>
+          <span class="plabel">Toggle theme</span>
+          <span class="keys"><span class="kbd">⌘⇧L</span></span>
+        </button>
+        <div class="pal-group">Navigate &amp; manage</div>
+        <button class="pal-item">
+          <span class="pic"><svg class="icon"><use href="#i-download"/></svg></span>
+          <span class="plabel">Import from CSV…</span>
+          <span class="keys"><span class="kbd">⌘I</span></span>
+        </button>
+        <button class="pal-item">
+          <span class="pic"><svg class="icon"><use href="#i-upload"/></svg></span>
+          <span class="plabel">Export as PNG…</span>
+          <span class="keys"><span class="kbd">⌘E</span></span>
+        </button>
+        <button class="pal-item">
+          <span class="pic"><svg class="icon"><use href="#i-sliders"/></svg></span>
+          <span class="plabel">Open settings</span>
+          <span class="keys"><span class="kbd">⌘,</span></span>
+        </button>
+        <button class="pal-item">
+          <span class="pic"><svg class="icon"><use href="#i-fit"/></svg></span>
+          <span class="plabel">Fit chart to screen</span>
+          <span class="keys"><span class="kbd">⇧1</span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var app = document.getElementById('app');
+
+  // ---- Theme toggle ----
+  document.getElementById('theme-toggle').addEventListener('click', function () {
+    app.setAttribute('data-theme', app.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  // ---- Inspector open/close ----
+  document.getElementById('inspector-close').addEventListener('click', function () {
+    app.classList.add('inspector-collapsed');
+  });
+  var marcus = document.getElementById('node-marcus');
+  function openInspector() { app.classList.remove('inspector-collapsed'); }
+  marcus.addEventListener('click', openInspector);
+  marcus.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInspector(); }
+  });
+
+  // ---- Overlays ----
+  var settings = document.getElementById('settings-overlay');
+  var palette  = document.getElementById('palette-overlay');
+  function openOv(o) { o.classList.add('open'); }
+  function closeOv(o) { o.classList.remove('open'); }
+
+  document.getElementById('settings-btn').addEventListener('click', function () { openOv(settings); });
+  document.getElementById('settings-close').addEventListener('click', function () { closeOv(settings); });
+  document.getElementById('settings-cancel').addEventListener('click', function () { closeOv(settings); });
+  document.getElementById('settings-done').addEventListener('click', function () { closeOv(settings); });
+
+  document.getElementById('palette-btn').addEventListener('click', function () {
+    openOv(palette);
+    var s = document.getElementById('palette-search'); if (s) s.focus();
+  });
+  document.getElementById('palette-close').addEventListener('click', function () { closeOv(palette); });
+
+  // Close on backdrop click
+  [settings, palette].forEach(function (ov) {
+    ov.addEventListener('mousedown', function (e) { if (e.target === ov) closeOv(ov); });
+  });
+
+  // ---- Settings group nav ----
+  var navBtns = document.querySelectorAll('.settings-nav button');
+  var panels  = document.querySelectorAll('.settings-panel');
+  navBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      navBtns.forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var g = btn.getAttribute('data-group');
+      panels.forEach(function (p) {
+        p.classList.toggle('active', p.getAttribute('data-panel') === g);
+      });
+    });
+  });
+
+  // ---- Keyboard ----
+  document.addEventListener('keydown', function (e) {
+    var mod = e.metaKey || e.ctrlKey;
+    if (mod && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      if (palette.classList.contains('open')) { closeOv(palette); }
+      else { openOv(palette); var s = document.getElementById('palette-search'); if (s) s.focus(); }
+    }
+    if (e.key === 'Escape') { closeOv(palette); closeOv(settings); }
+  });
+})();
+</script>
+</body>
+</html>
