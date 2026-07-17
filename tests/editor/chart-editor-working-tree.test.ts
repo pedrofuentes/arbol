@@ -43,6 +43,9 @@ function createChartStore(charts: ChartRecord[]) {
   let versions: VersionRecord[] = [];
   let workingTreeSavedListener: ((event: { chartId: string; peopleCount: number }) => void) | null =
     null;
+  const unsubscribeWorkingTreeSaved = vi.fn(() => {
+    workingTreeSavedListener = null;
+  });
 
   return {
     getCharts: vi.fn(async () => charts),
@@ -54,11 +57,10 @@ function createChartStore(charts: ChartRecord[]) {
     onWorkingTreeSaved: vi.fn(
       (listener: (event: { chartId: string; peopleCount: number }) => void) => {
         workingTreeSavedListener = listener;
-        return () => {
-          workingTreeSavedListener = null;
-        };
+        return unsubscribeWorkingTreeSaved;
       },
     ),
+    unsubscribeWorkingTreeSaved,
     switchChart: vi.fn(async (chartId: string) => {
       const chart = charts.find((candidate) => candidate.id === chartId)!;
       activeChartId = chartId;
@@ -208,6 +210,29 @@ describe('ChartEditor working-tree people counts', () => {
       await vi.waitFor(() => {
         expect(getMeta(chart.id).textContent).toBe(expectedMeta(3, 0));
       });
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('unsubscribes working-tree save updates when destroyed', async () => {
+    const chart = makeChart('active', 1);
+    const { chartStore, orgStore } = await render([chart]);
+    const renderedMeta = getMeta(chart.id);
+    const originalMeta = renderedMeta.textContent;
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      editor!.destroy();
+      editor = null;
+      expect(chartStore.unsubscribeWorkingTreeSaved).toHaveBeenCalledOnce();
+
+      const replacementTree = makeTree('saved-after-destroy', 3);
+      orgStore.fromJSON(JSON.stringify(replacementTree));
+      await chartStore.saveWorkingTree(orgStore.getTree());
+
+      expect(renderedMeta.textContent).toBe(originalMeta);
+      expect(warn).not.toHaveBeenCalled();
     } finally {
       warn.mockRestore();
     }
