@@ -294,6 +294,102 @@ describe('SettingsModal', () => {
     });
   });
 
+  describe('settings search', () => {
+    function appendSection(
+      modal: SettingsModal,
+      group: string,
+      title: string,
+      keywords: string,
+    ): HTMLElement {
+      const section = document.createElement('section');
+      section.dataset.sectionId = title.toLowerCase().replaceAll(' ', '-');
+      section.dataset.settingsGroup = group;
+
+      const heading = document.createElement('h3');
+      heading.className = 'setting-section-title';
+      heading.textContent = title;
+      section.appendChild(heading);
+
+      const description = document.createElement('p');
+      description.textContent = keywords;
+      section.appendChild(description);
+      modal.getContentArea().appendChild(section);
+      return section;
+    }
+
+    it('renders a localized search control in the modal header', () => {
+      const { modal } = createModal();
+      modal.open();
+
+      const header = document.querySelector('.settings-modal-header')!;
+      const input = header.querySelector<HTMLInputElement>('.settings-search-input');
+      expect(input).not.toBeNull();
+      expect(input!.placeholder).toBe('Search settings…');
+      expect(input!.getAttribute('aria-label')).toBe('Search settings');
+      expect(header.querySelector('svg[data-icon="search"]')).not.toBeNull();
+      modal.destroy();
+    });
+
+    it('filters matching sections across every group and shows their group', () => {
+      const { modal } = createModal();
+      const appearance = appendSection(modal, 'appearance', 'Typography', 'Fonts and colors');
+      const badges = appendSection(
+        modal,
+        'cards_badges',
+        'Headcount Badge',
+        'Show team size on manager cards',
+      );
+      modal.open();
+
+      const input = document.querySelector<HTMLInputElement>('.settings-search-input')!;
+      input.value = 'team size';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      expect(appearance.hidden).toBe(true);
+      expect(badges.hidden).toBe(false);
+      expect(badges.querySelector('.settings-search-group-label')?.textContent).toBe(
+        'Cards & Badges',
+      );
+      modal.destroy();
+    });
+
+    it('shows no-results feedback when no section title or keyword matches', () => {
+      const { modal } = createModal();
+      appendSection(modal, 'appearance', 'Typography', 'Fonts and colors');
+      modal.open();
+
+      const input = document.querySelector<HTMLInputElement>('.settings-search-input')!;
+      input.value = 'payroll';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      const noResults = document.querySelector<HTMLElement>('.settings-search-no-results')!;
+      expect(noResults.hidden).toBe(false);
+      expect(noResults.textContent).toBe('No settings found. Try different keywords.');
+      modal.destroy();
+    });
+
+    it('clearing search restores the active group view', () => {
+      const { modal } = createModal();
+      const appearance = appendSection(modal, 'appearance', 'Typography', 'Fonts and colors');
+      const layout = appendSection(modal, 'layout', 'Tree Spacing', 'Branch gaps');
+      modal.open();
+
+      const input = document.querySelector<HTMLInputElement>('.settings-search-input')!;
+      input.value = 'branch';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      expect(appearance.hidden).toBe(true);
+      expect(layout.hidden).toBe(false);
+
+      input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      expect(appearance.hidden).toBe(false);
+      expect(layout.hidden).toBe(true);
+      expect(document.querySelector('.settings-search-group-label')).toBeNull();
+      modal.destroy();
+    });
+  });
+
   describe('live preview strip', () => {
     it('renders preview strip with header, title, hint, and area', () => {
       const { modal } = createModal();

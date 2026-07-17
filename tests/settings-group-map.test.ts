@@ -11,7 +11,7 @@ const mainSource = readFileSync(
 describe('settings section group mapping', () => {
   it('assigns every existing section ID to one of the six settings groups', () => {
     const mapSource = mainSource.match(
-      /const SECTION_TAB_MAP: Record<string, string> = \{([^]*?)\n  \};/,
+      /const SECTION_TAB_MAP: Record<string, string> = \{([^]*?)\n {2}\};/,
     )?.[1];
     expect(mapSource).toBeDefined();
 
@@ -36,5 +36,10 @@ describe('settings section group mapping', () => {
       'settings-io': 'data_backup',
       'backup-restore': 'data_backup',
     });
+  });
+
+  it('annotates editor sections from the sole section group map for modal search', () => {
+    expect(mainSource).toContain("section.setAttribute('data-settings-group', sectionTab)");
+    expect(mainSource).toContain('settingsModal.refreshSectionVisibility()');
   });
 });
