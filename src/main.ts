@@ -522,6 +522,7 @@ async function main(): Promise<void> {
         try {
           await chartStore.saveVersion(name.trim(), store.getTree(), store.mutationVersion);
           chartNameHeader.setEditCount(chartStore.getEditsSinceLastVersion(store.getTree()));
+          showToast(t('toast.version_saved', { name: name.trim() }), 'success');
           announce(t('announce.chart_saved'));
         } catch {
           showToast(t('error.version_save_failed'), 'error');

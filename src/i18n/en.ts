@@ -1236,6 +1236,7 @@ const en: Record<string, string> = {
   'error.storage_save_failed': 'Failed to save. Storage may be full.',
   'error.render_failed': 'Chart rendering failed. Try refreshing.',
   'error.version_save_failed': 'Failed to save version',
+  'toast.version_saved': 'Version saved · {name}',
 
   // --- Form ---
   'form.required_indicator': '*',

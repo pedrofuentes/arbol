@@ -1195,6 +1195,8 @@ const es: Record<string, string> = {
   'error.unexpected': 'Error inesperado: {message}',
   'error.storage_save_failed': 'Error al guardar. El almacenamiento puede estar lleno.',
   'error.render_failed': 'Error al renderizar el organigrama. Intenta recargar.',
+  'error.version_save_failed': 'Error al guardar la versión',
+  'toast.version_saved': 'Versión guardada · {name}',
 
   // --- Form ---
   'form.required_indicator': '*',
