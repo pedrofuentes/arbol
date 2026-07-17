@@ -402,6 +402,8 @@ const es: Record<string, string> = {
   'chart_editor.current_chart_saved': 'Todos los cambios guardados',
   'chart_editor.edits_since_version.one': '1 edición desde la última versión',
   'chart_editor.edits_since_version.other': '{count} ediciones desde la última versión',
+  'chart_editor.version_delta_aria':
+    '{added} agregadas, {removed} eliminadas desde la versión anterior',
   'chart_editor.search_aria': 'Buscar organigramas',
 
   // ─── JSON Editor ───────────────────────────────────────────────────

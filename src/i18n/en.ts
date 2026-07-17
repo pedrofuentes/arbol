@@ -460,6 +460,7 @@ const en: Record<string, string> = {
   'chart_editor.current_chart_saved': 'All changes saved',
   'chart_editor.edits_since_version.one': '1 edit since last version',
   'chart_editor.edits_since_version.other': '{count} edits since last version',
+  'chart_editor.version_delta_aria': '{added} added, {removed} removed since previous version',
   'chart_editor.search_aria': 'Search charts',
 
   // ─── JSON Editor ───────────────────────────────────────────────────

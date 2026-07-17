@@ -18,6 +18,7 @@ import { t, tp, getLocale } from '../i18n';
 import { showCreateChartDialog } from '../ui/create-chart-dialog';
 import { createButton } from '../utils/dom-builder';
 import { createIcon, type IconName } from '../ui/icon';
+import { VersionDeltaCache, type VersionDelta } from '../utils/version-delta';
 
 export interface ChartEditorOptions {
   container: HTMLElement;
@@ -75,6 +76,7 @@ export class ChartEditor {
   private pendingPeopleCounts = new Map<string, number>();
   private versionCounts = new Map<string, number>();
   private chartNames = new Map<string, string>();
+  private versionDeltaCache = new VersionDeltaCache();
 
   constructor(options: ChartEditorOptions) {
     this.container = options.container;
@@ -446,13 +448,15 @@ export class ChartEditor {
 
     // Saved versions
     const versions = await this.chartStore.getVersions();
+    this.versionDeltaCache.retain(versions);
 
-    for (const version of versions) {
-      this.versionListEl.appendChild(this.createVersionItem(version));
+    for (const [index, version] of versions.entries()) {
+      const delta = this.versionDeltaCache.get(version, versions[index + 1]);
+      this.versionListEl.appendChild(this.createVersionItem(version, delta));
     }
   }
 
-  private createVersionItem(version: VersionRecord): HTMLDivElement {
+  private createVersionItem(version: VersionRecord, delta: VersionDelta): HTMLDivElement {
     const item = document.createElement('div');
     const isViewing = this.viewingVersionId === version.id;
     item.className = 'version-item' + (isViewing ? ' viewing' : '');
@@ -481,9 +485,21 @@ export class ChartEditor {
       t('chart_editor.saved_prefix') + new Date(version.createdAt).toLocaleString(getLocale());
     infoEl.appendChild(dateEl);
 
+    const deltaEl = document.createElement('span');
+    deltaEl.className = 'version-delta-chip';
+    deltaEl.textContent = `+${delta.added} −${delta.removed}`;
+    deltaEl.setAttribute(
+      'aria-label',
+      t('chart_editor.version_delta_aria', {
+        added: delta.added,
+        removed: delta.removed,
+      }),
+    );
+    infoEl.appendChild(deltaEl);
+
     item.appendChild(infoEl);
 
-    // Action buttons (hover-reveal)
+    // Action buttons
     const actions = document.createElement('div');
     actions.className = 'version-item-actions';
 

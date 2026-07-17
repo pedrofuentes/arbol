@@ -134,6 +134,7 @@ export class ChartStore extends EventEmitter {
   private lastSavedTree: string | null = null;
   private savedMutationVersion: number | null = null;
   private lastVersionTree: OrgNode | null = null;
+  private versionCache = new Map<string, VersionRecord[]>();
   private storage: IStorage;
   private workingTreeSavedEmitter = new WorkingTreeSavedEmitter();
 
@@ -249,6 +250,7 @@ export class ChartStore extends EventEmitter {
 
     await this.db.putChart(chart);
     this.activeChartId = chart.id;
+    this.versionCache.set(chart.id, []);
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
     this.lastVersionTree = structuredClone(chart.workingTree);
@@ -284,6 +286,7 @@ export class ChartStore extends EventEmitter {
 
     await this.db.putChart(chart);
     this.activeChartId = chart.id;
+    this.versionCache.set(chart.id, []);
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
     this.lastVersionTree = structuredClone(chart.workingTree);
@@ -337,6 +340,7 @@ export class ChartStore extends EventEmitter {
     if (!chart) throw new Error(`Chart not found: ${id}`);
 
     await this.db.deleteChart(id);
+    this.versionCache.delete(id);
 
     if (this.activeChartId === id) {
       const remaining = await this.db.getAllCharts();
@@ -348,6 +352,7 @@ export class ChartStore extends EventEmitter {
       } else {
         const fallback = await this.createFallbackChart();
         this.activeChartId = fallback.id;
+        this.versionCache.set(fallback.id, []);
         this.lastSavedTree = JSON.stringify(fallback.workingTree);
         this.savedMutationVersion = null;
         this.lastVersionTree = structuredClone(fallback.workingTree);
@@ -429,7 +434,12 @@ export class ChartStore extends EventEmitter {
   async getVersions(chartId?: string): Promise<VersionRecord[]> {
     const id = chartId ?? this.activeChartId;
     if (!id) throw new Error('No active chart');
-    return this.db.getVersionsByChart(id);
+    const cached = this.versionCache.get(id);
+    if (cached) return [...cached];
+
+    const versions = await this.db.getVersionsByChart(id);
+    this.versionCache.set(id, versions);
+    return [...versions];
   }
 
   async saveVersion(name: string, tree: OrgNode, mutationVersion?: number): Promise<VersionRecord> {
@@ -446,6 +456,8 @@ export class ChartStore extends EventEmitter {
     };
 
     await this.db.putVersion(version);
+    const cached = this.versionCache.get(this.activeChartId) ?? [];
+    this.versionCache.set(this.activeChartId, [version, ...cached]);
     this.lastSavedTree = JSON.stringify(tree);
     this.savedMutationVersion = mutationVersion ?? null;
     this.lastVersionTree = structuredClone(tree);
@@ -479,6 +491,15 @@ export class ChartStore extends EventEmitter {
   async deleteVersion(id: string): Promise<void> {
     const version = await this.db.getVersion(id);
     await this.db.deleteVersion(id);
+    if (version) {
+      const cached = this.versionCache.get(version.chartId);
+      if (cached) {
+        this.versionCache.set(
+          version.chartId,
+          cached.filter((candidate) => candidate.id !== id),
+        );
+      }
+    }
     if (version?.chartId === this.activeChartId) {
       const chart = await this.getActiveChart();
       if (chart) await this.loadVersionBaseline(chart.id, chart.workingTree);
@@ -537,6 +558,10 @@ export class ChartStore extends EventEmitter {
       tree: v.tree,
     }));
     await this.db.putVersionsBatch(versions);
+    this.versionCache.set(
+      chart.id,
+      versions.sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    );
 
     this.activeChartId = chart.id;
     this.lastSavedTree = JSON.stringify(chart.workingTree);
@@ -590,6 +615,7 @@ export class ChartStore extends EventEmitter {
       tree: v.tree,
     }));
     await this.db.putVersionsBatch(versions);
+    this.versionCache.delete(chart.id);
 
     this.lastSavedTree = JSON.stringify(chart.workingTree);
     this.savedMutationVersion = null;
@@ -641,7 +667,7 @@ export class ChartStore extends EventEmitter {
   }
 
   private async loadVersionBaseline(chartId: string, fallbackTree: OrgNode): Promise<void> {
-    const versions = await this.db.getVersionsByChart(chartId);
+    const versions = await this.getVersions(chartId);
     this.lastVersionTree = structuredClone(versions[0]?.tree ?? fallbackTree);
   }
 
