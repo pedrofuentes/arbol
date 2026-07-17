@@ -452,7 +452,7 @@ export class ChartStore extends EventEmitter {
       chartId: this.activeChartId,
       name: trimmed,
       createdAt: new Date().toISOString(),
-      tree,
+      tree: structuredClone(tree),
     };
 
     await this.db.putVersion(version);
