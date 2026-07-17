@@ -60,7 +60,7 @@ export class PropertyPanel {
     this.options = options;
 
     this.el = document.createElement('div');
-    this.el.className = 'property-panel';
+    this.el.className = 'panel-chrome property-panel';
     this.el.setAttribute('role', 'complementary');
     this.el.setAttribute('aria-label', t('property_panel.aria_label'));
 

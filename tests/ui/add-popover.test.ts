@@ -57,6 +57,14 @@ describe('AddPopover', () => {
     expect(document.activeElement).toBe(nameInput);
   });
 
+  it('uses shared panel chrome without runtime style injection', () => {
+    const popover = openPopover();
+
+    expect(popover.classList.contains('dialog-panel')).toBe(true);
+    expect(popover.classList.contains('add-popover')).toBe(true);
+    expect(popover.querySelector('style')).toBeNull();
+  });
+
   it('clicking Add calls onAdd with input values', () => {
     const popover = openPopover();
     const inputs = popover.querySelectorAll('input');

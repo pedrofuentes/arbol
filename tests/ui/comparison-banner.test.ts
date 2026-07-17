@@ -89,13 +89,12 @@ describe('ComparisonBanner', () => {
       expect(getBanner()!.getAttribute('role')).toBe('status');
     });
 
-    it('banner has correct positioning styles', () => {
+    it('banner uses the shared class-based positioning pattern', () => {
       showComparisonBanner(defaultOptions());
-      const style = getBanner()!.getAttribute('style') ?? '';
-      expect(style).toContain('position:absolute');
-      expect(style).toContain('left:50%');
-      expect(style).toContain('translateX(-50%)');
-      expect(style).toContain('z-index:var(--z-canvas-overlay)');
+      const banner = getBanner()!;
+      expect(banner.classList.contains('ui-banner')).toBe(true);
+      expect(banner.classList.contains('comparison-banner')).toBe(true);
+      expect(banner.querySelector('style')).toBeNull();
     });
 
     it('marks side-by-side mode so the surrounding layout can reserve its title band', () => {
@@ -103,26 +102,13 @@ describe('ComparisonBanner', () => {
 
       expect(getBanner()!.getAttribute('data-view-mode')).toBe('side-by-side');
     });
-
-    it('uses CSS variables for theming', () => {
-      showComparisonBanner(defaultOptions());
-      const style = getBanner()!.getAttribute('style') ?? '';
-      expect(style).toContain('var(--bg-elevated)');
-      expect(style).toContain('var(--accent)');
-      expect(style).toContain('var(--text-primary)');
-    });
-
-    it('includes animation keyframe', () => {
-      showComparisonBanner(defaultOptions());
-      const styleEl = getBanner()!.querySelector('style');
-      expect(styleEl).not.toBeNull();
-      expect(styleEl!.textContent).toContain('comparisonBannerIn');
-    });
   });
 
   describe('stats', () => {
     it('shows stats with correct colors', () => {
-      showComparisonBanner(defaultOptions({ stats: { added: 3, removed: 2, moved: 1, modified: 1 } }));
+      showComparisonBanner(
+        defaultOptions({ stats: { added: 3, removed: 2, moved: 1, modified: 1 } }),
+      );
 
       const added = getStat('added')!;
       expect(added.textContent).toContain('3');
@@ -142,7 +128,9 @@ describe('ComparisonBanner', () => {
     });
 
     it('hides zero-count stats', () => {
-      showComparisonBanner(defaultOptions({ stats: { added: 5, removed: 0, moved: 0, modified: 3 } }));
+      showComparisonBanner(
+        defaultOptions({ stats: { added: 5, removed: 0, moved: 0, modified: 3 } }),
+      );
 
       expect(getStat('added')).not.toBeNull();
       expect(getStat('modified')).not.toBeNull();
@@ -151,13 +139,17 @@ describe('ComparisonBanner', () => {
     });
 
     it('hides all stats when all are zero', () => {
-      showComparisonBanner(defaultOptions({ stats: { added: 0, removed: 0, moved: 0, modified: 0 } }));
+      showComparisonBanner(
+        defaultOptions({ stats: { added: 0, removed: 0, moved: 0, modified: 0 } }),
+      );
       const statsEl = getStats()!;
       expect(statsEl.children).toHaveLength(0);
     });
 
     it('shows correct stat prefixes', () => {
-      showComparisonBanner(defaultOptions({ stats: { added: 1, removed: 1, moved: 1, modified: 1 } }));
+      showComparisonBanner(
+        defaultOptions({ stats: { added: 1, removed: 1, moved: 1, modified: 1 } }),
+      );
       expect(getStat('added')!.textContent).toMatch(/^\+1$/);
       expect(getStat('removed')!.textContent).toMatch(/^.1$/); // −1 (minus sign)
       expect(getStat('moved')!.textContent).toMatch(/^.1$/); // ↗1
@@ -271,7 +263,9 @@ describe('ComparisonBanner', () => {
     it('toggles text and calls callback on click', () => {
       const onToggle = vi.fn();
       showComparisonBanner(defaultOptions({ dimUnchanged: true, onToggleDimUnchanged: onToggle }));
-      const btn = document.querySelector('[data-testid="comparison-banner-dim-toggle"]') as HTMLButtonElement;
+      const btn = document.querySelector(
+        '[data-testid="comparison-banner-dim-toggle"]',
+      ) as HTMLButtonElement;
       btn.click();
       expect(onToggle).toHaveBeenCalledWith(false);
       expect(btn.textContent).toBe('Dim: Off');
@@ -300,5 +294,4 @@ describe('ComparisonBanner', () => {
       expect(exitBtn!.getAttribute('aria-label')).toBe('Exit comparison mode');
     });
   });
-
 });

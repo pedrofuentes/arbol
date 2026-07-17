@@ -1,5 +1,6 @@
 import { t } from '../i18n';
 import { createIcon } from './icon';
+import { createBanner } from './dialog-utils';
 
 export interface ComparisonBannerOptions {
   container: HTMLElement;
@@ -29,42 +30,9 @@ export function isComparisonBannerActive(): boolean {
 export function showComparisonBanner(options: ComparisonBannerOptions): void {
   dismissComparisonBanner();
 
-  const banner = document.createElement('div');
-  banner.setAttribute('role', 'status');
+  const banner = createBanner('comparison-banner');
   banner.setAttribute('data-testid', 'comparison-banner');
   banner.setAttribute('data-view-mode', options.viewMode);
-
-  const bannerStyles = [
-    'position:absolute',
-    'top:var(--space-3)',
-    'left:50%',
-    'transform:translateX(-50%)',
-    'z-index:var(--z-canvas-overlay)',
-    'display:flex',
-    'align-items:center',
-    'gap:var(--space-3)',
-    'padding:var(--space-2) var(--space-4)',
-    'background:var(--bg-elevated)',
-    'border:1px solid var(--accent)',
-    'border-radius:var(--radius-lg)',
-    'box-shadow:var(--shadow-md)',
-    'font-family:var(--font-sans)',
-    'font-size:var(--text-sm)',
-    'color:var(--text-primary)',
-    'animation:comparisonBannerIn 200ms ease',
-    'pointer-events:auto',
-    'white-space:nowrap',
-  ].join(';');
-  banner.setAttribute('style', bannerStyles);
-
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes comparisonBannerIn {
-      from { opacity:0; transform:translateX(-50%) translateY(-8px); }
-      to   { opacity:1; transform:translateX(-50%) translateY(0); }
-    }
-  `;
-  banner.appendChild(style);
 
   const label = document.createElement('span');
   label.setAttribute('data-testid', 'comparison-banner-label');
@@ -91,13 +59,13 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
 
   // Separator
   const sep1 = document.createElement('span');
-  sep1.style.cssText = 'width:1px;height:14px;background:var(--border-default);';
+  sep1.className = 'ui-banner-separator';
   banner.appendChild(sep1);
 
   // Stats
   const statsContainer = document.createElement('span');
+  statsContainer.className = 'comparison-banner-stats';
   statsContainer.setAttribute('data-testid', 'comparison-banner-stats');
-  statsContainer.style.cssText = 'display:flex;align-items:center;gap:8px;font-weight:600;';
 
   const statDefs: Array<{ key: string; prefix: string; color: string; value: number }> = [
     { key: 'added', prefix: '+', color: '#22c55e', value: options.stats.added },
@@ -120,14 +88,13 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
 
   // Separator
   const sep2 = document.createElement('span');
-  sep2.style.cssText = 'width:1px;height:14px;background:var(--border-default);';
+  sep2.className = 'ui-banner-separator';
   banner.appendChild(sep2);
 
   // Dim unchanged toggle
   const dimBtn = document.createElement('button');
   dimBtn.setAttribute('data-testid', 'comparison-banner-dim-toggle');
   dimBtn.className = 'btn btn-secondary';
-  dimBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
   dimBtn.setAttribute('aria-label', t('comparison.dim_aria'));
   let dimState = options.dimUnchanged;
   dimBtn.textContent = dimState ? t('comparison.dim_on') : t('comparison.dim_off');
@@ -142,7 +109,6 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   const toggleBtn = document.createElement('button');
   toggleBtn.setAttribute('data-testid', 'comparison-banner-toggle');
   toggleBtn.className = 'btn btn-secondary';
-  toggleBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
   toggleBtn.setAttribute('aria-label', t('comparison.toggle_view_aria'));
   toggleBtn.textContent =
     options.viewMode === 'merged' ? t('comparison.side_by_side') : t('comparison.merged');
@@ -155,7 +121,6 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   const exitBtn = document.createElement('button');
   exitBtn.setAttribute('data-testid', 'comparison-banner-exit');
   exitBtn.className = 'btn btn-secondary';
-  exitBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
   exitBtn.setAttribute('aria-label', t('comparison.exit_aria'));
   exitBtn.appendChild(createIcon('close'));
   exitBtn.appendChild(document.createTextNode(t('comparison.exit')));

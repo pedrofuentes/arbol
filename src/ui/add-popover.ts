@@ -1,5 +1,5 @@
 import { createDismissible } from './dismissible';
-import { trapFocus } from './dialog-utils';
+import { activateDialog, createDialogPanel } from './dialog-utils';
 import { t } from '../i18n';
 import { createButton } from '../utils/dom-builder';
 
@@ -29,22 +29,8 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   const { anchor, parentName, onAdd, onCancel } = options;
 
-  const container = document.createElement('div');
-  container.setAttribute('role', 'dialog');
-  container.setAttribute('aria-modal', 'true');
-  container.setAttribute('aria-label', t('add_popover.aria'));
-  container.style.cssText = `
-    position:fixed;
-    z-index:var(--z-menu);
-    min-width:240px;
-    background:var(--bg-elevated);
-    border:1px solid var(--border-default);
-    border-radius:var(--radius-lg);
-    box-shadow:var(--shadow-lg);
-    padding:var(--space-4);
-    font-family:var(--font-sans);
-    animation:popoverFadeIn 150ms ease;
-  `;
+  const container = createDialogPanel({ ariaLabel: t('add_popover.aria') });
+  container.classList.add('add-popover');
 
   // Position: centered on anchor, below by default
   const left = anchor.left + anchor.width / 2;
@@ -53,29 +39,21 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   // Title
   const heading = document.createElement('div');
+  heading.className = 'add-popover-heading';
   heading.textContent = parentName
     ? t('add_popover.heading', { name: parentName })
     : t('add_popover.heading_default');
-  heading.style.cssText = `
-    font-size:14px;font-weight:600;
-    color:var(--text-primary);
-    margin-bottom:var(--space-3);
-  `;
   container.appendChild(heading);
 
   // Name field
   const nameGroup = document.createElement('div');
-  nameGroup.style.cssText = 'margin-bottom:var(--space-2);';
+  nameGroup.className = 'add-popover-name-group';
 
   const nameId = uniqueId('add-name');
   const nameLabel = document.createElement('label');
+  nameLabel.className = 'add-popover-label';
   nameLabel.textContent = t('add_popover.name_label');
   nameLabel.htmlFor = nameId;
-  nameLabel.style.cssText = `
-    display:block;font-size:12px;font-weight:500;
-    color:var(--text-secondary);
-    margin-bottom:var(--space-1);
-  `;
 
   const required = document.createElement('span');
   required.className = 'required-indicator';
@@ -84,21 +62,11 @@ export function showAddPopover(options: AddPopoverOptions): void {
   nameLabel.appendChild(required);
 
   const nameInput = document.createElement('input');
+  nameInput.className = 'add-popover-input';
   nameInput.id = nameId;
   nameInput.type = 'text';
   nameInput.setAttribute('aria-required', 'true');
   nameInput.placeholder = t('add_popover.name_placeholder');
-  nameInput.style.cssText = `
-    width:100%;box-sizing:border-box;
-    padding:var(--space-1) var(--space-2);
-    background:var(--bg-base);
-    border:1px solid var(--border-default);
-    border-radius:var(--radius-sm, 4px);
-    color:var(--text-primary);
-    font-family:var(--font-sans);
-    font-size:13px;
-    outline:none;
-  `;
 
   nameGroup.appendChild(nameLabel);
   nameGroup.appendChild(nameInput);
@@ -115,23 +83,19 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   // Title field
   const titleGroup = document.createElement('div');
-  titleGroup.style.cssText = 'margin-bottom:var(--space-3);';
+  titleGroup.className = 'add-popover-title-group';
 
   const titleId = uniqueId('add-title');
   const titleLabel = document.createElement('label');
+  titleLabel.className = 'add-popover-label';
   titleLabel.textContent = t('add_popover.title_label');
   titleLabel.htmlFor = titleId;
-  titleLabel.style.cssText = `
-    display:block;font-size:12px;font-weight:500;
-    color:var(--text-secondary);
-    margin-bottom:var(--space-1);
-  `;
 
   const titleInput = document.createElement('input');
+  titleInput.className = 'add-popover-input';
   titleInput.id = titleId;
   titleInput.type = 'text';
   titleInput.placeholder = t('add_popover.title_placeholder');
-  titleInput.style.cssText = nameInput.style.cssText;
 
   titleGroup.appendChild(titleLabel);
   titleGroup.appendChild(titleInput);
@@ -139,7 +103,7 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   // Buttons
   const btnGroup = document.createElement('div');
-  btnGroup.style.cssText = 'display:flex;gap:var(--space-2);justify-content:flex-end;';
+  btnGroup.className = 'add-popover-actions';
 
   const cancelBtn = createButton({
     className: 'btn btn-secondary',
@@ -205,13 +169,6 @@ export function showAddPopover(options: AddPopoverOptions): void {
 
   cancelBtn.addEventListener('click', cancel);
 
-  const escHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      cancel();
-    }
-  };
-  document.addEventListener('keydown', escHandler);
-
   // Click outside — use mousedown to detect before focus shifts
   const outsideHandler = (e: MouseEvent) => {
     if (!container.contains(e.target as Node)) {
@@ -223,32 +180,18 @@ export function showAddPopover(options: AddPopoverOptions): void {
     document.addEventListener('mousedown', outsideHandler);
   }, 0);
 
-  // Inject animation keyframes if not already present
-  if (!document.getElementById('popover-fade-style')) {
-    const style = document.createElement('style');
-    style.id = 'popover-fade-style';
-    style.textContent = `
-      @keyframes popoverFadeIn {
-        from { opacity: 0; transform: translateX(-50%) translateY(4px); }
-        to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
   document.body.appendChild(container);
   dismissible.activate(container);
 
-  const removeTrap = trapFocus(container);
+  const deactivate = activateDialog(container, {
+    onEscape: cancel,
+    restoreFocusTo: previouslyFocused,
+  });
 
   // Register cleanup AFTER activate so dismiss() inside activate doesn't clear them
   dismissible.onDismiss(() => {
-    removeTrap();
-    document.removeEventListener('keydown', escHandler);
+    deactivate();
     document.removeEventListener('mousedown', outsideHandler);
-    if (previouslyFocused && previouslyFocused instanceof HTMLElement) {
-      previouslyFocused.focus();
-    }
     previouslyFocused = null;
   });
 

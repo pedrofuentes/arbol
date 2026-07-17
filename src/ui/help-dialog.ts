@@ -1,4 +1,4 @@
-import { createOverlay, trapFocus } from './dialog-utils';
+import { activateDialog, createDialogPanel, createOverlay } from './dialog-utils';
 import { showConfirmDialog } from './confirm-dialog';
 import { t } from '../i18n';
 import { type IStorage, browserStorage } from '../utils/storage';
@@ -455,55 +455,29 @@ export function showHelpDialog(options: HelpDialogOptions = {}): void {
   const storage = options.storage ?? browserStorage;
   const previouslyFocused = document.activeElement;
   const overlay = createOverlay();
-  overlay.style.background = 'rgba(0,0,0,0.6)';
-  overlay.style.backdropFilter = 'blur(3px)';
+  overlay.classList.add('dialog-overlay--help');
 
-  const dialog = document.createElement('div');
-  dialog.setAttribute('role', 'dialog');
-  dialog.setAttribute('aria-modal', 'true');
-  dialog.setAttribute('aria-label', t('help.dialog_aria'));
-  dialog.style.cssText = `
-    background:var(--bg-surface);
-    border:1px solid var(--border-default);
-    border-radius:var(--radius-xl);
-    padding:0;
-    width:520px;
-    max-width:90vw;
-    max-height:80vh;
-    display:flex;
-    flex-direction:column;
-    box-shadow:var(--shadow-lg);
-    animation:slideUp 200ms cubic-bezier(0.22,1,0.36,1);
-    overflow:hidden;
-  `;
+  const dialog = createDialogPanel({ ariaLabel: t('help.dialog_aria') });
+  dialog.classList.add('help-dialog');
 
   // Header
   const header = document.createElement('div');
-  header.style.cssText = `
-    display:flex;align-items:center;justify-content:space-between;
-    padding:16px 20px;border-bottom:1px solid var(--border-subtle);
-    flex-shrink:0;
-  `;
+  header.className = 'help-dialog-header';
   const titleEl = document.createElement('h2');
+  titleEl.className = 'help-dialog-title';
   titleEl.textContent = t('help.title');
-  titleEl.style.cssText = `
-    font-size:16px;font-weight:700;color:var(--text-primary);
-    font-family:var(--font-sans);margin:0;
-  `;
   header.appendChild(titleEl);
 
   const closeBtn = document.createElement('button');
-  closeBtn.className = 'icon-btn';
+  closeBtn.className = 'icon-btn help-dialog-close';
   closeBtn.setAttribute('aria-label', t('help.close_aria'));
   closeBtn.appendChild(createIcon('close'));
-  closeBtn.style.cssText += 'font-size:14px;width:28px;height:28px;';
   header.appendChild(closeBtn);
   dialog.appendChild(header);
 
   // Content
   const content = document.createElement('div');
-  content.style.cssText = 'overflow-y:auto;padding:16px 20px;flex:1;';
-  content.style.scrollbarWidth = 'thin';
+  content.className = 'help-dialog-content';
 
   const sections = getHelpSections();
   const initialSection = resolveInitialSectionIndex(sections, options.initialSection);
@@ -594,35 +568,12 @@ export function showHelpDialog(options: HelpDialogOptions = {}): void {
   dialog.appendChild(content);
   overlay.appendChild(dialog);
 
-  // Scoped styles for kbd and code elements
-  const styleTag = document.createElement('style');
-  styleTag.textContent = `
-    .help-dialog kbd {
-      display:inline-block;padding:1px 5px;font-size:11px;
-      font-family:var(--font-mono);background:var(--bg-base);
-      border:1px solid var(--border-default);border-radius:3px;
-      color:var(--text-primary);line-height:1.4;
-    }
-    .help-dialog code {
-      font-family:var(--font-mono);font-size:11px;
-      background:var(--bg-base);padding:1px 4px;border-radius:3px;
-      color:var(--accent);
-    }
-  `;
-  dialog.classList.add('help-dialog');
-  dialog.prepend(styleTag);
-
-  const removeTrap = trapFocus(dialog);
-
+  let deactivate = () => {};
   const close = () => {
-    removeTrap();
     if (document.body.contains(overlay)) {
       document.body.removeChild(overlay);
     }
-    document.removeEventListener('keydown', escHandler);
-    if (previouslyFocused && previouslyFocused instanceof HTMLElement) {
-      previouslyFocused.focus();
-    }
+    deactivate();
   };
   closeRef.fn = close;
 
@@ -631,10 +582,7 @@ export function showHelpDialog(options: HelpDialogOptions = {}): void {
     if (e.target === overlay) close();
   });
 
-  const escHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') close();
-  };
-  document.addEventListener('keydown', escHandler);
+  deactivate = activateDialog(dialog, { onEscape: close, restoreFocusTo: previouslyFocused });
 
   document.body.appendChild(overlay);
   closeBtn.focus();

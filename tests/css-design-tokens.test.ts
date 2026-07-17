@@ -56,6 +56,32 @@ describe('z-index design tokens', () => {
   });
 });
 
+describe('shared dialog surface styles', () => {
+  it('defines class-based overlay, panel, and banner chrome', () => {
+    expect(css).toMatch(/\.dialog-overlay\s*\{/);
+    expect(css).toMatch(/\.dialog-panel\s*\{/);
+    expect(css).toMatch(/\.panel-chrome/);
+    expect(css).toMatch(/\.ui-banner\s*\{/);
+    expect(css).toContain('z-index: var(--z-dialog)');
+    expect(css).toContain('z-index: var(--z-canvas-overlay)');
+  });
+
+  it('does not inject runtime style elements for consolidated surfaces', () => {
+    const surfaces = [
+      'src/ui/help-dialog.ts',
+      'src/ui/add-popover.ts',
+      'src/ui/context-menu.ts',
+      'src/ui/focus-banner.ts',
+      'src/ui/offline-banner.ts',
+      'src/ui/comparison-banner.ts',
+    ];
+
+    for (const surface of surfaces) {
+      expect(readSource(surface), surface).not.toMatch(/createElement\(['"]style['"]\)/);
+    }
+  });
+});
+
 describe('fatal error design tokens', () => {
   const fatalErrorCss =
     css.match(/\/\* Fatal error boundary[^]*?(?=\/\* High contrast mode)/)?.[0] ?? '';

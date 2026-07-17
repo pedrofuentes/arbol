@@ -4,7 +4,9 @@ import en from '../../src/i18n/en';
 import { PropertyPanel, type PropertyPanelOptions } from '../../src/ui/property-panel';
 import type { OrgNode } from '../../src/types';
 
-beforeAll(() => { setLocale('en', en); });
+beforeAll(() => {
+  setLocale('en', en);
+});
 
 function makeNode(overrides: Partial<OrgNode> = {}): OrgNode {
   return { id: 'n1', name: 'Alice', title: 'Engineer', ...overrides };
@@ -18,19 +20,32 @@ function createPanel() {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const callbacks = {
-    onEdit: vi.fn(), onAddChild: vi.fn(), onMove: vi.fn(), onRemove: vi.fn(),
-    onFocus: vi.fn(), onCategoryChange: vi.fn(), onLevelChange: vi.fn(), onToggleDottedLine: vi.fn(), onClose: vi.fn(),
+    onEdit: vi.fn(),
+    onAddChild: vi.fn(),
+    onMove: vi.fn(),
+    onRemove: vi.fn(),
+    onFocus: vi.fn(),
+    onCategoryChange: vi.fn(),
+    onLevelChange: vi.fn(),
+    onToggleDottedLine: vi.fn(),
+    onClose: vi.fn(),
   };
   const panel = new PropertyPanel({ container, ...callbacks });
   return { container, panel, ...callbacks };
 }
 
 describe('PropertyPanel', () => {
-  afterEach(() => { document.body.innerHTML = ''; });
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
 
   it('creates panel in container', () => {
     const { container } = createPanel();
-    expect(container.querySelector('.property-panel')).not.toBeNull();
+    const panel = container.querySelector('.property-panel')!;
+    expect(panel).not.toBeNull();
+    expect(panel.classList.contains('panel-chrome')).toBe(true);
+    expect(panel.getAttribute('role')).toBe('complementary');
+    expect(panel.hasAttribute('aria-modal')).toBe(false);
   });
 
   it('is hidden by default', () => {
@@ -78,7 +93,9 @@ describe('PropertyPanel', () => {
     const { container, panel } = createPanel();
     panel.show(makeNode(), 'Boss', 0, 0, 0, []);
     const spanRow = container.querySelectorAll('.pp-node-meta span');
-    const spanOfControl = Array.from(spanRow).find(s => s.textContent?.includes('span of control'));
+    const spanOfControl = Array.from(spanRow).find((s) =>
+      s.textContent?.includes('span of control'),
+    );
     expect(spanOfControl).toBeDefined();
     expect((spanOfControl as HTMLElement).style.display).toBe('none');
   });
@@ -153,7 +170,7 @@ describe('PropertyPanel', () => {
     const { container, panel } = createPanel();
     panel.show(makeNode(), null, 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
-    const moveBtn = Array.from(btns).find(b => b.textContent?.includes('Move'))!;
+    const moveBtn = Array.from(btns).find((b) => b.textContent?.includes('Move'))!;
     expect(moveBtn.getAttribute('aria-disabled')).toBe('true');
   });
 
@@ -161,7 +178,7 @@ describe('PropertyPanel', () => {
     const { container, panel } = createPanel();
     panel.show(makeNode(), null, 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
-    const removeBtn = Array.from(btns).find(b => b.textContent?.includes('Remove'))!;
+    const removeBtn = Array.from(btns).find((b) => b.textContent?.includes('Remove'))!;
     expect(removeBtn.getAttribute('aria-disabled')).toBe('true');
   });
 
@@ -169,7 +186,7 @@ describe('PropertyPanel', () => {
     const { container, panel } = createPanel();
     panel.show(makeNode(), 'Boss', 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
-    const focusBtn = Array.from(btns).find(b => b.textContent?.includes('Focus'))!;
+    const focusBtn = Array.from(btns).find((b) => b.textContent?.includes('Focus'))!;
     expect(focusBtn.getAttribute('aria-disabled')).toBe('true');
   });
 
@@ -177,7 +194,7 @@ describe('PropertyPanel', () => {
     const { container, panel } = createPanel();
     panel.show(makeManager(), 'CEO', 1, 2, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
-    const focusBtn = Array.from(btns).find(b => b.textContent?.includes('Focus'))!;
+    const focusBtn = Array.from(btns).find((b) => b.textContent?.includes('Focus'))!;
     expect(focusBtn.getAttribute('aria-disabled')).toBeNull();
   });
 
@@ -185,7 +202,7 @@ describe('PropertyPanel', () => {
     const { container, panel, onMove } = createPanel();
     panel.show(makeNode(), null, 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
-    const moveBtn = Array.from(btns).find(b => b.textContent?.includes('Move'))!;
+    const moveBtn = Array.from(btns).find((b) => b.textContent?.includes('Move'))!;
     (moveBtn as HTMLElement).click();
     expect(onMove).not.toHaveBeenCalled();
   });
@@ -204,7 +221,7 @@ describe('PropertyPanel', () => {
   it('inputs have labels with htmlFor', () => {
     const { container } = createPanel();
     const labels = container.querySelectorAll('.pp-field label');
-    labels.forEach(label => {
+    labels.forEach((label) => {
       expect((label as HTMLLabelElement).htmlFor).toBeTruthy();
     });
   });
@@ -227,7 +244,7 @@ describe('PropertyPanel', () => {
     const { container, panel } = createPanel();
     panel.show(makeNode(), 'Boss', 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
-    const dottedBtn = Array.from(btns).find(b => b.textContent?.includes('Dotted'))!;
+    const dottedBtn = Array.from(btns).find((b) => b.textContent?.includes('Dotted'))!;
     expect(dottedBtn).toBeDefined();
     expect(dottedBtn.getAttribute('aria-disabled')).toBeNull();
   });
@@ -236,7 +253,7 @@ describe('PropertyPanel', () => {
     const { container, panel } = createPanel();
     panel.show(makeNode({ dottedLine: true }), 'Boss', 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
-    const solidBtn = Array.from(btns).find(b => b.textContent?.includes('Solid'))!;
+    const solidBtn = Array.from(btns).find((b) => b.textContent?.includes('Solid'))!;
     expect(solidBtn).toBeDefined();
   });
 
@@ -244,7 +261,7 @@ describe('PropertyPanel', () => {
     const { container, panel } = createPanel();
     panel.show(makeNode(), null, 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
-    const dottedBtn = Array.from(btns).find(b => b.textContent?.includes('Dotted'))!;
+    const dottedBtn = Array.from(btns).find((b) => b.textContent?.includes('Dotted'))!;
     expect(dottedBtn.getAttribute('aria-disabled')).toBe('true');
   });
 
@@ -252,7 +269,7 @@ describe('PropertyPanel', () => {
     const { container, panel, onToggleDottedLine } = createPanel();
     panel.show(makeNode(), 'Boss', 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
-    const dottedBtn = Array.from(btns).find(b => b.textContent?.includes('Dotted'))!;
+    const dottedBtn = Array.from(btns).find((b) => b.textContent?.includes('Dotted'))!;
     (dottedBtn as HTMLElement).click();
     expect(onToggleDottedLine).toHaveBeenCalledWith('n1');
   });
@@ -261,7 +278,7 @@ describe('PropertyPanel', () => {
     const { container, panel, onToggleDottedLine } = createPanel();
     panel.show(makeNode(), null, 0, 0, 0, []);
     const btns = container.querySelectorAll('.pp-action-btn');
-    const dottedBtn = Array.from(btns).find(b => b.textContent?.includes('Dotted'))!;
+    const dottedBtn = Array.from(btns).find((b) => b.textContent?.includes('Dotted'))!;
     (dottedBtn as HTMLElement).click();
     expect(onToggleDottedLine).not.toHaveBeenCalled();
   });
@@ -339,10 +356,17 @@ describe('PropertyPanel', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
       const callbacks = {
-        onEdit: vi.fn(), onAddChild: vi.fn(), onMove: vi.fn(), onRemove: vi.fn(),
-        onFocus: vi.fn(), onCategoryChange: vi.fn(), onLevelChange: vi.fn(),
-        onToggleDottedLine: vi.fn(), onClose: vi.fn(),
-        onPinTitle: vi.fn(), onUnpinTitle: vi.fn(),
+        onEdit: vi.fn(),
+        onAddChild: vi.fn(),
+        onMove: vi.fn(),
+        onRemove: vi.fn(),
+        onFocus: vi.fn(),
+        onCategoryChange: vi.fn(),
+        onLevelChange: vi.fn(),
+        onToggleDottedLine: vi.fn(),
+        onClose: vi.fn(),
+        onPinTitle: vi.fn(),
+        onUnpinTitle: vi.fn(),
         resolveTitle,
       };
       const panel = new PropertyPanel({ container, ...callbacks });
