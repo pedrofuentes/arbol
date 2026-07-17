@@ -185,6 +185,34 @@ describe('ChartEditor working-tree people counts', () => {
     expect(getMeta(chart.id).textContent).toBe(expectedMeta(3, 0));
   });
 
+  it('quietly retains a saved count while the active chart is filtered out', async () => {
+    const chart = makeChart('active', 1);
+    const { chartStore, orgStore } = await render([chart]);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      const searchInput = container!.querySelector<HTMLInputElement>('.chart-search')!;
+      searchInput.value = 'does not match';
+      searchInput.dispatchEvent(new Event('input'));
+      await vi.waitFor(() => {
+        expect(container!.querySelector('[data-chart-id]')).toBeNull();
+      });
+
+      const replacementTree = makeTree('saved-while-filtered', 3);
+      orgStore.fromJSON(JSON.stringify(replacementTree));
+      await expect(chartStore.saveWorkingTree(orgStore.getTree())).resolves.toBeUndefined();
+      expect(warn).not.toHaveBeenCalled();
+
+      searchInput.value = '';
+      searchInput.dispatchEvent(new Event('input'));
+      await vi.waitFor(() => {
+        expect(getMeta(chart.id).textContent).toBe(expectedMeta(3, 0));
+      });
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it('shows the target chart people count immediately after switching charts', async () => {
     const initial = makeChart('initial', 1);
     const target = makeChart('larger', 4);
