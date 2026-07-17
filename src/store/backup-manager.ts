@@ -196,8 +196,8 @@ export async function restoreFullReplace(
   }
 
   // Stage 2 snapshots the current state because `ChartDB` cannot replace everything in one atomic transaction.
-  const existingCharts = await db.getAllCharts();
-  const existingVersions = await db.getAllVersions();
+  const existingCharts = await db.getAllCharts({ includeTrashed: true });
+  const existingVersions = await db.getAllVersions({ includeTrashed: true });
   const existingLSValues: Record<string, string | null> = {};
   for (const key of ALL_ARBOL_LS_KEYS) {
     existingLSValues[key] = storage.getItem(key);
@@ -283,7 +283,7 @@ export async function restoreFullReplace(
 export async function restoreMerge(db: ChartDB, backup: ArbolBackup): Promise<MergeResult> {
   const result: MergeResult = { chartsAdded: 0, chartsSkipped: 0, versionsAdded: 0 };
 
-  const existingCharts = await db.getAllCharts();
+  const existingCharts = await db.getAllCharts({ includeTrashed: true });
   const existingIds = new Set(existingCharts.map((c) => c.id));
 
   for (const chart of backup.data.charts) {

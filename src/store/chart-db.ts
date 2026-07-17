@@ -1,4 +1,4 @@
-import type { ChartRecord, VersionRecord } from '../types';
+import type { ChartRecord, IncludeTrashedOptions, VersionRecord } from '../types';
 
 const DB_NAME = 'arbol-db';
 const DB_VERSION = 1;
@@ -51,14 +51,20 @@ export class ChartDB {
     this.db = null;
   }
 
-  getAllCharts(): Promise<ChartRecord[]> {
+  getAllCharts(options: IncludeTrashedOptions = {}): Promise<ChartRecord[]> {
     return this.getAll<ChartRecord>(CHARTS_STORE).then((charts) =>
-      charts.sort((a, b) => (a.createdAt > b.createdAt ? 1 : a.createdAt < b.createdAt ? -1 : 0)),
+      this.filterTrashed(charts, options).sort((a, b) =>
+        a.createdAt > b.createdAt ? 1 : a.createdAt < b.createdAt ? -1 : 0,
+      ),
     );
   }
 
-  getChart(id: string): Promise<ChartRecord | undefined> {
-    return this.getByKey<ChartRecord>(CHARTS_STORE, id);
+  async getChart(
+    id: string,
+    options: IncludeTrashedOptions = {},
+  ): Promise<ChartRecord | undefined> {
+    const chart = await this.getByKey<ChartRecord>(CHARTS_STORE, id);
+    return chart && this.isVisible(chart, options) ? chart : undefined;
   }
 
   putChart(chart: ChartRecord): Promise<void> {
@@ -123,7 +129,10 @@ export class ChartDB {
     });
   }
 
-  getVersionsByChart(chartId: string): Promise<VersionRecord[]> {
+  getVersionsByChart(
+    chartId: string,
+    options: IncludeTrashedOptions = {},
+  ): Promise<VersionRecord[]> {
     const db = this.requireDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(VERSIONS_STORE, 'readonly');
@@ -131,7 +140,7 @@ export class ChartDB {
       const request = index.getAll(IDBKeyRange.only(chartId));
 
       request.onsuccess = () => {
-        const versions = request.result as VersionRecord[];
+        const versions = this.filterTrashed(request.result as VersionRecord[], options);
         versions.sort((a, b) =>
           b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0,
         );
@@ -144,18 +153,47 @@ export class ChartDB {
     });
   }
 
-  getAllVersions(): Promise<VersionRecord[]> {
+  getAllVersions(options: IncludeTrashedOptions = {}): Promise<VersionRecord[]> {
     return this.getAll<VersionRecord>(VERSIONS_STORE).then((versions) =>
-      versions.sort((a, b) => (b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0)),
+      this.filterTrashed(versions, options).sort((a, b) =>
+        b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0,
+      ),
     );
   }
 
-  getVersion(id: string): Promise<VersionRecord | undefined> {
-    return this.getByKey<VersionRecord>(VERSIONS_STORE, id);
+  async getVersion(
+    id: string,
+    options: IncludeTrashedOptions = {},
+  ): Promise<VersionRecord | undefined> {
+    const version = await this.getByKey<VersionRecord>(VERSIONS_STORE, id);
+    return version && this.isVisible(version, options) ? version : undefined;
   }
 
   putVersion(version: VersionRecord): Promise<void> {
     return this.put(VERSIONS_STORE, version);
+  }
+
+  patchVersion(id: string, fields: Partial<Omit<VersionRecord, 'id'>>): Promise<void> {
+    const db = this.requireDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(VERSIONS_STORE, 'readwrite');
+      const store = tx.objectStore(VERSIONS_STORE);
+      const getReq = store.get(id);
+
+      getReq.onsuccess = () => {
+        const version = getReq.result as VersionRecord | undefined;
+        if (!version) {
+          reject(new Error(`Version not found: ${id}`));
+          return;
+        }
+        Object.assign(version, fields);
+        store.put(version);
+      };
+      getReq.onerror = () =>
+        reject(new Error(`Failed to get version for patching: ${getReq.error?.message}`));
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(new Error(`Failed to patch version: ${tx.error?.message}`));
+    });
   }
 
   /** Writes multiple versions in a single transaction for efficient bulk imports. */
@@ -214,6 +252,19 @@ export class ChartDB {
       throw new Error('Database not open — call open() first');
     }
     return this.db;
+  }
+
+  private filterTrashed<T extends { deletedAt?: number }>(
+    records: T[],
+    options: IncludeTrashedOptions,
+  ): T[] {
+    return options.includeTrashed
+      ? records
+      : records.filter((record) => record.deletedAt === undefined);
+  }
+
+  private isVisible(record: { deletedAt?: number }, options: IncludeTrashedOptions): boolean {
+    return options.includeTrashed || record.deletedAt === undefined;
   }
 
   private getAll<T>(storeName: string): Promise<T[]> {

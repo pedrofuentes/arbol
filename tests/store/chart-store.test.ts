@@ -9,6 +9,7 @@ import type {
   ColorCategory,
   ChartBundle,
   ChartRecord,
+  VersionRecord,
   LevelMapping,
   LevelDisplayMode,
 } from '../../src/types';
@@ -378,7 +379,7 @@ describe('ChartStore', () => {
       expect(orig.workingTree.name).toBe('Root');
     });
 
-    it('deleteChart removes the chart and its versions', async () => {
+    it('deleteChart soft-deletes the chart while preserving its versions', async () => {
       const chart = await store.createChart('To Delete');
       const tree = makeTree();
       await store.saveVersion('v1', tree);
@@ -390,6 +391,11 @@ describe('ChartStore', () => {
       const remaining = await store.getCharts();
       const ids = remaining.map((c) => c.id);
       expect(ids).not.toContain(chart.id);
+      const trashed = (await store.getCharts({ includeTrashed: true })).find(
+        (candidate) => candidate.id === chart.id,
+      );
+      expect(trashed?.deletedAt).toEqual(expect.any(Number));
+      expect(await db.getVersionsByChart(chart.id)).toHaveLength(1);
     });
 
     it('deleteChart switches to another chart if deleting the active one', async () => {
@@ -405,7 +411,7 @@ describe('ChartStore', () => {
       expect(store.getActiveChartId()).toBeTruthy();
     });
 
-    it('deleteChart creates a new default chart if deleting the last chart', async () => {
+    it('deleteChart leaves an empty active state if deleting the last chart', async () => {
       // Delete all charts, leaving only the initial one
       const charts = await store.getCharts();
       for (let i = 1; i < charts.length; i++) {
@@ -416,9 +422,37 @@ describe('ChartStore', () => {
       await store.deleteChart(lastId);
 
       const remaining = await store.getCharts();
-      expect(remaining.length).toBe(1);
-      expect(remaining[0].name).toBe('My Org Chart');
-      expect(store.getActiveChartId()).toBe(remaining[0].id);
+      expect(remaining).toEqual([]);
+      expect(store.getActiveChartId()).toBeNull();
+      expect(await store.getActiveChart()).toBeUndefined();
+    });
+
+    it('restores a trashed chart without auto-activating it', async () => {
+      const firstId = store.getActiveChartId();
+      const chart = await store.createChart('Restore Me');
+      await store.deleteChart(chart.id);
+      const activeAfterDelete = store.getActiveChartId();
+
+      await store.restoreChart(chart.id);
+
+      expect((await store.getCharts()).map((candidate) => candidate.id)).toContain(chart.id);
+      expect(store.getActiveChartId()).toBe(activeAfterDelete);
+      expect(store.getActiveChartId()).toBe(firstId);
+    });
+
+    it('permanently deletes a trashed chart and all associated versions', async () => {
+      const chart = await store.createChart('Delete Forever');
+      const version = await store.saveVersion('Keep until purge', makeTree());
+      await store.deleteChart(chart.id);
+
+      await store.deleteChartForever(chart.id);
+
+      expect(
+        (await store.getCharts({ includeTrashed: true })).some(
+          (candidate) => candidate.id === chart.id,
+        ),
+      ).toBe(false);
+      expect(await db.getVersion(version.id, { includeTrashed: true })).toBeUndefined();
     });
 
     it('deleteChart completes the active-chart switch when the baseline cannot be read', async () => {
@@ -775,11 +809,81 @@ describe('ChartStore', () => {
       expect(await store.getVersions()).toHaveLength(1);
     });
 
-    it('deleteVersion removes the version', async () => {
+    it('deleteVersion soft-deletes the version and excludes it from active reads', async () => {
       const version = await store.saveVersion('temp', makeTree());
       await store.deleteVersion(version.id);
       const retrieved = await store.getVersion(version.id);
       expect(retrieved).toBeUndefined();
+      expect(await store.getVersions()).toEqual([]);
+      expect((await store.getAllVersions({ includeTrashed: true }))[0]).toMatchObject({
+        id: version.id,
+        deletedAt: expect.any(Number),
+      });
+    });
+
+    it('restores a trashed version in timestamp order and invalidates adjacent deltas', async () => {
+      const chartId = store.getActiveChartId()!;
+      const oldest: VersionRecord = {
+        id: 'trash-oldest',
+        chartId,
+        name: 'Oldest',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        tree: makeTree({ children: [{ id: 'a', name: 'A', title: 'IC' }] }),
+      };
+      const middle: VersionRecord = {
+        id: 'trash-middle',
+        chartId,
+        name: 'Middle',
+        createdAt: '2026-02-01T00:00:00.000Z',
+        tree: makeTree({
+          children: [
+            { id: 'a', name: 'A', title: 'IC' },
+            { id: 'b', name: 'B', title: 'IC' },
+          ],
+        }),
+      };
+      const newest: VersionRecord = {
+        id: 'trash-newest',
+        chartId,
+        name: 'Newest',
+        createdAt: '2026-03-01T00:00:00.000Z',
+        tree: makeTree({
+          children: [
+            { id: 'a', name: 'A', title: 'IC' },
+            { id: 'b', name: 'B', title: 'IC' },
+            { id: 'c', name: 'C', title: 'IC' },
+          ],
+        }),
+      };
+      await db.putVersionsBatch([oldest, middle, newest]);
+      store = new ChartStore(db);
+      await store.initialize();
+      const initial = await store.getVersions();
+      expect(new VersionDeltaCache().get(initial[0], initial[1])).toEqual({
+        added: 1,
+        removed: 0,
+      });
+
+      await store.deleteVersion(middle.id);
+      const withoutMiddle = await store.getVersions();
+      expect(withoutMiddle.map((version) => version.id)).toEqual([newest.id, oldest.id]);
+
+      await store.restoreDeletedVersion(middle.id);
+      const restored = await store.getVersions();
+      expect(restored.map((version) => version.id)).toEqual([newest.id, middle.id, oldest.id]);
+      expect(new VersionDeltaCache().get(restored[0], restored[1])).toEqual({
+        added: 1,
+        removed: 0,
+      });
+    });
+
+    it('permanently deletes a trashed version', async () => {
+      const version = await store.saveVersion('Purge Me', makeTree());
+      await store.deleteVersion(version.id);
+
+      await store.deleteVersionForever(version.id);
+
+      expect(await store.getVersion(version.id, { includeTrashed: true })).toBeUndefined();
     });
 
     it('saveVersion throws if name is empty', async () => {
