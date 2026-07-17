@@ -74,6 +74,13 @@ describe('dom-builder', () => {
       expect(btn.textContent).toBe('');
     });
 
+    it('renders an unregistered icon string as literal fallback text', () => {
+      const btn = createIconButton({ icon: 'legacy-symbol' });
+
+      expect(btn.textContent).toBe('legacy-symbol');
+      expect(btn.querySelector('svg')).toBeNull();
+    });
+
     it('sets tooltip via data-tooltip', () => {
       const btn = createIconButton({ icon: 'settings', tooltip: 'Settings' });
       expect(btn.getAttribute('data-tooltip')).toBe('Settings');

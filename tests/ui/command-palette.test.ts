@@ -148,6 +148,25 @@ describe('CommandPalette', () => {
       palette.destroy();
     });
 
+    it('renders an unregistered icon string as literal fallback text', () => {
+      const { palette } = createPalette();
+      palette.setItems([
+        {
+          id: 'legacy',
+          label: 'Legacy action',
+          icon: 'legacy-symbol',
+          group: 'Actions',
+          action: vi.fn(),
+        },
+      ]);
+      palette.open();
+
+      const icon = document.querySelector('.cp-item-icon');
+      expect(icon?.textContent).toBe('legacy-symbol');
+      expect(icon?.querySelector('svg')).toBeNull();
+      palette.destroy();
+    });
+
     it('renders item shortcuts', () => {
       const { palette } = createPalette();
       palette.setItems(makeItems());
