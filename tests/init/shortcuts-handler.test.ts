@@ -582,9 +582,21 @@ describe('shortcuts-handler — command palette actions', () => {
     );
 
     await items.find((item) => item.id === 'rename-chart')!.action();
+    await items.find((item) => item.id === 'duplicate-chart')!.action();
+    await items.find((item) => item.id === 'export-chart-data')!.action();
+    await items.find((item) => item.id === 'delete-chart')!.action();
     await items.find((item) => item.id === 'view-version-v1')!.action();
+    await items.find((item) => item.id === 'compare-version-v1')!.action();
+    await items.find((item) => item.id === 'restore-version-v1')!.action();
+    await items.find((item) => item.id === 'delete-version-v1')!.action();
     expect(callbacks.renameActiveChart).toHaveBeenCalledWith(activeChart);
+    expect(callbacks.duplicateActiveChart).toHaveBeenCalledWith(activeChart);
+    expect(callbacks.exportActiveChart).toHaveBeenCalledWith(activeChart);
+    expect(callbacks.deleteActiveChart).toHaveBeenCalledWith(activeChart);
     expect(callbacks.viewVersion).toHaveBeenCalledWith(version);
+    expect(callbacks.compareVersion).toHaveBeenCalledWith(version);
+    expect(callbacks.restoreVersion).toHaveBeenCalledWith(version);
+    expect(callbacks.deleteVersion).toHaveBeenCalledWith(version);
   });
 
   it('returns static commands when saved versions fail to load', async () => {
