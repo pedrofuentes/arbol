@@ -61,6 +61,7 @@ function mockChartStore(charts: ChartRecord[] = [], versions: VersionRecord[] = 
     getActiveChartId: vi.fn().mockReturnValue(charts[0]?.id ?? null),
     getVersions: vi.fn().mockResolvedValue(versions),
     onChange: vi.fn().mockReturnValue(() => {}),
+    onWorkingTreeSaved: vi.fn().mockReturnValue(() => {}),
     createChart: vi.fn().mockResolvedValue(charts[0] ?? makeChart()),
     switchChart: vi.fn().mockResolvedValue(charts[0] ?? makeChart()),
     getActiveChart: vi.fn().mockImplementation(async () => charts[0]),
