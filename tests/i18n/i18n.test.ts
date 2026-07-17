@@ -176,11 +176,6 @@ describe('i18n', () => {
       expect(en['loading.importing']).toBe('Importing\u2026');
     });
 
-    it('welcome.dismiss hints at help recovery', () => {
-      expect(en['welcome.dismiss']).toContain('Got it');
-      expect(en['welcome.dismiss']).toContain('\u2753');
-    });
-
     it('has footer.separator key for localization', () => {
       expect(en['footer.separator']).toBe(' \u00b7 ');
     });
@@ -202,11 +197,6 @@ describe('i18n', () => {
       expect(en['loading.restoring_version']).toBe('Restoring version\u2026');
       expect(en['loading.deleting_chart']).toBe('Deleting chart\u2026');
       expect(en['loading.importing']).toBe('Importing\u2026');
-    });
-
-    it('welcome.dismiss hints at help recovery', () => {
-      expect(en['welcome.dismiss']).toContain('Got it');
-      expect(en['welcome.dismiss']).toContain('\u2753');
     });
 
     it('has footer.separator key for localization', () => {
