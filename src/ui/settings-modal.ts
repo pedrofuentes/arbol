@@ -67,6 +67,8 @@ export class SettingsModal {
   private previewZoomPct: HTMLSpanElement = null!;
   private previewFitBtn: HTMLButtonElement = null!;
   private previewResetBtn: HTMLButtonElement = null!;
+  private searchInput: HTMLInputElement;
+  private searchNoResults: HTMLDivElement;
 
   constructor(options: SettingsModalOptions, tabs?: SettingsTab[]) {
     this.options = options;
@@ -98,6 +100,19 @@ export class SettingsModal {
     title.appendChild(document.createTextNode(t('settings_modal.title')));
     modal.setAttribute('aria-labelledby', 'settings-modal-title');
 
+    const search = document.createElement('label');
+    search.className = 'settings-modal-search';
+    search.appendChild(createIcon('search'));
+
+    this.searchInput = document.createElement('input');
+    this.searchInput.className = 'settings-search-input';
+    this.searchInput.type = 'search';
+    this.searchInput.placeholder = t('settings_modal.search_placeholder');
+    this.searchInput.setAttribute('aria-label', t('settings_modal.search_aria'));
+    this.searchInput.setAttribute('autocomplete', 'off');
+    this.searchInput.addEventListener('input', () => this.refreshSectionVisibility());
+    search.appendChild(this.searchInput);
+
     const closeBtn = document.createElement('button');
     closeBtn.className = 'settings-modal-close';
     closeBtn.setAttribute('aria-label', t('settings_modal.close_aria'));
@@ -105,6 +120,7 @@ export class SettingsModal {
     closeBtn.addEventListener('click', () => this.cancel());
 
     header.appendChild(title);
+    header.appendChild(search);
     header.appendChild(closeBtn);
 
     // Body (nav + content)
@@ -217,6 +233,14 @@ export class SettingsModal {
     this.contentArea.setAttribute('data-active-tab', this.activeTab);
 
     contentColumn.appendChild(this.contentArea);
+
+    this.searchNoResults = document.createElement('div');
+    this.searchNoResults.className = 'settings-search-no-results';
+    this.searchNoResults.textContent = t('settings_modal.search_no_results');
+    this.searchNoResults.setAttribute('role', 'status');
+    this.searchNoResults.setAttribute('aria-live', 'polite');
+    this.searchNoResults.hidden = true;
+    contentColumn.appendChild(this.searchNoResults);
 
     body.appendChild(nav);
     body.appendChild(contentColumn);
@@ -367,6 +391,45 @@ export class SettingsModal {
     }
 
     this.options.onTabChange?.(tabId);
+    this.refreshSectionVisibility();
+  }
+
+  refreshSectionVisibility(): void {
+    const query = this.searchInput.value.trim().toLocaleLowerCase();
+    const isSearching = query.length > 0;
+    const sections = Array.from(
+      this.contentArea.querySelectorAll<HTMLElement>('[data-section-id]'),
+    );
+
+    this.dialog.classList.toggle('settings-searching', isSearching);
+
+    let matchCount = 0;
+    for (const section of sections) {
+      section.querySelector('.settings-search-group-label')?.remove();
+
+      const groupId = section.dataset.settingsGroup;
+      const matches = isSearching
+        ? (section.textContent ?? '').toLocaleLowerCase().includes(query)
+        : groupId === this.activeTab;
+      section.hidden = !matches;
+
+      if (isSearching && matches) {
+        const group = this.tabs.find((tab) => tab.id === groupId);
+        if (group) {
+          const groupLabel = document.createElement('span');
+          groupLabel.className = 'settings-search-group-label';
+          groupLabel.textContent = group.label;
+          section.prepend(groupLabel);
+        }
+        matchCount += 1;
+      }
+    }
+
+    this.searchNoResults.hidden = !isSearching || matchCount > 0;
+    this.previewStrip.classList.toggle(
+      'hidden',
+      isSearching || !TABS_WITH_PREVIEW.has(this.activeTab),
+    );
   }
 
   cancel(): void {

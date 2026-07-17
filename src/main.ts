@@ -281,14 +281,15 @@ async function main(): Promise<void> {
     'backup-restore': 'data_backup',
   };
 
-  function filterSettingsSections(tabId: string): void {
+  function filterSettingsSections(): void {
     const contentArea = settingsModal.getContentArea();
     const sections = contentArea.querySelectorAll('[data-section-id]');
     sections.forEach((section) => {
       const sectionId = section.getAttribute('data-section-id')!;
       const sectionTab = SECTION_TAB_MAP[sectionId];
-      (section as HTMLElement).style.display = sectionTab === tabId ? '' : 'none';
+      section.setAttribute('data-settings-group', sectionTab);
     });
+    settingsModal.refreshSectionVisibility();
   }
 
   let settingsEditorInstance: SettingsEditor | null = null;
@@ -328,8 +329,8 @@ async function main(): Promise<void> {
         settingsSnapshot = null;
       }
     },
-    onTabChange: (tabId) => {
-      filterSettingsSections(tabId);
+    onTabChange: () => {
+      filterSettingsSections();
     },
   });
 
@@ -483,10 +484,10 @@ async function main(): Promise<void> {
           settingsModal.getPreviewZoomPct(),
         );
         settingsEditorInstance.onBuild(() => {
-          filterSettingsSections(settingsModal.getActiveTab());
+          filterSettingsSections();
         });
       }
-      filterSettingsSections(settingsModal.getActiveTab());
+      filterSettingsSections();
     },
     onImportClick: () => {
       wizardState = {};

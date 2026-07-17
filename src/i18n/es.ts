@@ -178,6 +178,10 @@ const es: Record<string, string> = {
   'settings_modal.cancel': 'Cancelar',
   'settings_modal.apply': 'Listo',
   'settings_modal.nav_aria': 'Secciones de configuración',
+  'settings_modal.search_placeholder': 'Buscar configuración…',
+  'settings_modal.search_aria': 'Buscar configuración',
+  'settings_modal.search_no_results':
+    'No se encontró ninguna configuración. Pruebe con otras palabras.',
   'settings_modal.preview_title': 'Vista previa en vivo',
   'settings_modal.preview_hint.appearance': 'Cambios de tema y color resaltados',
   'settings_modal.preview_hint.presets': 'Se actualiza al cambiar la configuración',
