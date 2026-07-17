@@ -2,6 +2,8 @@ import 'fake-indexeddb/auto';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ChartDB } from '../../src/store/chart-db';
 import { ChartStore } from '../../src/store/chart-store';
+import { OrgStore } from '../../src/store/org-store';
+import { VersionDeltaCache } from '../../src/utils/version-delta';
 import type {
   OrgNode,
   ColorCategory,
@@ -606,6 +608,21 @@ describe('ChartStore', () => {
 
       // Version trees are immutable, so list refreshes reuse the in-memory cache.
       expect(readVersions).not.toHaveBeenCalled();
+    });
+
+    it('keeps cached versions immutable when the live OrgStore mutates in place', async () => {
+      const orgStore = new OrgStore(makeTree());
+      const treeAtV1 = structuredClone(orgStore.getTree());
+      await store.saveVersion('V1', orgStore.getTree());
+
+      orgStore.addChild('root', { name: 'Bob', title: 'Engineer' });
+      orgStore.addChild('root', { name: 'Carol', title: 'Designer' });
+      await store.saveVersion('V2', orgStore.getTree());
+
+      const [v2, v1] = await store.getVersions();
+      expect.soft(new VersionDeltaCache().get(v2, v1)).toEqual({ added: 2, removed: 0 });
+      expect.soft(v1.tree).toEqual(treeAtV1);
+      expect.soft(v1.tree).not.toBe(orgStore.getTree());
     });
 
     it('getVersions returns versions for a specified chart', async () => {
