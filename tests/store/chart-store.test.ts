@@ -421,6 +421,32 @@ describe('ChartStore', () => {
       expect(store.getActiveChartId()).toBe(remaining[0].id);
     });
 
+    it('deleteChart completes the active-chart switch when the baseline cannot be read', async () => {
+      const activeId = store.getActiveChartId()!;
+      const remaining: ChartRecord = {
+        id: 'delete-baseline-fallback',
+        name: 'Remaining chart',
+        createdAt: '2026-07-17T00:00:00.000Z',
+        updatedAt: '2026-07-17T00:00:00.000Z',
+        workingTree: makeTree({ name: 'Remaining CEO' }),
+        categories: [],
+      };
+      await db.putChart(remaining);
+      const error = new Error('versions unavailable');
+      vi.spyOn(db, 'getVersionsByChart').mockRejectedValueOnce(error);
+      const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      try {
+        await store.deleteChart(activeId);
+
+        expect(store.getActiveChartId()).toBe(remaining.id);
+        expect(store.getEditsSinceLastVersion(remaining.workingTree)).toBe(0);
+        expect(logError).toHaveBeenCalledWith('Failed to load version baseline:', error);
+      } finally {
+        logError.mockRestore();
+      }
+    });
+
     it('switchChart loads a different chart and updates active ID', async () => {
       const chartA = await store.createChart('Chart A');
       const chartB = await store.createChart('Chart B');
@@ -430,6 +456,36 @@ describe('ChartStore', () => {
       const switched = await store.switchChart(chartA.id);
       expect(switched.id).toBe(chartA.id);
       expect(store.getActiveChartId()).toBe(chartA.id);
+    });
+
+    it('switchChart falls back coherently when the version baseline cannot be read', async () => {
+      const previous = (await store.getActiveChart())!;
+      const target: ChartRecord = {
+        id: 'baseline-failure-target',
+        name: 'Baseline failure target',
+        createdAt: '2026-07-17T00:00:00.000Z',
+        updatedAt: '2026-07-17T00:00:00.000Z',
+        workingTree: makeTree({ name: 'Target CEO' }),
+        categories: [],
+      };
+      await db.putChart(target);
+      const error = new Error('versions unavailable');
+      vi.spyOn(db, 'getVersionsByChart').mockRejectedValueOnce(error);
+      const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      try {
+        const switched = await store.switchChart(target.id);
+
+        expect(switched).toEqual(target);
+        expect(store.getActiveChartId()).toBe(target.id);
+        expect(store.getEditsSinceLastVersion(switched.workingTree)).toBe(0);
+        await store.saveWorkingTree(switched.workingTree, []);
+        expect((await db.getChart(target.id))!.workingTree).toEqual(target.workingTree);
+        expect((await db.getChart(previous.id))!.workingTree).toEqual(previous.workingTree);
+        expect(logError).toHaveBeenCalledWith('Failed to load version baseline:', error);
+      } finally {
+        logError.mockRestore();
+      }
     });
 
     it('switchChart throws if chart does not exist', async () => {
@@ -1037,6 +1093,32 @@ describe('ChartStore', () => {
 
         expect(updated.workingTree).toEqual({ id: 'r', name: 'Root', title: 'CEO' });
         expect(updated.categories).toEqual([{ id: 'cat-1', label: 'Open', color: '#ff0000' }]);
+      });
+
+      it('reports a committed replacement coherently when the baseline cannot be read', async () => {
+        const bundle = makeBundle({
+          versions: [
+            {
+              name: 'Imported baseline',
+              createdAt: '2026-07-17T00:00:00.000Z',
+              tree: { id: 'r', name: 'Imported baseline root', title: 'CEO' },
+            },
+          ],
+        });
+        const error = new Error('versions unavailable');
+        vi.spyOn(db, 'getVersionsByChart').mockRejectedValueOnce(error);
+        const logError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        try {
+          const updated = await store.importChartReplaceCurrent(bundle);
+
+          expect(updated.workingTree).toEqual(bundle.chart.workingTree);
+          expect(store.getActiveChartId()).toBe(updated.id);
+          expect(store.getEditsSinceLastVersion(updated.workingTree)).toBe(0);
+          expect(logError).toHaveBeenCalledWith('Failed to load version baseline:', error);
+        } finally {
+          logError.mockRestore();
+        }
       });
 
       it('adds bundle versions as versions of the active chart', async () => {

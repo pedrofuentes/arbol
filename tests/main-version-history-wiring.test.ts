@@ -7,6 +7,7 @@ import { ChartDB } from '../src/store/chart-db';
 import { ChartStore } from '../src/store/chart-store';
 import { OrgStore } from '../src/store/org-store';
 import { showConfirmDialog } from '../src/ui/confirm-dialog';
+import type { OrgNode, VersionRecord } from '../src/types';
 
 vi.mock('../src/ui/confirm-dialog', () => ({
   showConfirmDialog: vi.fn().mockResolvedValue(true),
@@ -32,6 +33,10 @@ describe('main version-history header wiring', () => {
     expect(mainSource).toContain(
       "showToast(t('toast.version_saved', { name: name.trim() }), 'success')",
     );
+  });
+
+  it('hands the original preview tree to the version-viewer restore action', () => {
+    expect(mainSource).toContain('await chartEditor.restoreVersion(version, savedTree)');
   });
 });
 
@@ -93,36 +98,84 @@ describe('version preview restore safety', () => {
       expect(container!.querySelector(`[data-version-id="${newest.id}"]`)).not.toBeNull();
     });
 
-    orgStore.replaceTree(targetVersion.tree);
     return { chartStore, orgStore, targetVersion, workingTreeBeforePreview, older, newest };
   }
 
-  it.each(['older', 'newest'] as const)(
-    'saves the pre-preview edits before restoring the %s version',
-    async (target) => {
-      const { chartStore, orgStore, targetVersion, workingTreeBeforePreview, older, newest } =
-        await createPreviewScenario(target);
+  async function clickSidebarRestore(version: VersionRecord): Promise<void> {
+    let restoreButton: HTMLButtonElement | null = null;
+    await vi.waitFor(() => {
+      const row = container!.querySelector<HTMLElement>(`[data-version-id="${version.id}"]`);
+      restoreButton =
+        row?.querySelector<HTMLButtonElement>('button[data-tooltip="Restore"]') ?? null;
+      expect(restoreButton).not.toBeNull();
+    });
+    restoreButton!.click();
+  }
 
-      await editor!.restoreVersion(targetVersion, workingTreeBeforePreview);
-
-      expect(orgStore.getTree()).toEqual(targetVersion.tree);
+  async function expectSafetyVersion(
+    chartStore: ChartStore,
+    originalVersions: VersionRecord[],
+    expectedTree: OrgNode,
+  ): Promise<void> {
+    await vi.waitFor(async () => {
       const versions = await chartStore.getVersions();
       const safetyVersions = versions.filter(
-        (version) => version.id !== older.id && version.id !== newest.id,
+        (version) => !originalVersions.some((original) => original.id === version.id),
       );
       expect(safetyVersions).toHaveLength(1);
-      expect(safetyVersions[0].tree).toEqual(workingTreeBeforePreview);
-      expect(safetyVersions[0].tree).not.toEqual(targetVersion.tree);
-    },
-  );
+      expect(safetyVersions[0].tree).toEqual(expectedTree);
+    });
+  }
 
-  it('keeps the preview active when restore confirmation is canceled', async () => {
-    const { orgStore, targetVersion, workingTreeBeforePreview } =
+  it('saves pre-preview edits when sidebar Restore targets an older version', async () => {
+    const { chartStore, orgStore, targetVersion, workingTreeBeforePreview, older, newest } =
       await createPreviewScenario('older');
-    vi.mocked(showConfirmDialog).mockResolvedValueOnce(false);
+    editor!.setViewingVersion(targetVersion.id, workingTreeBeforePreview);
+    orgStore.replaceTree(targetVersion.tree);
 
-    await editor!.restoreVersion(targetVersion, workingTreeBeforePreview);
+    await clickSidebarRestore(targetVersion);
 
+    await expectSafetyVersion(chartStore, [older, newest], workingTreeBeforePreview);
     expect(orgStore.getTree()).toEqual(targetVersion.tree);
+  });
+
+  it('creates a safety version when sidebar Restore targets the newest version', async () => {
+    const { chartStore, orgStore, targetVersion, workingTreeBeforePreview, older, newest } =
+      await createPreviewScenario('newest');
+    editor!.setViewingVersion(targetVersion.id, workingTreeBeforePreview);
+    orgStore.replaceTree(targetVersion.tree);
+
+    await clickSidebarRestore(targetVersion);
+
+    await expectSafetyVersion(chartStore, [older, newest], workingTreeBeforePreview);
+    expect(orgStore.getTree()).toEqual(targetVersion.tree);
+  });
+
+  it('keeps the original pre-preview tree across nested previews before restore', async () => {
+    const { chartStore, orgStore, workingTreeBeforePreview, older, newest } =
+      await createPreviewScenario('older');
+    editor!.setViewingVersion(older.id, workingTreeBeforePreview);
+    orgStore.replaceTree(older.tree);
+    editor!.setViewingVersion(newest.id, orgStore.getTree());
+    orgStore.replaceTree(newest.tree);
+
+    await clickSidebarRestore(newest);
+
+    await expectSafetyVersion(chartStore, [older, newest], workingTreeBeforePreview);
+    expect(orgStore.getTree()).toEqual(newest.tree);
+  });
+
+  it('restores the working tree without creating a version when the preview is closed', async () => {
+    const { chartStore, orgStore, targetVersion, workingTreeBeforePreview } =
+      await createPreviewScenario('older');
+    const versionCountBeforePreview = (await chartStore.getVersions()).length;
+    editor!.setViewingVersion(targetVersion.id, workingTreeBeforePreview);
+    orgStore.replaceTree(targetVersion.tree);
+
+    const treeToRestore = editor!.setViewingVersion(null) as unknown as OrgNode | null;
+    if (treeToRestore) orgStore.replaceTree(treeToRestore);
+
+    expect(orgStore.getTree()).toEqual(workingTreeBeforePreview);
+    expect(await chartStore.getVersions()).toHaveLength(versionCountBeforePreview);
   });
 });
