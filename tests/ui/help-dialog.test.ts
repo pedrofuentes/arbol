@@ -270,6 +270,13 @@ describe('showHelpDialog', () => {
     expect(grid!.textContent).toContain('Ctrl+,');
   });
 
+  it('shortcuts grid documents Ctrl+Shift+A analytics toggle', () => {
+    showHelpDialog();
+    const grid = document.querySelector('.help-shortcuts-grid');
+    expect(grid!.textContent).toContain('Ctrl+Shift+A');
+    expect(grid!.textContent).toContain('Toggle analytics panel');
+  });
+
   it('shortcuts grid contains ? for help', () => {
     showHelpDialog();
     const grid = document.querySelector('.help-shortcuts-grid');
