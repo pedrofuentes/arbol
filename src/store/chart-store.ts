@@ -12,6 +12,7 @@ import { validateTree } from './org-store';
 import { generateId } from '../utils/id';
 import { EventEmitter } from '../utils/event-emitter';
 import { type IStorage, browserStorage } from '../utils/storage';
+import { flattenTree } from '../utils/tree';
 import { t } from '../i18n';
 
 const DEFAULT_ROOT: OrgNode = {
@@ -26,6 +27,17 @@ const LS_CAT_KEY = 'arbol-categories';
 const VALID_LEVEL_DISPLAY_MODES: ReadonlySet<string> = new Set(['original', 'mapped']);
 
 const HEX_COLOR_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+export interface WorkingTreeSavedEvent {
+  chartId: string;
+  peopleCount: number;
+}
+
+class WorkingTreeSavedEmitter extends EventEmitter<WorkingTreeSavedEvent> {
+  emitSaved(event: WorkingTreeSavedEvent): void {
+    this.emit(event);
+  }
+}
 
 function isValidCategory(c: unknown): c is ColorCategory {
   if (typeof c !== 'object' || c === null) return false;
@@ -116,6 +128,7 @@ export class ChartStore extends EventEmitter {
   private lastSavedTree: string | null = null;
   private savedMutationVersion: number | null = null;
   private storage: IStorage;
+  private workingTreeSavedEmitter = new WorkingTreeSavedEmitter();
 
   constructor(db: ChartDB, storage: IStorage = browserStorage) {
     super();
@@ -349,6 +362,10 @@ export class ChartStore extends EventEmitter {
   // Working tree persistence
   // ---------------------------------------------------------------------------
 
+  onWorkingTreeSaved(listener: (event: WorkingTreeSavedEvent) => void): () => void {
+    return this.workingTreeSavedEmitter.onChange(listener);
+  }
+
   async saveWorkingTree(
     tree: OrgNode,
     categories: ColorCategory[],
@@ -356,6 +373,7 @@ export class ChartStore extends EventEmitter {
     levelData?: { levelMappings: LevelMapping[]; levelDisplayMode: LevelDisplayMode },
   ): Promise<void> {
     if (!this.activeChartId) throw new Error('No active chart');
+    const chartId = this.activeChartId;
 
     const patch: Partial<Omit<ChartRecord, 'id'>> = {
       workingTree: tree,
@@ -366,9 +384,10 @@ export class ChartStore extends EventEmitter {
       patch.levelMappings = levelData.levelMappings;
       patch.levelDisplayMode = levelData.levelDisplayMode;
     }
-    await this.db.patchChart(this.activeChartId, patch);
+    await this.db.patchChart(chartId, patch);
     this.savedMutationVersion = mutationVersion ?? null;
     this.lastSavedTree = mutationVersion !== undefined ? null : JSON.stringify(tree);
+    this.workingTreeSavedEmitter.emitSaved({ chartId, peopleCount: flattenTree(tree).length });
   }
 
   isDirty(currentTree: OrgNode, mutationVersion?: number): boolean {
