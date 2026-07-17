@@ -3,7 +3,9 @@ import { setLocale } from '../../src/i18n';
 import en from '../../src/i18n/en';
 import { SettingsModal } from '../../src/ui/settings-modal';
 
-beforeAll(() => { setLocale('en', en); });
+beforeAll(() => {
+  setLocale('en', en);
+});
 
 function createModal() {
   const onClose = vi.fn();
@@ -13,7 +15,9 @@ function createModal() {
 }
 
 describe('SettingsModal', () => {
-  afterEach(() => { document.body.innerHTML = ''; });
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
 
   it('is hidden by default', () => {
     const { modal } = createModal();
@@ -175,7 +179,7 @@ describe('SettingsModal', () => {
     const { modal } = createModal();
     modal.open();
     const tabs = document.querySelectorAll('.settings-nav-item');
-    tabs.forEach(tab => {
+    tabs.forEach((tab) => {
       expect(tab.getAttribute('role')).toBe('tab');
     });
     modal.destroy();
@@ -388,6 +392,61 @@ describe('SettingsModal', () => {
       expect(document.querySelector('.settings-search-group-label')).toBeNull();
       modal.destroy();
     });
+
+    it('reopening clears search and restores the active group view', () => {
+      const { modal } = createModal();
+      const appearance = appendSection(modal, 'appearance', 'Typography', 'Fonts and colors');
+      const badges = appendSection(
+        modal,
+        'cards_badges',
+        'Headcount Badge',
+        'Show team size on manager cards',
+      );
+      modal.open();
+
+      const input = document.querySelector<HTMLInputElement>('.settings-search-input')!;
+      input.value = 'badge';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      expect(appearance.hidden).toBe(true);
+      expect(badges.hidden).toBe(false);
+
+      modal.close();
+      modal.open();
+
+      expect(input.value).toBe('');
+      expect(appearance.hidden).toBe(false);
+      expect(badges.hidden).toBe(true);
+      expect(document.querySelector<HTMLElement>('.settings-search-no-results')!.hidden).toBe(true);
+      modal.destroy();
+    });
+
+    it('clicking a tab clears search and shows the selected group', () => {
+      const { modal } = createModal();
+      const appearance = appendSection(modal, 'appearance', 'Typography', 'Fonts and colors');
+      const layout = appendSection(modal, 'layout', 'Tree Spacing', 'Branch gaps');
+      const badges = appendSection(
+        modal,
+        'cards_badges',
+        'Headcount Badge',
+        'Show team size on manager cards',
+      );
+      modal.open();
+
+      const input = document.querySelector<HTMLInputElement>('.settings-search-input')!;
+      input.value = 'badge';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+
+      document.querySelector<HTMLElement>('[data-tab="layout"]')!.click();
+
+      expect(input.value).toBe('');
+      expect(modal.getActiveTab()).toBe('layout');
+      expect(document.querySelector('[data-tab="layout"]')!.classList).toContain('active');
+      expect(appearance.hidden).toBe(true);
+      expect(layout.hidden).toBe(false);
+      expect(badges.hidden).toBe(true);
+      expect(document.querySelector<HTMLElement>('.settings-search-no-results')!.hidden).toBe(true);
+      modal.destroy();
+    });
   });
 
   describe('live preview strip', () => {
@@ -541,7 +600,8 @@ describe('SettingsModal', () => {
   });
 
   describe('focus trapping', () => {
-    const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const FOCUSABLE =
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
     it('traps Tab on last focusable element to first', () => {
       const { modal } = createModal();
@@ -562,7 +622,12 @@ describe('SettingsModal', () => {
       const dialog = document.querySelector('.settings-modal') as HTMLElement;
       const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE));
       focusable[0].focus();
-      const e = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
+      const e = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+      });
       focusable[0].dispatchEvent(e);
       expect(document.activeElement).toBe(focusable[focusable.length - 1]);
       modal.destroy();

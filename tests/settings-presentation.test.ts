@@ -28,4 +28,10 @@ describe('settings modal presentation', () => {
     expect(titleRule).toMatch(/gap:\s*var\(--space-/);
     expect(searchRule).toMatch(/gap:\s*var\(--space-/);
   });
+
+  it('suppresses the search input outline so the wrapper owns its focus indicator', () => {
+    const focusRule = css.match(/\.settings-search-input:focus-visible\s*\{([^}]*)\}/)?.[1] ?? '';
+
+    expect(focusRule).toMatch(/outline:\s*none/);
+  });
 });
