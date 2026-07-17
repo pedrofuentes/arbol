@@ -85,18 +85,32 @@ describe('SettingsModal', () => {
     modal.destroy();
   });
 
-  it('renders 11 tabs', () => {
+  it('renders six audience-friendly settings groups with M2 icons', () => {
     const { modal } = createModal();
     modal.open();
-    const tabs = document.querySelectorAll('.settings-nav-item');
-    expect(tabs.length).toBe(11);
+    const tabs = Array.from(document.querySelectorAll<HTMLElement>('.settings-nav-item'));
+    expect(tabs).toHaveLength(6);
+    expect(
+      tabs.map((tab) => ({
+        id: tab.dataset.tab,
+        label: tab.textContent?.trim(),
+        icon: tab.querySelector('svg')?.dataset.icon,
+      })),
+    ).toEqual([
+      { id: 'appearance', label: 'Appearance', icon: 'palette' },
+      { id: 'layout', label: 'Layout', icon: 'layout' },
+      { id: 'cards_badges', label: 'Cards & Badges', icon: 'cards' },
+      { id: 'levels_categories', label: 'Levels & Categories', icon: 'hierarchy' },
+      { id: 'presets', label: 'Presets', icon: 'star' },
+      { id: 'data_backup', label: 'Data & Backup', icon: 'backup' },
+    ]);
     modal.destroy();
   });
 
   it('first tab is active by default', () => {
     const { modal } = createModal();
     modal.open();
-    expect(modal.getActiveTab()).toBe('presets');
+    expect(modal.getActiveTab()).toBe('appearance');
     const tabs = document.querySelectorAll('.settings-nav-item');
     expect(tabs[0].classList.contains('active')).toBe(true);
     expect(tabs[0].getAttribute('aria-selected')).toBe('true');
@@ -108,7 +122,7 @@ describe('SettingsModal', () => {
     modal.open();
     const tabs = document.querySelectorAll('.settings-nav-item');
     (tabs[2] as HTMLElement).click();
-    expect(modal.getActiveTab()).toBe('typography');
+    expect(modal.getActiveTab()).toBe('cards_badges');
     expect(tabs[2].classList.contains('active')).toBe(true);
     expect(tabs[0].classList.contains('active')).toBe(false);
     modal.destroy();
@@ -117,8 +131,8 @@ describe('SettingsModal', () => {
   it('setActiveTab updates tab state', () => {
     const { modal } = createModal();
     modal.open();
-    modal.setActiveTab('cards');
-    expect(modal.getActiveTab()).toBe('cards');
+    modal.setActiveTab('cards_badges');
+    expect(modal.getActiveTab()).toBe('cards_badges');
     modal.destroy();
   });
 
@@ -126,7 +140,7 @@ describe('SettingsModal', () => {
     const { modal } = createModal();
     modal.open();
     const content = document.querySelector('.settings-content') as HTMLElement;
-    expect(content.getAttribute('data-active-tab')).toBe('presets');
+    expect(content.getAttribute('data-active-tab')).toBe('appearance');
     modal.setActiveTab('layout');
     expect(content.getAttribute('data-active-tab')).toBe('layout');
     modal.destroy();
@@ -301,15 +315,15 @@ describe('SettingsModal', () => {
       modal.destroy();
     });
 
-    it('preview hint shows default presets hint', () => {
+    it('preview hint describes the default appearance group', () => {
       const { modal } = createModal();
       modal.open();
       const hint = document.querySelector('.preview-hint')!;
-      expect(hint.textContent).toBe('Updates as you change settings');
+      expect(hint.textContent).toBe('Theme and color changes highlighted');
       modal.destroy();
     });
 
-    it('preview strip is visible by default (presets tab)', () => {
+    it('preview strip is visible by default for appearance', () => {
       const { modal } = createModal();
       modal.open();
       const strip = document.querySelector('.preview-strip') as HTMLElement;
@@ -317,19 +331,19 @@ describe('SettingsModal', () => {
       modal.destroy();
     });
 
-    it('preview strip is hidden when switching to backup tab', () => {
+    it('preview strip is hidden for data and backup', () => {
       const { modal } = createModal();
       modal.open();
-      modal.setActiveTab('backup');
+      modal.setActiveTab('data_backup');
       const strip = document.querySelector('.preview-strip') as HTMLElement;
       expect(strip.classList.contains('hidden')).toBe(true);
       modal.destroy();
     });
 
-    it('preview strip reappears when switching away from backup', () => {
+    it('preview strip reappears when switching to a visual group', () => {
       const { modal } = createModal();
       modal.open();
-      modal.setActiveTab('backup');
+      modal.setActiveTab('data_backup');
       modal.setActiveTab('layout');
       const strip = document.querySelector('.preview-strip') as HTMLElement;
       expect(strip.classList.contains('hidden')).toBe(false);
@@ -344,26 +358,14 @@ describe('SettingsModal', () => {
       modal.setActiveTab('layout');
       expect(hint.textContent).toBe('Spacing regions highlighted');
 
-      modal.setActiveTab('typography');
-      expect(hint.textContent).toBe('Text styling highlighted');
+      modal.setActiveTab('cards_badges');
+      expect(hint.textContent).toBe('Card and badge styling highlighted');
 
-      modal.setActiveTab('cards');
-      expect(hint.textContent).toBe('Card appearance highlighted');
+      modal.setActiveTab('levels_categories');
+      expect(hint.textContent).toBe('Level and category styling highlighted');
 
-      modal.setActiveTab('connectors');
-      expect(hint.textContent).toBe('Line styles highlighted');
-
-      modal.setActiveTab('ic');
-      expect(hint.textContent).toBe('Individual contributor layout');
-
-      modal.setActiveTab('advisors');
-      expect(hint.textContent).toBe('Advisor spacing highlighted');
-
-      modal.setActiveTab('badges');
-      expect(hint.textContent).toBe('Badge styling shown on cards');
-
-      modal.setActiveTab('categories');
-      expect(hint.textContent).toBe('How categories appear on cards');
+      modal.setActiveTab('presets');
+      expect(hint.textContent).toBe('Updates as you change settings');
 
       modal.destroy();
     });
