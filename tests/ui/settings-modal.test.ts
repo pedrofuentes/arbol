@@ -265,8 +265,8 @@ describe('SettingsModal', () => {
     it('badge shows correct count text', () => {
       const { modal } = createModal();
       modal.open();
-      modal.updateTabBadge('cards', 42);
-      const badge = document.querySelector('[data-tab="cards"] .settings-tab-badge');
+      modal.updateTabBadge('cards_badges', 42);
+      const badge = document.querySelector('[data-tab="cards_badges"] .settings-tab-badge');
       expect(badge).not.toBeNull();
       expect(badge!.textContent).toBe('42');
       modal.destroy();
