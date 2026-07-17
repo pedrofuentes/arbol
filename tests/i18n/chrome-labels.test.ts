@@ -4,14 +4,7 @@ import es from '../../src/i18n/es';
 
 const CHROME_PICTOGRAPH = /[\p{Extended_Pictographic}↩↪↺⊞✕×▶▾▪▫▢▣☰]/gu;
 
-const DOCUMENTATION_EXAMPLES = new Set([
-  'help.getting_started.sidebar',
-  'help.sidebar_tabs.settings_label',
-  'help.sidebar_tabs.import_label',
-  'help.sidebar_tabs.export_label',
-  'help.importing.how_strong',
-  'help.settings.modal',
-]);
+const DOCUMENTATION_EXAMPLES = new Set(['help.importing.how_strong']);
 
 const DATA_NOTATION = new Set(['export.scale_1x', 'export.scale_2x', 'export.scale_3x']);
 
