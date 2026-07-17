@@ -221,14 +221,24 @@ async function main(): Promise<void> {
 
   // Batched render: coalesces multiple onChange triggers into a single render frame
   let renderScheduled = false;
+  let fitAfterNextRender = false;
   const scheduleRender = () => {
     if (!renderScheduled) {
       renderScheduled = true;
       requestAnimationFrame(() => {
         renderScheduled = false;
         rerender();
+        if (fitAfterNextRender) {
+          fitAfterNextRender = false;
+          renderer.getZoomManager()?.fitToContent();
+        }
       });
     }
+  };
+
+  const loadSampleOrg = () => {
+    fitAfterNextRender = true;
+    store.fromJSON(JSON.stringify(SAMPLE_ORG));
   };
 
   // Initialize focus mode controller now that rerender is defined
@@ -446,6 +456,7 @@ async function main(): Promise<void> {
     headerRight,
     headerLeft: document.querySelector('.header-left')!,
     sidebar,
+    onLoadSample: loadSampleOrg,
     onSettingsClick: () => {
       // Snapshot current settings so Cancel can revert
       settingsSnapshot = { ...renderer.getOptions() };
@@ -1128,7 +1139,7 @@ async function main(): Promise<void> {
 
   rerender();
 
-  showFirstVisitHelp(() => store.fromJSON(JSON.stringify(SAMPLE_ORG)));
+  showFirstVisitHelp(loadSampleOrg);
 
   initOfflineBanner(chartArea);
   registerServiceWorker();

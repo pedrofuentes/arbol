@@ -4,7 +4,6 @@ import type { ThemeManager } from '../store/theme-manager';
 import type { OrgStore } from '../store/org-store';
 import { announce } from '../ui/announcer';
 import { showHelpDialog } from '../ui/help-dialog';
-import { SAMPLE_ORG } from '../data/sample-org';
 
 export interface ToolbarDeps {
   store: OrgStore;
@@ -15,6 +14,7 @@ export interface ToolbarDeps {
   onSettingsClick: () => void;
   onImportClick: () => void;
   onExportClick: () => void;
+  onLoadSample: () => void;
 }
 
 export interface ToolbarElements {
@@ -53,9 +53,11 @@ export function buildToolbar(deps: ToolbarDeps): ToolbarElements {
   helpBtn.setAttribute('aria-label', t('toolbar.help_aria'));
   helpBtn.textContent = t('toolbar.help_text');
   helpBtn.style.fontWeight = '700';
-  helpBtn.addEventListener('click', () => showHelpDialog({
-    onLoadSample: () => store.fromJSON(JSON.stringify(SAMPLE_ORG)),
-  }));
+  helpBtn.addEventListener('click', () =>
+    showHelpDialog({
+      onLoadSample: deps.onLoadSample,
+    }),
+  );
   headerRight.appendChild(helpBtn);
 
   // Undo / Redo (inserted before theme button to preserve DOM order)
