@@ -14,7 +14,7 @@ describe('sample-org first-load fit', () => {
 
   it('fits only after the scheduled render has produced the sample layout', () => {
     const scheduledRender = mainSource.match(
-      /const scheduleRender = \(\) => \{(?<body>[\s\S]*?)\n  \};/,
+      /const scheduleRender = \(\) => \{(?<body>[\s\S]*?)\n {2}\};/,
     )?.groups?.body;
 
     expect(scheduledRender).toBeDefined();
