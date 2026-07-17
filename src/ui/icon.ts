@@ -87,10 +87,12 @@ const ICON_PATHS = {
 export type IconName = keyof typeof ICON_PATHS;
 
 export function isIconName(value: string): value is IconName {
-  return value in ICON_PATHS;
+  return Object.prototype.hasOwnProperty.call(ICON_PATHS, value);
 }
 
 function appendPaths(svg: SVGSVGElement, name: IconName): void {
+  if (!Object.prototype.hasOwnProperty.call(ICON_PATHS, name)) return;
+
   for (const pathData of ICON_PATHS[name]) {
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('d', pathData);
