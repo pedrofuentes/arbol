@@ -98,6 +98,12 @@ describe('ComparisonBanner', () => {
       expect(style).toContain('z-index:100');
     });
 
+    it('marks side-by-side mode so the surrounding layout can reserve its title band', () => {
+      showComparisonBanner(defaultOptions({ viewMode: 'side-by-side' }));
+
+      expect(getBanner()!.getAttribute('data-view-mode')).toBe('side-by-side');
+    });
+
     it('uses CSS variables for theming', () => {
       showComparisonBanner(defaultOptions());
       const style = getBanner()!.getAttribute('style') ?? '';
