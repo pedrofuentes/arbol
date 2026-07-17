@@ -39,7 +39,9 @@ describe('settings section group mapping', () => {
   });
 
   it('annotates editor sections from the sole section group map for modal search', () => {
-    expect(mainSource).toContain("section.setAttribute('data-settings-group', sectionTab)");
+    expect(mainSource).toContain(
+      'annotateTopLevelSettingsSections(contentArea, SECTION_TAB_MAP)',
+    );
     expect(mainSource).toContain('settingsModal.refreshSectionVisibility()');
   });
 });
