@@ -81,12 +81,12 @@ describe('showVersionPicker', () => {
     expect(items[0].querySelector('span')!.textContent).toBe('Q2 Planning');
   });
 
-  it('shows working tree option when includeWorkingTree is true', () => {
+  it('shows current chart option when includeWorkingTree is true', () => {
     showVersionPicker({ versions: sampleVersions, includeWorkingTree: true });
 
     const workingItem = document.querySelector('[data-testid="version-picker-working-tree"]');
     expect(workingItem).not.toBeNull();
-    expect(workingItem!.textContent).toContain('Current working tree');
+    expect(workingItem!.textContent).toContain('Current chart');
     expect(workingItem!.textContent).toContain('Compare against live changes');
   });
 
@@ -97,7 +97,7 @@ describe('showVersionPicker', () => {
     expect(workingItem).toBeNull();
   });
 
-  it('working tree option not affected by search', () => {
+  it('current chart option is not affected by search', () => {
     showVersionPicker({ versions: sampleVersions, includeWorkingTree: true });
 
     const input = document.querySelector('[data-testid="version-picker-search"]') as HTMLInputElement;
@@ -123,7 +123,7 @@ describe('showVersionPicker', () => {
     expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 
-  it('clicking working tree resolves correctly', async () => {
+  it('clicking current chart resolves correctly', async () => {
     const promise = showVersionPicker({ versions: sampleVersions, includeWorkingTree: true });
 
     const workingItem = document.querySelector('[data-testid="version-picker-working-tree"]') as HTMLElement;

@@ -567,6 +567,28 @@ describe('ChartStore', () => {
       expect(retrieved!.tree.name).toBe('Snapshot');
     });
 
+    it('counts changed people since the latest saved version', async () => {
+      const baseline = makeTree({
+        children: [{ id: 'person-1', name: 'Bob', title: 'Engineer' }],
+      });
+      await store.saveVersion('Baseline', baseline);
+      const edited = structuredClone(baseline);
+      edited.children![0].title = 'Senior Engineer';
+      edited.children!.push({ id: 'person-2', name: 'Carol', title: 'Designer' });
+
+      expect(store.getEditsSinceLastVersion(edited)).toBe(2);
+      expect(store.getEditsSinceLastVersion(baseline)).toBe(0);
+    });
+
+    it('does not reset version-relative edits when the current chart autosaves', async () => {
+      const baseline = makeTree({ name: 'Baseline' });
+      const edited = makeTree({ name: 'Edited' });
+      await store.saveVersion('Baseline', baseline);
+      await store.saveWorkingTree(edited, []);
+
+      expect(store.getEditsSinceLastVersion(edited)).toBe(1);
+    });
+
     it('getVersions returns versions for the active chart', async () => {
       await store.saveVersion('v1', makeTree());
       await store.saveVersion('v2', makeTree());

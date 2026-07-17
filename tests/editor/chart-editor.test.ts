@@ -73,6 +73,7 @@ function mockChartStore(charts: ChartRecord[] = [], versions: VersionRecord[] = 
     restoreVersion: vi.fn().mockResolvedValue(makeTree()),
     deleteVersion: vi.fn().mockResolvedValue(undefined),
     isDirty: vi.fn().mockReturnValue(false),
+    getEditsSinceLastVersion: vi.fn().mockReturnValue(0),
   } as unknown as ChartEditorOptions['chartStore'];
 }
 
@@ -269,7 +270,7 @@ describe('ChartEditor – Compare button', () => {
     expect(calledWith).toHaveProperty('tree');
   });
 
-  it('places Compare button between View and Restore', async () => {
+  it('places Compare button between Preview and Restore', async () => {
     await vi.waitFor(() => {
       const allButtons = Array.from(container.querySelectorAll('button'));
       expect(allButtons.map((b) => b.getAttribute('data-tooltip'))).toContain('Compare');
@@ -278,11 +279,11 @@ describe('ChartEditor – Compare button', () => {
     // Get buttons within the first version item's action row
     const allButtons = Array.from(container.querySelectorAll('button'));
     const versionActionButtons = allButtons.filter(
-      (b) => ['View', 'Compare', 'Restore', 'Delete'].includes(b.getAttribute('data-tooltip') ?? ''),
+      (b) => ['Preview', 'Compare', 'Restore', 'Delete'].includes(b.getAttribute('data-tooltip') ?? ''),
     );
     // First group of 4 = first version item
     const labels = versionActionButtons.slice(0, 4).map((b) => b.getAttribute('data-tooltip'));
-    const viewIdx = labels.indexOf('View');
+    const viewIdx = labels.indexOf('Preview');
     const compareIdx = labels.indexOf('Compare');
     const restoreIdx = labels.indexOf('Restore');
     expect(compareIdx).toBe(viewIdx + 1);
@@ -416,17 +417,76 @@ describe('ChartEditor – action button accessibility', () => {
   it('version action buttons have data-tooltip and aria-label attributes', async () => {
     await vi.waitFor(() => {
       const buttons = Array.from(container.querySelectorAll('button'));
-      expect(buttons.map((b) => b.getAttribute('data-tooltip'))).toContain('View');
+      expect(buttons.map((b) => b.getAttribute('data-tooltip'))).toContain('Preview');
     });
 
     const buttons = Array.from(container.querySelectorAll('button'));
-    const expectedLabels = ['View', 'Compare', 'Restore', 'Delete'];
+    const expectedLabels = ['Preview', 'Compare', 'Restore', 'Delete'];
 
     for (const label of expectedLabels) {
       const btn = buttons.find((b) => b.getAttribute('data-tooltip') === label);
       expect(btn, `button with data-tooltip "${label}" should exist`).not.toBeUndefined();
       expect(btn!.getAttribute('aria-label')).toBe(label);
     }
+  });
+});
+
+describe('ChartEditor – consumer version vocabulary', () => {
+  let container: HTMLElement;
+  let editor: ChartEditor;
+  let store: ReturnType<typeof mockChartStore>;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    store = mockChartStore([makeChart()], [makeVersion()]);
+
+    editor = new ChartEditor({
+      container,
+      chartStore: store,
+      onChartSwitch: vi.fn(),
+      onVersionRestore: vi.fn(),
+      onVersionView: vi.fn(),
+      onVersionCompare: vi.fn(),
+      getCurrentTree: () => makeTree(),
+      getCurrentCategories: () => [],
+      onBeforeSwitch: vi.fn().mockResolvedValue(true),
+    });
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-version-id="ver-1"]')).not.toBeNull();
+    });
+  });
+
+  afterEach(() => {
+    editor.destroy();
+    container.remove();
+  });
+
+  it('labels the section and save action with consumer language', () => {
+    expect(container.querySelector('.version-section-title')?.textContent).toBe('Version history');
+    const saveButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Save a version',
+    );
+    expect(saveButton).toBeDefined();
+  });
+
+  it('labels the live state as the current chart with a saved status', () => {
+    const current = container.querySelector('.version-item:not([data-version-id])')!;
+    expect(current.querySelector('.version-item-name')?.textContent).toBe('Current chart');
+    expect(current.querySelector('.version-item-date')?.textContent).toBe('All changes saved');
+  });
+
+  it('shows the edit count since the last version', async () => {
+    store.getEditsSinceLastVersion = vi.fn().mockReturnValue(4);
+
+    await editor.refresh();
+
+    const current = container.querySelector('.version-item:not([data-version-id])')!;
+    expect(current.querySelector('.version-item-date')?.textContent).toBe(
+      '4 edits since last version',
+    );
   });
 });
 
