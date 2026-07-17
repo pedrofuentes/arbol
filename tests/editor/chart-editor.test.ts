@@ -489,8 +489,8 @@ describe('ChartEditor – public chart and version action wrappers', () => {
   let container: HTMLElement;
   let editor: ChartEditor;
   let handlers: InternalActionHandlers;
-  let onVersionView: ReturnType<typeof vi.fn>;
-  let onVersionCompare: ReturnType<typeof vi.fn>;
+  let onVersionView: ReturnType<typeof vi.fn<(version: VersionRecord) => void>>;
+  let onVersionCompare: ReturnType<typeof vi.fn<(version: VersionRecord) => void>>;
   const chart = makeChart({ id: 'chart-wrapper', name: 'Wrapper Chart' });
   const version = makeVersion({
     id: 'version-wrapper',
