@@ -66,9 +66,14 @@ export class ChartEditor {
   private viewingVersionId: string | null = null;
 
   private unsubscribe: (() => void) | null = null;
+  private unsubscribeWorkingTreeSaved: (() => void) | null = null;
   private errorTimers: ReturnType<typeof setTimeout>[] = [];
   private refreshInProgress = false;
   private refreshQueued = false;
+  private latestPeopleCounts = new Map<string, number>();
+  private pendingPeopleCounts = new Map<string, number>();
+  private versionCounts = new Map<string, number>();
+  private chartNames = new Map<string, string>();
 
   constructor(options: ChartEditorOptions) {
     this.container = options.container;
@@ -85,6 +90,9 @@ export class ChartEditor {
 
     this.build();
     this.unsubscribe = this.chartStore.onChange(() => this.refresh());
+    this.unsubscribeWorkingTreeSaved = this.chartStore.onWorkingTreeSaved(
+      ({ chartId, peopleCount }) => this.updateChartMeta(chartId, peopleCount),
+    );
   }
 
   async refresh(): Promise<void> {
@@ -97,6 +105,7 @@ export class ChartEditor {
       await Promise.all([this.renderChartList(), this.renderVersionList()]);
     } finally {
       this.refreshInProgress = false;
+      this.applyPendingChartMetaUpdates();
       if (this.refreshQueued) {
         this.refreshQueued = false;
         await this.refresh();
@@ -108,6 +117,10 @@ export class ChartEditor {
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
+    }
+    if (this.unsubscribeWorkingTreeSaved) {
+      this.unsubscribeWorkingTreeSaved();
+      this.unsubscribeWorkingTreeSaved = null;
     }
     for (const t of this.errorTimers) clearTimeout(t);
     this.errorTimers = [];
@@ -220,6 +233,7 @@ export class ChartEditor {
 
     const charts = await this.chartStore.getCharts();
     const activeId = this.chartStore.getActiveChartId();
+    this.chartNames = new Map(charts.map((chart) => [chart.id, chart.name]));
 
     const filtered = this.chartSearchTerm
       ? charts.filter((c) => c.name.toLowerCase().includes(this.chartSearchTerm))
@@ -235,16 +249,16 @@ export class ChartEditor {
     }
 
     // Pre-fetch version counts
-    const versionCounts = new Map<string, number>();
+    this.versionCounts.clear();
     for (const chart of filtered) {
       const versions = await this.chartStore.getVersions(chart.id);
-      versionCounts.set(chart.id, versions.length);
+      this.versionCounts.set(chart.id, versions.length);
     }
 
     for (const chart of filtered) {
       const isActive = chart.id === activeId;
       this.chartListEl.appendChild(
-        this.createChartItem(chart, isActive, versionCounts.get(chart.id) ?? 0),
+        this.createChartItem(chart, isActive, this.versionCounts.get(chart.id) ?? 0),
       );
     }
   }
@@ -298,10 +312,9 @@ export class ChartEditor {
 
     const metaEl = document.createElement('div');
     metaEl.className = 'chart-item-meta';
-    const peopleCount = flattenTree(chart.workingTree).length;
-    const vSuffix =
-      versionCount === 1 ? t('chart_editor.version_suffix') : t('chart_editor.versions_suffix');
-    metaEl.textContent = `${peopleCount} ${t('chart_editor.people_suffix')} · ${versionCount} ${vSuffix}`;
+    const peopleCount =
+      this.latestPeopleCounts.get(chart.id) ?? flattenTree(chart.workingTree).length;
+    metaEl.textContent = this.formatChartMeta(peopleCount, versionCount);
     infoEl.appendChild(metaEl);
 
     item.appendChild(infoEl);
@@ -343,6 +356,55 @@ export class ChartEditor {
     }
 
     return item;
+  }
+
+  private formatChartMeta(peopleCount: number, versionCount: number): string {
+    const vSuffix =
+      versionCount === 1 ? t('chart_editor.version_suffix') : t('chart_editor.versions_suffix');
+    return `${peopleCount} ${t('chart_editor.people_suffix')} · ${versionCount} ${vSuffix}`;
+  }
+
+  private updateChartMeta(chartId: string, peopleCount: number): void {
+    this.latestPeopleCounts.set(chartId, peopleCount);
+    if (this.refreshInProgress) {
+      this.pendingPeopleCounts.set(chartId, peopleCount);
+      return;
+    }
+    this.applyChartMetaUpdate(chartId, peopleCount);
+  }
+
+  private applyPendingChartMetaUpdates(): void {
+    const pendingPeopleCounts = Array.from(this.pendingPeopleCounts);
+    this.pendingPeopleCounts.clear();
+    for (const [chartId, peopleCount] of pendingPeopleCounts) {
+      this.applyChartMetaUpdate(chartId, peopleCount);
+    }
+  }
+
+  private applyChartMetaUpdate(chartId: string, peopleCount: number): void {
+    const chartItem = Array.from(
+      this.chartListEl.querySelectorAll<HTMLElement>('[data-chart-id]'),
+    ).find((item) => item.dataset.chartId === chartId);
+    const metaEl = chartItem?.querySelector<HTMLElement>('.chart-item-meta');
+    if (!metaEl) {
+      if (this.isChartFilteredOut(chartId)) return;
+      console.warn(`Chart row not found for working-tree save: ${chartId}`);
+      return;
+    }
+
+    const versionCount = this.versionCounts.get(chartId);
+    if (versionCount === undefined) {
+      console.warn(`Version count not found for chart: ${chartId}`);
+      return;
+    }
+    metaEl.textContent = this.formatChartMeta(peopleCount, versionCount);
+  }
+
+  private isChartFilteredOut(chartId: string): boolean {
+    const chartName = this.chartNames.get(chartId);
+    return Boolean(
+      this.chartSearchTerm && chartName && !chartName.toLowerCase().includes(this.chartSearchTerm),
+    );
   }
 
   // ── Render version list ────────────────────────────────

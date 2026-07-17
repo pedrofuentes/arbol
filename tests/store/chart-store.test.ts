@@ -693,6 +693,31 @@ describe('ChartStore', () => {
       expect(listener).toHaveBeenCalled();
     });
 
+    it('onWorkingTreeSaved reports the saved chart and people count without a full change', async () => {
+      const fullChangeListener = vi.fn();
+      const workingTreeListener = vi.fn();
+      store.onChange(fullChangeListener);
+      const observableStore = store as ChartStore & {
+        onWorkingTreeSaved: (
+          listener: (event: { chartId: string; peopleCount: number }) => void,
+        ) => () => void;
+      };
+      observableStore.onWorkingTreeSaved(workingTreeListener);
+      const chartId = store.getActiveChartId();
+      const tree = makeTree({
+        children: [
+          makeTree({ id: 'child-1', name: 'Bob' }),
+          makeTree({ id: 'child-2', name: 'Carol' }),
+        ],
+      });
+
+      await store.saveWorkingTree(tree, []);
+
+      expect(workingTreeListener).toHaveBeenCalledOnce();
+      expect(workingTreeListener).toHaveBeenCalledWith({ chartId, peopleCount: 3 });
+      expect(fullChangeListener).not.toHaveBeenCalled();
+    });
+
     it('onChange returns an unsubscribe function that works', async () => {
       const listener = vi.fn();
       const unsub = store.onChange(listener);
