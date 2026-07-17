@@ -182,6 +182,10 @@ function getHelpSections(): HelpSection[] {
           t('help.interactions.inline_desc'),
         ],
         [
+          { tag: 'strong', text: t('help.interactions.pin_title_label') },
+          t('help.interactions.pin_title_desc'),
+        ],
+        [
           { tag: 'strong', text: t('help.interactions.search_label') },
           t('help.interactions.search_desc'),
         ],

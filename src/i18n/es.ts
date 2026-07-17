@@ -93,6 +93,9 @@ const es: Record<string, string> = {
 
   // ─── Context Menu ──────────────────────────────────────────────────
   'menu.edit': 'Editar',
+  'context_menu.quick_edit': 'Edición rápida',
+  'context_menu.pin_title': 'Fijar cargo',
+  'context_menu.unpin_title': 'Desfijar cargo',
   'menu.add': 'Agregar',
   'menu.focus': 'Enfocar',
   'menu.category': 'Categoría',
@@ -187,8 +190,7 @@ const es: Record<string, string> = {
   'settings_modal.preview_hint.presets': 'Se actualiza al cambiar la configuración',
   'settings_modal.preview_hint.layout': 'Regiones de espaciado resaltadas',
   'settings_modal.preview_hint.cards_badges': 'Estilo de tarjetas e insignias resaltado',
-  'settings_modal.preview_hint.levels_categories':
-    'Estilo de niveles y categorías resaltado',
+  'settings_modal.preview_hint.levels_categories': 'Estilo de niveles y categorías resaltado',
   'settings_modal.preview_fit': 'Ajustar vista previa',
   'settings_modal.preview_reset': 'Restablecer vista previa',
 
@@ -889,16 +891,19 @@ const es: Record<string, string> = {
   'help.interactions.click_desc': ' — Seleccionar y resaltar una tarjeta.',
   'help.interactions.right_click_label': 'Clic derecho',
   'help.interactions.right_click_desc':
-    ' — Menú contextual con Editar, Agregar, Enfocar, Categoría, Punteada/Sólida, Mover y Eliminar.',
+    ' — Menú contextual con Editar, Edición rápida, Fijar cargo, Agregar, Enfocar, Categoría, Punteada/Sólida, Mover y Eliminar.',
   'help.interactions.shift_click_label': 'Shift+clic',
   'help.interactions.shift_click_desc':
     ' — Selección múltiple de tarjetas, luego clic derecho para Categoría, Mover todos o Eliminar todos en masa.',
   'help.interactions.escape_label': 'Escape',
   'help.interactions.escape_desc':
     ' — Cerrar visor de versiones, limpiar búsqueda, salir del modo enfoque, limpiar selección múltiple o deseleccionar (en ese orden de prioridad).',
-  'help.interactions.inline_label': 'Edición en línea',
+  'help.interactions.inline_label': 'Edición rápida',
   'help.interactions.inline_desc':
-    ' — Haga clic derecho en una tarjeta y elija Editar para editar directamente sobre la tarjeta.',
+    ' — Haga clic derecho en una tarjeta y elija Edición rápida para editar directamente sobre la tarjeta.',
+  'help.interactions.pin_title_label': 'Fijar cargo',
+  'help.interactions.pin_title_desc':
+    ' — Evita que un cargo personalizado cambie con el mapeo de niveles; elija Desfijar cargo para reanudar el mapeo automático.',
   'help.interactions.search_label': 'Buscar',
   'help.interactions.search_desc':
     ' — Escriba en la barra de búsqueda para resaltar personas coincidentes. Las no coincidentes se atenúan.',

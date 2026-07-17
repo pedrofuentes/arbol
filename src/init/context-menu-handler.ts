@@ -19,12 +19,23 @@ export interface ContextMenuDeps {
   categoryStore: CategoryStore;
   renderer: ChartRenderer;
   focusMode: FocusModeController;
+  selectNodeForInspection: (nodeId: string) => void;
   selection: SelectionManager;
 }
 
-export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string, event: MouseEvent) => void {
+export function setNodeTitlePinned(store: OrgStore, nodeId: string, pinned: boolean): void {
+  if (pinned) {
+    store.pinTitle(nodeId);
+  } else {
+    store.unpinTitle(nodeId);
+  }
+}
+
+export function createShowSingleCardMenu(
+  deps: ContextMenuDeps,
+): (nodeId: string, event: MouseEvent) => void {
   return (nodeId: string, event: MouseEvent) => {
-    const { store, categoryStore, renderer, focusMode } = deps;
+    const { store, categoryStore, renderer, focusMode, selectNodeForInspection } = deps;
     const tree = store.getTree();
     const node = findNodeById(tree, nodeId);
     if (!node) return;
@@ -48,6 +59,13 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
           label: t('menu.edit'),
           icon: 'edit',
           action: () => {
+            selectNodeForInspection(nodeId);
+          },
+        },
+        {
+          label: t('context_menu.quick_edit'),
+          icon: 'type',
+          action: () => {
             const rect = renderer.getNodeScreenRect(nodeId);
             if (!rect) return;
             showInlineEditor({
@@ -66,6 +84,13 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
               },
               onCancel: () => {},
             });
+          },
+        },
+        {
+          label: node.pinnedTitle ? t('context_menu.unpin_title') : t('context_menu.pin_title'),
+          icon: 'pin',
+          action: () => {
+            setNodeTitlePinned(store, nodeId, !node.pinnedTitle);
           },
         },
         {
@@ -145,7 +170,12 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
               if (result) {
                 const targetNode = findNodeById(tree, result.managerId);
                 store.moveNode(nodeId, result.managerId, result.dottedLine);
-                announce(t('announce.moved', { name: node.name, target: targetNode?.name ?? t('announce.move_fallback_target') }));
+                announce(
+                  t('announce.moved', {
+                    name: node.name,
+                    target: targetNode?.name ?? t('announce.move_fallback_target'),
+                  }),
+                );
               }
             } catch (e) {
               showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');
@@ -176,9 +206,14 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
 
                 const reassign = await showConfirmDialog({
                   title: t('dialog.remove_manager.title'),
-                  message: t('dialog.remove_manager.message', { name: node.name, count: String(descendantCount) }),
+                  message: t('dialog.remove_manager.message', {
+                    name: node.name,
+                    count: String(descendantCount),
+                  }),
                   confirmLabel: t('dialog.remove_manager.reassign'),
-                  cancelLabel: t('dialog.remove_manager.remove_all', { count: String(descendantCount) }),
+                  cancelLabel: t('dialog.remove_manager.remove_all', {
+                    count: String(descendantCount),
+                  }),
                   danger: false,
                 });
 
@@ -200,13 +235,21 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
                 } else {
                   const confirmed = await showConfirmDialog({
                     title: t('dialog.remove_manager.remove_all_confirm_title'),
-                    message: t('dialog.remove_manager.remove_all_confirm_message', { name: node.name, count: String(descendantCount) }),
+                    message: t('dialog.remove_manager.remove_all_confirm_message', {
+                      name: node.name,
+                      count: String(descendantCount),
+                    }),
                     confirmLabel: t('dialog.remove_manager.remove_all_confirm'),
                     danger: true,
                   });
                   if (confirmed) {
                     store.removeNode(nodeId);
-                    announce(t('announce.removed_with_org', { name: node.name, count: String(descendantCount) }));
+                    announce(
+                      t('announce.removed_with_org', {
+                        name: node.name,
+                        count: String(descendantCount),
+                      }),
+                    );
                   }
                 }
               }
@@ -281,7 +324,12 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
               if (result) {
                 store.bulkMoveNodes(selectedArray, result.managerId);
                 const targetNode = findNodeById(store.getTree(), result.managerId);
-                announce(t('announce.multi_moved', { count, target: targetNode?.name ?? t('announce.move_fallback_target') }));
+                announce(
+                  t('announce.multi_moved', {
+                    count,
+                    target: targetNode?.name ?? t('announce.move_fallback_target'),
+                  }),
+                );
               }
             } catch (e) {
               showToast(e instanceof Error ? e.message : t('footer.operation_failed'), 'error');

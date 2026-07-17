@@ -147,6 +147,9 @@ const en: Record<string, string> = {
 
   // ─── Context Menu ──────────────────────────────────────────────────
   'menu.edit': 'Edit',
+  'context_menu.quick_edit': 'Quick edit',
+  'context_menu.pin_title': 'Pin title',
+  'context_menu.unpin_title': 'Unpin title',
   'menu.add': 'Add',
   'menu.focus': 'Focus',
   'menu.category': 'Category',
@@ -929,16 +932,19 @@ const en: Record<string, string> = {
   'help.interactions.click_desc': ' — Select and highlight a card.',
   'help.interactions.right_click_label': 'Right-click',
   'help.interactions.right_click_desc':
-    ' \u2014 Context menu with Edit, Add, Focus, Category, Dotted/Solid, Move, and Remove.',
+    ' \u2014 Context menu with Edit, Quick edit, Pin title, Add, Focus, Category, Dotted/Solid, Move, and Remove.',
   'help.interactions.shift_click_label': 'Shift+click',
   'help.interactions.shift_click_desc':
     ' \u2014 Multi-select cards, then right-click for bulk Category, Move all, or Remove all.',
   'help.interactions.escape_label': 'Escape',
   'help.interactions.escape_desc':
     ' — Dismiss version viewer, clear search, exit focus mode, clear multi-selection, or deselect (in that priority order).',
-  'help.interactions.inline_label': 'Inline editing',
+  'help.interactions.inline_label': 'Quick edit',
   'help.interactions.inline_desc':
-    ' — Right-click a card and choose Edit to edit directly on the card.',
+    ' — Right-click a card and choose Quick edit to edit directly on the card.',
+  'help.interactions.pin_title_label': 'Pin title',
+  'help.interactions.pin_title_desc':
+    ' — Keep a custom title from changing with level mapping; choose Unpin title to resume automatic mapping.',
   'help.interactions.search_label': 'Search',
   'help.interactions.search_desc':
     ' — Type in the search bar to highlight matching people. Non-matches are dimmed.',
