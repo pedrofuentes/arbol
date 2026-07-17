@@ -52,8 +52,9 @@
   /* Z-index hierarchy — lower roles sit beneath every role that follows.
      Local content and canvas controls stay within the app shell. Banners and
      the legend float above the canvas; drawers and panels sit above those.
-     Full-screen modals sit below dialogs opened from them. Menus, toasts,
-     blocking progress, and the focused skip link occupy the highest layers. */
+     Full-screen modals sit below dialogs opened from them. Menus and blocking
+     progress occupy high layers. Toasts must remain visible above the blocking
+     overlay, while the focused skip link remains the highest layer. */
   --z-local: 1;
   --z-canvas-control: 10;
   --z-header: 20;
@@ -67,8 +68,8 @@
   --z-dialog: 700;
   --z-menu: 800;
   --z-menu-submenu: 801;
-  --z-toast: 900;
   --z-blocking: 1000;
+  --z-toast: 1050;
   --z-skip-link: 1100;
 
   /* Typography — Plus Jakarta Sans: geometric warmth meets professionalism */
@@ -1225,7 +1226,7 @@ textarea:focus-visible {
   font-weight: var(--font-medium);
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border-default);
-  z-index: var(--z-toast) !important;
+  z-index: var(--z-toast);
 }
 .toast-error {
   background: var(--danger, #ef4444);
@@ -1845,10 +1846,6 @@ textarea:focus-visible {
 }
 
 /* Shift category legend inward when property panel is open */
-[data-testid='category-legend'] {
-  z-index: var(--z-canvas-overlay) !important;
-}
-
 .property-panel.open ~ [data-testid='category-legend'] {
   right: calc(280px + var(--space-3, 12px)) !important;
   transition: right var(--transition-normal) !important;
