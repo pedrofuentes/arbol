@@ -569,7 +569,11 @@ export class ChartEditor {
     this.onVersionCompare(version);
   }
 
-  async restoreVersion(version: VersionRecord): Promise<void> {
+  async restoreVersion(version: VersionRecord, currentTree?: OrgNode): Promise<void> {
+    if (currentTree) {
+      await this.handleRestoreVersion(version, currentTree);
+      return;
+    }
     await this.handleRestoreVersion(version);
   }
 
@@ -748,7 +752,10 @@ export class ChartEditor {
     }
   }
 
-  private async handleRestoreVersion(version: VersionRecord): Promise<void> {
+  private async handleRestoreVersion(
+    version: VersionRecord,
+    currentTree = this.getCurrentTree(),
+  ): Promise<void> {
     const proceed = await showConfirmDialog({
       title: t('dialog.restore_version.title', { name: version.name }),
       message: t('dialog.restore_version.message', { name: version.name }),
@@ -757,7 +764,7 @@ export class ChartEditor {
     if (!proceed) return;
 
     try {
-      const tree = await this.chartStore.restoreVersion(version.id, this.getCurrentTree());
+      const tree = await this.chartStore.restoreVersion(version.id, currentTree);
       this.onVersionRestore(tree);
       await this.refresh();
     } catch (err) {

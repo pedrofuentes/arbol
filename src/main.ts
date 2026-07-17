@@ -704,7 +704,7 @@ async function main(): Promise<void> {
           comparison.enterComparisonMode(version);
         },
         onRestore: async () => {
-          await chartEditor.restoreVersion(version);
+          await chartEditor.restoreVersion(version, savedTree);
         },
         onClose: () => {
           store.replaceTree(savedTree);
