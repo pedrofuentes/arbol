@@ -203,6 +203,8 @@ describe('i18n', () => {
       expect(es['chart_header.edits_since_version.other']).toBe(
         '{count} ediciones desde la última versión',
       );
+      expect(en['toast.version_saved']).toBe('Version saved · {name}');
+      expect(es['toast.version_saved']).toBe('Versión guardada · {name}');
     });
 
     it('never exposes technical or alarming edit-state vocabulary', () => {

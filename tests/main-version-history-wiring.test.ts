@@ -17,4 +17,10 @@ describe('main version-history header wiring', () => {
     );
     expect(mainSource).not.toContain('chartNameHeader.setDirty(');
   });
+
+  it('confirms a saved version with its name in a success toast', () => {
+    expect(mainSource).toContain(
+      "showToast(t('toast.version_saved', { name: name.trim() }), 'success')",
+    );
+  });
 });
