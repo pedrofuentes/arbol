@@ -28,6 +28,8 @@ export interface ChartEditorOptions {
   onVersionRestore: (tree: OrgNode) => void;
   onVersionView: (version: VersionRecord) => void;
   onVersionCompare: (version: VersionRecord) => void;
+  onVersionDelete?: (version: VersionRecord) => void;
+  onChartsEmpty?: () => void;
   getCurrentTree: () => OrgNode;
   getCurrentCategories: () => ColorCategory[];
   onBeforeSwitch: () => Promise<boolean>;
@@ -54,6 +56,8 @@ export class ChartEditor {
   private onVersionRestore: ChartEditorOptions['onVersionRestore'];
   private onVersionView: ChartEditorOptions['onVersionView'];
   private onVersionCompare: ChartEditorOptions['onVersionCompare'];
+  private onVersionDelete: NonNullable<ChartEditorOptions['onVersionDelete']>;
+  private onChartsEmpty: NonNullable<ChartEditorOptions['onChartsEmpty']>;
   private getCurrentTree: ChartEditorOptions['getCurrentTree'];
   private getCurrentCategories: ChartEditorOptions['getCurrentCategories'];
   private onBeforeSwitch: ChartEditorOptions['onBeforeSwitch'];
@@ -87,6 +91,8 @@ export class ChartEditor {
     this.onVersionRestore = options.onVersionRestore;
     this.onVersionView = options.onVersionView;
     this.onVersionCompare = options.onVersionCompare;
+    this.onVersionDelete = options.onVersionDelete ?? (() => {});
+    this.onChartsEmpty = options.onChartsEmpty ?? (() => {});
     this.getCurrentTree = options.getCurrentTree;
     this.getCurrentCategories = options.getCurrentCategories;
     this.onBeforeSwitch = options.onBeforeSwitch;
@@ -423,6 +429,7 @@ export class ChartEditor {
 
   private async renderVersionList(): Promise<void> {
     this.versionListEl.innerHTML = '';
+    if (!this.chartStore.getActiveChartId()) return;
 
     // Working tree entry (always shown)
     const workingItem = document.createElement('div');
@@ -731,6 +738,8 @@ export class ChartEditor {
         const newActive = await this.chartStore.getActiveChart();
         if (newActive) {
           this.onChartSwitch(newActive);
+        } else {
+          this.onChartsEmpty();
         }
       }
       await this.refresh();
@@ -795,6 +804,7 @@ export class ChartEditor {
     if (!confirmed) return;
 
     try {
+      this.onVersionDelete(version);
       await this.chartStore.deleteVersion(version.id);
       await this.refresh();
     } catch (err) {

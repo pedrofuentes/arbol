@@ -13,6 +13,7 @@ import { PresetPanel } from './settings/preset-panel';
 import { CategoryPanel } from './settings/category-panel';
 import { SettingsIOPanel } from './settings/settings-io';
 import { BackupPanel } from './settings/backup-panel';
+import { TrashPanel } from './settings/trash-panel';
 import { LevelMappingPanel } from './settings/level-mapping-panel';
 import { PresetToolbar } from '../ui/preset-toolbar';
 import { showToast } from '../ui/toast';
@@ -571,6 +572,7 @@ export class SettingsEditor {
   private levelMappingPanel: LevelMappingPanel | null = null;
   private settingsIOPanel: SettingsIOPanel;
   private backupPanel: BackupPanel | null = null;
+  private trashPanel: TrashPanel | null = null;
   private rangeDebounceTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
   private cachedChartEntries: { id: string; name: string }[] = [];
 
@@ -628,6 +630,10 @@ export class SettingsEditor {
         chartDB,
         storage: this.storage,
       });
+    }
+
+    if (chartStore) {
+      this.trashPanel = new TrashPanel({ chartStore });
     }
 
     this.build();
@@ -921,6 +927,12 @@ export class SettingsEditor {
           t('settings.backup_section'),
           this.backupPanel.build(),
         ),
+      );
+    }
+
+    if (this.trashPanel) {
+      this.container.appendChild(
+        this.createAccordionSection('trash', t('trash.title'), this.trashPanel.build()),
       );
     }
 

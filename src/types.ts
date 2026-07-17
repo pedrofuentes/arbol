@@ -87,6 +87,8 @@ export interface ChartRecord {
   levelMappings?: LevelMapping[];
   /** How level values are displayed on cards and in exports. */
   levelDisplayMode?: LevelDisplayMode;
+  /** Epoch milliseconds when the chart was moved to Trash. Missing means active. */
+  deletedAt?: number;
 }
 
 /** Immutable point-in-time snapshot of a chart's tree. */
@@ -101,6 +103,12 @@ export interface VersionRecord {
   createdAt: string;
   /** Frozen copy of the org tree at snapshot time. */
   tree: OrgNode;
+  /** Epoch milliseconds when the version was moved to Trash. Missing means active. */
+  deletedAt?: number;
+}
+
+export interface IncludeTrashedOptions {
+  includeTrashed?: boolean;
 }
 
 export type DiffStatus = 'added' | 'removed' | 'moved' | 'modified' | 'unchanged';

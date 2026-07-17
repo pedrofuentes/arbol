@@ -6,6 +6,7 @@ import type {
   ChartBundle,
   LevelMapping,
   LevelDisplayMode,
+  IncludeTrashedOptions,
 } from '../types';
 import { ChartDB } from './chart-db';
 import { validateTree } from './org-store';
@@ -210,8 +211,8 @@ export class ChartStore extends EventEmitter {
   // Chart CRUD
   // ---------------------------------------------------------------------------
 
-  async getCharts(): Promise<ChartRecord[]> {
-    return this.db.getAllCharts();
+  async getCharts(options: IncludeTrashedOptions = {}): Promise<ChartRecord[]> {
+    return this.db.getAllCharts(options);
   }
 
   async getActiveChart(): Promise<ChartRecord | undefined> {
@@ -336,10 +337,10 @@ export class ChartStore extends EventEmitter {
   }
 
   async deleteChart(id: string): Promise<void> {
-    const chart = await this.db.getChart(id);
+    const chart = await this.db.getChart(id, { includeTrashed: true });
     if (!chart) throw new Error(`Chart not found: ${id}`);
 
-    await this.db.deleteChart(id);
+    await this.db.patchChart(id, { deletedAt: Date.now() });
     this.versionCache.delete(id);
 
     if (this.activeChartId === id) {
@@ -350,15 +351,28 @@ export class ChartStore extends EventEmitter {
         this.savedMutationVersion = null;
         await this.loadVersionBaselineWithFallback(remaining[0].id, remaining[0].workingTree);
       } else {
-        const fallback = await this.createFallbackChart();
-        this.activeChartId = fallback.id;
-        this.versionCache.set(fallback.id, []);
-        this.lastSavedTree = JSON.stringify(fallback.workingTree);
+        this.activeChartId = null;
+        this.lastSavedTree = null;
         this.savedMutationVersion = null;
-        this.lastVersionTree = structuredClone(fallback.workingTree);
+        this.lastVersionTree = null;
       }
     }
 
+    this.emit();
+  }
+
+  async restoreChart(id: string): Promise<void> {
+    const chart = await this.db.getChart(id, { includeTrashed: true });
+    if (!chart) throw new Error(`Chart not found: ${id}`);
+    await this.db.patchChart(id, { deletedAt: undefined });
+    this.emit();
+  }
+
+  async deleteChartForever(id: string): Promise<void> {
+    const chart = await this.db.getChart(id, { includeTrashed: true });
+    if (!chart) throw new Error(`Chart not found: ${id}`);
+    await this.db.deleteChart(id);
+    this.versionCache.delete(id);
     this.emit();
   }
 
@@ -431,15 +445,25 @@ export class ChartStore extends EventEmitter {
   // Version management
   // ---------------------------------------------------------------------------
 
-  async getVersions(chartId?: string): Promise<VersionRecord[]> {
+  async getVersions(
+    chartId?: string,
+    options: IncludeTrashedOptions = {},
+  ): Promise<VersionRecord[]> {
     const id = chartId ?? this.activeChartId;
     if (!id) throw new Error('No active chart');
+    if (options.includeTrashed) {
+      return this.db.getVersionsByChart(id, options);
+    }
     const cached = this.versionCache.get(id);
     if (cached) return [...cached];
 
     const versions = await this.db.getVersionsByChart(id);
     this.versionCache.set(id, versions);
     return [...versions];
+  }
+
+  async getAllVersions(options: IncludeTrashedOptions = {}): Promise<VersionRecord[]> {
+    return this.db.getAllVersions(options);
   }
 
   async saveVersion(name: string, tree: OrgNode, mutationVersion?: number): Promise<VersionRecord> {
@@ -467,8 +491,11 @@ export class ChartStore extends EventEmitter {
     return version;
   }
 
-  async getVersion(id: string): Promise<VersionRecord | undefined> {
-    return this.db.getVersion(id);
+  async getVersion(
+    id: string,
+    options: IncludeTrashedOptions = {},
+  ): Promise<VersionRecord | undefined> {
+    return this.db.getVersion(id, options);
   }
 
   async restoreVersion(versionId: string, currentTree?: OrgNode): Promise<OrgNode> {
@@ -491,20 +518,39 @@ export class ChartStore extends EventEmitter {
   }
 
   async deleteVersion(id: string): Promise<void> {
-    const version = await this.db.getVersion(id);
-    await this.db.deleteVersion(id);
+    const version = await this.db.getVersion(id, { includeTrashed: true });
+    if (!version) throw new Error(`Version not found: ${id}`);
+    await this.db.patchVersion(id, { deletedAt: Date.now() });
     if (version) {
-      const cached = this.versionCache.get(version.chartId);
-      if (cached) {
-        this.versionCache.set(
-          version.chartId,
-          cached.filter((candidate) => candidate.id !== id),
-        );
-      }
+      this.versionCache.delete(version.chartId);
     }
     if (version?.chartId === this.activeChartId) {
       const chart = await this.getActiveChart();
-      if (chart) await this.loadVersionBaseline(chart.id, chart.workingTree);
+      if (chart) await this.loadVersionBaselineWithFallback(chart.id, chart.workingTree);
+    }
+    this.emit();
+  }
+
+  async restoreDeletedVersion(id: string): Promise<void> {
+    const version = await this.db.getVersion(id, { includeTrashed: true });
+    if (!version) throw new Error(`Version not found: ${id}`);
+    await this.db.patchVersion(id, { deletedAt: undefined });
+    this.versionCache.delete(version.chartId);
+    if (version.chartId === this.activeChartId) {
+      const chart = await this.getActiveChart();
+      if (chart) await this.loadVersionBaselineWithFallback(chart.id, chart.workingTree);
+    }
+    this.emit();
+  }
+
+  async deleteVersionForever(id: string): Promise<void> {
+    const version = await this.db.getVersion(id, { includeTrashed: true });
+    if (!version) throw new Error(`Version not found: ${id}`);
+    await this.db.deleteVersion(id);
+    this.versionCache.delete(version.chartId);
+    if (version.chartId === this.activeChartId) {
+      const chart = await this.getActiveChart();
+      if (chart) await this.loadVersionBaselineWithFallback(chart.id, chart.workingTree);
     }
     this.emit();
   }
@@ -653,20 +699,6 @@ export class ChartStore extends EventEmitter {
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
-
-  private async createFallbackChart(): Promise<ChartRecord> {
-    const now = new Date().toISOString();
-    const chart: ChartRecord = {
-      id: generateId(),
-      name: t('chart_store.default_chart_name'),
-      createdAt: now,
-      updatedAt: now,
-      workingTree: { ...DEFAULT_ROOT },
-      categories: [],
-    };
-    await this.db.putChart(chart);
-    return chart;
-  }
 
   private async loadVersionBaseline(chartId: string, fallbackTree: OrgNode): Promise<void> {
     const versions = await this.getVersions(chartId);

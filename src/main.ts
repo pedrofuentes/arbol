@@ -282,6 +282,7 @@ async function main(): Promise<void> {
     'level-mapping': 'levels_categories',
     'settings-io': 'data_backup',
     'backup-restore': 'data_backup',
+    trash: 'data_backup',
   };
 
   function filterSettingsSections(): void {
@@ -648,6 +649,7 @@ async function main(): Promise<void> {
   const handleChartSwitched = (chart: ChartRecord) => {
     showLoading(t('loading.switching_chart'));
     try {
+      chartArea.querySelector('svg[role="tree"]')?.removeAttribute('hidden');
       focusMode.clear();
       prePreviewTree = null;
       chartEditor?.setViewingVersion(null);
@@ -725,6 +727,30 @@ async function main(): Promise<void> {
     },
     onVersionCompare: (version) => {
       comparison.enterComparisonMode(version);
+    },
+    onVersionDelete: () => {
+      const treeToRestore = chartEditor.setViewingVersion(null);
+      prePreviewTree = null;
+      if (treeToRestore) {
+        store.replaceTree(treeToRestore);
+        rerender();
+        renderer.getZoomManager()?.fitToContent();
+        formEditor.refresh();
+        jsonEditor.refresh();
+      }
+      dismissVersionViewer();
+      if (comparison.isInComparisonMode()) comparison.exitComparisonMode();
+    },
+    onChartsEmpty: () => {
+      focusMode.clear();
+      prePreviewTree = null;
+      chartEditor.setViewingVersion(null);
+      dismissVersionViewer();
+      if (comparison.isInComparisonMode()) comparison.exitComparisonMode();
+      clearMultiSelection();
+      chartArea.querySelector('svg[role="tree"]')?.setAttribute('hidden', '');
+      chartNameHeader.setName(t('chart_editor.no_active_chart'));
+      chartNameHeader.setEditCount(0);
     },
   });
 
