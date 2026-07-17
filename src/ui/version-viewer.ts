@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { createIcon } from './icon';
 
 export interface VersionViewerOptions {
   versionName: string;
@@ -61,11 +62,11 @@ export function showVersionViewer(options: VersionViewerOptions): void {
   `;
   banner.appendChild(style);
 
-  // Label: 📋 Viewing version "[name]"
   const label = document.createElement('span');
   label.setAttribute('data-testid', 'version-viewer-label');
+  label.appendChild(createIcon('copy'));
 
-  const labelPrefix = document.createTextNode('📋 Viewing version \u201c');
+  const labelPrefix = document.createTextNode(' Viewing version \u201c');
   label.appendChild(labelPrefix);
 
   const nameSpan = document.createElement('strong');
@@ -117,7 +118,8 @@ export function showVersionViewer(options: VersionViewerOptions): void {
   const closeBtn = document.createElement('button');
   closeBtn.setAttribute('data-testid', 'version-viewer-close');
   closeBtn.className = 'btn btn-secondary';
-  closeBtn.textContent = t('version_viewer.close');
+  closeBtn.appendChild(createIcon('close'));
+  closeBtn.appendChild(document.createTextNode(t('version_viewer.close')));
   closeBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
   closeBtn.addEventListener('click', () => {
     options.onClose();

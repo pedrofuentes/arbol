@@ -19,20 +19,15 @@ const es: Record<string, string> = {
   // ─── Toolbar ───────────────────────────────────────────────────────
   'toolbar.toggle_theme': 'Cambiar tema',
   'toolbar.toggle_theme_aria': 'Alternar tema claro/oscuro',
-  'toolbar.theme_icon_dark': '☀️',
-  'toolbar.theme_icon_light': '🌙',
   'toolbar.theme_switched': 'Tema cambiado a {theme}',
   'toolbar.help_tooltip': 'Ayuda y atajos',
   'toolbar.help_aria': 'Mostrar ayuda',
   'toolbar.help_text': '?',
   'toolbar.undo_tooltip': 'Deshacer (Ctrl+Z)',
   'toolbar.undo_aria': 'Deshacer',
-  'toolbar.undo_icon': '↩',
   'toolbar.redo_tooltip': 'Rehacer (Ctrl+Shift+Z)',
   'toolbar.redo_aria': 'Rehacer',
-  'toolbar.redo_icon': '↪',
   'toolbar.toggle_sidebar': 'Alternar barra lateral',
-  'toolbar.hamburger_icon': '☰',
   'toolbar.settings_tooltip': 'Configuración',
   'toolbar.settings_aria': 'Abrir configuración',
   'toolbar.quick_actions': 'Ctrl+K Acciones rápidas',
@@ -98,17 +93,12 @@ const es: Record<string, string> = {
 
   // ─── Context Menu ──────────────────────────────────────────────────
   'menu.edit': 'Editar',
-  'menu.edit_icon': '✏️',
   'menu.add': 'Agregar',
-  'menu.add_icon': '➕',
   'menu.focus': 'Enfocar',
-  'menu.focus_icon': '🔎',
   'menu.category': 'Categoría',
-  'menu.category_icon': '🏷️',
   'menu.category_none': 'Ninguna (predeterminada)',
   'menu.category_check': '✓',
   'menu.level': 'Nivel',
-  'menu.level_icon': '📊',
   'menu.level_none': 'Ninguno',
   'menu.level_check': '✓',
   'menu.set_level': 'Establecer nivel',
@@ -117,9 +107,7 @@ const es: Record<string, string> = {
   'menu.dotted_line_remove': 'Sólida',
   'menu.dotted_line_icon': '┈',
   'menu.move': 'Mover',
-  'menu.move_icon': '↗️',
   'menu.remove': 'Eliminar',
-  'menu.remove_icon': '🗑️',
   'menu.multi_category': 'Asignar categoría ({count} personas)',
   'menu.multi_move': 'Mover todos ({count} personas)',
   'menu.multi_remove': 'Eliminar todos ({count} personas)',
@@ -174,12 +162,12 @@ const es: Record<string, string> = {
   'property_panel.level_none': 'Sin definir',
   'property_panel.save': 'Guardar',
   'property_panel.actions': 'Acciones',
-  'property_panel.add_child': '➕ Agregar subordinado',
-  'property_panel.move': '↗️ Mover',
-  'property_panel.focus': '🔎 Enfocar',
+  'property_panel.add_child': 'Agregar subordinado',
+  'property_panel.move': 'Mover',
+  'property_panel.focus': 'Enfocar',
   'property_panel.dotted': '┈ Punteada',
   'property_panel.solid': '┈ Sólida',
-  'property_panel.remove': '🗑️ Eliminar',
+  'property_panel.remove': 'Eliminar',
   'announce.panel_opened': 'Panel de propiedades abierto para {name}',
   'announce.panel_closed': 'Panel de propiedades cerrado',
 
@@ -204,7 +192,7 @@ const es: Record<string, string> = {
   'settings_modal.preview_reset': 'Restablecer vista previa',
 
   // ─── Import Instructions ────────────────────────────────────────────
-  'import_instructions.summary': '📋 Cómo exportar desde tu sistema de RRHH',
+  'import_instructions.summary': 'Cómo exportar desde tu sistema de RRHH',
   'import_instructions.help_title': 'Cómo exportar desde tu sistema de RRHH',
 
   // ─── Import Wizard ──────────────────────────────────────────────────
@@ -225,7 +213,7 @@ const es: Record<string, string> = {
   'toolbar.import_label': 'Importar',
 
   // ─── Focus Mode ────────────────────────────────────────────────────
-  'focus.viewing': "🔎 Viewing {name}'s org",
+  'focus.viewing': "Viewing {name}'s org",
   'focus.show_full': 'Mostrar organigrama completo',
   'focus.entered': 'Enfocado en la organización de {name}',
   'focus.exited': 'Mostrando organigrama completo',
@@ -361,7 +349,7 @@ const es: Record<string, string> = {
   'chart_header.name_empty_error': 'El nombre del organigrama no puede estar vacío',
 
   // ─── Version Viewer ────────────────────────────────────────────────
-  'version_viewer.viewing': '📋 Viewing version \u201c{name}\u201d',
+  'version_viewer.viewing': 'Viewing version \u201c{name}\u201d',
   'version_viewer.read_only': '(solo lectura)',
   'version_viewer.restore': 'Restaurar',
   'version_viewer.close': 'Cerrar',
@@ -406,17 +394,16 @@ const es: Record<string, string> = {
   'json_editor.aria': 'Datos JSON del organigrama',
   'json_editor.apply': 'Aplicar',
   'json_editor.section_title': 'Editar JSON',
-  'json_editor.expand_icon': '▶',
 
   // ─── Import Editor ─────────────────────────────────────────────────
   'import.preset_heading': 'Preajuste de mapeo',
   'import.preset_aria': 'Preajuste de mapeo',
   'import.no_presets': 'No hay preajustes guardados.',
   'import.new_preset': '+ Nuevo',
-  'import.import_presets': '📂 Importar',
-  'import.export_presets': '💾 Exportar todos',
+  'import.import_presets': 'Importar',
+  'import.export_presets': 'Exportar todos',
   'import.export_preset_single': 'Exportar',
-  'import.delete_preset': '×',
+  'import.delete_preset': 'Eliminar',
   'import.import_presets_heading': 'Importar preajustes',
   'import.paste_preset_placeholder': 'Pega el JSON del preajuste aquí…',
   'import.or_load_file': 'O cargar archivo',
@@ -476,7 +463,7 @@ const es: Record<string, string> = {
   'import.loading': 'Cargando…',
   'import.drop_or': 'Suelta un archivo o ',
   'import.original_version_name': 'Original',
-  'import.sample_button': '🌳 Cargar organigrama de ejemplo',
+  'import.sample_button': 'Cargar organigrama de ejemplo',
 
   // ─── Column Mapper ─────────────────────────────────────────────────
   'column_mapper.heading': 'Mapear columnas CSV',
@@ -546,19 +533,15 @@ const es: Record<string, string> = {
   'footer.selected': '{count} seleccionados',
   'footer.built_with': '✦ Creado con Arbol',
   'footer.report_bugs': 'Reportar errores y solicitar funciones',
-  'footer.export_icon': '📊 ',
   'footer.export_label': 'Exportar PPTX',
   'footer.export_aria': 'Exportar a PowerPoint',
   'footer.export_tooltip': 'Exportar a PowerPoint (Ctrl+E)',
-  'footer.exporting_icon': '⏳ ',
   'footer.exporting_label': 'Exportando…',
   'footer.exported': 'Organigrama exportado',
   'footer.export_failed': 'Error al exportar: {error}',
-  'footer.fit_icon': '⊞ ',
   'footer.fit_label': 'Ajustar',
   'footer.fit_aria': 'Ajustar organigrama a la pantalla',
   'footer.fit_tooltip': 'Ajustar organigrama a la pantalla',
-  'footer.reset_icon': '⟲ ',
   'footer.reset_label': 'Restablecer',
   'footer.reset_aria': 'Restablecer zoom',
   'footer.reset_tooltip': 'Restablecer zoom',
@@ -578,7 +561,7 @@ const es: Record<string, string> = {
   'shortcut.help': 'Ayuda',
 
   // ─── Settings Editor ──────────────────────────────────────────────
-  'settings.filter_placeholder': '🔍  Filtrar configuración…',
+  'settings.filter_placeholder': 'Filtrar configuración…',
   'settings.filter_aria': 'Filtrar configuración',
   'settings.filter_clear_aria': 'Limpiar filtro',
   'settings.collapse_all': 'Contraer todo',
@@ -589,12 +572,11 @@ const es: Record<string, string> = {
   'settings.backup_section': 'Respaldo y restauración',
   'settings.reset_aria': 'Restablecer {title} a valores predeterminados',
   'settings.reset_tooltip': 'Restablecer a valores predeterminados',
-  'settings.reset_icon': '↺',
-  'settings.export': '💾 Exportar',
-  'settings.import': '📂 Importar',
-  'settings.backup': '💾 Crear respaldo',
-  'settings.restore': '📂 Restaurar',
-  'settings.clear_data': '🗑 Borrar todos los datos',
+  'settings.export': 'Exportar',
+  'settings.import': 'Importar',
+  'settings.backup': 'Crear respaldo',
+  'settings.restore': 'Restaurar',
+  'settings.clear_data': 'Borrar todos los datos',
   'settings.clear_data_aria': 'Borrar todos los datos locales',
   'settings.file_too_large': 'Archivo de configuración demasiado grande (máx. 1MB).',
   'settings.import_failed': 'Error al importar: {error}',
@@ -628,7 +610,7 @@ const es: Record<string, string> = {
   'settings.preset_name_placeholder': 'Nombre del preajuste…',
   'settings.preset_name_aria': 'Nombre del preajuste personalizado',
   'settings.delete_preset_aria': 'Eliminar preajuste {name}',
-  'settings.save_preset': '💾 Guardar como preajuste',
+  'settings.save_preset': 'Guardar como preajuste',
   'settings.save_preset_button': 'Guardar',
   'settings.save_preset_skip': 'No',
   'settings.save_preset_prompt_title': '¿Guardar como preajuste?',
@@ -819,9 +801,9 @@ const es: Record<string, string> = {
   'help.title': 'Ayuda y referencia',
   'help.close_aria': 'Cerrar diálogo de ayuda',
   'help.dialog_aria': 'Atajos de teclado y ayuda',
-  'help.clear_data_button': '🗑 Borrar todos los datos',
+  'help.clear_data_button': 'Borrar todos los datos',
   'help.clear_data_aria': 'Borrar todos los datos locales',
-  'help.sample_org_button': '🌳 Cargar organigrama de ejemplo',
+  'help.sample_org_button': 'Cargar organigrama de ejemplo',
   'help.sample_org_aria': 'Cargar un organigrama de ejemplo',
   'help.sample_org_confirm_title': '¿Cargar organigrama de ejemplo?',
   'help.sample_org_confirm_message':
@@ -835,7 +817,7 @@ const es: Record<string, string> = {
   'help.getting_started.right_click':
     'Haga clic derecho en cualquier tarjeta para opciones de editar, agregar, mover o eliminar.',
   'help.getting_started.sidebar':
-    'La barra lateral gestiona organigramas y versiones. Use los botones de la barra de herramientas para Configuración (⚙️), Importar (📂) y Exportar (📤).',
+    'La barra lateral gestiona organigramas y versiones. Use el botón de engranaje de Ajustes, el botón de carpeta de Importar y el botón de flecha de Exportar de la barra de herramientas.',
 
   // Help: How the Chart Works
   'help.chart_works.title': 'Cómo funciona el organigrama',
@@ -856,13 +838,13 @@ const es: Record<string, string> = {
   'help.sidebar_tabs.sidebar_label': 'Barra lateral',
   'help.sidebar_tabs.sidebar_desc':
     ' — Explorar, crear, renombrar y cambiar entre organigramas. Guardar, ver, comparar y restaurar versiones con nombre.',
-  'help.sidebar_tabs.settings_label': 'Configuración (⚙️)',
+  'help.sidebar_tabs.settings_label': 'Botón de engranaje de Ajustes',
   'help.sidebar_tabs.settings_desc':
     ' — Abre un diálogo para ajustar tamaños de tarjeta, espaciado, colores, tipografía y categorías. Incluye preajustes de tema y vista previa en vivo.',
-  'help.sidebar_tabs.import_label': 'Importar (📂)',
+  'help.sidebar_tabs.import_label': 'Botón de carpeta de Importar',
   'help.sidebar_tabs.import_desc':
     ' — Abre un asistente paso a paso para importar datos desde archivos JSON o CSV, con mapeo de columnas y normalización de texto.',
-  'help.sidebar_tabs.export_label': 'Exportar (📤)',
+  'help.sidebar_tabs.export_label': 'Botón de flecha de Exportar',
   'help.sidebar_tabs.export_desc':
     ' — Descarga el organigrama como un archivo PowerPoint editable. Elija qué versiones guardadas incluir.',
 
@@ -979,7 +961,7 @@ const es: Record<string, string> = {
   'help.settings.auto_save':
     'Toda la configuración visual se guarda automáticamente en su navegador y se restaura en la siguiente visita.',
   'help.settings.modal':
-    'Abra Configuración (botón ⚙️ o Ctrl+,) para acceder a 10 pestañas: Preajustes, Disposición, Tipografía, Tarjetas, Conectores, Opciones CI, Asesores, Insignias, Categorías y Respaldo.',
+    'Abra Ajustes (con el botón de engranaje de la barra de herramientas o Ctrl+,) para acceder a 10 pestañas: Preajustes, Disposición, Tipografía, Tarjetas, Conectores, Opciones CI, Asesores, Insignias, Categorías y Respaldo.',
   'help.settings.presets':
     'Los preajustes de tema aplican un conjunto completo de colores y espaciado con un solo clic. También puede guardar sus propios preajustes personalizados.',
   'help.settings.preview':
@@ -1220,8 +1202,8 @@ const es: Record<string, string> = {
     '{chartCount} organigrama(s), {versionCount} versión(es) · Creado {backupDate} · v{appVersion}',
   'restore_dialog.how': '¿Cómo desea restaurar?',
   'restore_dialog.replace_all':
-    '🔄 Reemplazar todo — borrar datos actuales y restaurar desde respaldo',
-  'restore_dialog.merge': '➕ Combinar — agregar organigramas nuevos, mantener los existentes',
+    'Reemplazar todo — borrar datos actuales y restaurar desde respaldo',
+  'restore_dialog.merge': 'Combinar — agregar organigramas nuevos, mantener los existentes',
   'restore_dialog.cancel': 'Cancelar',
   'comparison.dim_on': 'Atenuación: Sí',
   'comparison.dim_off': 'Atenuación: No',
@@ -1259,9 +1241,9 @@ const es: Record<string, string> = {
   'settings_modal.tab.categories': 'Categorías',
   'settings_modal.tab.level_mapping': 'Mapeo de niveles',
   'settings_modal.tab.backup': 'Respaldo',
-  'backup.create_btn': '💾 Crear respaldo',
+  'backup.create_btn': 'Crear respaldo',
   'backup.backup_failed': 'Error al crear respaldo: {message}',
-  'backup.restore_btn': '📂 Restaurar',
+  'backup.restore_btn': 'Restaurar',
   'backup.replace_title': 'Reemplazar todos los datos',
   'backup.replace_message':
     'Esto reemplazará permanentemente todos los organigramas, versiones y configuraciones existentes con los datos del respaldo. Se ha descargado un respaldo de sus datos actuales.\n\n¿Continuar?',
@@ -1273,7 +1255,7 @@ const es: Record<string, string> = {
     'Se agregaron {chartsAdded} organigrama(s) y {versionsAdded} versión(es). Se omitieron {chartsSkipped} organigrama(s) que ya existían.\n\nLa página se recargará para aplicar los cambios.',
   'backup.merge_confirm': 'OK',
   'backup.restore_failed': 'Error al restaurar: {message}',
-  'backup.clear_btn': '🗑 Borrar todos los datos',
+  'backup.clear_btn': 'Borrar todos los datos',
   'backup.clear_aria': 'Borrar todos los datos locales',
   'backup.clear_title': 'Borrar todos los datos',
   'backup.clear_message':
@@ -1283,8 +1265,8 @@ const es: Record<string, string> = {
   'backup.clear_no_backup_message':
     'No se pudo crear un respaldo automático. Si continúa, sus datos se eliminarán permanentemente sin posibilidad de recuperación.\n\n¿Está seguro de que desea continuar sin respaldo?',
   'backup.clear_no_backup_confirm': 'Continuar sin respaldo',
-  'settings_io.export_btn': '\ud83d\udcbe Export',
-  'settings_io.import_btn': '\ud83d\udcc2 Import',
+  'settings_io.export_btn': 'Exportar',
+  'settings_io.import_btn': 'Importar',
   'settings_io.file_too_large': 'Archivo de configuración demasiado grande (máx. 1MB).',
   'settings_io.imported_theme': 'Tema personalizado importado',
   'settings_io.import_failed': 'Error al importar: {message}',

@@ -1,5 +1,6 @@
 import { createDismissible } from './dismissible';
 import { t } from '../i18n';
+import { createIcon } from './icon';
 
 export interface FocusBannerOptions {
   name: string;
@@ -58,7 +59,8 @@ export function showFocusBanner(options: FocusBannerOptions): void {
 
   const label = document.createElement('span');
   label.setAttribute('data-testid', 'focus-banner-label');
-  label.textContent = t('focus.viewing', { name: options.name });
+  label.appendChild(createIcon('focus'));
+  label.appendChild(document.createTextNode(t('focus.viewing', { name: options.name })));
   banner.appendChild(label);
 
   const separator = document.createElement('span');

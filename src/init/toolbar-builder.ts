@@ -1,5 +1,6 @@
 import { t } from '../i18n';
 import { createIconButton } from '../utils/dom-builder';
+import { createIcon, setIcon } from '../ui/icon';
 import type { ThemeManager } from '../store/theme-manager';
 import type { OrgStore } from '../store/org-store';
 import { announce } from '../ui/announcer';
@@ -33,36 +34,30 @@ export function buildToolbar(deps: ToolbarDeps): ToolbarElements {
 
   // Theme toggle
   const themeBtn = createIconButton({
-    icon: themeManager.getTheme() === 'dark' ? t('toolbar.theme_icon_dark') : t('toolbar.theme_icon_light'),
+    icon: themeManager.getTheme() === 'dark' ? 'sun' : 'moon',
     tooltip: t('toolbar.toggle_theme'),
     ariaLabel: t('toolbar.toggle_theme_aria'),
     onClick: () => { themeManager.toggle(); },
   });
-  const themeIcon = themeBtn.querySelector('span')!;
+  const themeIcon = themeBtn.querySelector('svg')!;
   themeManager.onChange(() => {
     const theme = themeManager.getTheme();
-    themeIcon.textContent = theme === 'dark' ? t('toolbar.theme_icon_dark') : t('toolbar.theme_icon_light');
+    setIcon(themeIcon, theme === 'dark' ? 'sun' : 'moon');
     announce(t('toolbar.theme_switched', { theme }));
   });
   headerRight.appendChild(themeBtn);
 
-  // Help button — uses textContent directly (bold "?"), not an icon span
-  const helpBtn = document.createElement('button');
-  helpBtn.className = 'icon-btn';
-  helpBtn.setAttribute('data-tooltip', t('toolbar.help_tooltip'));
-  helpBtn.setAttribute('aria-label', t('toolbar.help_aria'));
-  helpBtn.textContent = t('toolbar.help_text');
-  helpBtn.style.fontWeight = '700';
-  helpBtn.addEventListener('click', () =>
-    showHelpDialog({
-      onLoadSample: deps.onLoadSample,
-    }),
-  );
+  const helpBtn = createIconButton({
+    icon: 'help',
+    tooltip: t('toolbar.help_tooltip'),
+    ariaLabel: t('toolbar.help_aria'),
+    onClick: () => showHelpDialog({ onLoadSample: deps.onLoadSample }),
+  });
   headerRight.appendChild(helpBtn);
 
   // Undo / Redo (inserted before theme button to preserve DOM order)
   const undoBtn = createIconButton({
-    icon: t('toolbar.undo_icon'),
+    icon: 'undo',
     tooltip: t('toolbar.undo_tooltip'),
     ariaLabel: t('toolbar.undo_aria'),
     ariaKeyshortcuts: 'Control+Z',
@@ -72,7 +67,7 @@ export function buildToolbar(deps: ToolbarDeps): ToolbarElements {
   headerRight.insertBefore(undoBtn, themeBtn);
 
   const redoBtn = createIconButton({
-    icon: t('toolbar.redo_icon'),
+    icon: 'redo',
     tooltip: t('toolbar.redo_tooltip'),
     ariaLabel: t('toolbar.redo_aria'),
     ariaKeyshortcuts: 'Control+Shift+Z',
@@ -88,7 +83,7 @@ export function buildToolbar(deps: ToolbarDeps): ToolbarElements {
 
   // Settings button
   const settingsBtn = createIconButton({
-    icon: '⚙️',
+    icon: 'settings',
     tooltip: t('toolbar.settings_tooltip'),
     ariaLabel: t('toolbar.settings_aria'),
     ariaKeyshortcuts: 'Control+,',
@@ -98,7 +93,7 @@ export function buildToolbar(deps: ToolbarDeps): ToolbarElements {
 
   // Import button (icon + text label)
   const importBtn = createIconButton({
-    icon: '📂',
+    icon: 'import',
     tooltip: t('toolbar.import_tooltip'),
     ariaLabel: t('toolbar.import_aria'),
     onClick: deps.onImportClick,
@@ -108,7 +103,7 @@ export function buildToolbar(deps: ToolbarDeps): ToolbarElements {
 
   // Export button (icon + text label)
   const exportBtn = createIconButton({
-    icon: '📤',
+    icon: 'export',
     tooltip: t('toolbar.export_tooltip'),
     ariaLabel: t('toolbar.export_aria'),
     ariaKeyshortcuts: 'Control+e',
@@ -139,10 +134,7 @@ export function buildToolbar(deps: ToolbarDeps): ToolbarElements {
   menuToggle.className = 'menu-toggle icon-btn';
   menuToggle.setAttribute('aria-label', t('toolbar.toggle_sidebar'));
   menuToggle.setAttribute('aria-expanded', 'false');
-  const menuIcon = document.createElement('span');
-  menuIcon.setAttribute('aria-hidden', 'true');
-  menuIcon.textContent = t('toolbar.hamburger_icon');
-  menuToggle.appendChild(menuIcon);
+  menuToggle.appendChild(createIcon('menu'));
   headerLeft.insertBefore(menuToggle, headerLeft.firstChild);
 
   const sidebarBackdrop = document.createElement('div');

@@ -1,5 +1,6 @@
 import type { LevelStore } from '../../store/level-store';
 import { t } from '../../i18n';
+import { createIcon } from '../../ui/icon';
 
 type LevelDisplayMode = 'original' | 'mapped';
 
@@ -192,7 +193,7 @@ export class LevelMappingPanel {
       row.appendChild(mgrLabel);
 
       const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = '×';
+      deleteBtn.appendChild(createIcon('remove'));
       deleteBtn.style.cssText =
         'width:22px;height:22px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:transparent;color:var(--text-tertiary);cursor:pointer;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:0.5;';
       deleteBtn.setAttribute('aria-label', t('settings.label.delete_mapping'));

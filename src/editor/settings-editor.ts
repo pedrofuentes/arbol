@@ -8,6 +8,7 @@ import type { CategoryPresetStore } from '../store/category-preset-store';
 import type { LevelPresetStore } from '../store/level-preset-store';
 import { type IStorage, browserStorage } from '../utils/storage';
 import { t } from '../i18n';
+import { createIcon } from '../ui/icon';
 import { PresetPanel } from './settings/preset-panel';
 import { CategoryPanel } from './settings/category-panel';
 import { SettingsIOPanel } from './settings/settings-io';
@@ -712,7 +713,7 @@ export class SettingsEditor {
     if (options?.resetCallback) {
       const resetBtn = document.createElement('button');
       resetBtn.className = 'accordion-reset';
-      resetBtn.textContent = '↺';
+      resetBtn.appendChild(createIcon('reset'));
       resetBtn.setAttribute('aria-label', t('settings.reset_aria', { title }));
       resetBtn.setAttribute('data-tooltip', t('settings.reset_tooltip'));
       resetBtn.addEventListener('click', (e) => {
@@ -983,7 +984,7 @@ export class SettingsEditor {
     const resetBtn = document.createElement('button');
     resetBtn.className = 'setting-reset-btn';
     if (isModified) resetBtn.classList.add('visible');
-    resetBtn.textContent = '↺';
+    resetBtn.appendChild(createIcon('reset'));
     if (defaultValue !== undefined) {
       resetBtn.setAttribute(
         'aria-label',

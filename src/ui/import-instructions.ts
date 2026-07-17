@@ -1,6 +1,7 @@
 import { getAppConfig } from '../config/app-config';
 import { renderMarkdown } from '../utils/markdown';
 import { t } from '../i18n';
+import { createIcon } from './icon';
 
 /**
  * Renders company-specific import instructions from app config as a
@@ -14,7 +15,8 @@ export function renderImportInstructions(): HTMLDetailsElement | null {
   details.className = 'import-instructions';
 
   const summary = document.createElement('summary');
-  summary.textContent = t('import_instructions.summary');
+  summary.appendChild(createIcon('copy'));
+  summary.appendChild(document.createTextNode(t('import_instructions.summary')));
   details.appendChild(summary);
 
   const content = document.createElement('div');

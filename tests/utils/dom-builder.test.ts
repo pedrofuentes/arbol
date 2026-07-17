@@ -1,5 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createButton, createIconButton, createFormGroup, createHeading, createSection } from '../../src/utils/dom-builder';
+import {
+  createButton,
+  createIconButton,
+  createFormGroup,
+  createHeading,
+  createSection,
+} from '../../src/utils/dom-builder';
 
 describe('dom-builder', () => {
   describe('createButton', () => {
@@ -47,43 +53,65 @@ describe('dom-builder', () => {
       expect(btn.tagName).toBe('BUTTON');
       expect(btn.textContent).toBe('');
     });
+
+    it('renders a semantic SVG beside a clean label', () => {
+      const btn = createButton({ icon: 'save', label: 'Save changes' });
+
+      expect(btn.querySelector('svg')?.dataset.icon).toBe('save');
+      expect(btn.textContent).toBe('Save changes');
+    });
   });
 
   describe('createIconButton', () => {
-    it('creates button with icon span', () => {
-      const btn = createIconButton({ icon: '⚙️' });
+    it('creates button with semantic SVG icon', () => {
+      const btn = createIconButton({ icon: 'settings' });
       expect(btn.tagName).toBe('BUTTON');
       expect(btn.className).toBe('icon-btn');
-      const span = btn.querySelector('span');
-      expect(span).not.toBeNull();
-      expect(span!.getAttribute('aria-hidden')).toBe('true');
-      expect(span!.textContent).toBe('⚙️');
+      const svg = btn.querySelector('svg');
+      expect(svg).not.toBeNull();
+      expect(svg!.getAttribute('aria-hidden')).toBe('true');
+      expect(svg!.dataset.icon).toBe('settings');
+      expect(btn.textContent).toBe('');
+    });
+
+    it('renders an unregistered icon string as literal fallback text', () => {
+      const btn = createIconButton({ icon: 'legacy-symbol' });
+
+      expect(btn.textContent).toBe('legacy-symbol');
+      expect(btn.querySelector('svg')).toBeNull();
+    });
+
+    it('treats prototype-chain icon names as literal fallback text', () => {
+      const btn = createIconButton({ icon: 'constructor' });
+
+      expect(btn.textContent).toBe('constructor');
+      expect(btn.querySelector('svg')).toBeNull();
     });
 
     it('sets tooltip via data-tooltip', () => {
-      const btn = createIconButton({ icon: '⚙️', tooltip: 'Settings' });
+      const btn = createIconButton({ icon: 'settings', tooltip: 'Settings' });
       expect(btn.getAttribute('data-tooltip')).toBe('Settings');
     });
 
     it('sets aria-label', () => {
-      const btn = createIconButton({ icon: '⚙️', ariaLabel: 'Open settings' });
+      const btn = createIconButton({ icon: 'settings', ariaLabel: 'Open settings' });
       expect(btn.getAttribute('aria-label')).toBe('Open settings');
     });
 
     it('sets aria-keyshortcuts', () => {
-      const btn = createIconButton({ icon: '⚙️', ariaKeyshortcuts: 'Control+,' });
+      const btn = createIconButton({ icon: 'settings', ariaKeyshortcuts: 'Control+,' });
       expect(btn.getAttribute('aria-keyshortcuts')).toBe('Control+,');
     });
 
     it('attaches click handler', () => {
       const handler = vi.fn();
-      const btn = createIconButton({ icon: '✓', onClick: handler });
+      const btn = createIconButton({ icon: 'check', onClick: handler });
       btn.click();
       expect(handler).toHaveBeenCalledOnce();
     });
 
     it('uses custom className', () => {
-      const btn = createIconButton({ icon: '✓', className: 'custom-btn' });
+      const btn = createIconButton({ icon: 'check', className: 'custom-btn' });
       expect(btn.className).toBe('custom-btn');
     });
   });

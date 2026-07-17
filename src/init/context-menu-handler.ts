@@ -46,7 +46,7 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
       items: [
         {
           label: t('menu.edit'),
-          icon: t('menu.edit_icon'),
+          icon: 'edit',
           action: () => {
             const rect = renderer.getNodeScreenRect(nodeId);
             if (!rect) return;
@@ -70,7 +70,7 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
         },
         {
           label: t('menu.add'),
-          icon: t('menu.add_icon'),
+          icon: 'add',
           action: () => {
             const rect = renderer.getNodeScreenRect(nodeId);
             if (!rect) return;
@@ -86,7 +86,7 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
         },
         {
           label: t('menu.focus'),
-          icon: t('menu.focus_icon'),
+          icon: 'focus',
           disabled: nodeIsLeaf || focusMode.focusedId === nodeId,
           action: () => {
             focusMode.enter(nodeId);
@@ -95,7 +95,7 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
         },
         {
           label: t('menu.category'),
-          icon: t('menu.category_icon'),
+          icon: 'tag',
           submenu: [
             {
               label: t('menu.category_none'),
@@ -126,7 +126,7 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
         },
         {
           label: t('menu.move'),
-          icon: t('menu.move_icon'),
+          icon: 'move',
           disabled: isRoot,
           action: async () => {
             try {
@@ -154,7 +154,7 @@ export function createShowSingleCardMenu(deps: ContextMenuDeps): (nodeId: string
         },
         {
           label: t('menu.remove'),
-          icon: t('menu.remove_icon'),
+          icon: 'remove',
           danger: true,
           disabled: isRoot,
           action: async () => {
@@ -239,7 +239,7 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
       items: [
         {
           label: t('menu.multi_category', { count }),
-          icon: '🏷️',
+          icon: 'tag',
           submenu: [
             {
               label: t('menu.category_none'),
@@ -260,7 +260,7 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
         },
         {
           label: t('menu.multi_move', { count }),
-          icon: '↗️',
+          icon: 'move',
           action: async () => {
             try {
               const allNodes = getAllNodes();
@@ -290,7 +290,7 @@ export function createShowMultiSelectMenu(deps: ContextMenuDeps): (event: MouseE
         },
         {
           label: t('menu.multi_remove', { count }),
-          icon: '🗑️',
+          icon: 'remove',
           danger: true,
           action: async () => {
             try {

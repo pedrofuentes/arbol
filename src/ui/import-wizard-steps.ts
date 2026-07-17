@@ -14,6 +14,7 @@ import { normalizeText } from '../utils/text-normalize';
 import { flattenTree } from '../utils/tree';
 import { ColumnMapper } from './column-mapper';
 import { renderImportInstructions } from './import-instructions';
+import { createIcon } from './icon';
 
 export interface WizardState {
   rawText?: string;
@@ -66,7 +67,7 @@ export function renderSourceStep(
 
   const icon = document.createElement('div');
   icon.className = 'wizard-dropzone-icon';
-  icon.textContent = '📁';
+  icon.appendChild(createIcon('folder-open'));
   dropzone.appendChild(icon);
 
   const dropText = document.createElement('div');

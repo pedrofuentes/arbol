@@ -4,6 +4,7 @@ import { t } from '../i18n';
 import { type IStorage, browserStorage } from '../utils/storage';
 import { getAppConfig } from '../config/app-config';
 import { renderMarkdown } from '../utils/markdown';
+import { appendIconLabel, createIcon } from './icon';
 
 const ARBOL_STORAGE_KEYS = [
   'arbol-org-data',
@@ -372,7 +373,7 @@ function buildShortcutsGrid(shortcuts: ShortcutEntry[]): HTMLDivElement {
 
 function buildClearDataButton(storage: IStorage): HTMLButtonElement {
   const clearBtn = document.createElement('button');
-  clearBtn.textContent = t('help.clear_data_button');
+  appendIconLabel(clearBtn, 'remove', t('help.clear_data_button'));
   clearBtn.setAttribute('aria-label', t('help.clear_data_aria'));
   clearBtn.style.cssText = `
     margin-top:10px;padding:5px 14px;font-size:12px;
@@ -411,7 +412,7 @@ function buildClearDataButton(storage: IStorage): HTMLButtonElement {
 
 function buildSampleOrgButton(onLoad: () => void, closeDialog: () => void): HTMLButtonElement {
   const btn = document.createElement('button');
-  btn.textContent = t('help.sample_org_button');
+  appendIconLabel(btn, 'tree', t('help.sample_org_button'));
   btn.setAttribute('aria-label', t('help.sample_org_aria'));
   btn.style.cssText = `
     margin-top:10px;margin-bottom:6px;padding:5px 14px;font-size:12px;
@@ -494,7 +495,7 @@ export function showHelpDialog(options: HelpDialogOptions = {}): void {
   const closeBtn = document.createElement('button');
   closeBtn.className = 'icon-btn';
   closeBtn.setAttribute('aria-label', t('help.close_aria'));
-  closeBtn.textContent = '✕';
+  closeBtn.appendChild(createIcon('close'));
   closeBtn.style.cssText += 'font-size:14px;width:28px;height:28px;';
   header.appendChild(closeBtn);
   dialog.appendChild(header);

@@ -1,5 +1,6 @@
 import type { ColorCategory } from '../types';
 import { t } from '../i18n';
+import { createIcon } from './icon';
 
 export interface CategoryLegendOptions {
   categories: ColorCategory[];
@@ -86,7 +87,7 @@ export function showCategoryLegend(options: CategoryLegendOptions): void {
     'line-height:1',
     'transition:transform 150ms ease',
   ].join(';');
-  toggleBtn.textContent = '▾';
+  toggleBtn.appendChild(createIcon('chevron-down', undefined, 16));
 
   headerRow.appendChild(toggleBtn);
   legend.appendChild(headerRow);
@@ -125,7 +126,7 @@ export function showCategoryLegend(options: CategoryLegendOptions): void {
     const isCollapsed = legend.getAttribute('data-collapsed') === 'true';
     legend.setAttribute('data-collapsed', String(!isCollapsed));
     itemsContainer.style.display = isCollapsed ? 'flex' : 'none';
-    toggleBtn.textContent = isCollapsed ? '▾' : '▸';
+    toggleBtn.style.transform = isCollapsed ? '' : 'rotate(-90deg)';
   });
 
   options.container.appendChild(legend);

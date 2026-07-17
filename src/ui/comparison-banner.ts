@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { createIcon } from './icon';
 
 export interface ComparisonBannerOptions {
   container: HTMLElement;
@@ -65,11 +66,11 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   `;
   banner.appendChild(style);
 
-  // Label: 🔄 Comparing "oldLabel" → "newLabel"
   const label = document.createElement('span');
   label.setAttribute('data-testid', 'comparison-banner-label');
+  label.appendChild(createIcon('replace'));
 
-  const labelPrefix = document.createTextNode('🔄 Comparing \u201c');
+  const labelPrefix = document.createTextNode(' Comparing \u201c');
   label.appendChild(labelPrefix);
 
   const oldStrong = document.createElement('strong');
@@ -155,7 +156,8 @@ export function showComparisonBanner(options: ComparisonBannerOptions): void {
   exitBtn.className = 'btn btn-secondary';
   exitBtn.style.cssText = 'padding:4px 12px;font-size:11px;';
   exitBtn.setAttribute('aria-label', t('comparison.exit_aria'));
-  exitBtn.textContent = t('comparison.exit');
+  exitBtn.appendChild(createIcon('close'));
+  exitBtn.appendChild(document.createTextNode(t('comparison.exit')));
   exitBtn.addEventListener('click', () => {
     options.onExit();
   });

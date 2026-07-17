@@ -7,6 +7,7 @@ import { t } from '../i18n';
 import { SunburstChart } from '../analytics/sunburst-chart';
 import { SpanChart } from '../analytics/span-chart';
 import { TreemapChart } from '../analytics/treemap-chart';
+import { createIcon } from '../ui/icon';
 
 export interface AnalyticsEditorOptions {
   container: HTMLElement;
@@ -284,7 +285,7 @@ export class AnalyticsEditor {
       if (card.tooltip) {
         const info = document.createElement('span');
         info.className = 'analytics-kpi-info';
-        info.textContent = 'ℹ️';
+        info.appendChild(createIcon('info'));
         info.setAttribute('title', card.tooltip);
         info.setAttribute('role', 'img');
         info.setAttribute('aria-label', card.tooltip);

@@ -15,6 +15,7 @@ import type { ChartStore } from '../store/chart-store';
 import type { FocusModeController } from '../controllers/focus-mode';
 import type { SelectionManager } from '../controllers/selection-manager';
 import type { SideBySideRenderer } from '../renderer/side-by-side-renderer';
+import { createIcon } from '../ui/icon';
 
 export interface FooterDeps {
   store: OrgStore;
@@ -293,10 +294,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
   const fitBtn = document.createElement('button');
   fitBtn.className = 'footer-btn';
   fitBtn.dataset.action = 'fit';
-  const fitIcon = document.createElement('span');
-  fitIcon.setAttribute('aria-hidden', 'true');
-  fitIcon.textContent = t('footer.fit_icon');
-  fitBtn.appendChild(fitIcon);
+  fitBtn.appendChild(createIcon('fit'));
   fitBtn.appendChild(document.createTextNode(t('footer.fit_label')));
   fitBtn.setAttribute('aria-label', t('footer.fit_aria'));
   fitBtn.setAttribute('data-tooltip', t('footer.fit_tooltip'));
@@ -314,10 +312,7 @@ export function buildFooter(deps: FooterDeps): FooterElements {
   const resetZoomBtn = document.createElement('button');
   resetZoomBtn.className = 'footer-btn';
   resetZoomBtn.dataset.action = 'reset-zoom';
-  const resetIcon = document.createElement('span');
-  resetIcon.setAttribute('aria-hidden', 'true');
-  resetIcon.textContent = t('footer.reset_icon');
-  resetZoomBtn.appendChild(resetIcon);
+  resetZoomBtn.appendChild(createIcon('reset'));
   resetZoomBtn.appendChild(document.createTextNode(t('footer.reset_label')));
   resetZoomBtn.setAttribute('aria-label', t('footer.reset_aria'));
   resetZoomBtn.setAttribute('data-tooltip', t('footer.reset_tooltip'));

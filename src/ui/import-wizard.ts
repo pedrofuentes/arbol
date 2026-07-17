@@ -1,5 +1,6 @@
 import { t } from '../i18n';
 import { trapFocus } from './dialog-utils';
+import { createIcon } from './icon';
 
 export interface WizardStep {
   id: string;
@@ -53,13 +54,14 @@ export class ImportWizard {
     const title = document.createElement('span');
     title.className = 'import-wizard-title';
     title.id = 'import-wizard-title';
-    title.textContent = t('import_wizard.title');
+    title.appendChild(createIcon('folder-open'));
+    title.appendChild(document.createTextNode(t('import_wizard.title')));
     wizard.setAttribute('aria-labelledby', 'import-wizard-title');
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'import-wizard-close';
     closeBtn.setAttribute('aria-label', t('import_wizard.close_aria'));
-    closeBtn.textContent = '✕';
+    closeBtn.appendChild(createIcon('close'));
     closeBtn.addEventListener('click', () => this.close());
 
     header.appendChild(title);

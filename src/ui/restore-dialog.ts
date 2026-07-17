@@ -1,5 +1,6 @@
 import { createOverlay, createDialogPanel, trapFocus } from './dialog-utils';
 import { t } from '../i18n';
+import { appendIconLabel } from './icon';
 
 export type RestoreStrategy = 'replace' | 'merge' | 'cancel';
 
@@ -60,13 +61,13 @@ export function showRestoreStrategyDialog(
 
     const replaceBtn = document.createElement('button');
     replaceBtn.className = 'btn btn-danger';
-    replaceBtn.textContent = t('restore_dialog.replace_all');
+    appendIconLabel(replaceBtn, 'replace', t('restore_dialog.replace_all'));
     replaceBtn.style.cssText += ';text-align:start;padding:10px 14px;font-size:13px;';
     btnGroup.appendChild(replaceBtn);
 
     const mergeBtn = document.createElement('button');
     mergeBtn.className = 'btn btn-primary';
-    mergeBtn.textContent = t('restore_dialog.merge');
+    appendIconLabel(mergeBtn, 'merge', t('restore_dialog.merge'));
     mergeBtn.style.cssText += ';text-align:start;padding:10px 14px;font-size:13px;';
     btnGroup.appendChild(mergeBtn);
 

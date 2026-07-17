@@ -137,7 +137,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       {
         id: 'export',
         label: t('command_palette.item_export'),
-        icon: '📊',
+        icon: 'export',
         shortcut: 'Ctrl+E',
         group: t('command_palette.group_actions'),
         action: () => {
@@ -147,7 +147,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       {
         id: 'undo',
         label: t('command_palette.item_undo'),
-        icon: '↩',
+        icon: 'undo',
         shortcut: 'Ctrl+Z',
         group: t('command_palette.group_actions'),
         action: () => {
@@ -159,7 +159,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       {
         id: 'redo',
         label: t('command_palette.item_redo'),
-        icon: '↪',
+        icon: 'redo',
         shortcut: 'Ctrl+Shift+Z',
         group: t('command_palette.group_actions'),
         action: () => {
@@ -171,7 +171,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       {
         id: 'settings',
         label: t('command_palette.item_settings'),
-        icon: '⚙️',
+        icon: 'settings',
         shortcut: 'Ctrl+,',
         group: t('command_palette.group_actions'),
         action: () => {
@@ -181,7 +181,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       {
         id: 'search',
         label: t('command_palette.item_search'),
-        icon: '🔍',
+        icon: 'search',
         shortcut: 'Ctrl+F',
         group: t('command_palette.group_navigation'),
         action: () => {
@@ -191,7 +191,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       {
         id: 'help',
         label: t('command_palette.item_help'),
-        icon: '❓',
+        icon: 'help',
         shortcut: '?',
         group: t('command_palette.group_navigation'),
         action: () => {
@@ -201,7 +201,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       {
         id: 'theme',
         label: t('command_palette.item_theme'),
-        icon: themeManager.getTheme() === 'dark' ? '☀️' : '🌙',
+        icon: themeManager.getTheme() === 'dark' ? 'sun' : 'moon',
         group: t('command_palette.group_actions'),
         action: () => {
           themeManager.toggle();
@@ -210,7 +210,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       {
         id: 'new-chart',
         label: t('command_palette.item_new_chart'),
-        icon: '➕',
+        icon: 'add',
         group: t('command_palette.group_charts'),
         action: async () => {
           const name = await showInputDialog({
@@ -230,7 +230,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       {
         id: 'save-version',
         label: t('command_palette.item_save_version'),
-        icon: '💾',
+        icon: 'save',
         group: t('command_palette.group_charts'),
         action: async () => {
           const name = await showInputDialog({
@@ -252,7 +252,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       {
         id: 'import',
         label: t('command_palette.item_import'),
-        icon: '📥',
+        icon: 'import',
         group: t('command_palette.group_actions'),
         action: () => {
           importBtn.click();
@@ -269,28 +269,28 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
         {
           id: 'rename-chart',
           label: t('command_palette.item_rename_chart'),
-          icon: '✏️',
+          icon: 'edit',
           group: t('command_palette.group_charts'),
           action: () => renameActiveChart(activeChart),
         },
         {
           id: 'duplicate-chart',
           label: t('command_palette.item_duplicate_chart'),
-          icon: '📋',
+          icon: 'copy',
           group: t('command_palette.group_charts'),
           action: () => duplicateActiveChart(activeChart),
         },
         {
           id: 'export-chart-data',
           label: t('command_palette.item_export_chart_data'),
-          icon: '📤',
+          icon: 'export',
           group: t('command_palette.group_charts'),
           action: () => exportActiveChart(activeChart),
         },
         {
           id: 'delete-chart',
           label: t('command_palette.item_delete_chart'),
-          icon: '🗑️',
+          icon: 'remove',
           group: t('command_palette.group_charts'),
           action: () => deleteActiveChart(activeChart),
         },
@@ -303,28 +303,28 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
             {
               id: `view-version-${version.id}`,
               label: t('command_palette.item_view_version', { name: version.name }),
-              icon: '👁',
+              icon: 'eye',
               group: t('command_palette.group_charts'),
               action: () => viewVersion(version),
             },
             {
               id: `compare-version-${version.id}`,
               label: t('command_palette.item_compare_version', { name: version.name }),
-              icon: '⚖️',
+              icon: 'compare',
               group: t('command_palette.group_charts'),
               action: () => compareVersion(version),
             },
             {
               id: `restore-version-${version.id}`,
               label: t('command_palette.item_restore_version', { name: version.name }),
-              icon: '↩️',
+              icon: 'restore',
               group: t('command_palette.group_charts'),
               action: () => restoreVersion(version),
             },
             {
               id: `delete-version-${version.id}`,
               label: t('command_palette.item_delete_version', { name: version.name }),
-              icon: '🗑️',
+              icon: 'remove',
               group: t('command_palette.group_charts'),
               action: () => deleteVersion(version),
             },
@@ -339,7 +339,7 @@ export function registerShortcuts(deps: ShortcutsDeps): ShortcutsResult {
       items.push({
         id: `chart-${chart.id}`,
         label: chart.name,
-        icon: '🌳',
+        icon: 'tree',
         group: t('command_palette.group_charts'),
         action: async () => {
           const proceed = await handleBeforeSwitch();

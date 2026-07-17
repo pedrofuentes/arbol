@@ -1,5 +1,6 @@
 import { t, getLocale, setLocale as i18nSetLocale } from '../i18n';
 import { trapFocus } from './dialog-utils';
+import { createIcon, type IconName } from './icon';
 
 const PREVIEW_HINT_KEYS: Record<string, string> = {
   presets: 'settings_modal.preview_hint.presets',
@@ -18,7 +19,7 @@ const TABS_WITHOUT_PREVIEW = new Set(['backup', 'level_mapping']);
 export interface SettingsTab {
   id: string;
   label: string;
-  icon: string;
+  icon: IconName;
 }
 
 export interface SettingsModalOptions {
@@ -31,17 +32,17 @@ export interface SettingsModalOptions {
 
 function getDefaultTabs(): SettingsTab[] {
   return [
-    { id: 'presets', label: t('settings_modal.tab.presets'), icon: '🎨' },
-    { id: 'layout', label: t('settings_modal.tab.layout'), icon: '📐' },
-    { id: 'typography', label: t('settings_modal.tab.typography'), icon: '🔤' },
-    { id: 'cards', label: t('settings_modal.tab.cards'), icon: '🃏' },
-    { id: 'connectors', label: t('settings_modal.tab.connectors'), icon: '🔗' },
-    { id: 'ic', label: t('settings_modal.tab.ic'), icon: '👤' },
-    { id: 'advisors', label: t('settings_modal.tab.advisors'), icon: '📎' },
-    { id: 'badges', label: t('settings_modal.tab.badges'), icon: '🔢' },
-    { id: 'categories', label: t('settings_modal.tab.categories'), icon: '🏷️' },
-    { id: 'level_mapping', label: t('settings_modal.tab.level_mapping'), icon: '📊' },
-    { id: 'backup', label: t('settings_modal.tab.backup'), icon: '💾' },
+    { id: 'presets', label: t('settings_modal.tab.presets'), icon: 'palette' },
+    { id: 'layout', label: t('settings_modal.tab.layout'), icon: 'layout' },
+    { id: 'typography', label: t('settings_modal.tab.typography'), icon: 'type' },
+    { id: 'cards', label: t('settings_modal.tab.cards'), icon: 'cards' },
+    { id: 'connectors', label: t('settings_modal.tab.connectors'), icon: 'link' },
+    { id: 'ic', label: t('settings_modal.tab.ic'), icon: 'person' },
+    { id: 'advisors', label: t('settings_modal.tab.advisors'), icon: 'paperclip' },
+    { id: 'badges', label: t('settings_modal.tab.badges'), icon: 'badge' },
+    { id: 'categories', label: t('settings_modal.tab.categories'), icon: 'tag' },
+    { id: 'level_mapping', label: t('settings_modal.tab.level_mapping'), icon: 'hierarchy' },
+    { id: 'backup', label: t('settings_modal.tab.backup'), icon: 'backup' },
   ];
 }
 
@@ -92,13 +93,14 @@ export class SettingsModal {
     const title = document.createElement('span');
     title.className = 'settings-modal-title';
     title.id = 'settings-modal-title';
-    title.textContent = t('settings_modal.title');
+    title.appendChild(createIcon('settings'));
+    title.appendChild(document.createTextNode(t('settings_modal.title')));
     modal.setAttribute('aria-labelledby', 'settings-modal-title');
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'settings-modal-close';
     closeBtn.setAttribute('aria-label', t('settings_modal.close_aria'));
-    closeBtn.textContent = '✕';
+    closeBtn.appendChild(createIcon('close'));
     closeBtn.addEventListener('click', () => this.cancel());
 
     header.appendChild(title);
@@ -124,10 +126,7 @@ export class SettingsModal {
 
       if (tab.id === this.activeTab) btn.classList.add('active');
 
-      const iconSpan = document.createElement('span');
-      iconSpan.className = 'nav-icon';
-      iconSpan.setAttribute('aria-hidden', 'true');
-      iconSpan.textContent = tab.icon;
+      const iconSpan = createIcon(tab.icon, 'nav-icon');
 
       btn.appendChild(iconSpan);
       btn.appendChild(document.createTextNode(` ${tab.label}`));
@@ -179,14 +178,14 @@ export class SettingsModal {
     this.previewFitBtn.className = 'preview-zoom-btn';
     this.previewFitBtn.setAttribute('aria-label', t('settings_modal.preview_fit'));
     this.previewFitBtn.setAttribute('data-tooltip', t('settings_modal.preview_fit'));
-    this.previewFitBtn.textContent = '⊞';
+    this.previewFitBtn.appendChild(createIcon('fit'));
     this.previewControls.appendChild(this.previewFitBtn);
 
     this.previewResetBtn = document.createElement('button');
     this.previewResetBtn.className = 'preview-zoom-btn';
     this.previewResetBtn.setAttribute('aria-label', t('settings_modal.preview_reset'));
     this.previewResetBtn.setAttribute('data-tooltip', t('settings_modal.preview_reset'));
-    this.previewResetBtn.textContent = '↺';
+    this.previewResetBtn.appendChild(createIcon('reset'));
     this.previewControls.appendChild(this.previewResetBtn);
 
     this.previewZoomPct = document.createElement('span');

@@ -199,7 +199,8 @@ describe('ComparisonBanner', () => {
 
     it('displays exit text', () => {
       showComparisonBanner(defaultOptions());
-      expect(getExit()!.textContent).toBe('✕ Exit');
+      expect(getExit()!.textContent).toBe('Exit');
+      expect(getExit()!.querySelector('svg[data-icon="close"]')).not.toBeNull();
     });
 
     it('has btn btn-secondary class', () => {
