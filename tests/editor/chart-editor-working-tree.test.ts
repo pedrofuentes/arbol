@@ -95,6 +95,7 @@ function createChartStore(charts: ChartRecord[]) {
     duplicateChart: vi.fn(),
     deleteVersion: vi.fn(),
     isDirty: vi.fn(() => false),
+    getEditsSinceLastVersion: vi.fn(() => 0),
   };
 }
 
