@@ -54,11 +54,11 @@ describe('dialog surface visual contracts', () => {
     expectDeclaration(helpPanel, 'max-height', '80vh');
   });
 
-  it('pins fixed, horizontally centered banners and passive hit testing', () => {
+  it('pins container-relative, horizontally centered banners and passive hit testing', () => {
     const banner = rule('.ui-banner');
     const passiveBanner = rule('.ui-banner--passive');
 
-    expectDeclaration(banner, 'position', 'fixed');
+    expectDeclaration(banner, 'position', 'absolute');
     expectDeclaration(banner, 'left', '50%');
     expectDeclaration(banner, 'transform', /translateX\(-50%\)/);
     expectDeclaration(passiveBanner, 'pointer-events', 'none');
