@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 import { setLocale, t } from '../../src/i18n';
 import en from '../../src/i18n/en';
+import { showHelpDialog } from '../../src/ui/help-dialog';
+
+vi.mock('../../src/ui/help-dialog', () => ({ showHelpDialog: vi.fn() }));
 import { buildToolbar, type ToolbarDeps } from '../../src/init/toolbar-builder';
 import { OrgStore } from '../../src/store/org-store';
 import { ThemeManager } from '../../src/store/theme-manager';
@@ -36,6 +39,7 @@ function makeDeps(overrides: Partial<ToolbarDeps> = {}): ToolbarDeps {
     onSettingsClick: vi.fn(),
     onImportClick: vi.fn(),
     onExportClick: vi.fn(),
+    onLoadSample: vi.fn(),
     ...overrides,
   };
 }
@@ -66,6 +70,18 @@ describe('buildToolbar', () => {
     buildToolbar(deps);
     const btns = deps.headerRight.querySelectorAll('button');
     expect(btns.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('forwards the shared sample loader to the help dialog', () => {
+    const deps = makeDeps();
+    buildToolbar(deps);
+    const helpBtn = deps.headerRight.querySelector(
+      `[aria-label="${t('toolbar.help_aria')}"]`,
+    ) as HTMLButtonElement;
+
+    helpBtn.click();
+
+    expect(showHelpDialog).toHaveBeenCalledWith({ onLoadSample: deps.onLoadSample });
   });
 
   it('sets undo/redo buttons disabled initially', () => {
