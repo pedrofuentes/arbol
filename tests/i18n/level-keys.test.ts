@@ -5,7 +5,6 @@ import es from '../../src/i18n/es';
 describe('i18n level menu keys', () => {
   const levelKeys = [
     'menu.level',
-    'menu.level_icon',
     'menu.level_none',
     'menu.level_check',
     'menu.set_level',
