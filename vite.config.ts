@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { readFileSync } from 'fs';
 import { VitePWA } from 'vite-plugin-pwa';
+import { configDefaults } from 'vitest/config';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
@@ -80,6 +81,7 @@ export default defineConfig({
     },
   },
   test: {
+    exclude: [...configDefaults.exclude, '.worktrees/**'],
     globals: true,
     environment: 'jsdom',
     setupFiles: ['tests/setup.ts'],
