@@ -828,6 +828,15 @@ const es: Record<string, string> = {
     'Esto reemplazará el organigrama actual con una organización de ejemplo. Puede deshacer esta acción.',
   'help.section_toggle_aria': 'Alternar sección {section}',
 
+  // ─── Bienvenida inicial ────────────────────────────────────────────
+  'welcome.title': 'Le damos la bienvenida a Arbol',
+  'welcome.description': 'Cree y explore su organigrama, directamente en su navegador.',
+  'welcome.import_hint': '¿Ya tiene datos? Use Importar en la barra de herramientas.',
+  'welcome.load_sample': 'Cargar organigrama de ejemplo',
+  'welcome.load_sample_aria': 'Cargar el organigrama de ejemplo',
+  'welcome.start_empty': 'Empezar vacío',
+  'welcome.start_empty_aria': 'Empezar con un organigrama vacío',
+
   // Help: Getting Started
   'help.getting_started.title': 'Primeros pasos',
   'help.getting_started.pan_zoom':
