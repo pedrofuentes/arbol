@@ -61,3 +61,26 @@ describe('z-index design tokens', () => {
     expect(hardcoded).toEqual([]);
   });
 });
+
+describe('fatal error design tokens', () => {
+  const fatalErrorCss =
+    css.match(/\/\* Fatal error boundary[^]*?(?=\/\* High contrast mode)/)?.[0] ?? '';
+
+  it('uses the real danger token while preserving initialization fallbacks', () => {
+    expect(fatalErrorCss).toContain('color: var(--danger, #c0392b)');
+    expect(fatalErrorCss).not.toContain('--color-danger');
+    expect(fatalErrorCss).toMatch(/hex fallbacks are intentional[^.]*initialization fails/i);
+    expect(fatalErrorCss).toContain('var(--text-primary, #1a1a1a)');
+    expect(fatalErrorCss).toContain('var(--bg-surface, #ffffff)');
+    expect(fatalErrorCss).toContain('var(--border-color, #d0d0d0)');
+  });
+
+  it('tokenizes fatal error spacing and radius', () => {
+    expect(fatalErrorCss).toContain('margin: var(--space-8) auto');
+    expect(fatalErrorCss).toContain('padding: var(--space-6)');
+    expect(fatalErrorCss).toContain('border-radius: var(--radius-lg)');
+    expect(fatalErrorCss).toContain('margin: 0 0 var(--space-4)');
+    expect(fatalErrorCss).toContain('margin: var(--space-2) 0');
+    expect(fatalErrorCss).not.toMatch(/(?:margin|padding|border-radius)\s*:[^;]*\drem/);
+  });
+});
