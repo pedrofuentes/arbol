@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.15.0](https://github.com/pedrofuentes/arbol/compare/arbol-v3.14.0...arbol-v3.15.0) (2026-07-17)
+
+
+### Features
+
+* **editor:** route context-menu Edit to the inspector and formalize shortcuts ([#140](https://github.com/pedrofuentes/arbol/issues/140)) ([299944d](https://github.com/pedrofuentes/arbol/commit/299944d853a2b8e98d3de3e08610619b27fa14ac))
+* **icons:** replace emoji chrome with a semantic SVG icon system ([#132](https://github.com/pedrofuentes/arbol/issues/132)) ([c5d4e2c](https://github.com/pedrofuentes/arbol/commit/c5d4e2cec329177aa058c5c37c2a0fbe5cec9f0d))
+* make Arbol installable as a PWA with offline support ([#119](https://github.com/pedrofuentes/arbol/issues/119)) ([724fdca](https://github.com/pedrofuentes/arbol/commit/724fdcaeb0371a9624557c9cd92cd2a4468d7e59))
+* **settings:** regroup settings into six groups with cross-group search ([#136](https://github.com/pedrofuentes/arbol/issues/136)) ([d56664d](https://github.com/pedrofuentes/arbol/commit/d56664d9257713858b0c7307a2cf2b007df8a828))
+* **trash:** soft-delete trash for charts and versions ([#148](https://github.com/pedrofuentes/arbol/issues/148)) ([9d18c85](https://github.com/pedrofuentes/arbol/commit/9d18c85791e987cca549ebae2507c4865569b3dd))
+* **versions:** adopt consumer version vocabulary with safe restore and deltas ([#143](https://github.com/pedrofuentes/arbol/issues/143)) ([fb42cf7](https://github.com/pedrofuentes/arbol/commit/fb42cf730e2e8773feb5d676f6d0353609b9d190))
+
+
+### Bug Fixes
+
+* **a11y:** make sidebar chart/version row actions keyboard-accessible ([#121](https://github.com/pedrofuentes/arbol/issues/121)) ([7aa9967](https://github.com/pedrofuentes/arbol/commit/7aa9967a678220eebb8d067b61519a0e80c2ca14))
+* **editor:** sync working-tree sidebar counts ([#130](https://github.com/pedrofuentes/arbol/issues/130)) ([b29b3c9](https://github.com/pedrofuentes/arbol/commit/b29b3c9fe12af42c7eb41de8a1dcb99f5bf20d3b))
+* **mobile:** compose the shell within phone viewports; unblock compare titles; fix first-load fit ([#123](https://github.com/pedrofuentes/arbol/issues/123)) ([c41e2ac](https://github.com/pedrofuentes/arbol/commit/c41e2ac5dea344bbe101fc5c4691444377135140))
+
 ## [3.14.0](https://github.com/pedrofuentes/arbol/compare/arbol-v3.13.3...arbol-v3.14.0) (2026-06-15)
 
 
